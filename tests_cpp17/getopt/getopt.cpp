@@ -3,7 +3,6 @@
 #include <chrono>
 #include <fea/getopt/getopt.hpp>
 #include <fea/utils/platform.hpp>
-#include <fea/utils/string.hpp>
 #include <gtest/gtest.h>
 #include <random>
 

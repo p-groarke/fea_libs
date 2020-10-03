@@ -1,4 +1,4 @@
-﻿#if defined(_MSC_VER) && _MSC_VER >= 1920
+﻿#if defined(_MSC_VER) && (_MSC_VER >= 1920 /* VS 2019 */)
 // Demo of VS2019 hack.
 // No need for macros since it supports static constexpr variables in functions.
 
