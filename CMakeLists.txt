@@ -11,7 +11,7 @@ include(GoogleTest)
 # User options
 option(FEA_TESTS "Build and run tests." On)
 option(FEA_BENCHMARKS "Build and run bencharks, requires tests." Off)
-# set(FEA_CPP_VER "17" CACHE STRING "The c++ standard version, minimum 14.")
+option(FEA_FORCE_CPP14 "XCode reports being C++17, yet it doesn't offer std::filesystem." Off)
 
 # Conan search paths.
 set(CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR} ${CMAKE_MODULE_PATH})
@@ -55,7 +55,7 @@ function(set_compile_options REQUIRED_ARG EXPOSURE)
 	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 		target_compile_options(${REQUIRED_ARG} ${EXPOSURE} -Wall -Wextra -Wpedantic -Werror)
 	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-	  # using Intel C++
+		# using Intel C++
 	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 		target_compile_definitions(${REQUIRED_ARG} ${EXPOSURE} NOMINMAX UNICODE _UNICODE)
 		target_compile_options(${REQUIRED_ARG} ${EXPOSURE} /Zc:__cplusplus /Zc:alignedNew /permissive- /W4 /WX /utf-8)
@@ -67,7 +67,7 @@ endfunction()
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/.clang-format ${CMAKE_CURRENT_BINARY_DIR}/.clang-format COPYONLY)
 
 # C++ version.
-if ("cxx_std_17" IN_LIST CMAKE_CXX_COMPILE_FEATURES)
+if ("cxx_std_17" IN_LIST CMAKE_CXX_COMPILE_FEATURES AND NOT FEA_FORCE_CPP14)
 	set(CMAKE_CXX_STANDARD 17)
 	message("\nEnabling C++17 libraries.\n")
 else()
@@ -134,7 +134,13 @@ if (${FEA_TESTS})
 		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_SOURCES_CPP17}>"
 	)
 	set_compile_options(${TEST_NAME} PRIVATE)
-	target_link_libraries(${TEST_NAME} PRIVATE ${PROJECT_NAME} GTest::GTest TBB::TBB)
+
+	# Pre version 9, gcc needs to link with seperate filesystem library.
+	if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+		target_link_libraries(${TEST_NAME} PRIVATE ${PROJECT_NAME} GTest::GTest TBB::TBB stdc++fs)
+	else()
+		target_link_libraries(${TEST_NAME} PRIVATE ${PROJECT_NAME} GTest::GTest TBB::TBB)
+	endif()
 
 	make_pretty_source_folders("tests_cpp14" "Source Files" "${TEST_SOURCES_CPP14}")
 	make_pretty_source_folders("tests_cpp17" "Source Files" "${TEST_SOURCES_CPP17}")

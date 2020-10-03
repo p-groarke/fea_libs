@@ -658,7 +658,7 @@ TEST(fea_lazy_graph, dirtyness) {
 			});
 
 	// Only should clean 6.
-	EXPECT_EQ(cleaned_ids.size(), 1);
+	EXPECT_EQ(cleaned_ids.size(), 1u);
 
 	// Test no duplicate messages
 	std::sort(cleaned_ids.begin(), cleaned_ids.end());
@@ -940,7 +940,7 @@ TEST(fea_lazy_graph, dirtyness_mt) {
 
 
 	// Only should clean 6.
-	EXPECT_EQ(cleaned_ids.size(), 1);
+	EXPECT_EQ(cleaned_ids.size(), 1u);
 
 	// Test no duplicate messages
 	std::sort(cleaned_ids.begin(), cleaned_ids.end());
