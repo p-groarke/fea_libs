@@ -1,5 +1,5 @@
 image:
-  - Visual Studio 2019
+  # - Visual Studio 2019
   - Visual Studio 2017
   - Visual Studio 2015
 platform:
@@ -28,45 +28,41 @@ for:
     matrix:
       only:
         - platform: x64
-      except:
         - image: Visual Studio 2015
     before_build:
       - cmd: conan profile update settings.arch="x86_64" default
       - cmd: cd c:\projects\fea
       - cmd: mkdir build
       - cmd: cd build
-      - cmd: cmake .. -A %PLATFORM%
+      - cmd: cmake .. -A %PLATFORM% -DFEA_CPP14=On
   -
     matrix:
       only:
         - platform: Win32
-      except:
         - image: Visual Studio 2015
     before_build:
       - cmd: conan profile update settings.arch="x86" default
       - cmd: cd c:\projects\fea
       - cmd: mkdir build
       - cmd: cd build
-      - cmd: cmake .. -A %PLATFORM%
+      - cmd: cmake .. -A %PLATFORM% -DFEA_CPP14=On
   -
     matrix:
       only:
         - platform: x64
-        - image: Visual Studio 2015
     before_build:
       - cmd: conan profile update settings.arch="x86_64" default
       - cmd: cd c:\projects\fea
       - cmd: mkdir build
       - cmd: cd build
-      - cmd: cmake .. -A %PLATFORM% -DFEA_CPP14=On
+      - cmd: cmake .. -A %PLATFORM%
   -
     matrix:
       only:
         - platform: Win32
-        - image: Visual Studio 2015
     before_build:
       - cmd: conan profile update settings.arch="x86" default
       - cmd: cd c:\projects\fea
       - cmd: mkdir build
       - cmd: cd build
-      - cmd: cmake .. -A %PLATFORM% -DFEA_CPP14=On
+      - cmd: cmake .. -A %PLATFORM%
