@@ -408,8 +408,8 @@ TEST(fea_lazy_graph, advanced) {
 
 	std::vector<unsigned> to_eval{ 0, 1, 2, 3, 4, 5, 6, 7 };
 	auto ind_data = graph.are_eval_graphs_independent(to_eval);
-	EXPECT_EQ(ind_data.independent_graphs.size(), 0);
-	EXPECT_EQ(ind_data.dependent_graphs.size(), 8);
+	EXPECT_EQ(ind_data.independent_graphs.size(), 0u);
+	EXPECT_EQ(ind_data.dependent_graphs.size(), 8u);
 }
 
 TEST(fea_lazy_graph, dirtyness) {

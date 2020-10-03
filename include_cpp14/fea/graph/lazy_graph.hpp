@@ -116,8 +116,8 @@ struct node {
 	// A left to right graph of parents needed to update this node.
 	const std::vector<Id>& evaluation_graph() const {
 		if (_dirty_evaluation_graph) {
-			throw std::runtime_error(
-					__FUNCTION__ " : reading dirty evaluation graph");
+			throw std::runtime_error{ std::string{ __FUNCTION__ }
+				+ " : reading dirty evaluation graph" };
 		}
 		return _evaluation_graph;
 	}
