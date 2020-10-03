@@ -136,7 +136,7 @@ if (${FEA_TESTS})
 	file(GLOB_RECURSE TEST_SOURCES_CPP14 "tests_cpp14/*.cpp" "tests_cpp14/*.hpp" "tests_cpp14/*.tpp")
 	file(GLOB_RECURSE TEST_SOURCES_CPP17 "tests_cpp17/*.cpp" "tests_cpp17/*.hpp" "tests_cpp17/*.tpp")
 	add_executable(${TEST_NAME} ${TEST_SOURCES_CPP14}
-		$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_SOURCES_CPP17}>>
+		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_SOURCES_CPP17}>>"
 	)
 	target_link_libraries(${TEST_NAME} PRIVATE ${PROJECT_NAME} GTest::GTest TBB::TBB)
 	set_compile_options(${TEST_NAME} PRIVATE)
