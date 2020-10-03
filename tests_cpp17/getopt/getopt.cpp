@@ -7,10 +7,6 @@
 #include <gtest/gtest.h>
 #include <random>
 
-#if defined(FEA_WINDOWS)
-#include <windows.h>
-#endif
-
 namespace {
 std::string last_printed_string;
 std::wstring last_printed_wstring;

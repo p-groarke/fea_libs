@@ -218,6 +218,12 @@ template <class CharT>
 #pragma warning(disable : 4996)
 #endif
 
+#if (!_DLL) && (_MSC_VER >= 1900 /* VS 2015*/) \
+		&& (_MSC_VER <= 1911 /* VS 2017 */)
+std::locale::id std::codecvt<char16_t, char, struct _Mbstatet>::id;
+std::locale::id std::codecvt<char32_t, char, struct _Mbstatet>::id;
+#endif
+
 // From UTF8 (multi-byte)
 
 // UTF-8 to UTF-16
