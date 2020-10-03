@@ -386,11 +386,11 @@ TEST(fea_lazy_graph, advanced) {
 	size_t idx_5 = get_index(subgraph, 5u);
 	size_t idx_6 = get_index(subgraph, 6u);
 	size_t idx_7 = get_index(subgraph, 7u);
-	EXPECT_EQ(idx_0, 0); // should be at front
-	EXPECT_EQ(idx_1, 1); // should be second
-	EXPECT_EQ(idx_2, 2); // should be third
-	EXPECT_EQ(idx_3, 3); // should be fourth
-	EXPECT_EQ(idx_7, 7); // should be at end
+	EXPECT_EQ(idx_0, 0u); // should be at front
+	EXPECT_EQ(idx_1, 1u); // should be second
+	EXPECT_EQ(idx_2, 2u); // should be third
+	EXPECT_EQ(idx_3, 3u); // should be fourth
+	EXPECT_EQ(idx_7, 7u); // should be at end
 
 	EXPECT_GT(idx_4, idx_3);
 	EXPECT_GT(idx_5, idx_3);
