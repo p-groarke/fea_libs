@@ -1009,7 +1009,7 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 		// Find the biggest raw option name size.
 		// The raw option's name is stored in its long_opt string.
 		size_t max_name_width = 0;
-		for (const user_option<CharT> raw_opt : _raw_opts) {
+		for (const user_option<CharT>& raw_opt : _raw_opts) {
 			size_t name_width = raw_opt.long_name.size() + rawopt_help_indent;
 			max_name_width = std::max(max_name_width, name_width);
 		}
@@ -1018,7 +1018,7 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 		print(FEA_ML("Arguments:\n"));
 
 		// Now, print the raw option help.
-		for (const user_option<CharT> raw_opt : _raw_opts) {
+		for (const user_option<CharT>& raw_opt : _raw_opts) {
 			// Print indentation.
 			print(string(indent, FEA_CH(' ')));
 
@@ -1041,7 +1041,7 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 
 		// First, compute the maximum width of long options.
 		size_t longopt_width = 0;
-		for (const std::pair<string, user_option<CharT>>& opt_p :
+		for (const std::pair<const string, user_option<CharT>>& opt_p :
 				_long_opt_to_user_opt) {
 			const string& long_opt_str = opt_p.first;
 			const user_option<CharT>& opt = opt_p.second;
@@ -1068,7 +1068,7 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 		}
 
 		// Print the options.
-		for (const std::pair<string, user_option<CharT>>& opt_p :
+		for (const std::pair<const string, user_option<CharT>>& opt_p :
 				_long_opt_to_user_opt) {
 			const string& long_opt_str = opt_p.first;
 			const user_option<CharT>& opt = opt_p.second;

@@ -138,7 +138,7 @@ if (${FEA_TESTS})
 
 	# g++ 8 needs to link with seperate filesystem library.
 	target_link_libraries(${TEST_NAME} PRIVATE ${PROJECT_NAME} GTest::GTest TBB::TBB
-		$<$<AND:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_VERSION:8>>:stdc++fs>
+		$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:${CMAKE_CXX_COMPILER_VERSION},9.0>>:stdc++fs>
 	)
 
 	# if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
