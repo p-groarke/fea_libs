@@ -26,42 +26,42 @@ matrix:
     - os: osx
       osx_image: xcode12
       env:
-        - MATRIX_EVAL="CC=clang && CXX=clang++ && CONFIG=Debug && FORCE_CPP14=Off"
+        - MATRIX_EVAL="CC=clang && CXX=clang++ && CONFIG=Debug"
 
     - os: osx
       osx_image: xcode12
       env:
-        - MATRIX_EVAL="CC=clang && CXX=clang++ && CONFIG=Release && FORCE_CPP14=Off"
+        - MATRIX_EVAL="CC=clang && CXX=clang++ && CONFIG=Release"
 
     - os: osx
       osx_image: xcode11.6
       env:
-        - MATRIX_EVAL="CC=clang && CXX=clang++ && CONFIG=Debug && FORCE_CPP14=Off"
+        - MATRIX_EVAL="CC=clang && CXX=clang++ && CONFIG=Debug"
 
     - os: osx
       osx_image: xcode11.6
       env:
-        - MATRIX_EVAL="CC=clang && CXX=clang++ && CONFIG=Release && FORCE_CPP14=Off"
+        - MATRIX_EVAL="CC=clang && CXX=clang++ && CONFIG=Release"
 
     - os: osx
       osx_image: xcode11.3
       env:
-        - MATRIX_EVAL="CC=clang && CXX=clang++ && CONFIG=Debug && FORCE_CPP14=On"
+        - MATRIX_EVAL="CC=clang && CXX=clang++ && CONFIG=Debug && CPP14='-DFEA_CPP14=On'"
 
     - os: osx
       osx_image: xcode11.3
       env:
-        - MATRIX_EVAL="CC=clang && CXX=clang++ && CONFIG=Release && FORCE_CPP14=On"
+        - MATRIX_EVAL="CC=clang && CXX=clang++ && CONFIG=Release && CPP14='-DFEA_CPP14=On'"
 
     - os: osx
       osx_image: xcode11.2
       env:
-        - MATRIX_EVAL="CC=clang && CXX=clang++ && CONFIG=Debug && FORCE_CPP14=On"
+        - MATRIX_EVAL="CC=clang && CXX=clang++ && CONFIG=Debug && CPP14='-DFEA_CPP14=On'"
 
     - os: osx
       osx_image: xcode11.2
       env:
-        - MATRIX_EVAL="CC=clang && CXX=clang++ && CONFIG=Release && FORCE_CPP14=On"
+        - MATRIX_EVAL="CC=clang && CXX=clang++ && CONFIG=Release && CPP14='-DFEA_CPP14=On'"
 
     - os: linux
       dist: bionic
@@ -73,7 +73,7 @@ matrix:
             - gcc-6
             - g++-6
       env:
-        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6 && CONFIG=Debug && FORCE_CPP14=Off"
+        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6 && CONFIG=Debug && CPP14='-DFEA_CPP14=On'"
 
     - os: linux
       dist: bionic
@@ -85,7 +85,7 @@ matrix:
             - gcc-6
             - g++-6
       env:
-        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6 && CONFIG=Release && FORCE_CPP14=Off"
+        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6 && CONFIG=Release && CPP14='-DFEA_CPP14=On'"
 
     - os: linux
       dist: bionic
@@ -97,7 +97,7 @@ matrix:
             - gcc-7
             - g++-7
       env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7 && CONFIG=Debug && FORCE_CPP14=Off"
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7 && CONFIG=Debug"
 
     - os: linux
       dist: bionic
@@ -109,7 +109,7 @@ matrix:
             - gcc-7
             - g++-7
       env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7 && CONFIG=Release && FORCE_CPP14=Off"
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7 && CONFIG=Release"
 
     - os: linux
       dist: bionic
@@ -121,7 +121,7 @@ matrix:
             - gcc-8
             - g++-8
       env:
-        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8 && CONFIG=Debug && FORCE_CPP14=Off"
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8 && CONFIG=Debug"
 
     - os: linux
       dist: bionic
@@ -133,13 +133,13 @@ matrix:
             - gcc-8
             - g++-8
       env:
-        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8 && CONFIG=Release && FORCE_CPP14=Off"
+        - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8 && CONFIG=Release"
 
 script:
   - pwd
   - ls -al
   - mkdir build && cd build
-  - cmake .. -DCMAKE_BUILD_TYPE=$CONFIG -DFEA_FORCE_CPP14=$FORCE_CPP14
+  - cmake .. -DCMAKE_BUILD_TYPE=$CONFIG $CPP14
   - cmake --build . --config $CONFIG
   - ./bin/fea_tests
 

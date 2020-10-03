@@ -11,7 +11,7 @@ include(GoogleTest)
 # User options
 option(FEA_TESTS "Build and run tests." On)
 option(FEA_BENCHMARKS "Build and run bencharks, requires tests." Off)
-option(FEA_FORCE_CPP14 "XCode reports being C++17, yet it doesn't offer std::filesystem." Off)
+option(FEA_CPP14 "Use C++14 (default is C++17). CMake's detection doesn't work well." Off)
 
 # Conan search paths.
 set(CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR} ${CMAKE_MODULE_PATH})
@@ -67,11 +67,12 @@ endfunction()
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/.clang-format ${CMAKE_CURRENT_BINARY_DIR}/.clang-format COPYONLY)
 
 # C++ version.
-if ("cxx_std_17" IN_LIST CMAKE_CXX_COMPILE_FEATURES AND NOT FEA_FORCE_CPP14)
+if ("cxx_std_17" IN_LIST CMAKE_CXX_COMPILE_FEATURES AND NOT FEA_CPP14)
 	set(CMAKE_CXX_STANDARD 17)
-	message("\nEnabling C++17 libraries.\n")
+	message("\nEnabling C++14 and C++17 libraries.\n")
 else()
 	set(CMAKE_CXX_STANDARD 14)
+	message("\nEnabling C++14 libraries.\n")
 endif()
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
