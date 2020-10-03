@@ -58,7 +58,7 @@ function(set_compile_options REQUIRED_ARG EXPOSURE)
 	  # using Intel C++
 	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 		target_compile_definitions(${REQUIRED_ARG} ${EXPOSURE} NOMINMAX UNICODE _UNICODE)
-		target_compile_options(${REQUIRED_ARG} ${EXPOSURE} /Zc:__cplusplus /Zc:alignedNew /permissive- /FAs /W4 /WX /utf-8)
+		target_compile_options(${REQUIRED_ARG} ${EXPOSURE} /Zc:__cplusplus /Zc:alignedNew /permissive- /W4 /WX /utf-8)
 		# set_target_properties(${REQUIRED_ARG} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 	endif()
 endfunction()
@@ -69,6 +69,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/.clang-format ${CMAKE_CURRENT_BINARY_
 # C++ version.
 if ("cxx_std_17" IN_LIST CMAKE_CXX_COMPILE_FEATURES)
 	set(CMAKE_CXX_STANDARD 17)
+	message("\nEnabling C++17 libraries.\n")
 else()
 	set(CMAKE_CXX_STANDARD 14)
 endif()
@@ -81,27 +82,33 @@ find_package(TBB CONFIG REQUIRED)
 
 
 # Main Project
-file(GLOB_RECURSE HEADER_FILES_CPP14 "${PROJECT_SOURCE_DIR}/include_cpp14/${PROJECT_NAME}/*.hpp")
-file(GLOB_RECURSE HEADER_FILES_CPP17 "${PROJECT_SOURCE_DIR}/include_cpp17/${PROJECT_NAME}/*.hpp")
+# file(GLOB_RECURSE HEADER_FILES_CPP14 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "include_cpp14/${PROJECT_NAME}/*.hpp")
+# file(GLOB_RECURSE HEADER_FILES_CPP17 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "include_cpp17/${PROJECT_NAME}/*.hpp")
+file(GLOB_RECURSE HEADER_FILES_CPP14 "include_cpp14/${PROJECT_NAME}/*.hpp")
+file(GLOB_RECURSE HEADER_FILES_CPP17 "include_cpp17/${PROJECT_NAME}/*.hpp")
 add_library(${PROJECT_NAME} INTERFACE)
 set_compile_options(${PROJECT_NAME} INTERFACE)
 target_link_libraries(${PROJECT_NAME} INTERFACE TBB::TBB)
 
+
+# message("\n\n${HEADER_FILES_CPP14}\n\n")
 # To see files in IDE
 target_sources(${PROJECT_NAME} INTERFACE
+	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 	"$<BUILD_INTERFACE:${HEADER_FILES_CPP14}>"
 	"$<BUILD_INTERFACE:$<$<COMPILE_FEATURES:cxx_std_17>:${HEADER_FILES_CPP17}>>"
 )
 
+# ${PROJECT_SOURCE_DIR}
 # Interface
 target_include_directories(${PROJECT_NAME} INTERFACE
-	"$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
-	"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include_cpp14>"
-	"$<BUILD_INTERFACE:$<$<COMPILE_FEATURES:cxx_std_17>:${CMAKE_CURRENT_SOURCE_DIR}/include_cpp17>>"
+	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include_cpp14>
+	$<BUILD_INTERFACE:$<$<COMPILE_FEATURES:cxx_std_17>:${CMAKE_CURRENT_SOURCE_DIR}/include_cpp17>>
 )
 
-make_pretty_source_folders("include_cpp14/fea" "Header Files" "${HEADER_FILES_CPP14}")
-make_pretty_source_folders("include_cpp17/fea" "Header Files" "${HEADER_FILES_CPP17}")
+# make_pretty_source_folders("include_cpp14/fea" "Header Files" "${HEADER_FILES_CPP14}")
+# make_pretty_source_folders("include_cpp17/fea" "Header Files" "${HEADER_FILES_CPP17}")
 
 # Install Package Configuration
 install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}_targets)
@@ -113,9 +120,9 @@ install(EXPORT ${PROJECT_NAME}_targets
 )
 
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include_cpp14/${PROJECT_NAME}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-# if (${CMAKE_CXX_STANDARD} GREATER_EQUAL 17)
+if (${CMAKE_CXX_STANDARD} GREATER_EQUAL 17)
 	install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include_cpp17/${PROJECT_NAME}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-# endif()
+endif()
 
 # Tests
 if (${FEA_TESTS})
@@ -129,10 +136,10 @@ if (${FEA_TESTS})
 	file(GLOB_RECURSE TEST_SOURCES_CPP14 "tests_cpp14/*.cpp" "tests_cpp14/*.hpp" "tests_cpp14/*.tpp")
 	file(GLOB_RECURSE TEST_SOURCES_CPP17 "tests_cpp17/*.cpp" "tests_cpp17/*.hpp" "tests_cpp17/*.tpp")
 	add_executable(${TEST_NAME} ${TEST_SOURCES_CPP14}
-		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_SOURCES_CPP17}>>"
+		$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_SOURCES_CPP17}>>
 	)
+	target_link_libraries(${TEST_NAME} PRIVATE ${PROJECT_NAME} GTest::GTest TBB::TBB)
 	set_compile_options(${TEST_NAME} PRIVATE)
-	target_link_libraries(${TEST_NAME} PRIVATE ${PROJECT_NAME} GTest::GTest)
 
 	make_pretty_source_folders("tests_cpp14" "Source Files" "${TEST_SOURCES_CPP14}")
 	make_pretty_source_folders("tests_cpp17" "Source Files" "${TEST_SOURCES_CPP17}")
