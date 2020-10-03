@@ -67,7 +67,12 @@ endfunction()
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/.clang-format ${CMAKE_CURRENT_BINARY_DIR}/.clang-format COPYONLY)
 
 # C++ version.
-set(CMAKE_CXX_STANDARD 17)
+if ("cxx_std_17" IN_LIST CMAKE_CXX_COMPILE_FEATURES)
+	set(CMAKE_CXX_STANDARD 17)
+else()
+	set(CMAKE_CXX_STANDARD 14)
+endif()
+
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
