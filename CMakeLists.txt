@@ -134,15 +134,15 @@ if (${FEA_TESTS})
 	# Test Project
 	set(TEST_NAME ${PROJECT_NAME}_tests)
 	file(GLOB_RECURSE TEST_SOURCES_CPP14 "tests_cpp14/*.cpp" "tests_cpp14/*.hpp" "tests_cpp14/*.tpp")
-	file(GLOB_RECURSE TEST_SOURCES_CPP17 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "tests_cpp17/*.cpp" "tests_cpp17/*.hpp" "tests_cpp17/*.tpp")
+	file(GLOB_RECURSE TEST_SOURCES_CPP17 "tests_cpp17/*.cpp" "tests_cpp17/*.hpp" "tests_cpp17/*.tpp")
 	add_executable(${TEST_NAME} ${TEST_SOURCES_CPP14}
-		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_SOURCES_CPP17}>>"
+		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_SOURCES_CPP17}>"
 	)
 	target_link_libraries(${TEST_NAME} PRIVATE ${PROJECT_NAME} GTest::GTest TBB::TBB)
 	set_compile_options(${TEST_NAME} PRIVATE)
 
-	# make_pretty_source_folders("tests_cpp14" "Source Files" "${TEST_SOURCES_CPP14}")
-	# make_pretty_source_folders("tests_cpp17" "Source Files" "${TEST_SOURCES_CPP17}")
+	make_pretty_source_folders("tests_cpp14" "Source Files" "${TEST_SOURCES_CPP14}")
+	make_pretty_source_folders("tests_cpp17" "Source Files" "${TEST_SOURCES_CPP17}")
 
 	if (${FEA_BENCHMARKS})
 		target_compile_definitions(${TEST_NAME} PRIVATE FEA_BENCHMARKS)
