@@ -82,16 +82,12 @@ find_package(TBB CONFIG REQUIRED)
 
 
 # Main Project
-# file(GLOB_RECURSE HEADER_FILES_CPP14 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "include_cpp14/${PROJECT_NAME}/*.hpp")
-# file(GLOB_RECURSE HEADER_FILES_CPP17 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "include_cpp17/${PROJECT_NAME}/*.hpp")
 file(GLOB_RECURSE HEADER_FILES_CPP14 "include_cpp14/${PROJECT_NAME}/*.hpp")
 file(GLOB_RECURSE HEADER_FILES_CPP17 "include_cpp17/${PROJECT_NAME}/*.hpp")
 add_library(${PROJECT_NAME} INTERFACE)
 set_compile_options(${PROJECT_NAME} INTERFACE)
 target_link_libraries(${PROJECT_NAME} INTERFACE TBB::TBB)
 
-
-# message("\n\n${HEADER_FILES_CPP14}\n\n")
 # To see files in IDE
 target_sources(${PROJECT_NAME} INTERFACE
 	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -99,7 +95,6 @@ target_sources(${PROJECT_NAME} INTERFACE
 	"$<BUILD_INTERFACE:$<$<COMPILE_FEATURES:cxx_std_17>:${HEADER_FILES_CPP17}>>"
 )
 
-# ${PROJECT_SOURCE_DIR}
 # Interface
 target_include_directories(${PROJECT_NAME} INTERFACE
 	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -107,8 +102,8 @@ target_include_directories(${PROJECT_NAME} INTERFACE
 	$<BUILD_INTERFACE:$<$<COMPILE_FEATURES:cxx_std_17>:${CMAKE_CURRENT_SOURCE_DIR}/include_cpp17>>
 )
 
-# make_pretty_source_folders("include_cpp14/fea" "Header Files" "${HEADER_FILES_CPP14}")
-# make_pretty_source_folders("include_cpp17/fea" "Header Files" "${HEADER_FILES_CPP17}")
+make_pretty_source_folders("include_cpp14/fea" "Header Files" "${HEADER_FILES_CPP14}")
+make_pretty_source_folders("include_cpp17/fea" "Header Files" "${HEADER_FILES_CPP17}")
 
 # Install Package Configuration
 install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}_targets)
@@ -138,8 +133,8 @@ if (${FEA_TESTS})
 	add_executable(${TEST_NAME} ${TEST_SOURCES_CPP14}
 		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_SOURCES_CPP17}>"
 	)
-	target_link_libraries(${TEST_NAME} PRIVATE ${PROJECT_NAME} GTest::GTest TBB::TBB)
 	set_compile_options(${TEST_NAME} PRIVATE)
+	target_link_libraries(${TEST_NAME} PRIVATE ${PROJECT_NAME} GTest::GTest TBB::TBB)
 
 	make_pretty_source_folders("tests_cpp14" "Source Files" "${TEST_SOURCES_CPP14}")
 	make_pretty_source_folders("tests_cpp17" "Source Files" "${TEST_SOURCES_CPP17}")

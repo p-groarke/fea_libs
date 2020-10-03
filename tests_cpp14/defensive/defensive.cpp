@@ -7,11 +7,13 @@ struct test1 {
 	}
 	test1(const test1&) {
 	}
-	test1(test1&&) {
+	test1(test1&&) noexcept {
 	}
 	test1& operator=(const test1&) {
+		return *this;
 	}
-	test1& operator=(test1&&) {
+	test1& operator=(test1&&) noexcept {
+		return *this;
 	}
 };
 FEA_FULFILLS_5_CTORS(test1);
@@ -52,11 +54,13 @@ struct test5 {
 	}
 	test5(const test5&) {
 	}
-	test5(test5&&) {
+	test5(test5&&) noexcept {
 	}
 	test5& operator=(const test5&) {
+		return *this;
 	}
-	test5& operator=(test5&&) {
+	test5& operator=(test5&&) noexcept {
+		return *this;
 	}
 };
 FEA_FULFILLS_6_CTORS(test5);
@@ -95,9 +99,10 @@ struct test10 {
 FEA_FULFILLS_MOVE_ONLY(test10);
 
 struct test11 {
-	test11(test11&&) {
+	test11(test11&&) noexcept {
 	}
-	test11& operator=(test11&&) {
+	test11& operator=(test11&&) noexcept {
+		return *this;
 	}
 };
 FEA_FULFILLS_MOVE_ONLY(test11);
