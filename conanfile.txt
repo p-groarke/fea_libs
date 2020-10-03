@@ -1,0 +1,14 @@
+[requires]
+gtest/1.10.0@_/_
+tbb/2019_u9
+
+[generators]
+cmake_find_package_multi
+
+[options]
+gtest:build_gmock=False
+
+[imports]
+bin, *.pdb -> ./bin
+bin, *.pdb -> ./lib
+bin, *.dll -> ./bin
