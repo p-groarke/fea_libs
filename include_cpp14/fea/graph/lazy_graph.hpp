@@ -672,15 +672,13 @@ struct lazy_graph {
 
 		// 'ind_data.dependent_graphs' cannot be cleaned in parallel.
 		// But they are still independent from 'ind_data.independent_graphs'.
-		g.run([&, this]() {
+		g.run_and_wait([&, this]() {
 			for (Id id : ind_data.dependent_graphs) {
 				// Clean one at a time. But you can still call clean_mt at
 				// least.
 				clean_mt(id, func);
 			}
 		});
-
-		g.wait();
 	}
 
 

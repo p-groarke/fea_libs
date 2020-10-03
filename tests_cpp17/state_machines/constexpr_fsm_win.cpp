@@ -1,4 +1,6 @@
-﻿#if defined(_MSC_VER)
+﻿#if defined(_MSC_VER) && _MSC_VER >= 1920
+// Demo of VS2019 hack.
+// No need for macros since it supports static constexpr variables in functions.
 
 #include <cstdio>
 #define FEA_FSM_NO_EVENT_WRAPPER
