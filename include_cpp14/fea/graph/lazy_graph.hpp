@@ -116,9 +116,8 @@ struct node {
 	// A left to right graph of parents needed to update this node.
 	const std::vector<Id>& evaluation_graph() const {
 		if (_dirty_evaluation_graph) {
-			throw std::runtime_error{
-				__FUNCTION__ " : reading dirty evaluation graph"
-			};
+			throw std::runtime_error(
+					__FUNCTION__ " : reading dirty evaluation graph");
 		}
 		return _evaluation_graph;
 	}
@@ -782,7 +781,7 @@ struct lazy_graph {
 		// During the recursion, the graph is sorted back to front. We
 		// reverse it at the end because it just makes things easier to
 		// reason about.
-		recurse_breadth_up(node_id, [&, this](Id id, const node_t&) {
+		recurse_breadth_up(node_id, [&](Id id, const node_t&) {
 			if (visited.count(id) == 0) {
 				// Not previously visited, simply push back.
 				visited.insert({ id, eval_graph.size() });
