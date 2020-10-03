@@ -28,7 +28,7 @@ for:
     matrix:
       only:
         - platform: x64
-        - image: Visual Studio 2015
+          image: Visual Studio 2015
     before_build:
       - cmd: conan profile update settings.arch="x86_64" default
       - cmd: cd c:\projects\fea
@@ -39,7 +39,7 @@ for:
     matrix:
       only:
         - platform: Win32
-        - image: Visual Studio 2015
+          image: Visual Studio 2015
     before_build:
       - cmd: conan profile update settings.arch="x86" default
       - cmd: cd c:\projects\fea
