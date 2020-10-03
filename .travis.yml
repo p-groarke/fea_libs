@@ -92,6 +92,8 @@ matrix:
         - MATRIX_EVAL="CC=gcc-8 && CXX=g++-8 && CONFIG=Release"
 
 script:
+  - pwd
+  - ls -al
   - mkdir build && cd build
   - cmake .. -DCMAKE_BUILD_TYPE=$CONFIG
   - cmake --build . --config $CONFIG
