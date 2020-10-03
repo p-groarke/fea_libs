@@ -456,7 +456,7 @@ struct lazy_graph {
 	bool is_dirty(Id id) const {
 		return recurse_up(id, [&, this](Id, const node_t& n) {
 			const std::unordered_map<Id, DirtyVersion>& parents = n.parents();
-			for (const std::pair<Id, DirtyVersion>& parent : parents) {
+			for (const std::pair<const Id, DirtyVersion>& parent : parents) {
 				if (parent.second != _nodes.at(parent.first).version()) {
 					return true;
 				}
@@ -906,7 +906,7 @@ private:
 		}
 
 		const std::unordered_map<Id, DirtyVersion>& parents = n.parents();
-		for (const std::pair<Id, DirtyVersion>& parent_pair : parents) {
+		for (const std::pair<const Id, DirtyVersion>& parent_pair : parents) {
 			if (recurse_up(parent_pair.first, func)) {
 				return true;
 			}
@@ -936,7 +936,8 @@ private:
 			}
 
 			const std::unordered_map<Id, DirtyVersion>& parents = n.parents();
-			for (const std::pair<Id, DirtyVersion>& parent_pair : parents) {
+			for (const std::pair<const Id, DirtyVersion>& parent_pair :
+					parents) {
 				graph.push_back(parent_pair.first);
 			}
 		}

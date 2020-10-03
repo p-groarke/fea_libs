@@ -136,12 +136,16 @@ if (${FEA_TESTS})
 	)
 	set_compile_options(${TEST_NAME} PRIVATE)
 
-	# Pre version 9, gcc needs to link with seperate filesystem library.
-	if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
-		target_link_libraries(${TEST_NAME} PRIVATE ${PROJECT_NAME} GTest::GTest TBB::TBB stdc++fs)
-	else()
-		target_link_libraries(${TEST_NAME} PRIVATE ${PROJECT_NAME} GTest::GTest TBB::TBB)
-	endif()
+	# g++ 8 needs to link with seperate filesystem library.
+	target_link_libraries(${TEST_NAME} PRIVATE ${PROJECT_NAME} GTest::GTest TBB::TBB
+		$<$<AND:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_VERSION:8>>:stdc++fs>
+	)
+
+	# if(CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+	# 	target_link_libraries(${TEST_NAME} PRIVATE ${PROJECT_NAME} GTest::GTest TBB::TBB stdc++fs)
+	# else()
+	# 	target_link_libraries(${TEST_NAME} PRIVATE ${PROJECT_NAME} GTest::GTest TBB::TBB)
+	# endif()
 
 	make_pretty_source_folders("tests_cpp14" "Source Files" "${TEST_SOURCES_CPP14}")
 	make_pretty_source_folders("tests_cpp17" "Source Files" "${TEST_SOURCES_CPP17}")

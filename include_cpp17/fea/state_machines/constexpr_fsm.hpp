@@ -98,6 +98,10 @@ TODO :
 namespace fea {
 namespace cexpr {
 namespace detail {
+template <class... Args>
+inline constexpr void unused(Args&&...) {
+}
+
 template <class T>
 struct event_ {
 	using type = void;
@@ -304,6 +308,9 @@ struct fsm_state {
 			class Machine, class... FuncArgs>
 	static constexpr auto execute_event([[maybe_unused]] Machine& machine,
 			[[maybe_unused]] FuncArgs&&... func_args) {
+		detail::unused(machine);
+		detail::unused(func_args...);
+
 		static_assert(Event != fsm_event::on_enter_from,
 				"state : do not execute on_enter_from, use on_enter instead "
 				"and provide to_from_state");
