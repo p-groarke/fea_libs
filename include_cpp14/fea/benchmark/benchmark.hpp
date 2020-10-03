@@ -156,7 +156,7 @@ struct suite {
 		}
 
 		_results.push_back(
-				{ message, elapsed_time.count() / double(_num_average) });
+				pair{ message, elapsed_time.count() / double(_num_average) });
 	}
 
 	template <class Func>
