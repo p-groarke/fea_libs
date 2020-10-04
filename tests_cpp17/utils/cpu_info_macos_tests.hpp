@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
-std::unordered_map<std::string, bool> cpu_info_map{
+std::unordered_map<std::string, bool> macos_cpu_info_map{
 	{ "fpu", fea::cpu_info.fpu() },
 	{ "vme", fea::cpu_info.vme() },
 	{ "de", fea::cpu_info.de() },

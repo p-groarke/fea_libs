@@ -40,13 +40,17 @@ TEST(cpu_info, basics) {
 			s = "lahf_lm";
 
 		std::transform(s.begin(), s.end(), s.begin(), ::tolower);
-		//			printf("%s\n", s.c_str());
-		EXPECT_TRUE(cpu_info_map.at(s));
-		cpu_info_map.erase(s);
+		if (macos_cpu_info_map.count(s) == 0) {
+			printf("Missing cpu feature : %s\n", s.c_str());
+			EXPECT_TRUE(false);
+		} else {
+			EXPECT_TRUE(macos_cpu_info_map.at(s));
+			macos_cpu_info_map.erase(s);
+		}
 	}
 
-	cpu_info_map.erase("lm"); // Might be em64t or tsci.
-	for (const auto& x : cpu_info_map) {
+	macos_cpu_info_map.erase("lm"); // Might be em64t or tsci.
+	for (const auto& x : macos_cpu_info_map) {
 		//			printf("%s\n", x.first.c_str());
 		EXPECT_FALSE(x.second);
 	}

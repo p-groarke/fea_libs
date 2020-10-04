@@ -32,6 +32,7 @@
  **/
 #pragma once
 #include <cstdint>
+#include <fea/utils/platform.hpp>
 #include <limits>
 #include <type_traits>
 
@@ -86,7 +87,7 @@ constexpr int compare_lowest() {
 	constexpr U u_low = (std::numeric_limits<U>::lowest)();
 
 	if constexpr (std::is_floating_point_v<T> || std::is_floating_point_v<U>) {
-		// All floating points hold higher values than integers.
+		// All floating points hold higher/lower values than integers.
 		if constexpr (floatmax_t(t_low) < floatmax_t(u_low)) {
 			return 1;
 		} else if constexpr (floatmax_t(t_low) > floatmax_t(u_low)) {
@@ -95,7 +96,7 @@ constexpr int compare_lowest() {
 			return 0;
 		}
 	} else {
-		// Use biggest unsigned to compare maxes.
+		// Use biggest signed to compare lows.
 		if constexpr (intmax_t(t_low) < intmax_t(u_low)) {
 			return 1;
 		} else if constexpr (intmax_t(t_low) > intmax_t(u_low)) {
@@ -110,6 +111,14 @@ template <class T, class U>
 constexpr bool not_floating() {
 	return !std::is_floating_point_v<T> && !std::is_floating_point_v<U>;
 }
+
+#if defined(FEA_WINDOWS)
+// As far as I can tell, this is a problem with overzealous MSVC.
+// It doesn't take into consideration the runtime edge cases that are
+// eliminated. Gcc and clang are happy.
+#pragma warning(push)
+#pragma warning(disable : 4756)
+#endif
 
 // Saturating cast.
 // Casts the input type to the output type,
@@ -130,8 +139,8 @@ template <class Output, class Input>
 	constexpr int max_info = compare_max<Input, Output>();
 	constexpr int low_info = compare_lowest<Input, Output>();
 
+	// Input max is bigger than output (ex. uint8_t in, int8_t out).
 	if constexpr (max_info == 1) {
-		// Input max is bigger than output.
 		// Clamp in input space.
 		constexpr Output out_max = (std::numeric_limits<Output>::max)();
 		if (input > Input(out_max)) {
@@ -139,8 +148,8 @@ template <class Output, class Input>
 		}
 	}
 
+	// Input low is lower than output (ex. int8_t in, uint8_t out).
 	if constexpr (low_info == 1) {
-		// Input low is lower than output.
 		// Clamp in input space.
 		constexpr Output out_low = (std::numeric_limits<Output>::lowest)();
 		if (input < Input(out_low)) {
@@ -150,4 +159,8 @@ template <class Output, class Input>
 
 	return Output(input);
 }
+
+#if defined(FEA_WINDOWS)
+#pragma warning(pop)
+#endif
 } // namespace fea
