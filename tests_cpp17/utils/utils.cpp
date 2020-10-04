@@ -1,6 +1,9 @@
 ﻿#include <cstdio>
 #include <cstring>
-#include <fea/utils/all_utils.hpp>
+#include <fea/utils/file.hpp>
+#include <fea/utils/scope.hpp>
+#include <fea/utils/string.hpp>
+#include <fea/utils/thread.hpp>
 #include <gtest/gtest.h>
 
 extern const char* argv0;
