@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 #if FEA_MACOS
-#include "cpu_info_macos.hpp"
+#include "cpu_info_macos_tests.hpp"
 #else
 #endif
 
