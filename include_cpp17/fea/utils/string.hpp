@@ -218,7 +218,7 @@ template <class CharT>
 #pragma warning(disable : 4996)
 
 // VS 2015 and VS 2017 don't export codecvt symbols...
-#if (_MSC_VER >= 1900 /* VS 2015*/) && (_MSC_VER <= 1911 /* VS 2017 */)
+#if (_MSC_VER >= 1900 /* VS 2015*/) && (_MSC_VER <= 1916 /* VS 2017 */)
 #define FEA_MSVC_CODECVT_BUG
 using u16string_hack = std::basic_string<std::uint_least16_t,
 		std::char_traits<std::uint_least16_t>,
