@@ -116,9 +116,8 @@ struct node {
 	// A left to right graph of parents needed to update this node.
 	const std::vector<Id>& evaluation_graph() const {
 		if (_dirty_evaluation_graph) {
-			throw std::runtime_error{
-				__FUNCTION__ " : reading dirty evaluation graph"
-			};
+			throw std::runtime_error{ std::string{ __FUNCTION__ }
+				+ " : reading dirty evaluation graph" };
 		}
 		return _evaluation_graph;
 	}
@@ -457,7 +456,7 @@ struct lazy_graph {
 	bool is_dirty(Id id) const {
 		return recurse_up(id, [&, this](Id, const node_t& n) {
 			const std::unordered_map<Id, DirtyVersion>& parents = n.parents();
-			for (const std::pair<Id, DirtyVersion>& parent : parents) {
+			for (const std::pair<const Id, DirtyVersion>& parent : parents) {
 				if (parent.second != _nodes.at(parent.first).version()) {
 					return true;
 				}
@@ -673,15 +672,13 @@ struct lazy_graph {
 
 		// 'ind_data.dependent_graphs' cannot be cleaned in parallel.
 		// But they are still independent from 'ind_data.independent_graphs'.
-		g.run([&, this]() {
+		g.run_and_wait([&, this]() {
 			for (Id id : ind_data.dependent_graphs) {
 				// Clean one at a time. But you can still call clean_mt at
 				// least.
 				clean_mt(id, func);
 			}
 		});
-
-		g.wait();
 	}
 
 
@@ -782,7 +779,7 @@ struct lazy_graph {
 		// During the recursion, the graph is sorted back to front. We
 		// reverse it at the end because it just makes things easier to
 		// reason about.
-		recurse_breadth_up(node_id, [&, this](Id id, const node_t&) {
+		recurse_breadth_up(node_id, [&](Id id, const node_t&) {
 			if (visited.count(id) == 0) {
 				// Not previously visited, simply push back.
 				visited.insert({ id, eval_graph.size() });
@@ -907,7 +904,7 @@ private:
 		}
 
 		const std::unordered_map<Id, DirtyVersion>& parents = n.parents();
-		for (const std::pair<Id, DirtyVersion>& parent_pair : parents) {
+		for (const std::pair<const Id, DirtyVersion>& parent_pair : parents) {
 			if (recurse_up(parent_pair.first, func)) {
 				return true;
 			}
@@ -937,7 +934,8 @@ private:
 			}
 
 			const std::unordered_map<Id, DirtyVersion>& parents = n.parents();
-			for (const std::pair<Id, DirtyVersion>& parent_pair : parents) {
+			for (const std::pair<const Id, DirtyVersion>& parent_pair :
+					parents) {
 				graph.push_back(parent_pair.first);
 			}
 		}

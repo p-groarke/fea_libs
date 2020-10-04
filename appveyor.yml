@@ -1,6 +1,7 @@
 image:
   - Visual Studio 2019
   - Visual Studio 2017
+  - Visual Studio 2015
 platform:
   - x64
   - Win32
@@ -23,6 +24,28 @@ build:
 test_script:
   - cmd: c:\projects\fea\build\bin\fea_tests.exe
 for:
+  -
+    matrix:
+      only:
+        - platform: x64
+          image: Visual Studio 2015
+    before_build:
+      - cmd: conan profile update settings.arch="x86_64" default
+      - cmd: cd c:\projects\fea
+      - cmd: mkdir build
+      - cmd: cd build
+      - cmd: cmake .. -A %PLATFORM% -DFEA_CPP14=On
+  -
+    matrix:
+      only:
+        - platform: Win32
+          image: Visual Studio 2015
+    before_build:
+      - cmd: conan profile update settings.arch="x86" default
+      - cmd: cd c:\projects\fea
+      - cmd: mkdir build
+      - cmd: cd build
+      - cmd: cmake .. -A %PLATFORM% -DFEA_CPP14=On
   -
     matrix:
       only:

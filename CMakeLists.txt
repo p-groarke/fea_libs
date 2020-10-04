@@ -11,7 +11,7 @@ include(GoogleTest)
 # User options
 option(FEA_TESTS "Build and run tests." On)
 option(FEA_BENCHMARKS "Build and run bencharks, requires tests." Off)
-# set(FEA_CPP_VER "17" CACHE STRING "The c++ standard version, minimum 14.")
+option(FEA_CPP14 "Use C++14 (default is C++17). CMake's detection doesn't work well." Off)
 
 # Conan search paths.
 set(CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR} ${CMAKE_MODULE_PATH})
@@ -55,10 +55,10 @@ function(set_compile_options REQUIRED_ARG EXPOSURE)
 	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 		target_compile_options(${REQUIRED_ARG} ${EXPOSURE} -Wall -Wextra -Wpedantic -Werror)
 	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-	  # using Intel C++
+		# using Intel C++
 	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 		target_compile_definitions(${REQUIRED_ARG} ${EXPOSURE} NOMINMAX UNICODE _UNICODE)
-		target_compile_options(${REQUIRED_ARG} ${EXPOSURE} /Zc:__cplusplus /Zc:alignedNew /permissive- /FAs /W4 /WX /utf-8)
+		target_compile_options(${REQUIRED_ARG} ${EXPOSURE} /Zc:__cplusplus /Zc:alignedNew /permissive- /W4 /WX /utf-8)
 		# set_target_properties(${REQUIRED_ARG} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 	endif()
 endfunction()
@@ -67,7 +67,14 @@ endfunction()
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/.clang-format ${CMAKE_CURRENT_BINARY_DIR}/.clang-format COPYONLY)
 
 # C++ version.
-set(CMAKE_CXX_STANDARD 17)
+if ("cxx_std_17" IN_LIST CMAKE_CXX_COMPILE_FEATURES AND NOT FEA_CPP14)
+	set(CMAKE_CXX_STANDARD 17)
+	message("\nEnabling C++14 and C++17 libraries.\n")
+else()
+	set(CMAKE_CXX_STANDARD 14)
+	message("\nEnabling C++14 libraries.\n")
+endif()
+
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -76,23 +83,24 @@ find_package(TBB CONFIG REQUIRED)
 
 
 # Main Project
-file(GLOB_RECURSE HEADER_FILES_CPP14 "${PROJECT_SOURCE_DIR}/include_cpp14/${PROJECT_NAME}/*.hpp")
-file(GLOB_RECURSE HEADER_FILES_CPP17 "${PROJECT_SOURCE_DIR}/include_cpp17/${PROJECT_NAME}/*.hpp")
+file(GLOB_RECURSE HEADER_FILES_CPP14 "include_cpp14/${PROJECT_NAME}/*.hpp")
+file(GLOB_RECURSE HEADER_FILES_CPP17 "include_cpp17/${PROJECT_NAME}/*.hpp")
 add_library(${PROJECT_NAME} INTERFACE)
 set_compile_options(${PROJECT_NAME} INTERFACE)
 target_link_libraries(${PROJECT_NAME} INTERFACE TBB::TBB)
 
 # To see files in IDE
 target_sources(${PROJECT_NAME} INTERFACE
+	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 	"$<BUILD_INTERFACE:${HEADER_FILES_CPP14}>"
 	"$<BUILD_INTERFACE:$<$<COMPILE_FEATURES:cxx_std_17>:${HEADER_FILES_CPP17}>>"
 )
 
 # Interface
 target_include_directories(${PROJECT_NAME} INTERFACE
-	"$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
-	"$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include_cpp14>"
-	"$<BUILD_INTERFACE:$<$<COMPILE_FEATURES:cxx_std_17>:${CMAKE_CURRENT_SOURCE_DIR}/include_cpp17>>"
+	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include_cpp14>
+	$<BUILD_INTERFACE:$<$<COMPILE_FEATURES:cxx_std_17>:${CMAKE_CURRENT_SOURCE_DIR}/include_cpp17>>
 )
 
 make_pretty_source_folders("include_cpp14/fea" "Header Files" "${HEADER_FILES_CPP14}")
@@ -108,9 +116,9 @@ install(EXPORT ${PROJECT_NAME}_targets
 )
 
 install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include_cpp14/${PROJECT_NAME}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-# if (${CMAKE_CXX_STANDARD} GREATER_EQUAL 17)
+if (${CMAKE_CXX_STANDARD} GREATER_EQUAL 17)
 	install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include_cpp17/${PROJECT_NAME}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
-# endif()
+endif()
 
 # Tests
 if (${FEA_TESTS})
@@ -124,10 +132,14 @@ if (${FEA_TESTS})
 	file(GLOB_RECURSE TEST_SOURCES_CPP14 "tests_cpp14/*.cpp" "tests_cpp14/*.hpp" "tests_cpp14/*.tpp")
 	file(GLOB_RECURSE TEST_SOURCES_CPP17 "tests_cpp17/*.cpp" "tests_cpp17/*.hpp" "tests_cpp17/*.tpp")
 	add_executable(${TEST_NAME} ${TEST_SOURCES_CPP14}
-		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_SOURCES_CPP17}>>"
+		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_SOURCES_CPP17}>"
 	)
 	set_compile_options(${TEST_NAME} PRIVATE)
-	target_link_libraries(${TEST_NAME} PRIVATE ${PROJECT_NAME} GTest::GTest)
+
+	# g++ 8 needs to link with seperate filesystem library.
+	target_link_libraries(${TEST_NAME} PRIVATE ${PROJECT_NAME} GTest::GTest TBB::TBB
+		$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:${CMAKE_CXX_COMPILER_VERSION},9.0>>:stdc++fs>
+	)
 
 	make_pretty_source_folders("tests_cpp14" "Source Files" "${TEST_SOURCES_CPP14}")
 	make_pretty_source_folders("tests_cpp17" "Source Files" "${TEST_SOURCES_CPP17}")

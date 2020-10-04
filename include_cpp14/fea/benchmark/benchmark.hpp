@@ -156,7 +156,7 @@ struct suite {
 		}
 
 		_results.push_back(
-				{ message, elapsed_time.count() / double(_num_average) });
+				pair{ message, elapsed_time.count() / double(_num_average) });
 	}
 
 	template <class Func>
@@ -212,6 +212,12 @@ struct suite {
 
 private:
 	struct pair {
+		pair(const char* msg, double t)
+				: message(msg)
+				, time(t) {
+		}
+		pair() = default;
+
 		const char* message{ nullptr };
 		double time{ 0.0 };
 	};

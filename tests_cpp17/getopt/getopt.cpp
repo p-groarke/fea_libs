@@ -3,13 +3,8 @@
 #include <chrono>
 #include <fea/getopt/getopt.hpp>
 #include <fea/utils/platform.hpp>
-#include <fea/utils/string.hpp>
 #include <gtest/gtest.h>
 #include <random>
-
-#if defined(FEA_WINDOWS)
-#include <windows.h>
-#endif
 
 namespace {
 std::string last_printed_string;

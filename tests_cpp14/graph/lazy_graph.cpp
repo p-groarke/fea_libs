@@ -1,8 +1,11 @@
-﻿#include <fea/graph/lazy_graph.hpp>
+﻿#include <algorithm>
+#include <cstdint>
+#include <fea/graph/lazy_graph.hpp>
 #include <fea/unsigned_map/unsigned_map.hpp>
 #include <gtest/gtest.h>
 #include <mutex>
 #include <tbb/task_group.h>
+#include <vector>
 
 namespace {
 TEST(fea_lazy_graph, example) {
@@ -11,8 +14,8 @@ TEST(fea_lazy_graph, example) {
 	using my_id_t = unsigned;
 
 	// Create a graph with your id type.
-	// You can also pass in the version unsigned int to use and an unordered_map
-	// container of your choice.
+	// You can also pass in a node data type, the version unsigned int to use
+	// and an unordered_map container of your choice.
 	fea::lazy_graph<my_id_t> graph;
 
 	/**
@@ -27,6 +30,9 @@ TEST(fea_lazy_graph, example) {
 	graph.is_root(0); // true
 	graph.has_children(0); // false
 	graph.has_parents(0); // false
+
+	// All function signatures consistently accept (child_id, parent_id) when
+	// using both.
 	graph.has_child(1, 0); // false
 	graph.has_parent(1, 0); // false
 
@@ -58,6 +64,8 @@ TEST(fea_lazy_graph, example) {
 	/*const std::vector<my_id_t>& children = */ graph.children(0);
 
 	// Get a nodes parents. Readonly.
+	// It is a map so we don't uselessly create a vector. You can ignore the
+	// 'second' variable in the pair.
 	/*const std::unordered_map<my_id_t, uint16_t>& parents = */ graph.parents(
 			1);
 
@@ -73,7 +81,7 @@ TEST(fea_lazy_graph, example) {
 	graph.make_dirty(1);
 
 	// Check if a node is dirty.
-	graph.is_dirty(2);
+	graph.is_dirty(2); // true
 
 	// Clean a node.
 	// Calls your callback from top to bottom in the dirtied graph.
@@ -88,7 +96,9 @@ TEST(fea_lazy_graph, example) {
 	// Clean multiple nodes at a time.
 	std::vector<my_id_t> my_nodes_to_clean{ 0, 1, 2 };
 	graph.clean(my_nodes_to_clean,
-			[](my_id_t /* id_to_update */, const auto&, const auto&) {
+			[](my_id_t /* id_to_update */,
+					const std::vector<my_id_t>& /* my parents */,
+					const std::vector<my_id_t>& /* my dirty parents */) {
 				// do fancy things.
 			});
 }
@@ -103,10 +113,13 @@ TEST(fea_lazy_graph, advanced_example) {
 	// RULE 1 : Only read from your parents.
 	// RULE 2 : Only write to yourself.
 
+	using my_id_t = unsigned;
+	// You can add some extra data that all nodes will have.
 	// You can customize the unsigned integer we use to track versions.
 	// You can also customize the unordered_map container, as long as your
 	// container fulfills std::unordered_map APIs.
-	using my_id_t = unsigned;
+
+	// fea::lazy_graph<id_type, node_data, versioning_type, unordered_map>
 	fea::lazy_graph<my_id_t, char, uint8_t, fea::unsigned_map> graph;
 
 	graph.add_dependency(1, 0);
@@ -117,7 +130,8 @@ TEST(fea_lazy_graph, advanced_example) {
 	// your function in a threaded breadth manner.
 	// It will lock between stages that aren't independent.
 	graph.clean_mt(2,
-			[](my_id_t, const std::vector<my_id_t>& /* parents */,
+			[](my_id_t /* node_to_clean */,
+					const std::vector<my_id_t>& /* parents */,
 					const std::vector<my_id_t>& /* dirty_parents */) {});
 
 	// Clean multiple nodes in a multithreaded eval.
@@ -155,13 +169,15 @@ TEST(fea_lazy_graph, advanced_example) {
 			graph.clean_mt(id, [](my_id_t, const auto&, const auto&) {});
 		});
 	}
-	g.wait();
 
 	// 'ind_data.dependent_graphs' cannot be cleaned in parallel.
-	for (my_id_t id : ind_data.independent_graphs) {
-		// Clean one at a time. But you can still call clean_mt at least.
-		graph.clean_mt(id, [](my_id_t, const auto&, const auto&) {});
-	}
+	// But they can still execute in parallel with the other nodes.
+	g.run_and_wait([&]() {
+		for (my_id_t id : ind_data.independent_graphs) {
+			// Clean one at a time. But you can still call clean_mt at least.
+			graph.clean_mt(id, [](my_id_t, const auto&, const auto&) {});
+		}
+	});
 }
 
 bool contains(const std::vector<unsigned>& vec, unsigned i) {
@@ -386,11 +402,11 @@ TEST(fea_lazy_graph, advanced) {
 	size_t idx_5 = get_index(subgraph, 5u);
 	size_t idx_6 = get_index(subgraph, 6u);
 	size_t idx_7 = get_index(subgraph, 7u);
-	EXPECT_EQ(idx_0, 0); // should be at front
-	EXPECT_EQ(idx_1, 1); // should be second
-	EXPECT_EQ(idx_2, 2); // should be third
-	EXPECT_EQ(idx_3, 3); // should be fourth
-	EXPECT_EQ(idx_7, 7); // should be at end
+	EXPECT_EQ(idx_0, 0u); // should be at front
+	EXPECT_EQ(idx_1, 1u); // should be second
+	EXPECT_EQ(idx_2, 2u); // should be third
+	EXPECT_EQ(idx_3, 3u); // should be fourth
+	EXPECT_EQ(idx_7, 7u); // should be at end
 
 	EXPECT_GT(idx_4, idx_3);
 	EXPECT_GT(idx_5, idx_3);
@@ -406,8 +422,8 @@ TEST(fea_lazy_graph, advanced) {
 
 	std::vector<unsigned> to_eval{ 0, 1, 2, 3, 4, 5, 6, 7 };
 	auto ind_data = graph.are_eval_graphs_independent(to_eval);
-	EXPECT_EQ(ind_data.independent_graphs.size(), 0);
-	EXPECT_EQ(ind_data.dependent_graphs.size(), 8);
+	EXPECT_EQ(ind_data.independent_graphs.size(), 0u);
+	EXPECT_EQ(ind_data.dependent_graphs.size(), 8u);
 }
 
 TEST(fea_lazy_graph, dirtyness) {
@@ -656,7 +672,7 @@ TEST(fea_lazy_graph, dirtyness) {
 			});
 
 	// Only should clean 6.
-	EXPECT_EQ(cleaned_ids.size(), 1);
+	EXPECT_EQ(cleaned_ids.size(), 1u);
 
 	// Test no duplicate messages
 	std::sort(cleaned_ids.begin(), cleaned_ids.end());
@@ -938,7 +954,7 @@ TEST(fea_lazy_graph, dirtyness_mt) {
 
 
 	// Only should clean 6.
-	EXPECT_EQ(cleaned_ids.size(), 1);
+	EXPECT_EQ(cleaned_ids.size(), 1u);
 
 	// Test no duplicate messages
 	std::sort(cleaned_ids.begin(), cleaned_ids.end());
