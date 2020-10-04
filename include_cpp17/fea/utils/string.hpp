@@ -216,22 +216,40 @@ template <class CharT>
 #if defined(FEA_WINDOWS)
 #pragma warning(push)
 #pragma warning(disable : 4996)
+
+// VS 2015 and VS 2017 don't export codecvt symbols...
+// ...
+// ...
+#if (_MSC_VER >= 1900 /* VS 2015*/) && (_MSC_VER <= 1911 /* VS 2017 */)
+#define FEA_MSVC_CODECVT_BUG
+using u16string_hack = std::basic_string<std::uint_least16_t,
+		std::char_traits<std::uint_least16_t>,
+		std::allocator<std::uint_least16_t>>;
+using u32string_hack = std::basic_string<std::uint_least32_t,
+		std::char_traits<std::uint_least32_t>,
+		std::allocator<std::uint_least32_t>>;
+#endif
 #endif
 
-// TODO : Fix codecvt linking for real.
-#if defined(_MSC_VER) && (!_DLL) && (_MSC_VER >= 1900 /* VS 2015*/) \
-		&& (_MSC_VER <= 1911 /* VS 2017 */)
-std::locale::id std::codecvt<char16_t, char, std::mbstate_t>::id;
-std::locale::id std::codecvt<char32_t, char, std::mbstate_t>::id;
-#endif
 
 // From UTF8 (multi-byte)
 
+#if defined(FEA_MSVC_CODECVT_BUG)
+// UTF-8 to UTF-16
+inline std::u16string utf8_to_utf16(const std::string& s) {
+	std::wstring_convert<std::codecvt_utf8_utf16<std::uint_least16_t>,
+			std::uint_least16_t>
+			convert;
+	u16string_hack str = convert.from_bytes(s);
+	return { reinterpret_cast<const char16_t*>(str.c_str()) };
+}
+#else
 // UTF-8 to UTF-16
 inline std::u16string utf8_to_utf16(const std::string& s) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> convert;
 	return convert.from_bytes(s);
 }
+#endif
 
 // UTF-8 to UTF-16, in wstring. Aka Windows "unicode".
 inline std::wstring utf8_to_utf16_w(const std::string& s) {
@@ -257,20 +275,43 @@ inline std::wstring utf8_to_ucs2_w(const std::string& s) {
 	return convert.from_bytes(s);
 }
 
+#if defined(FEA_MSVC_CODECVT_BUG)
+// UTF-8 to UTF-32
+inline std::u32string utf8_to_utf32(const std::string& s) {
+	std::wstring_convert<std::codecvt_utf8<std::uint_least32_t>,
+			std::uint_least32_t>
+			conv;
+	u32string_hack str = conv.from_bytes(s);
+	return { reinterpret_cast<const char32_t*>(str.c_str()) };
+}
+#else
 // UTF-8 to UTF-32
 inline std::u32string utf8_to_utf32(const std::string& s) {
 	std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
 	return conv.from_bytes(s);
 }
+#endif
 
 
 // From UTF-16
 
+#if defined(FEA_MSVC_CODECVT_BUG)
+// UTF-16 to UTF-8
+inline std::string utf16_to_utf8(const std::u16string& s) {
+	std::wstring_convert<std::codecvt_utf8_utf16<std::uint_least16_t>,
+			std::uint_least16_t>
+			conv;
+	u16string_hack str{ reinterpret_cast<const std::uint_least16_t*>(
+			s.c_str()) };
+	return conv.to_bytes(str);
+}
+#else
 // UTF-16 to UTF-8
 inline std::string utf16_to_utf8(const std::u16string& s) {
 	std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> conv;
 	return conv.to_bytes(s);
 }
+#endif
 
 // UTF-16 to UTF-8, using wstring.
 inline std::string utf16_to_utf8(const std::wstring& s) {
@@ -372,11 +413,23 @@ inline std::u32string ucs2_to_utf32(const std::wstring& s) {
 
 // From UTF-32
 
+#if defined(FEA_MSVC_CODECVT_BUG)
+// UTF-32 to UTF-8
+inline std::string utf32_to_utf8(const std::u32string& s) {
+	std::wstring_convert<std::codecvt_utf8<std::uint_least32_t>,
+			std::uint_least32_t>
+			conv;
+	u32string_hack str{ reinterpret_cast<const std::uint_least32_t*>(
+			s.c_str()) };
+	return conv.to_bytes(str);
+}
+#else
 // UTF-32 to UTF-8
 inline std::string utf32_to_utf8(const std::u32string& s) {
 	std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
 	return conv.to_bytes(s);
 }
+#endif
 
 // UTF-32 to UTF-16
 inline std::u16string utf32_to_utf16(const std::u32string& s) {
