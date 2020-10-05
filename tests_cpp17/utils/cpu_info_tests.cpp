@@ -11,35 +11,44 @@ TEST(cpu_info, basics) {
 #if FEA_MACOS
 	std::vector<std::string> cpu_tokens = get_macos_cpu_features();
 	for (auto& s : cpu_tokens) {
-		if (s == "EM64T")
-			continue;
-		if (s == "TSCI")
-			continue;
-
-		if (s == "RDWRFSGS")
-			s = "fsgsbase";
-		if (s == "XD")
-			s = "nx";
-		if (s == "TSCTMR")
-			s = "tsc-deadline";
-		if (s == "DSCPL")
-			s = "ds-cpl";
-		if (s == "TPR")
-			s = "xtpr";
-		if (s == "MON")
-			s = "monitor";
-		if (s == "SSE4.1")
-			s = "sse41";
-		if (s == "SSE4.2")
-			s = "sse42";
-		if (s == "AVX1.0")
-			s = "avx";
-		if (s == "RDRAND")
-			s = "rdrnd";
-		if (s == "LAHF")
-			s = "lahf_lm";
-
 		std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+
+		if (s == "em64t")
+			continue;
+		if (s == "tsci")
+			continue;
+
+		if (s == "rdwrfsgs")
+			s = "fsgsbase";
+		if (s == "xd")
+			s = "nx";
+		if (s == "tsctmr")
+			s = "tsc-deadline";
+		if (s == "dscpl")
+			s = "ds-cpl";
+		if (s == "tpr")
+			s = "xtpr";
+		if (s == "mon")
+			s = "monitor";
+		if (s == "sse4.1")
+			s = "sse41";
+		if (s == "sse4.2")
+			s = "sse42";
+		if (s == "avx1.0")
+			s = "avx";
+		if (s == "rdrand")
+			s = "rdrnd";
+		if (s == "lahf")
+			s = "lahf_lm";
+		if (s == "lahf")
+			s = "lahf_lm";
+		if (s == "ibrs")
+			s = "spec_ctrl";
+		if (s == "vmm")
+			s = "hypervisor";
+		if (s == "tsc_thread_offset")
+			s = "ia32_tsc_adjust";
+
 		if (macos_cpu_info_map.count(s) == 0) {
 			printf("Missing cpu feature : %s\n", s.c_str());
 			// EXPECT_TRUE(false);
