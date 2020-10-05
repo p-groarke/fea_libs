@@ -310,7 +310,7 @@ void do_basic_test() {
 
 	// erase
 	const KeyT init_hash_max = 7u;
-	const float max_load = map1.max_load_factor();
+	const double max_load = map1.max_load_factor();
 	const KeyT num_keys = KeyT(init_hash_max * max_load) + 1u;
 
 	{

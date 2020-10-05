@@ -51,384 +51,427 @@ TEST(hfsm, basics) {
 	fea::hfsm<transition, state> smachine{};
 
 
-	fea::hfsm_state<transition, state> walk_normal_state{ state::walk_normal,
-		"walk_normal" };
-	walk_normal_state.add_event<fea::hfsm_event::on_enter>(
-			[&](auto&) { state_test.enter_num++; });
-	walk_normal_state.add_event<fea::hfsm_event::on_update>([&](auto&) {
-		state_test.update_num++;
-		if (do_something) {
-			smachine.trigger<transition::do_jump>();
-			return;
-		}
-		if (state_machine_ready) {
-			smachine.trigger<transition::do_walk_crouch>();
-			return;
-		}
-	});
-	walk_normal_state.add_event<fea::hfsm_event::on_exit>(
-			[&](auto&) { state_test.exit_num++; });
-	walk_normal_state.add_event<fea::hfsm_event::on_enter_from, state::walk>(
-			[&](auto&) { state_test.enter_from_num++; });
-	walk_normal_state
-			.add_event<fea::hfsm_event::on_enter_from, state::walk_crouch>(
-					[&](auto&) { state_test.enter_from_num++; }, true);
-	walk_normal_state
-			.add_event<fea::hfsm_event::on_exit_to, state::walk_crouch>(
-					[&](auto&) { state_test.exit_to_num++; });
+	// Walk
+	{
+		fea::hfsm_state<transition, state> walk_normal_state{
+			state::walk_normal, "walk_normal"
+		};
+		walk_normal_state.add_event<fea::hfsm_event::on_enter>(
+				[&](auto&) { state_test.enter_num++; });
+		walk_normal_state.add_event<fea::hfsm_event::on_update>([&](auto&) {
+			state_test.update_num++;
+			if (do_something) {
+				smachine.trigger<transition::do_jump>();
+				return;
+			}
+			if (state_machine_ready) {
+				smachine.trigger<transition::do_walk_crouch>();
+				return;
+			}
+		});
+		walk_normal_state.add_event<fea::hfsm_event::on_exit>(
+				[&](auto&) { state_test.exit_num++; });
+		walk_normal_state
+				.add_event<fea::hfsm_event::on_enter_from, state::walk>(
+						[&](auto&) { state_test.enter_from_num++; });
+		walk_normal_state
+				.add_event<fea::hfsm_event::on_enter_from, state::walk_crouch>(
+						[&](auto&) { state_test.enter_from_num++; }, true);
+		walk_normal_state
+				.add_event<fea::hfsm_event::on_exit_to, state::walk_crouch>(
+						[&](auto&) { state_test.exit_to_num++; });
 
-	walk_normal_state
-			.add_transition<transition::do_walk_crouch, state::walk_crouch>();
+		walk_normal_state.add_transition<transition::do_walk_crouch,
+				state::walk_crouch>();
 
-	walk_normal_state.enable_parent_update();
+		walk_normal_state.enable_parent_update();
 
-	walk_normal_state.init();
+		walk_normal_state.init();
 
-	walk_normal_state.execute_event<fea::hfsm_event::on_enter>(
-			state::run, smachine);
-	walk_normal_state.execute_event<fea::hfsm_event::on_enter>(
-			state::jump, smachine);
-	walk_normal_state.execute_event<fea::hfsm_event::on_enter>(
-			state::walk, smachine);
-	walk_normal_state.execute_event<fea::hfsm_event::on_enter>(
-			state::walk_normal, smachine);
-	walk_normal_state.execute_event<fea::hfsm_event::on_enter>(
-			state::walk_crouch, smachine);
+		walk_normal_state.execute_event<fea::hfsm_event::on_enter>(
+				state::run, smachine);
+		walk_normal_state.execute_event<fea::hfsm_event::on_enter>(
+				state::jump, smachine);
+		walk_normal_state.execute_event<fea::hfsm_event::on_enter>(
+				state::walk, smachine);
+		walk_normal_state.execute_event<fea::hfsm_event::on_enter>(
+				state::walk_normal, smachine);
+		walk_normal_state.execute_event<fea::hfsm_event::on_enter>(
+				state::walk_crouch, smachine);
 
-	EXPECT_EQ(state_test.enter_num, 3u);
-	EXPECT_EQ(state_test.enter_from_num, 2u);
-	EXPECT_EQ(state_test.update_num, 0u);
-	EXPECT_EQ(state_test.exit_num, 0u);
-	EXPECT_EQ(state_test.exit_to_num, 0u);
-
-
-	fea::hfsm_state<transition, state> walk_crouch_state{ state::walk_crouch,
-		"walk_crouch" };
-	walk_crouch_state.add_event<fea::hfsm_event::on_enter>(
-			[&](auto&) { state_test.enter_num++; });
-	walk_crouch_state.add_event<fea::hfsm_event::on_update>([&](auto&) {
-		state_test.update_num++;
-		if (state_machine_ready)
-			smachine.trigger<transition::do_walk>();
-	});
-	walk_crouch_state.add_event<fea::hfsm_event::on_exit>(
-			[&](auto&) { state_test.exit_num++; });
-	walk_crouch_state.add_event<fea::hfsm_event::on_enter_from, state::walk>(
-			[&](auto&) { state_test.enter_from_num++; });
-	walk_crouch_state
-			.add_event<fea::hfsm_event::on_enter_from, state::walk_normal>(
-					[&](auto&) { state_test.enter_from_num++; }, true);
-	walk_crouch_state
-			.add_event<fea::hfsm_event::on_exit_to, state::walk_normal>(
-					[&](auto&) { state_test.exit_to_num++; }, true);
-	walk_crouch_state.add_event<fea::hfsm_event::on_exit_to, state::walk>(
-			[&, v = false](auto&) mutable {
-				state_test.exit_to_num++;
-				if (state_machine_ready && !v) {
-					v = true;
-					smachine.trigger<transition::do_run>();
-				}
-			},
-			true);
-
-	walk_crouch_state
-			.add_transition<transition::do_walk_normal, state::walk_normal>();
-	walk_crouch_state.add_transition<transition::do_walk, state::walk>();
-	walk_crouch_state.add_transition<transition::do_run, state::run>();
-	walk_crouch_state.enable_parent_update();
+		EXPECT_EQ(state_test.enter_num, 3u);
+		EXPECT_EQ(state_test.enter_from_num, 2u);
+		EXPECT_EQ(state_test.update_num, 0u);
+		EXPECT_EQ(state_test.exit_num, 0u);
+		EXPECT_EQ(state_test.exit_to_num, 0u);
 
 
-	fea::hfsm_state<transition, state> walk_state{ state::walk, "walk" };
-	walk_state.add_event<fea::hfsm_event::on_enter>(
-			[&](auto&) { state_test.enter_num++; });
+		fea::hfsm_state<transition, state> walk_crouch_state{
+			state::walk_crouch, "walk_crouch"
+		};
+		walk_crouch_state.add_event<fea::hfsm_event::on_enter>(
+				[&](auto&) { state_test.enter_num++; });
+		walk_crouch_state.add_event<fea::hfsm_event::on_update>([&](auto&) {
+			state_test.update_num++;
+			if (state_machine_ready)
+				smachine.trigger<transition::do_walk>();
+		});
+		walk_crouch_state.add_event<fea::hfsm_event::on_exit>(
+				[&](auto&) { state_test.exit_num++; });
+		walk_crouch_state
+				.add_event<fea::hfsm_event::on_enter_from, state::walk>(
+						[&](auto&) { state_test.enter_from_num++; });
+		walk_crouch_state
+				.add_event<fea::hfsm_event::on_enter_from, state::walk_normal>(
+						[&](auto&) { state_test.enter_from_num++; }, true);
+		walk_crouch_state
+				.add_event<fea::hfsm_event::on_exit_to, state::walk_normal>(
+						[&](auto&) { state_test.exit_to_num++; }, true);
+		walk_crouch_state.add_event<fea::hfsm_event::on_exit_to, state::walk>(
+				[&, v = false](auto&) mutable {
+					state_test.exit_to_num++;
+					if (state_machine_ready && !v) {
+						v = true;
+						smachine.trigger<transition::do_run>();
+					}
+				},
+				true);
 
-	walk_state.add_event<fea::hfsm_event::on_enter_from, state::run>(
-			[&](auto&) { state_test.enter_from_num++; });
-	walk_state.add_event<fea::hfsm_event::on_enter_from, state::walk_crouch>(
-			[&](auto&) { state_test.enter_from_num++; });
-
-	walk_state.add_event<fea::hfsm_event::on_update>([&](auto&) {
-		state_test.update_num++;
-		if (do_something) {
-			do_something = false;
-			smachine.trigger<transition::do_jump>();
-		}
-	});
-
-	walk_state.add_event<fea::hfsm_event::on_exit>(
-			[&](auto&) { state_test.exit_num++; });
-
-	walk_state.add_event<fea::hfsm_event::on_exit_to, state::jump>(
-			[&](auto&) { state_test.exit_to_num++; });
-
-	// walk_state.add_transition<transition::do_walk, state::walk>();
-	walk_state.add_transition<transition::do_run, state::run>();
-	walk_state.add_transition<transition::do_jump, state::jump>();
-
-	walk_state.add_substate<state::walk_normal>(std::move(walk_normal_state));
-	walk_state.add_substate<state::walk_crouch>(std::move(walk_crouch_state));
-
-	walk_state.init();
-
-	state_test = {};
-	walk_state.execute_event<fea::hfsm_event::on_enter>(state::run, smachine);
-	walk_state.execute_event<fea::hfsm_event::on_enter>(state::jump, smachine);
-	walk_state.execute_event<fea::hfsm_event::on_enter>(state::walk, smachine);
-	walk_state.execute_event<fea::hfsm_event::on_enter>(
-			state::walk_normal, smachine);
-	walk_state.execute_event<fea::hfsm_event::on_enter>(
-			state::walk_crouch, smachine);
-	EXPECT_EQ(state_test.enter_num, 3u);
-	EXPECT_EQ(state_test.enter_from_num, 2u);
-	EXPECT_EQ(state_test.update_num, 0u);
-	EXPECT_EQ(state_test.exit_num, 0u);
-	EXPECT_EQ(state_test.exit_to_num, 0u);
-
-	walk_state.execute_event<fea::hfsm_event::on_update>(
-			state::count, smachine);
-	EXPECT_EQ(state_test.enter_num, 3u);
-	EXPECT_EQ(state_test.enter_from_num, 2u);
-	EXPECT_EQ(state_test.update_num, 1u);
-	EXPECT_EQ(state_test.exit_num, 0u);
-	EXPECT_EQ(state_test.exit_to_num, 0u);
-
-	walk_state.execute_event<fea::hfsm_event::on_exit>(state::run, smachine);
-	walk_state.execute_event<fea::hfsm_event::on_exit>(state::jump, smachine);
-	walk_state.execute_event<fea::hfsm_event::on_exit>(state::walk, smachine);
-	walk_state.execute_event<fea::hfsm_event::on_exit>(
-			state::walk_normal, smachine);
-	walk_state.execute_event<fea::hfsm_event::on_exit>(
-			state::walk_crouch, smachine);
-	EXPECT_EQ(state_test.enter_num, 3u);
-	EXPECT_EQ(state_test.enter_from_num, 2u);
-	EXPECT_EQ(state_test.update_num, 1u);
-	EXPECT_EQ(state_test.exit_num, 4u);
-	EXPECT_EQ(state_test.exit_to_num, 1u);
-
-	fea::hfsm_state<transition, state>::tranny_info tg;
-	walk_state.transition<transition::do_walk>(tg);
-	EXPECT_EQ(tg.to, state::count);
-	tg = {};
-	walk_state.transition<transition::do_run>(tg);
-	EXPECT_EQ(tg.to, state::run);
-	tg = {};
-	walk_state.transition<transition::do_jump>(tg);
-	EXPECT_EQ(tg.to, state::jump);
-
-	smachine.add_state<state::walk>(std::move(walk_state));
-
-	fea::hfsm_state<transition, state> run_subsubsubsub_state{
-		state::run_sub_sub_sub_sub, "run_subsubsubsubstate"
-	};
-	run_subsubsubsub_state.add_event<fea::hfsm_event::on_enter>(
-			[&](auto&) { state_test.enter_num++; });
-	run_subsubsubsub_state.add_event<fea::hfsm_event::on_update>([&](auto&) {
-		state_test.update_num++;
-		if (state_machine_ready)
-			smachine.trigger<transition::do_walk>();
-	});
-	run_subsubsubsub_state.add_event<fea::hfsm_event::on_exit>(
-			[&](auto&) { state_test.exit_num++; });
-
-	fea::hfsm_state<transition, state> run_subsubsub_state{
-		state::run_sub_sub_sub, "run_subsubsubstate"
-	};
-	run_subsubsub_state.add_event<fea::hfsm_event::on_enter>(
-			[&](auto&) { state_test.enter_num++; });
-	run_subsubsub_state.add_event<fea::hfsm_event::on_update>([&](auto&) {
-		state_test.update_num++;
-		if (state_machine_ready)
-			smachine.trigger<transition::do_walk>();
-	});
-	run_subsubsub_state.add_event<fea::hfsm_event::on_exit>(
-			[&](auto&) { state_test.exit_num++; });
-
-	run_subsubsub_state.add_substate<state::run_sub_sub_sub_sub>(
-			std::move(run_subsubsubsub_state));
-
-	fea::hfsm_state<transition, state> run_subsub_state{ state::run_sub_sub,
-		"run_subsubstate" };
-	run_subsub_state.add_event<fea::hfsm_event::on_enter>(
-			[&](auto&) { state_test.enter_num++; });
-	run_subsub_state.add_event<fea::hfsm_event::on_update>([&](auto&) {
-		state_test.update_num++;
-		if (state_machine_ready)
-			smachine.trigger<transition::do_walk>();
-	});
-	run_subsub_state.add_event<fea::hfsm_event::on_exit>(
-			[&](auto&) { state_test.exit_num++; });
-
-	run_subsub_state.add_substate<state::run_sub_sub_sub>(
-			std::move(run_subsubsub_state));
-
-	fea::hfsm_state<transition, state> run_sub_state{ state::run_sub,
-		"run_substate" };
-	run_sub_state.add_event<fea::hfsm_event::on_enter>(
-			[&](auto&) { state_test.enter_num++; });
-	run_sub_state.add_event<fea::hfsm_event::on_update>([&](auto&) {
-		state_test.update_num++;
-		if (state_machine_ready)
-			smachine.trigger<transition::do_walk>();
-	});
-	run_sub_state.add_event<fea::hfsm_event::on_exit>(
-			[&](auto&) { state_test.exit_num++; });
-
-	run_sub_state.add_substate<state::run_sub_sub>(std::move(run_subsub_state));
-
-	fea::hfsm_state<transition, state> run_state{ state::run, "run" };
-	run_state.add_event<fea::hfsm_event::on_enter>(
-			[&](auto&) { state_test.enter_num++; });
-
-	run_state.add_event<fea::hfsm_event::on_enter_from, state::walk>(
-			[&](auto&) { state_test.enter_from_num++; });
-
-	run_state.add_event<fea::hfsm_event::on_update>([&](auto&) {
-		state_test.update_num++;
-		if (state_machine_ready)
-			smachine.trigger<transition::do_walk>();
-	});
-
-	run_state.add_event<fea::hfsm_event::on_exit>(
-			[&](auto&) { state_test.exit_num++; });
-
-	run_state.add_event<fea::hfsm_event::on_exit_to, state::jump>(
-			[&](auto&) { state_test.exit_to_num++; });
-
-	run_state.add_transition<transition::do_walk, state::walk>();
-	run_state.add_transition<transition::do_jump, state::jump>();
-
-	run_state.add_substate<state::run_sub>(std::move(run_sub_state));
-
-	run_state.init();
-
-	state_test = {};
-	run_state.execute_event<fea::hfsm_event::on_enter>(state::run, smachine);
-	run_state.execute_event<fea::hfsm_event::on_enter>(state::jump, smachine);
-	run_state.execute_event<fea::hfsm_event::on_enter>(state::walk, smachine);
-	run_state.execute_event<fea::hfsm_event::on_enter>(
-			state::walk_normal, smachine);
-	run_state.execute_event<fea::hfsm_event::on_enter>(
-			state::walk_crouch, smachine);
-	EXPECT_EQ(state_test.enter_num, 4u);
-	EXPECT_EQ(state_test.enter_from_num, 1u);
-	EXPECT_EQ(state_test.update_num, 0u);
-	EXPECT_EQ(state_test.exit_num, 0u);
-	EXPECT_EQ(state_test.exit_to_num, 0u);
-
-	run_state.execute_event<fea::hfsm_event::on_update>(state::run, smachine);
-	run_state.execute_event<fea::hfsm_event::on_update>(state::jump, smachine);
-	run_state.execute_event<fea::hfsm_event::on_update>(state::walk, smachine);
-	run_state.execute_event<fea::hfsm_event::on_update>(
-			state::walk_normal, smachine);
-	run_state.execute_event<fea::hfsm_event::on_update>(
-			state::walk_crouch, smachine);
-	EXPECT_EQ(state_test.enter_num, 4u);
-	EXPECT_EQ(state_test.enter_from_num, 1u);
-	EXPECT_EQ(state_test.update_num, 5u); // parent update not enabled
-	EXPECT_EQ(state_test.exit_num, 0u);
-	EXPECT_EQ(state_test.exit_to_num, 0u);
-
-	run_state.execute_event<fea::hfsm_event::on_exit>(state::run, smachine);
-	run_state.execute_event<fea::hfsm_event::on_exit>(state::jump, smachine);
-	run_state.execute_event<fea::hfsm_event::on_exit>(state::walk, smachine);
-	run_state.execute_event<fea::hfsm_event::on_exit>(
-			state::walk_normal, smachine);
-	run_state.execute_event<fea::hfsm_event::on_exit>(
-			state::walk_crouch, smachine);
-	EXPECT_EQ(state_test.enter_num, 4u);
-	EXPECT_EQ(state_test.enter_from_num, 1u);
-	EXPECT_EQ(state_test.update_num, 5u);
-	EXPECT_EQ(state_test.exit_num, 4u);
-	EXPECT_EQ(state_test.exit_to_num, 1u);
-
-	tg = {};
-	run_state.transition<transition::do_walk>(tg);
-	EXPECT_EQ(tg.to, state::walk);
-	tg = {};
-	run_state.transition<transition::do_run>(tg);
-	EXPECT_EQ(tg.to, state::count);
-	tg = {};
-	run_state.transition<transition::do_jump>(tg);
-	EXPECT_EQ(tg.to, state::jump);
-
-	smachine.add_state<state::run>(std::move(run_state));
+		walk_crouch_state.add_transition<transition::do_walk_normal,
+				state::walk_normal>();
+		walk_crouch_state.add_transition<transition::do_walk, state::walk>();
+		walk_crouch_state.add_transition<transition::do_run, state::run>();
+		walk_crouch_state.enable_parent_update();
 
 
-	fea::hfsm_state<transition, state> jump_state{ state::jump, "jump" };
-	jump_state.add_event<fea::hfsm_event::on_enter>(
-			[&](auto&) { state_test.enter_num++; });
-	jump_state.add_event<fea::hfsm_event::on_update>([&](auto&) {
-		state_test.update_num++;
-		if (state_machine_ready)
-			smachine.trigger<transition::do_run>();
-	});
-	jump_state.add_event<fea::hfsm_event::on_exit>(
-			[&](auto&) { state_test.exit_num++; });
-	jump_state.add_event<fea::hfsm_event::on_enter_from, state::walk>(
-			[&](auto&) { state_test.enter_from_num++; });
-	jump_state.add_event<fea::hfsm_event::on_enter_from, state::run>(
-			[&](auto&) { state_test.enter_from_num++; });
+		fea::hfsm_state<transition, state> walk_state{ state::walk, "walk" };
+		walk_state.add_event<fea::hfsm_event::on_enter>(
+				[&](auto&) { state_test.enter_num++; });
 
-	jump_state.add_transition<transition::do_walk, state::walk>();
-	jump_state.add_transition<transition::do_run, state::run>();
-	jump_state.add_guard_transition<transition::do_walk, state::walk_crouch>(
-			[&]() { return false; });
-	jump_state.add_guard_transition<transition::do_walk, state::walk_crouch>(
-			[&]() { return true; });
-	jump_state.add_guard_transition<transition::do_walk, state::walk_normal>(
-			[&]() { return true; });
+		walk_state.add_event<fea::hfsm_event::on_enter_from, state::run>(
+				[&](auto&) { state_test.enter_from_num++; });
+		walk_state
+				.add_event<fea::hfsm_event::on_enter_from, state::walk_crouch>(
+						[&](auto&) { state_test.enter_from_num++; });
 
-	state_test = {};
-	jump_state.execute_event<fea::hfsm_event::on_enter>(state::run, smachine);
-	jump_state.execute_event<fea::hfsm_event::on_enter>(state::jump, smachine);
-	jump_state.execute_event<fea::hfsm_event::on_enter>(state::walk, smachine);
-	jump_state.execute_event<fea::hfsm_event::on_enter>(
-			state::walk_normal, smachine);
-	jump_state.execute_event<fea::hfsm_event::on_enter>(
-			state::walk_crouch, smachine);
-	EXPECT_EQ(state_test.enter_num, 3u);
-	EXPECT_EQ(state_test.enter_from_num, 2u);
-	EXPECT_EQ(state_test.update_num, 0u);
-	EXPECT_EQ(state_test.exit_num, 0u);
-	EXPECT_EQ(state_test.exit_to_num, 0u);
+		walk_state.add_event<fea::hfsm_event::on_update>([&](auto&) {
+			state_test.update_num++;
+			if (do_something) {
+				do_something = false;
+				smachine.trigger<transition::do_jump>();
+			}
+		});
 
-	jump_state.execute_event<fea::hfsm_event::on_update>(state::run, smachine);
-	jump_state.execute_event<fea::hfsm_event::on_update>(state::jump, smachine);
-	jump_state.execute_event<fea::hfsm_event::on_update>(state::walk, smachine);
-	jump_state.execute_event<fea::hfsm_event::on_update>(
-			state::walk_normal, smachine);
-	jump_state.execute_event<fea::hfsm_event::on_update>(
-			state::walk_crouch, smachine);
-	EXPECT_EQ(state_test.enter_num, 3u);
-	EXPECT_EQ(state_test.enter_from_num, 2u);
-	EXPECT_EQ(state_test.update_num, 5u);
-	EXPECT_EQ(state_test.exit_num, 0u);
-	EXPECT_EQ(state_test.exit_to_num, 0u);
+		walk_state.add_event<fea::hfsm_event::on_exit>(
+				[&](auto&) { state_test.exit_num++; });
 
-	jump_state.execute_event<fea::hfsm_event::on_exit>(state::run, smachine);
-	jump_state.execute_event<fea::hfsm_event::on_exit>(state::jump, smachine);
-	jump_state.execute_event<fea::hfsm_event::on_exit>(state::walk, smachine);
-	jump_state.execute_event<fea::hfsm_event::on_exit>(
-			state::walk_normal, smachine);
-	jump_state.execute_event<fea::hfsm_event::on_exit>(
-			state::walk_crouch, smachine);
-	EXPECT_EQ(state_test.enter_num, 3u);
-	EXPECT_EQ(state_test.enter_from_num, 2u);
-	EXPECT_EQ(state_test.update_num, 5u);
-	EXPECT_EQ(state_test.exit_num, 5u);
-	EXPECT_EQ(state_test.exit_to_num, 0u);
+		walk_state.add_event<fea::hfsm_event::on_exit_to, state::jump>(
+				[&](auto&) { state_test.exit_to_num++; });
 
-	tg = {};
-	jump_state.transition<transition::do_walk>(tg);
-	EXPECT_EQ(tg.to, state::walk_crouch);
-	tg = {};
-	jump_state.transition<transition::do_run>(tg);
-	EXPECT_EQ(tg.to, state::run);
-	tg = {};
-	jump_state.transition<transition::do_jump>(tg);
-	EXPECT_EQ(tg.to, state::count);
+		// walk_state.add_transition<transition::do_walk, state::walk>();
+		walk_state.add_transition<transition::do_run, state::run>();
+		walk_state.add_transition<transition::do_jump, state::jump>();
 
-	smachine.add_state<state::jump>(std::move(jump_state));
+		walk_state.add_substate<state::walk_normal>(
+				std::move(walk_normal_state));
+		walk_state.add_substate<state::walk_crouch>(
+				std::move(walk_crouch_state));
+
+		walk_state.init();
+
+		state_test = {};
+		walk_state.execute_event<fea::hfsm_event::on_enter>(
+				state::run, smachine);
+		walk_state.execute_event<fea::hfsm_event::on_enter>(
+				state::jump, smachine);
+		walk_state.execute_event<fea::hfsm_event::on_enter>(
+				state::walk, smachine);
+		walk_state.execute_event<fea::hfsm_event::on_enter>(
+				state::walk_normal, smachine);
+		walk_state.execute_event<fea::hfsm_event::on_enter>(
+				state::walk_crouch, smachine);
+		EXPECT_EQ(state_test.enter_num, 3u);
+		EXPECT_EQ(state_test.enter_from_num, 2u);
+		EXPECT_EQ(state_test.update_num, 0u);
+		EXPECT_EQ(state_test.exit_num, 0u);
+		EXPECT_EQ(state_test.exit_to_num, 0u);
+
+		walk_state.execute_event<fea::hfsm_event::on_update>(
+				state::count, smachine);
+		EXPECT_EQ(state_test.enter_num, 3u);
+		EXPECT_EQ(state_test.enter_from_num, 2u);
+		EXPECT_EQ(state_test.update_num, 1u);
+		EXPECT_EQ(state_test.exit_num, 0u);
+		EXPECT_EQ(state_test.exit_to_num, 0u);
+
+		walk_state.execute_event<fea::hfsm_event::on_exit>(
+				state::run, smachine);
+		walk_state.execute_event<fea::hfsm_event::on_exit>(
+				state::jump, smachine);
+		walk_state.execute_event<fea::hfsm_event::on_exit>(
+				state::walk, smachine);
+		walk_state.execute_event<fea::hfsm_event::on_exit>(
+				state::walk_normal, smachine);
+		walk_state.execute_event<fea::hfsm_event::on_exit>(
+				state::walk_crouch, smachine);
+		EXPECT_EQ(state_test.enter_num, 3u);
+		EXPECT_EQ(state_test.enter_from_num, 2u);
+		EXPECT_EQ(state_test.update_num, 1u);
+		EXPECT_EQ(state_test.exit_num, 4u);
+		EXPECT_EQ(state_test.exit_to_num, 1u);
+
+		fea::hfsm_state<transition, state>::tranny_info tg;
+		walk_state.transition<transition::do_walk>(tg);
+		EXPECT_EQ(tg.to, state::count);
+		tg = {};
+		walk_state.transition<transition::do_run>(tg);
+		EXPECT_EQ(tg.to, state::run);
+		tg = {};
+		walk_state.transition<transition::do_jump>(tg);
+		EXPECT_EQ(tg.to, state::jump);
+
+		smachine.add_state<state::walk>(std::move(walk_state));
+	}
+
+	// Run
+	{
+		fea::hfsm_state<transition, state> run_subsubsubsub_state{
+			state::run_sub_sub_sub_sub, "run_subsubsubsubstate"
+		};
+		run_subsubsubsub_state.add_event<fea::hfsm_event::on_enter>(
+				[&](auto&) { state_test.enter_num++; });
+		run_subsubsubsub_state.add_event<fea::hfsm_event::on_update>(
+				[&](auto&) {
+					state_test.update_num++;
+					if (state_machine_ready)
+						smachine.trigger<transition::do_walk>();
+				});
+		run_subsubsubsub_state.add_event<fea::hfsm_event::on_exit>(
+				[&](auto&) { state_test.exit_num++; });
+
+		fea::hfsm_state<transition, state> run_subsubsub_state{
+			state::run_sub_sub_sub, "run_subsubsubstate"
+		};
+		run_subsubsub_state.add_event<fea::hfsm_event::on_enter>(
+				[&](auto&) { state_test.enter_num++; });
+		run_subsubsub_state.add_event<fea::hfsm_event::on_update>([&](auto&) {
+			state_test.update_num++;
+			if (state_machine_ready)
+				smachine.trigger<transition::do_walk>();
+		});
+		run_subsubsub_state.add_event<fea::hfsm_event::on_exit>(
+				[&](auto&) { state_test.exit_num++; });
+
+		run_subsubsub_state.add_substate<state::run_sub_sub_sub_sub>(
+				std::move(run_subsubsubsub_state));
+
+		fea::hfsm_state<transition, state> run_subsub_state{ state::run_sub_sub,
+			"run_subsubstate" };
+		run_subsub_state.add_event<fea::hfsm_event::on_enter>(
+				[&](auto&) { state_test.enter_num++; });
+		run_subsub_state.add_event<fea::hfsm_event::on_update>([&](auto&) {
+			state_test.update_num++;
+			if (state_machine_ready)
+				smachine.trigger<transition::do_walk>();
+		});
+		run_subsub_state.add_event<fea::hfsm_event::on_exit>(
+				[&](auto&) { state_test.exit_num++; });
+
+		run_subsub_state.add_substate<state::run_sub_sub_sub>(
+				std::move(run_subsubsub_state));
+
+		fea::hfsm_state<transition, state> run_sub_state{ state::run_sub,
+			"run_substate" };
+		run_sub_state.add_event<fea::hfsm_event::on_enter>(
+				[&](auto&) { state_test.enter_num++; });
+		run_sub_state.add_event<fea::hfsm_event::on_update>([&](auto&) {
+			state_test.update_num++;
+			if (state_machine_ready)
+				smachine.trigger<transition::do_walk>();
+		});
+		run_sub_state.add_event<fea::hfsm_event::on_exit>(
+				[&](auto&) { state_test.exit_num++; });
+
+		run_sub_state.add_substate<state::run_sub_sub>(
+				std::move(run_subsub_state));
+
+		fea::hfsm_state<transition, state> run_state{ state::run, "run" };
+		run_state.add_event<fea::hfsm_event::on_enter>(
+				[&](auto&) { state_test.enter_num++; });
+
+		run_state.add_event<fea::hfsm_event::on_enter_from, state::walk>(
+				[&](auto&) { state_test.enter_from_num++; });
+
+		run_state.add_event<fea::hfsm_event::on_update>([&](auto&) {
+			state_test.update_num++;
+			if (state_machine_ready)
+				smachine.trigger<transition::do_walk>();
+		});
+
+		run_state.add_event<fea::hfsm_event::on_exit>(
+				[&](auto&) { state_test.exit_num++; });
+
+		run_state.add_event<fea::hfsm_event::on_exit_to, state::jump>(
+				[&](auto&) { state_test.exit_to_num++; });
+
+		run_state.add_transition<transition::do_walk, state::walk>();
+		run_state.add_transition<transition::do_jump, state::jump>();
+
+		run_state.add_substate<state::run_sub>(std::move(run_sub_state));
+
+		run_state.init();
+
+		state_test = {};
+		run_state.execute_event<fea::hfsm_event::on_enter>(
+				state::run, smachine);
+		run_state.execute_event<fea::hfsm_event::on_enter>(
+				state::jump, smachine);
+		run_state.execute_event<fea::hfsm_event::on_enter>(
+				state::walk, smachine);
+		run_state.execute_event<fea::hfsm_event::on_enter>(
+				state::walk_normal, smachine);
+		run_state.execute_event<fea::hfsm_event::on_enter>(
+				state::walk_crouch, smachine);
+		EXPECT_EQ(state_test.enter_num, 4u);
+		EXPECT_EQ(state_test.enter_from_num, 1u);
+		EXPECT_EQ(state_test.update_num, 0u);
+		EXPECT_EQ(state_test.exit_num, 0u);
+		EXPECT_EQ(state_test.exit_to_num, 0u);
+
+		run_state.execute_event<fea::hfsm_event::on_update>(
+				state::run, smachine);
+		run_state.execute_event<fea::hfsm_event::on_update>(
+				state::jump, smachine);
+		run_state.execute_event<fea::hfsm_event::on_update>(
+				state::walk, smachine);
+		run_state.execute_event<fea::hfsm_event::on_update>(
+				state::walk_normal, smachine);
+		run_state.execute_event<fea::hfsm_event::on_update>(
+				state::walk_crouch, smachine);
+		EXPECT_EQ(state_test.enter_num, 4u);
+		EXPECT_EQ(state_test.enter_from_num, 1u);
+		EXPECT_EQ(state_test.update_num, 5u); // parent update not enabled
+		EXPECT_EQ(state_test.exit_num, 0u);
+		EXPECT_EQ(state_test.exit_to_num, 0u);
+
+		run_state.execute_event<fea::hfsm_event::on_exit>(state::run, smachine);
+		run_state.execute_event<fea::hfsm_event::on_exit>(
+				state::jump, smachine);
+		run_state.execute_event<fea::hfsm_event::on_exit>(
+				state::walk, smachine);
+		run_state.execute_event<fea::hfsm_event::on_exit>(
+				state::walk_normal, smachine);
+		run_state.execute_event<fea::hfsm_event::on_exit>(
+				state::walk_crouch, smachine);
+		EXPECT_EQ(state_test.enter_num, 4u);
+		EXPECT_EQ(state_test.enter_from_num, 1u);
+		EXPECT_EQ(state_test.update_num, 5u);
+		EXPECT_EQ(state_test.exit_num, 4u);
+		EXPECT_EQ(state_test.exit_to_num, 1u);
+
+		fea::hfsm_state<transition, state>::tranny_info tg;
+		run_state.transition<transition::do_walk>(tg);
+		EXPECT_EQ(tg.to, state::walk);
+		tg = {};
+		run_state.transition<transition::do_run>(tg);
+		EXPECT_EQ(tg.to, state::count);
+		tg = {};
+		run_state.transition<transition::do_jump>(tg);
+		EXPECT_EQ(tg.to, state::jump);
+
+		smachine.add_state<state::run>(std::move(run_state));
+	}
+
+	// Jump
+	{
+		fea::hfsm_state<transition, state> jump_state{ state::jump, "jump" };
+		jump_state.add_event<fea::hfsm_event::on_enter>(
+				[&](auto&) { state_test.enter_num++; });
+		jump_state.add_event<fea::hfsm_event::on_update>([&](auto&) {
+			state_test.update_num++;
+			if (state_machine_ready)
+				smachine.trigger<transition::do_run>();
+		});
+		jump_state.add_event<fea::hfsm_event::on_exit>(
+				[&](auto&) { state_test.exit_num++; });
+		jump_state.add_event<fea::hfsm_event::on_enter_from, state::walk>(
+				[&](auto&) { state_test.enter_from_num++; });
+		jump_state.add_event<fea::hfsm_event::on_enter_from, state::run>(
+				[&](auto&) { state_test.enter_from_num++; });
+
+		jump_state.add_transition<transition::do_walk, state::walk>();
+		jump_state.add_transition<transition::do_run, state::run>();
+		jump_state
+				.add_guard_transition<transition::do_walk, state::walk_crouch>(
+						[&]() { return false; });
+		jump_state
+				.add_guard_transition<transition::do_walk, state::walk_crouch>(
+						[&]() { return true; });
+		jump_state
+				.add_guard_transition<transition::do_walk, state::walk_normal>(
+						[&]() { return true; });
+
+		state_test = {};
+		jump_state.execute_event<fea::hfsm_event::on_enter>(
+				state::run, smachine);
+		jump_state.execute_event<fea::hfsm_event::on_enter>(
+				state::jump, smachine);
+		jump_state.execute_event<fea::hfsm_event::on_enter>(
+				state::walk, smachine);
+		jump_state.execute_event<fea::hfsm_event::on_enter>(
+				state::walk_normal, smachine);
+		jump_state.execute_event<fea::hfsm_event::on_enter>(
+				state::walk_crouch, smachine);
+		EXPECT_EQ(state_test.enter_num, 3u);
+		EXPECT_EQ(state_test.enter_from_num, 2u);
+		EXPECT_EQ(state_test.update_num, 0u);
+		EXPECT_EQ(state_test.exit_num, 0u);
+		EXPECT_EQ(state_test.exit_to_num, 0u);
+
+		jump_state.execute_event<fea::hfsm_event::on_update>(
+				state::run, smachine);
+		jump_state.execute_event<fea::hfsm_event::on_update>(
+				state::jump, smachine);
+		jump_state.execute_event<fea::hfsm_event::on_update>(
+				state::walk, smachine);
+		jump_state.execute_event<fea::hfsm_event::on_update>(
+				state::walk_normal, smachine);
+		jump_state.execute_event<fea::hfsm_event::on_update>(
+				state::walk_crouch, smachine);
+		EXPECT_EQ(state_test.enter_num, 3u);
+		EXPECT_EQ(state_test.enter_from_num, 2u);
+		EXPECT_EQ(state_test.update_num, 5u);
+		EXPECT_EQ(state_test.exit_num, 0u);
+		EXPECT_EQ(state_test.exit_to_num, 0u);
+
+		jump_state.execute_event<fea::hfsm_event::on_exit>(
+				state::run, smachine);
+		jump_state.execute_event<fea::hfsm_event::on_exit>(
+				state::jump, smachine);
+		jump_state.execute_event<fea::hfsm_event::on_exit>(
+				state::walk, smachine);
+		jump_state.execute_event<fea::hfsm_event::on_exit>(
+				state::walk_normal, smachine);
+		jump_state.execute_event<fea::hfsm_event::on_exit>(
+				state::walk_crouch, smachine);
+		EXPECT_EQ(state_test.enter_num, 3u);
+		EXPECT_EQ(state_test.enter_from_num, 2u);
+		EXPECT_EQ(state_test.update_num, 5u);
+		EXPECT_EQ(state_test.exit_num, 5u);
+		EXPECT_EQ(state_test.exit_to_num, 0u);
+
+		fea::hfsm_state<transition, state>::tranny_info tg;
+		jump_state.transition<transition::do_walk>(tg);
+		EXPECT_EQ(tg.to, state::walk_crouch);
+		tg = {};
+		jump_state.transition<transition::do_run>(tg);
+		EXPECT_EQ(tg.to, state::run);
+		tg = {};
+		jump_state.transition<transition::do_jump>(tg);
+		EXPECT_EQ(tg.to, state::count);
+
+		smachine.add_state<state::jump>(std::move(jump_state));
+	}
 
 	state_machine_ready = true; // for tests
 	smachine.add_transition_names(transition_names);
