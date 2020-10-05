@@ -56,7 +56,10 @@ void print_bool(const char* str, bool b) {
 }
 } // namespace detail
 
-struct cpu_id final {
+// Loosely based off :
+// https://docs.microsoft.com/en-us/cpp/intrinsics/cpuid-cpuidex?view=vs-2019
+// leaf is EAX, subleaf is ECX.
+struct cpu_id {
 	cpu_id() = default;
 	cpu_id(const cpu_id&) = default;
 	cpu_id(cpu_id&&) = default;
@@ -128,7 +131,7 @@ struct cpu_id final {
 	std::bitset<32> edx = { 0 };
 };
 
-struct cpu_info_t final {
+struct cpu_info_t {
 	cpu_info_t() {
 		{ // Functions
 			std::vector<cpu_id> functions = {};
@@ -159,14 +162,15 @@ struct cpu_info_t final {
 				_is_amd = true;
 			}
 
-			// Processor Info and Feature Bits (0x1)
+			// Processor Info and Feature Bits (EAX=1)
 			if (functions.size() > 1) {
-				_feature_bits = functions[1];
+				_eax1 = functions[1];
 			}
 
-			// Features Extended (0x7)
+			// Features Extended (EAX=7)
 			if (functions.size() > 7) {
-				_feature_bits_more = functions[7];
+				_eax7_ecx0 = functions[7];
+				// TODO : subleaf ECX=1
 			}
 		}
 
@@ -183,7 +187,12 @@ struct cpu_info_t final {
 				ext_functions.emplace_back(i, 0);
 			}
 
-			// Processor Brand String (0x80000004)
+			// Extended Processor Info and Feature Bits (0x80000001)
+			if (highest_ext_func_id >= 0x80000001) {
+				_eax80000001 = ext_functions[1];
+			}
+
+			// Processor Brand String (0x80000002 to 0x80000004)
 			char brand[64] = { 0 };
 			if (highest_ext_func_id >= 0x80000004) {
 				for (size_t i = 2; i <= 4; ++i) {
@@ -193,11 +202,6 @@ struct cpu_info_t final {
 					std::copy(as_string.begin(), as_string.end(), &brand[pos]);
 				}
 				_brand = brand;
-			}
-
-			// Extended Processor Info and Feature Bits (0x80000001)
-			if (highest_ext_func_id >= 0x80000001) {
-				_ext_feature_bits = ext_functions[1];
 			}
 		}
 	}
@@ -223,361 +227,361 @@ public:
 	// EAX=1 CPUID feature bits
 	// EDX
 	bool fpu() const {
-		return _feature_bits.edx[0];
+		return _eax1.edx[0];
 	}
 	bool vme() const {
-		return _feature_bits.edx[1];
+		return _eax1.edx[1];
 	}
 	bool de() const {
-		return _feature_bits.edx[2];
+		return _eax1.edx[2];
 	}
 	bool pse() const {
-		return _feature_bits.edx[3];
+		return _eax1.edx[3];
 	}
 	bool tsc() const {
-		return _feature_bits.edx[4];
+		return _eax1.edx[4];
 	}
 	bool msr() const {
-		return _feature_bits.edx[5];
+		return _eax1.edx[5];
 	}
 	bool pae() const {
-		return _feature_bits.edx[6];
+		return _eax1.edx[6];
 	}
 	bool mce() const {
-		return _feature_bits.edx[7];
+		return _eax1.edx[7];
 	}
 	bool cx8() const {
-		return _feature_bits.edx[8];
+		return _eax1.edx[8];
 	}
 	bool apic() const {
-		return _feature_bits.edx[9];
+		return _eax1.edx[9];
 	}
 	// 10
 	bool sep() const {
-		return _feature_bits.edx[11];
+		return _eax1.edx[11];
 	}
 	bool mtrr() const {
-		return _feature_bits.edx[12];
+		return _eax1.edx[12];
 	}
 	bool pge() const {
-		return _feature_bits.edx[13];
+		return _eax1.edx[13];
 	}
 	bool mca() const {
-		return _feature_bits.edx[14];
+		return _eax1.edx[14];
 	}
 	bool cmov() const {
-		return _feature_bits.edx[15];
+		return _eax1.edx[15];
 	}
 	bool pat() const {
-		return _feature_bits.edx[16];
+		return _eax1.edx[16];
 	}
 	bool pse36() const {
-		return _feature_bits.edx[17];
+		return _eax1.edx[17];
 	}
 	bool psn() const {
-		return _feature_bits.edx[18];
+		return _eax1.edx[18];
 	}
 	bool clfsh() const {
-		return _feature_bits.edx[19];
+		return _eax1.edx[19];
 	}
 	// 20
 	bool ds() const {
-		return _feature_bits.edx[21];
+		return _eax1.edx[21];
 	}
 	bool acpi() const {
-		return _feature_bits.edx[22];
+		return _eax1.edx[22];
 	}
 	bool mmx() const {
-		return _feature_bits.edx[23];
+		return _eax1.edx[23];
 	}
 	bool fxsr() const {
-		return _feature_bits.edx[24];
+		return _eax1.edx[24];
 	}
 	bool sse() const {
-		return _feature_bits.edx[25];
+		return _eax1.edx[25];
 	}
 	bool sse2() const {
-		return _feature_bits.edx[26];
+		return _eax1.edx[26];
 	}
 	bool ss() const {
-		return _feature_bits.edx[27];
+		return _eax1.edx[27];
 	}
 	bool htt() const {
-		return _feature_bits.edx[28];
+		return _eax1.edx[28];
 	}
 	bool tm() const {
-		return _feature_bits.edx[29];
+		return _eax1.edx[29];
 	}
 	bool ia64() const {
-		return _feature_bits.edx[30];
+		return _eax1.edx[30];
 	}
 	bool pbe() const {
-		return _feature_bits.edx[31];
+		return _eax1.edx[31];
 	}
 
 	// ECX
 	bool sse3() const {
-		return _feature_bits.ecx[0];
+		return _eax1.ecx[0];
 	}
 	bool pclmulqdq() const {
-		return _feature_bits.ecx[1];
+		return _eax1.ecx[1];
 	}
 	bool dtes64() const {
-		return _feature_bits.ecx[2];
+		return _eax1.ecx[2];
 	}
 	bool monitor() const {
-		return _feature_bits.ecx[3];
+		return _eax1.ecx[3];
 	}
 	bool ds_cpl() const {
-		return _feature_bits.ecx[4];
+		return _eax1.ecx[4];
 	}
 	bool vmx() const {
-		return _feature_bits.ecx[5];
+		return _eax1.ecx[5];
 	}
 	bool smx() const {
-		return _feature_bits.ecx[6];
+		return _eax1.ecx[6];
 	}
 	bool est() const {
-		return _feature_bits.ecx[7];
+		return _eax1.ecx[7];
 	}
 	bool tm2() const {
-		return _feature_bits.ecx[8];
+		return _eax1.ecx[8];
 	}
 	bool ssse3() const {
-		return _feature_bits.ecx[9];
+		return _eax1.ecx[9];
 	}
 	bool cnxt_id() const {
-		return _feature_bits.ecx[10];
+		return _eax1.ecx[10];
 	}
 	bool sdbg() const {
-		return _feature_bits.ecx[11];
+		return _eax1.ecx[11];
 	}
 	bool fma() const {
-		return _feature_bits.ecx[12];
+		return _eax1.ecx[12];
 	}
 	bool cx16() const {
-		return _feature_bits.ecx[13];
+		return _eax1.ecx[13];
 	}
 	bool xtpr() const {
-		return _feature_bits.ecx[14];
+		return _eax1.ecx[14];
 	}
 	bool pdcm() const {
-		return _feature_bits.ecx[15];
+		return _eax1.ecx[15];
 	}
 	// 16
 	bool pcid() const {
-		return _feature_bits.ecx[17];
+		return _eax1.ecx[17];
 	}
 	bool dca() const {
-		return _feature_bits.ecx[18];
+		return _eax1.ecx[18];
 	}
 	bool sse41() const {
-		return _feature_bits.ecx[19];
+		return _eax1.ecx[19];
 	}
 	bool sse42() const {
-		return _feature_bits.ecx[20];
+		return _eax1.ecx[20];
 	}
 	bool x2apic() const {
-		return _feature_bits.ecx[21];
+		return _eax1.ecx[21];
 	}
 	bool movbe() const {
-		return _feature_bits.ecx[22];
+		return _eax1.ecx[22];
 	}
 	bool popcnt() const {
-		return _feature_bits.ecx[23];
+		return _eax1.ecx[23];
 	}
 	bool tsc_deadline() const {
-		return _feature_bits.ecx[24];
+		return _eax1.ecx[24];
 	}
 	bool aes() const {
-		return _feature_bits.ecx[25];
+		return _eax1.ecx[25];
 	}
 	bool xsave() const {
-		return _feature_bits.ecx[26];
+		return _eax1.ecx[26];
 	}
 	bool osxsave() const {
-		return _feature_bits.ecx[27];
+		return _eax1.ecx[27];
 	}
 	bool avx() const {
-		return _feature_bits.ecx[28];
+		return _eax1.ecx[28];
 	}
 	bool f16c() const {
-		return _feature_bits.ecx[29];
+		return _eax1.ecx[29];
 	}
 	bool rdrnd() const {
-		return _feature_bits.ecx[30];
+		return _eax1.ecx[30];
 	}
 	bool hypervisor() const {
-		return _feature_bits.ecx[31];
+		return _eax1.ecx[31];
 	}
 
 
 	// EAX=7 CPUID feature bits
 	// EBX
 	bool fsgsbase() const {
-		return _feature_bits_more.ebx[0];
+		return _eax7_ecx0.ebx[0];
 	}
 	bool ia32_tsc_adjust() const {
-		return _feature_bits_more.ebx[1];
+		return _eax7_ecx0.ebx[1];
 	}
 	bool sgx() const {
-		return _feature_bits_more.ebx[2];
+		return _eax7_ecx0.ebx[2];
 	}
 	bool bmi1() const {
-		return _feature_bits_more.ebx[3];
+		return _eax7_ecx0.ebx[3];
 	}
 	bool hle() const {
-		return _feature_bits_more.ebx[4];
+		return _eax7_ecx0.ebx[4];
 	}
 	bool avx2() const {
-		return _feature_bits_more.ebx[5];
+		return _eax7_ecx0.ebx[5];
 	}
 	// 6
 	bool smep() const {
-		return _feature_bits_more.ebx[7];
+		return _eax7_ecx0.ebx[7];
 	}
 	bool bmi2() const {
-		return _feature_bits_more.ebx[8];
+		return _eax7_ecx0.ebx[8];
 	}
 	bool erms() const {
-		return _feature_bits_more.ebx[9];
+		return _eax7_ecx0.ebx[9];
 	}
 	bool invpcid() const {
-		return _feature_bits_more.ebx[10];
+		return _eax7_ecx0.ebx[10];
 	}
 	bool rtm() const {
-		return _feature_bits_more.ebx[11];
+		return _eax7_ecx0.ebx[11];
 	}
 	bool pqm() const {
-		return _feature_bits_more.ebx[12];
+		return _eax7_ecx0.ebx[12];
 	}
 	// 13
 	bool mpx() const {
-		return _feature_bits_more.ebx[14];
+		return _eax7_ecx0.ebx[14];
 	}
 	bool pqe() const {
-		return _feature_bits_more.ebx[15];
+		return _eax7_ecx0.ebx[15];
 	}
 	bool avx512f() const {
-		return _feature_bits_more.ebx[16];
+		return _eax7_ecx0.ebx[16];
 	}
 	bool avx512dq() const {
-		return _feature_bits_more.ebx[17];
+		return _eax7_ecx0.ebx[17];
 	}
 	bool rdseed() const {
-		return _feature_bits_more.ebx[18];
+		return _eax7_ecx0.ebx[18];
 	}
 	bool adx() const {
-		return _feature_bits_more.ebx[19];
+		return _eax7_ecx0.ebx[19];
 	}
 	bool smap() const {
-		return _feature_bits_more.ebx[20];
+		return _eax7_ecx0.ebx[20];
 	}
 	bool avx512ifma() const {
-		return _feature_bits_more.ebx[21];
+		return _eax7_ecx0.ebx[21];
 	}
 	bool pcommit() const {
-		return _feature_bits_more.ebx[22];
+		return _eax7_ecx0.ebx[22];
 	}
 	bool clflushopt() const {
-		return _feature_bits_more.ebx[23];
+		return _eax7_ecx0.ebx[23];
 	}
 	bool clwb() const {
-		return _feature_bits_more.ebx[24];
+		return _eax7_ecx0.ebx[24];
 	}
 	bool intel_pt() const {
-		return _feature_bits_more.ebx[25];
+		return _eax7_ecx0.ebx[25];
 	}
 	bool avx512pf() const {
-		return _feature_bits_more.ebx[26];
+		return _eax7_ecx0.ebx[26];
 	}
 	bool avx512er() const {
-		return _feature_bits_more.ebx[27];
+		return _eax7_ecx0.ebx[27];
 	}
 	bool avx512cd() const {
-		return _feature_bits_more.ebx[28];
+		return _eax7_ecx0.ebx[28];
 	}
 	bool sha() const {
-		return _feature_bits_more.ebx[29];
+		return _eax7_ecx0.ebx[29];
 	}
 	bool avx512bw() const {
-		return _feature_bits_more.ebx[30];
+		return _eax7_ecx0.ebx[30];
 	}
 	bool avx512vl() const {
-		return _feature_bits_more.ebx[31];
+		return _eax7_ecx0.ebx[31];
 	}
 
 	// ECX
 	bool prefetchwt1() const {
-		return _feature_bits_more.ecx[0];
+		return _eax7_ecx0.ecx[0];
 	}
 	bool avx512vbmi() const {
-		return _feature_bits_more.ecx[1];
+		return _eax7_ecx0.ecx[1];
 	}
 	bool umip() const {
-		return _feature_bits_more.ecx[2];
+		return _eax7_ecx0.ecx[2];
 	}
 	bool pku() const {
-		return _feature_bits_more.ecx[3];
+		return _eax7_ecx0.ecx[3];
 	}
 	bool ospke() const {
-		return _feature_bits_more.ecx[4];
+		return _eax7_ecx0.ecx[4];
 	}
 	// 5
 	bool avx512vbmi2() const {
-		return _feature_bits_more.ecx[6];
+		return _eax7_ecx0.ecx[6];
 	}
 	// 7
 	bool gfni() const {
-		return _feature_bits_more.ecx[8];
+		return _eax7_ecx0.ecx[8];
 	}
 	bool vaes() const {
-		return _feature_bits_more.ecx[9];
+		return _eax7_ecx0.ecx[9];
 	}
 	bool vpclmulqdq() const {
-		return _feature_bits_more.ecx[10];
+		return _eax7_ecx0.ecx[10];
 	}
 	bool avx512vnni() const {
-		return _feature_bits_more.ecx[11];
+		return _eax7_ecx0.ecx[11];
 	}
 	bool avx512bitalg() const {
-		return _feature_bits_more.ecx[12];
+		return _eax7_ecx0.ecx[12];
 	}
 	// 13
 	bool avx512vpopcntdq() const {
-		return _feature_bits_more.ecx[14];
+		return _eax7_ecx0.ecx[14];
 	}
 	// 15 - 16
 	unsigned short mawau() const {
-		uint32_t bits = _feature_bits_more.ecx.to_ulong();
+		uint32_t bits = _eax7_ecx0.ecx.to_ulong();
 		bits <<= 10;
 		bits >>= 27;
 		return static_cast<unsigned short>(bits);
 	}
 	bool rdpid() const {
-		return _feature_bits_more.ecx[22];
+		return _eax7_ecx0.ecx[22];
 	}
 	// 23 - 29
 	bool sgx_lc() const {
-		return _feature_bits_more.ecx[30];
+		return _eax7_ecx0.ecx[30];
 	}
 	// 30
 
 	// EDX
 	// 0 - 1
 	bool avx512_4vnniw() const {
-		return _feature_bits_more.edx[2];
+		return _eax7_ecx0.edx[2];
 	}
 	bool avx512_4fmaps() const {
-		return _feature_bits_more.edx[3];
+		return _eax7_ecx0.edx[3];
 	}
 	// 4 - 17
 	bool pconfig() const {
-		return _feature_bits_more.edx[19];
+		return _eax7_ecx0.edx[19];
 	}
 	// 19 - 25
 	bool spec_ctrl() const {
-		return _feature_bits_more.edx[26];
+		return _eax7_ecx0.edx[26];
 	}
 	// 27 - 31
 
@@ -585,173 +589,173 @@ public:
 	// EAX=80000001h CPUID feature bits
 	// EDX
 	bool fpu_ext() const {
-		return _ext_feature_bits.edx[0];
+		return _eax80000001.edx[0];
 	}
 	bool vme_ext() const {
-		return _ext_feature_bits.edx[1];
+		return _eax80000001.edx[1];
 	}
 	bool de_ext() const {
-		return _ext_feature_bits.edx[2];
+		return _eax80000001.edx[2];
 	}
 	bool pse_ext() const {
-		return _ext_feature_bits.edx[3];
+		return _eax80000001.edx[3];
 	}
 	bool tsc_ext() const {
-		return _ext_feature_bits.edx[4];
+		return _eax80000001.edx[4];
 	}
 	bool msr_ext() const {
-		return _ext_feature_bits.edx[5];
+		return _eax80000001.edx[5];
 	}
 	bool pae_ext() const {
-		return _ext_feature_bits.edx[6];
+		return _eax80000001.edx[6];
 	}
 	bool mce_ext() const {
-		return _ext_feature_bits.edx[7];
+		return _eax80000001.edx[7];
 	}
 	bool cx8_ext() const {
-		return _ext_feature_bits.edx[8];
+		return _eax80000001.edx[8];
 	}
 	bool apic_ext() const {
-		return _ext_feature_bits.edx[9];
+		return _eax80000001.edx[9];
 	}
 	// 10
 	bool syscall() const {
-		return _ext_feature_bits.edx[11];
+		return _eax80000001.edx[11];
 	}
 	bool mtrr_ext() const {
-		return _ext_feature_bits.edx[12];
+		return _eax80000001.edx[12];
 	}
 	bool pge_ext() const {
-		return _ext_feature_bits.edx[13];
+		return _eax80000001.edx[13];
 	}
 	bool mca_ext() const {
-		return _ext_feature_bits.edx[14];
+		return _eax80000001.edx[14];
 	}
 	bool cmov_ext() const {
-		return _ext_feature_bits.edx[15];
+		return _eax80000001.edx[15];
 	}
 	bool pat_ext() const {
-		return _ext_feature_bits.edx[16];
+		return _eax80000001.edx[16];
 	}
 	bool pse36_ext() const {
-		return _ext_feature_bits.edx[17];
+		return _eax80000001.edx[17];
 	}
 	// 18
 	bool mp() const {
-		return _ext_feature_bits.edx[19];
+		return _eax80000001.edx[19];
 	}
 	bool nx() const {
-		return _ext_feature_bits.edx[20];
+		return _eax80000001.edx[20];
 	}
 	// 21
 	bool mmxext() const {
-		return _ext_feature_bits.edx[22];
+		return _eax80000001.edx[22];
 	}
 	bool mmx_ext() const {
-		return _ext_feature_bits.edx[23];
+		return _eax80000001.edx[23];
 	}
 	bool fxsr_ext() const {
-		return _ext_feature_bits.edx[24];
+		return _eax80000001.edx[24];
 	}
 	bool fxsr_opt() const {
-		return _ext_feature_bits.edx[25];
+		return _eax80000001.edx[25];
 	}
 	bool pdpe1gb() const {
-		return _ext_feature_bits.edx[26];
+		return _eax80000001.edx[26];
 	}
 	bool rdtscp() const {
-		return _ext_feature_bits.edx[27];
+		return _eax80000001.edx[27];
 	}
 	// 28
 	bool lm() const {
-		return _ext_feature_bits.edx[29];
+		return _eax80000001.edx[29];
 	}
 	bool _3dnowext() const {
-		return _ext_feature_bits.edx[30];
+		return _eax80000001.edx[30];
 	}
 	bool _3dnow() const {
-		return _ext_feature_bits.edx[31];
+		return _eax80000001.edx[31];
 	}
 
 	// ECX
 	bool lahf_lm() const {
-		return _ext_feature_bits.ecx[0];
+		return _eax80000001.ecx[0];
 	}
 	bool cmp_legacy() const {
-		return _ext_feature_bits.ecx[1];
+		return _eax80000001.ecx[1];
 	}
 	bool svm() const {
-		return _ext_feature_bits.ecx[2];
+		return _eax80000001.ecx[2];
 	}
 	bool extapic() const {
-		return _ext_feature_bits.ecx[3];
+		return _eax80000001.ecx[3];
 	}
 	bool cr8_legacy() const {
-		return _ext_feature_bits.ecx[4];
+		return _eax80000001.ecx[4];
 	}
 	bool abm() const {
-		return _ext_feature_bits.ecx[5];
+		return _eax80000001.ecx[5];
 	}
 	bool sse4a() const {
-		return _ext_feature_bits.ecx[6];
+		return _eax80000001.ecx[6];
 	}
 	bool misalignsse() const {
-		return _ext_feature_bits.ecx[7];
+		return _eax80000001.ecx[7];
 	}
 	bool _3dnowprefetch() const {
-		return _ext_feature_bits.ecx[8];
+		return _eax80000001.ecx[8];
 	}
 	bool osvw() const {
-		return _ext_feature_bits.ecx[9];
+		return _eax80000001.ecx[9];
 	}
 	bool ibs() const {
-		return _ext_feature_bits.ecx[10];
+		return _eax80000001.ecx[10];
 	}
 	bool xop() const {
-		return _ext_feature_bits.ecx[11];
+		return _eax80000001.ecx[11];
 	}
 	bool skinit() const {
-		return _ext_feature_bits.ecx[12];
+		return _eax80000001.ecx[12];
 	}
 	bool wdt() const {
-		return _ext_feature_bits.ecx[13];
+		return _eax80000001.ecx[13];
 	}
 	// 14
 	bool lwp() const {
-		return _ext_feature_bits.ecx[15];
+		return _eax80000001.ecx[15];
 	}
 	bool fma4() const {
-		return _ext_feature_bits.ecx[16];
+		return _eax80000001.ecx[16];
 	}
 	bool tce() const {
-		return _ext_feature_bits.ecx[17];
+		return _eax80000001.ecx[17];
 	}
 	// 18
 	bool nodeid_msr() const {
-		return _ext_feature_bits.ecx[19];
+		return _eax80000001.ecx[19];
 	}
 	// 20
 	bool tbm() const {
-		return _ext_feature_bits.ecx[21];
+		return _eax80000001.ecx[21];
 	}
 	bool topoext() const {
-		return _ext_feature_bits.ecx[22];
+		return _eax80000001.ecx[22];
 	}
 	bool perfctr_core() const {
-		return _ext_feature_bits.ecx[23];
+		return _eax80000001.ecx[23];
 	}
 	bool perfctr_nb() const {
-		return _ext_feature_bits.ecx[24];
+		return _eax80000001.ecx[24];
 	}
 	// 25
 	bool dbx() const {
-		return _ext_feature_bits.ecx[26];
+		return _eax80000001.ecx[26];
 	}
 	bool perftsc() const {
-		return _ext_feature_bits.ecx[27];
+		return _eax80000001.ecx[27];
 	}
 	bool pcx_l2i() const {
-		return _ext_feature_bits.ecx[28];
+		return _eax80000001.ecx[28];
 	}
 	// 29 - 31
 
@@ -928,9 +932,9 @@ private:
 	std::string _brand = "";
 	bool _is_intel = false;
 	bool _is_amd = false;
-	cpu_id _feature_bits = {};
-	cpu_id _feature_bits_more = {};
-	cpu_id _ext_feature_bits = {};
+	cpu_id _eax1 = {};
+	cpu_id _eax7_ecx0 = {};
+	cpu_id _eax80000001 = {};
 };
 
 inline const cpu_info_t cpu_info;

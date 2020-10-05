@@ -51,6 +51,10 @@ TEST(cpu_info, basics) {
 
 		if (macos_cpu_info_map.count(s) == 0) {
 			printf("Missing cpu feature : %s\n", s.c_str());
+			// Can't guarantee this is an error, since unixes may support
+			// hypervisor 0x40000000.
+			// https://lkml.org/lkml/2008/10/1/246
+
 			// EXPECT_TRUE(false);
 		} else {
 			EXPECT_TRUE(macos_cpu_info_map.at(s));
