@@ -45,6 +45,7 @@
 
 #include <array>
 #include <bitset>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -60,38 +61,12 @@ void print_bool(const char* str, bool b) {
 // https://docs.microsoft.com/en-us/cpp/intrinsics/cpuid-cpuidex?view=vs-2019
 // leaf is EAX, subleaf is ECX.
 struct cpu_id {
-	cpu_id() = default;
-	cpu_id(const cpu_id&) = default;
-	cpu_id(cpu_id&&) = default;
-
-	cpu_id& operator=(const cpu_id&) = default;
-	cpu_id& operator=(cpu_id&&) = default;
-
-	cpu_id(uint32_t leaf_)
-			: leaf(leaf_) {
-#if FEA_WINDOWS
-		std::array<int, 4> d = { 0 };
-		__cpuid(d.data(), static_cast<int>(leaf));
-		eax = d[0];
-		ebx = d[1];
-		ecx = d[2];
-		edx = d[3];
-#else
-		uint32_t a = 0, b = 0, c = 0, d = 0;
-		__get_cpuid(leaf, &a, &b, &c, &d);
-		eax = a;
-		ebx = b;
-		ecx = c;
-		edx = d;
-#endif
-	}
-
 	cpu_id(uint32_t leaf_, uint32_t sub_leaf_)
 			: leaf(leaf_)
 			, sub_leaf(sub_leaf_) {
 #if FEA_WINDOWS
 		std::array<int, 4> d = {};
-		__cpuidex(d.data(), static_cast<int>(leaf), static_cast<int>(sub_leaf));
+		__cpuidex(d.data(), int(leaf), int(sub_leaf));
 		eax = d[0];
 		ebx = d[1];
 		ecx = d[2];
@@ -105,6 +80,10 @@ struct cpu_id {
 		edx = d;
 #endif
 	}
+	cpu_id(uint32_t leaf_)
+			: cpu_id(leaf_, 0) {
+	}
+	cpu_id() = default;
 
 	std::array<char, 16> to_string() const {
 		std::array<char, 16> ret;
@@ -133,22 +112,16 @@ struct cpu_id {
 
 struct cpu_info_t {
 	cpu_info_t() {
-		{ // Functions
-			std::vector<cpu_id> functions = {};
-
+		// Functions
+		{
 			// calling __cpuid with 0x0 as the function_id argument
 			// gets the number of the highest valid function id.
-			uint32_t num_funcs = cpu_id{ 0 }.eax.to_ulong();
-			functions.reserve(num_funcs);
-
-			// Get all info
-			for (uint32_t i = 0; i < num_funcs; ++i) {
-				functions.push_back({ i, 0 });
-			}
+			cpu_id eax0 = cpu_id{ 0 };
+			uint32_t highest_leaf = eax0.eax.to_ulong();
 
 			// Vendor ID String (0x0)
 			char vendor[13] = { 0 };
-			std::array<char, 16> as_string = functions[0].to_string();
+			std::array<char, 16> as_string = eax0.to_string();
 			std::copy(as_string.begin() + 4, as_string.begin() + 8, &vendor[0]);
 			std::copy(as_string.begin() + 12, as_string.end(), &vendor[4]);
 			std::copy(
@@ -163,45 +136,79 @@ struct cpu_info_t {
 			}
 
 			// Processor Info and Feature Bits (EAX=1)
-			if (functions.size() > 1) {
-				_eax1 = functions[1];
+			if (highest_leaf >= 1) {
+				_eax1 = cpu_id{ 1 };
+			}
+
+			// TODO : Cache and TLB info.
+			if (highest_leaf >= 2) {
+				_eax2 = cpu_id{ 2 };
+			}
+
+			// Deprecated, used to be serial num.
+			if (highest_leaf >= 3) {
+				_eax3 = cpu_id{ 3 };
+			}
+
+			if (highest_leaf >= 4) {
+				_eax4 = cpu_id{ 4 };
+			}
+			// 0xB
+			if (highest_leaf >= 11) {
+				_eax11 = cpu_id{ 11 };
+			}
+
+			if (highest_leaf >= 6) {
+				_eax6 = cpu_id{ 6 };
 			}
 
 			// Features Extended (EAX=7)
-			if (functions.size() > 7) {
-				_eax7_ecx0 = functions[7];
-				// TODO : subleaf ECX=1
+			if (highest_leaf >= 7) {
+				_eax7_ecx0 = cpu_id{ 7 };
+				_eax7_ecx1 = cpu_id{ 7, 1 };
 			}
 		}
 
 		// Extended Functions
 		{
-			std::vector<cpu_id> ext_functions = {};
-
 			// calling __cpuid with 0x80000000 as the function_id argument
 			// gets the number of the highest valid extended id.
-			uint32_t highest_ext_func_id = cpu_id{ 0x80000000 }.eax.to_ulong();
-
-			// Get all info
-			for (uint32_t i = 0x80000000; i < highest_ext_func_id; ++i) {
-				ext_functions.emplace_back(i, 0);
-			}
+			uint32_t highest_leaf = cpu_id{ 0x80000000 }.eax.to_ulong();
 
 			// Extended Processor Info and Feature Bits (0x80000001)
-			if (highest_ext_func_id >= 0x80000001) {
-				_eax80000001 = ext_functions[1];
+			if (highest_leaf >= 0x80000001) {
+				_eax80000001 = cpu_id{ 0x80000001 };
 			}
 
 			// Processor Brand String (0x80000002 to 0x80000004)
 			char brand[64] = { 0 };
-			if (highest_ext_func_id >= 0x80000004) {
-				for (size_t i = 2; i <= 4; ++i) {
-					std::array<char, 16> as_string
-							= ext_functions[i].to_string();
-					size_t pos = (i - 2) * 16;
-					std::copy(as_string.begin(), as_string.end(), &brand[pos]);
-				}
+			if (highest_leaf >= 0x80000004) {
+				cpu_id eax802 = cpu_id{ 0x80000002 };
+				cpu_id eax803 = cpu_id{ 0x80000003 };
+				cpu_id eax804 = cpu_id{ 0x80000004 };
+
+				std::array<char, 16> str;
+				str = eax802.to_string();
+				std::copy(str.begin(), str.end(), &brand[0]);
+				str = eax803.to_string();
+				std::copy(str.begin(), str.end(), &brand[16]);
+				str = eax804.to_string();
+				std::copy(str.begin(), str.end(), &brand[32]);
+
 				_brand = brand;
+			}
+
+			if (highest_leaf >= 0x80000005) {
+				_eax80000005 = cpu_id{ 0x80000005 };
+			}
+			if (highest_leaf >= 0x80000006) {
+				_eax80000006 = cpu_id{ 0x80000006 };
+			}
+			if (highest_leaf >= 0x80000007) {
+				_eax80000007 = cpu_id{ 0x80000007 };
+			}
+			if (highest_leaf >= 0x80000008) {
+				_eax80000008 = cpu_id{ 0x80000008 };
 			}
 		}
 	}
@@ -225,6 +232,85 @@ public:
 	// Reference : https://en.wikipedia.org/wiki/CPUID
 
 	// EAX=1 CPUID feature bits
+
+	// EAX
+	uint8_t stepping_id() const {
+		constexpr uint32_t mask = 0x0000'000f;
+		uint32_t ret = _eax1.eax.to_ulong();
+		return ret & mask;
+	}
+	uint8_t model() const {
+		constexpr uint32_t mask = 0x0000'00f0;
+		uint32_t ret = _eax1.eax.to_ulong();
+		ret &= mask;
+		ret >>= 4;
+		return uint8_t(ret);
+	}
+	uint8_t family_id() const {
+		constexpr uint32_t mask = 0x0000'0f00;
+		uint32_t ret = _eax1.eax.to_ulong();
+		ret &= mask;
+		ret >>= 8;
+		return uint8_t(ret);
+	}
+	uint8_t processor_type() const {
+		constexpr uint32_t mask = 0b0000'0000'0000'0000'0011'0000'0000'0000;
+		uint32_t ret = _eax1.eax.to_ulong();
+		ret &= mask;
+		ret >>= 12;
+		return uint8_t(ret);
+	}
+	uint8_t extended_model_id() const {
+		constexpr uint32_t mask = 0x000f'0000;
+		uint32_t ret = _eax1.eax.to_ulong();
+		ret &= mask;
+		ret >>= 16;
+		return uint8_t(ret);
+	}
+	uint8_t extended_family_id() const {
+		constexpr uint32_t mask = 0x0ff0'0000;
+		uint32_t ret = _eax1.eax.to_ulong();
+		ret &= mask;
+		ret >>= 20;
+		return uint8_t(ret);
+	}
+
+	// EBX
+	uint8_t brand_index() const {
+		constexpr uint32_t mask = 0x0000'00ff;
+		uint32_t ret = _eax1.eax.to_ulong();
+		ret &= mask;
+		return uint8_t(ret);
+	}
+	// CLFLUSH line size (Value . 8 = cache line size in bytes).
+	uint8_t clflush_line_size() const {
+		if (!clfsh()) {
+			return { 0 };
+		}
+
+		constexpr uint32_t mask = 0x0000'ff00;
+		uint32_t ret = _eax1.eax.to_ulong();
+		ret &= mask;
+		ret >>= 8;
+		return uint8_t(ret);
+	}
+	uint8_t num_addressable_logical_ids() const {
+		if (!htt()) {
+			return { 0 };
+		}
+
+		constexpr uint32_t mask = 0x00ff'0000;
+		uint32_t ret = _eax1.eax.to_ulong();
+		ret &= mask;
+		ret >>= 16;
+		return uint8_t(ret);
+	}
+	uint8_t local_apic_id() const {
+		uint32_t ret = _eax1.eax.to_ulong();
+		ret >>= 24;
+		return uint8_t(ret);
+	}
+
 	// EDX
 	bool fpu() const {
 		return _eax1.edx[0];
@@ -436,7 +522,9 @@ public:
 	bool avx2() const {
 		return _eax7_ecx0.ebx[5];
 	}
-	// 6
+	bool fdp_excptn_only() const {
+		return _eax7_ecx0.ebx[6];
+	}
 	bool smep() const {
 		return _eax7_ecx0.ebx[7];
 	}
@@ -455,17 +543,19 @@ public:
 	bool pqm() const {
 		return _eax7_ecx0.ebx[12];
 	}
-	// 13
+	bool fpu_cs_ds() const {
+		return _eax7_ecx0.ebx[13];
+	}
 	bool mpx() const {
 		return _eax7_ecx0.ebx[14];
 	}
 	bool pqe() const {
 		return _eax7_ecx0.ebx[15];
 	}
-	bool avx512f() const {
+	bool avx512_f() const {
 		return _eax7_ecx0.ebx[16];
 	}
-	bool avx512dq() const {
+	bool avx512_dq() const {
 		return _eax7_ecx0.ebx[17];
 	}
 	bool rdseed() const {
@@ -477,7 +567,7 @@ public:
 	bool smap() const {
 		return _eax7_ecx0.ebx[20];
 	}
-	bool avx512ifma() const {
+	bool avx512_ifma() const {
 		return _eax7_ecx0.ebx[21];
 	}
 	bool pcommit() const {
@@ -492,22 +582,22 @@ public:
 	bool intel_pt() const {
 		return _eax7_ecx0.ebx[25];
 	}
-	bool avx512pf() const {
+	bool avx512_pf() const {
 		return _eax7_ecx0.ebx[26];
 	}
-	bool avx512er() const {
+	bool avx512_er() const {
 		return _eax7_ecx0.ebx[27];
 	}
-	bool avx512cd() const {
+	bool avx512_cd() const {
 		return _eax7_ecx0.ebx[28];
 	}
 	bool sha() const {
 		return _eax7_ecx0.ebx[29];
 	}
-	bool avx512bw() const {
+	bool avx512_bw() const {
 		return _eax7_ecx0.ebx[30];
 	}
-	bool avx512vl() const {
+	bool avx512_vl() const {
 		return _eax7_ecx0.ebx[31];
 	}
 
@@ -515,7 +605,7 @@ public:
 	bool prefetchwt1() const {
 		return _eax7_ecx0.ecx[0];
 	}
-	bool avx512vbmi() const {
+	bool avx512_vbmi() const {
 		return _eax7_ecx0.ecx[1];
 	}
 	bool umip() const {
@@ -527,11 +617,15 @@ public:
 	bool ospke() const {
 		return _eax7_ecx0.ecx[4];
 	}
-	// 5
-	bool avx512vbmi2() const {
+	bool waitpkg() const {
+		return _eax7_ecx0.ecx[5];
+	}
+	bool avx512_vbmi2() const {
 		return _eax7_ecx0.ecx[6];
 	}
-	// 7
+	bool cet_ss() const {
+		return _eax7_ecx0.ecx[7];
+	}
 	bool gfni() const {
 		return _eax7_ecx0.ecx[8];
 	}
@@ -541,31 +635,50 @@ public:
 	bool vpclmulqdq() const {
 		return _eax7_ecx0.ecx[10];
 	}
-	bool avx512vnni() const {
+	bool avx512_vnni() const {
 		return _eax7_ecx0.ecx[11];
 	}
-	bool avx512bitalg() const {
+	bool avx512_bitalg() const {
 		return _eax7_ecx0.ecx[12];
 	}
 	// 13
-	bool avx512vpopcntdq() const {
+	bool avx512_vpopcntdq() const {
 		return _eax7_ecx0.ecx[14];
 	}
-	// 15 - 16
-	unsigned short mawau() const {
-		uint32_t bits = _eax7_ecx0.ecx.to_ulong();
-		bits <<= 10;
-		bits >>= 27;
-		return static_cast<unsigned short>(bits);
+	// 15
+	bool five_level_paging() const {
+		return _eax7_ecx0.ecx[16];
+	}
+	uint8_t mawau() const {
+		constexpr uint32_t mask = 0b0000'0000'0011'1110'0000'0000;
+		uint32_t ret = _eax7_ecx0.ecx.to_ulong();
+		ret &= mask;
+		ret >>= 9;
+		return uint8_t(ret);
 	}
 	bool rdpid() const {
 		return _eax7_ecx0.ecx[22];
 	}
-	// 23 - 29
+	// 23 - 24
+	bool cldemote() const {
+		return _eax7_ecx0.ecx[25];
+	}
+	// 26
+	bool movdiri() const {
+		return _eax7_ecx0.ecx[27];
+	}
+	bool movdir64b() const {
+		return _eax7_ecx0.ecx[28];
+	}
+	bool enqcmd() const {
+		return _eax7_ecx0.ecx[29];
+	}
 	bool sgx_lc() const {
 		return _eax7_ecx0.ecx[30];
 	}
-	// 30
+	bool pks() const {
+		return _eax7_ecx0.ecx[31];
+	}
 
 	// EDX
 	// 0 - 1
@@ -575,15 +688,77 @@ public:
 	bool avx512_4fmaps() const {
 		return _eax7_ecx0.edx[3];
 	}
-	// 4 - 17
+	bool fsrm() const {
+		return _eax7_ecx0.edx[4];
+	}
+	// 5 - 7
+	bool avx512_vp2intersect() const {
+		return _eax7_ecx0.edx[8];
+	}
+	bool srbds_ctrl() const {
+		return _eax7_ecx0.edx[9];
+	}
+	bool md_clear() const {
+		return _eax7_ecx0.edx[10];
+	}
+	// 11 - 12
+	bool tsx_force_abort() const {
+		return _eax7_ecx0.edx[13];
+	}
+	bool serialize() const {
+		return _eax7_ecx0.edx[14];
+	}
+	bool hybrid() const {
+		return _eax7_ecx0.edx[15];
+	}
+	bool tsxldtrk() const {
+		return _eax7_ecx0.edx[16];
+	}
+	// 17
 	bool pconfig() const {
+		return _eax7_ecx0.edx[18];
+	}
+	bool lbr() const {
 		return _eax7_ecx0.edx[19];
 	}
-	// 19 - 25
+	bool cet_ibt() const {
+		return _eax7_ecx0.edx[20];
+	}
+	// 21
+	bool amx_bf16() const {
+		return _eax7_ecx0.edx[22];
+	}
+	// 23
+	bool amx_tile() const {
+		return _eax7_ecx0.edx[24];
+	}
+	bool amx_int8() const {
+		return _eax7_ecx0.edx[25];
+	}
 	bool spec_ctrl() const {
 		return _eax7_ecx0.edx[26];
 	}
-	// 27 - 31
+	bool stibp() const {
+		return _eax7_ecx0.edx[27];
+	}
+	bool l1d_flush() const {
+		return _eax7_ecx0.edx[28];
+	}
+	bool ia32_arch_capabilities() const {
+		return _eax7_ecx0.edx[29];
+	}
+	bool ia32_core_capabilities() const {
+		return _eax7_ecx0.edx[30];
+	}
+	bool ssbd() const {
+		return _eax7_ecx0.edx[31];
+	}
+
+
+	// EAX=7, ECX=1
+	bool avx512_bf16() const {
+		return _eax7_ecx1.eax[5];
+	}
 
 
 	// EAX=80000001h CPUID feature bits
@@ -759,9 +934,71 @@ public:
 	}
 	// 29 - 31
 
+
+	// Raw registers & unimplemented.
+	const cpu_id& eax1() const {
+		return _eax1;
+	}
+	const cpu_id& eax2() const {
+		return _eax2;
+	}
+	const cpu_id& eax3() const {
+		return _eax3;
+	}
+	const cpu_id& eax4() const {
+		return _eax4;
+	}
+	const cpu_id& eax6() const {
+		return _eax6;
+	}
+	const cpu_id& eax7_ecx0() const {
+		return _eax7_ecx0;
+	}
+	const cpu_id& eax7_ecx1() const {
+		return _eax7_ecx1;
+	}
+	// 0xB
+	const cpu_id& eax11() const {
+		return _eax11;
+	}
+	const cpu_id& eax80000001() const {
+		return _eax80000001;
+	}
+	const cpu_id& eax80000005() const {
+		return _eax80000005;
+	}
+	const cpu_id& eax80000006() const {
+		return _eax80000006;
+	}
+	const cpu_id& eax80000007() const {
+		return _eax80000007;
+	}
+	const cpu_id& eax80000008() const {
+		return _eax80000008;
+	}
+
+
 	void print_all() const {
 		printf("%-18s%s\n", "vendor", vendor());
 		printf("%-18s%s\n", "brand", brand());
+		printf("\n");
+
+		printf("%-18s%x\n", "family_id", family_id());
+		printf("%-18s%x\n", "ext_family_id", extended_family_id());
+		printf("%-18s%x\n", "model", model());
+		printf("%-18s%x\n", "ext_model_id", extended_model_id());
+		printf("%-18s%x\n", "processor_type", processor_type());
+		printf("%-18s%x\n", "stepping_id", stepping_id());
+		printf("\n");
+
+		printf("%-18s%hu\n", "brand_index", brand_index());
+		printf("%-18s%hu\n", "clflush_line_size", clflush_line_size());
+		printf("%-18s%hu\n", "num_addressable_ids",
+				num_addressable_logical_ids());
+		printf("%-18s%hu\n", "local_apic_id", local_apic_id());
+		printf("\n");
+
+		printf("eax1 - edx\n");
 		detail::print_bool("fpu", fpu());
 		detail::print_bool("vme", vme());
 		detail::print_bool("de", de());
@@ -792,6 +1029,9 @@ public:
 		detail::print_bool("tm", tm());
 		detail::print_bool("ia64", ia64());
 		detail::print_bool("pbe", pbe());
+		printf("\n");
+
+		printf("eax1 - ecx\n");
 		detail::print_bool("sse3", sse3());
 		detail::print_bool("pclmulqdq", pclmulqdq());
 		detail::print_bool("dtes64", dtes64());
@@ -823,55 +1063,99 @@ public:
 		detail::print_bool("f16c", f16c());
 		detail::print_bool("rdrnd", rdrnd());
 		detail::print_bool("hypervisor", hypervisor());
+		printf("\n");
+
+		printf("eax7_ecx0 - ebx\n");
 		detail::print_bool("fsgsbase", fsgsbase());
 		detail::print_bool("ia32_tsc_adjust", ia32_tsc_adjust());
 		detail::print_bool("sgx", sgx());
 		detail::print_bool("bmi1", bmi1());
 		detail::print_bool("hle", hle());
 		detail::print_bool("avx2", avx2());
+		detail::print_bool("fdp_excptn_only", fdp_excptn_only());
 		detail::print_bool("smep", smep());
 		detail::print_bool("bmi2", bmi2());
 		detail::print_bool("erms", erms());
 		detail::print_bool("invpcid", invpcid());
 		detail::print_bool("rtm", rtm());
 		detail::print_bool("pqm", pqm());
+		detail::print_bool("fpu_cs_ds", fpu_cs_ds());
 		detail::print_bool("mpx", mpx());
 		detail::print_bool("pqe", pqe());
-		detail::print_bool("avx512f", avx512f());
-		detail::print_bool("avx512dq", avx512dq());
+		detail::print_bool("avx512f", avx512_f());
+		detail::print_bool("avx512dq", avx512_dq());
 		detail::print_bool("rdseed", rdseed());
 		detail::print_bool("adx", adx());
 		detail::print_bool("smap", smap());
-		detail::print_bool("avx512ifma", avx512ifma());
+		detail::print_bool("avx512ifma", avx512_ifma());
 		detail::print_bool("pcommit", pcommit());
 		detail::print_bool("clflushopt", clflushopt());
 		detail::print_bool("clwb", clwb());
 		detail::print_bool("intel_pt", intel_pt());
-		detail::print_bool("avx512pf", avx512pf());
-		detail::print_bool("avx512er", avx512er());
-		detail::print_bool("avx512cd", avx512cd());
+		detail::print_bool("avx512pf", avx512_pf());
+		detail::print_bool("avx512er", avx512_er());
+		detail::print_bool("avx512cd", avx512_cd());
 		detail::print_bool("sha", sha());
-		detail::print_bool("avx512bw", avx512bw());
-		detail::print_bool("avx512vl", avx512vl());
+		detail::print_bool("avx512bw", avx512_bw());
+		detail::print_bool("avx512vl", avx512_vl());
+		printf("\n");
+
+
+		printf("eax7_ecx0 - ecx\n");
 		detail::print_bool("prefetchwt1", prefetchwt1());
-		detail::print_bool("avx512vbmi", avx512vbmi());
+		detail::print_bool("avx512_vbmi", avx512_vbmi());
 		detail::print_bool("umip", umip());
 		detail::print_bool("pku", pku());
 		detail::print_bool("ospke", ospke());
-		detail::print_bool("avx512vbmi2", avx512vbmi2());
+		detail::print_bool("waitpkg", waitpkg());
+		detail::print_bool("avx512_vbmi2", avx512_vbmi2());
+		detail::print_bool("cet_ss", cet_ss());
 		detail::print_bool("gfni", gfni());
 		detail::print_bool("vaes", vaes());
 		detail::print_bool("vpclmulqdq", vpclmulqdq());
-		detail::print_bool("avx512vnni", avx512vnni());
-		detail::print_bool("avx512bitalg", avx512bitalg());
-		detail::print_bool("avx512vpopcntdq", avx512vpopcntdq());
+		detail::print_bool("avx512_vnni", avx512_vnni());
+		detail::print_bool("avx512_bitalg", avx512_bitalg());
+		detail::print_bool("avx512_vpopcntdq", avx512_vpopcntdq());
+		detail::print_bool("five_level_paging", five_level_paging());
 		printf("%-18s%hu\n", "mawau", mawau());
 		detail::print_bool("rdpid", rdpid());
+		detail::print_bool("cldemote", cldemote());
+		detail::print_bool("movdiri", movdiri());
+		detail::print_bool("movdir64b", movdir64b());
+		detail::print_bool("enqcmd", enqcmd());
 		detail::print_bool("sgx_lc", sgx_lc());
+		detail::print_bool("pks", pks());
+		printf("\n");
+
+		printf("eax7_ecx0 - edx\n");
 		detail::print_bool("avx512_4vnniw", avx512_4vnniw());
 		detail::print_bool("avx512_4fmaps", avx512_4fmaps());
+		detail::print_bool("fsrm", fsrm());
+		detail::print_bool("avx512_vp2intersect", avx512_vp2intersect());
+		detail::print_bool("srbds_ctrl", srbds_ctrl());
+		detail::print_bool("md_clear", md_clear());
+		detail::print_bool("tsx_force_abort", tsx_force_abort());
+		detail::print_bool("serialize", serialize());
+		detail::print_bool("hybrid", hybrid());
+		detail::print_bool("tsxldtrk", tsxldtrk());
 		detail::print_bool("pconfig", pconfig());
+		detail::print_bool("lbr", lbr());
+		detail::print_bool("cet_ibt", cet_ibt());
+		detail::print_bool("amx_bf16", amx_bf16());
+		detail::print_bool("amx_tile", amx_tile());
+		detail::print_bool("amx_int8", amx_int8());
 		detail::print_bool("spec_ctrl", spec_ctrl());
+		detail::print_bool("stibp", stibp());
+		detail::print_bool("l1d_flush", l1d_flush());
+		detail::print_bool("ia32_arch_capabilities", ia32_arch_capabilities());
+		detail::print_bool("ia32_core_capabilities", ia32_core_capabilities());
+		detail::print_bool("ssbd", ssbd());
+		printf("\n");
+
+		printf("eax7_ecx1 - eax\n");
+		detail::print_bool("avx512_bf16", avx512_bf16());
+		printf("\n");
+
 		detail::print_bool("fpu_ext", fpu_ext());
 		detail::print_bool("vme_ext", vme_ext());
 		detail::print_bool("de_ext", de_ext());
@@ -925,6 +1209,7 @@ public:
 		detail::print_bool("dbx", dbx());
 		detail::print_bool("perftsc", perftsc());
 		detail::print_bool("pcx_l2i", pcx_l2i());
+		printf("\n");
 	}
 
 private:
@@ -932,9 +1217,21 @@ private:
 	std::string _brand = "";
 	bool _is_intel = false;
 	bool _is_amd = false;
-	cpu_id _eax1 = {};
-	cpu_id _eax7_ecx0 = {};
-	cpu_id _eax80000001 = {};
+
+	cpu_id _eax1;
+	cpu_id _eax2;
+	cpu_id _eax3;
+	cpu_id _eax4;
+	cpu_id _eax11;
+	cpu_id _eax6;
+	cpu_id _eax7_ecx0;
+	cpu_id _eax7_ecx1;
+
+	cpu_id _eax80000001;
+	cpu_id _eax80000005;
+	cpu_id _eax80000006;
+	cpu_id _eax80000007;
+	cpu_id _eax80000008;
 };
 
 inline const cpu_info_t cpu_info;
