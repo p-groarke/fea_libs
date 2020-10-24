@@ -49,7 +49,7 @@
 #include <string>
 #include <vector>
 
-#define FEA_UNUSED(...)
+#define FEA_REGION(...)
 
 // References :
 // https://en.wikipedia.org/wiki/CPUID
@@ -237,7 +237,7 @@ public:
 	/**
 	 * EAX=1 feature bits
 	 */
-	FEA_UNUSED(#pragma region EAX1)
+	FEA_REGION(#pragma region EAX1)
 
 	// EAX
 
@@ -763,13 +763,13 @@ public:
 	bool pbe() const {
 		return _eax1.edx[31];
 	}
-	FEA_UNUSED(#pragma endregion)
+	FEA_REGION(#pragma endregion)
 
 
 	/**
 	 * EAX=7 feature bits
 	 */
-	FEA_UNUSED(#pragma region EAX7)
+	FEA_REGION(#pragma region EAX7)
 
 	// EBX
 
@@ -1028,13 +1028,13 @@ public:
 	bool avx512_bf16() const {
 		return _eax7_ecx1.eax[5];
 	}
-	FEA_UNUSED(#pragma endregion)
+	FEA_REGION(#pragma endregion)
 
 
 	/**
 	 * EAX=80000001h feature bits
 	 */
-	FEA_UNUSED(#pragma region EAX80000001)
+	FEA_REGION(#pragma region EAX80000001)
 
 	// ECX
 
@@ -1210,7 +1210,7 @@ public:
 	bool _3dnow() const {
 		return _eax80000001.edx[31];
 	}
-	FEA_UNUSED(#pragma endregion)
+	FEA_REGION(#pragma endregion)
 
 
 	/**
@@ -1219,7 +1219,7 @@ public:
 	 * fea::cpu_id object with your desired function leaf and subleaf to get
 	 * the custom feature bits.
 	 */
-	FEA_UNUSED(#pragma region RAW)
+	FEA_REGION(#pragma region RAW)
 
 	// INPUT EAX = 01H: Returns Model, Family, Stepping Information
 	// INPUT EAX = 01H: Returns Additional Information in EBX
@@ -1291,7 +1291,7 @@ public:
 	const cpu_id& eax80000008() const {
 		return _eax80000008;
 	}
-	FEA_UNUSED(#pragma endregion)
+	FEA_REGION(#pragma endregion)
 
 	// Print all supported feature bits to console.
 	void print_all() const {
