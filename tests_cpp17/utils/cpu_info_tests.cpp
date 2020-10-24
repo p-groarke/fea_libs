@@ -219,36 +219,43 @@ TEST(cpu_info, basics) {
 		if (s == "tsci")
 			continue;
 
-		if (s == "rdwrfsgs")
+		if (s == "rdwrfsgs") {
 			s = "fsgsbase";
-		if (s == "xd")
+		} else if (s == "xd") {
 			s = "nx";
-		if (s == "tsctmr")
+		} else if (s == "tsctmr") {
 			s = "tsc-deadline";
-		if (s == "dscpl")
+		} else if (s == "dscpl") {
 			s = "ds-cpl";
-		if (s == "tpr")
+		} else if (s == "tpr") {
 			s = "xtpr";
-		if (s == "mon")
+		} else if (s == "mon") {
 			s = "monitor";
-		if (s == "sse4.1")
+		} else if (s == "sse4.1") {
 			s = "sse41";
-		if (s == "sse4.2")
+		} else if (s == "sse4.2") {
 			s = "sse42";
-		if (s == "avx1.0")
+		} else if (s == "avx1.0") {
 			s = "avx";
-		if (s == "rdrand")
+		} else if (s == "rdrand") {
 			s = "rdrnd";
-		if (s == "lahf")
+		} else if (s == "lahf") {
 			s = "lahf_lm";
-		if (s == "lahf")
+		} else if (s == "lahf") {
 			s = "lahf_lm";
-		if (s == "ibrs")
+		} else if (s == "ibrs") {
 			s = "spec_ctrl";
-		if (s == "vmm")
+		} else if (s == "vmm") {
 			s = "hypervisor";
-		if (s == "tsc_thread_offset")
+		} else if (s == "tsc_thread_offset") {
 			s = "ia32_tsc_adjust";
+		} else if (s == "l1df") {
+			s = "l1d_flush";
+		} else if (s == "mdclear") {
+			s = "md_clear";
+		} else if (s == "acapmsr") {
+			s = "ia32_arch_capabilities";
+		}
 
 		if (flag_map.count(s) == 0) {
 			printf("Missing cpu feature : %s\n", s.c_str());
