@@ -285,7 +285,7 @@ public:
 	// CLFLUSH line size (Value . 8 = cache line size in bytes).
 	uint8_t clflush_line_size() const {
 		if (!clfsh()) {
-			return { 0 };
+			return 0u;
 		}
 
 		constexpr uint32_t mask = 0x0000'ff00;
@@ -296,7 +296,7 @@ public:
 	}
 	uint8_t num_addressable_logical_ids() const {
 		if (!htt()) {
-			return { 0 };
+			return 0u;
 		}
 
 		constexpr uint32_t mask = 0x00ff'0000;

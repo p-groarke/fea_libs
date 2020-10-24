@@ -275,6 +275,6 @@ TEST(cpu_info, basics) {
 #endif
 
 	EXPECT_NE(fea::cpu_info.amd(), fea::cpu_info.intel());
-	fea::cpu_info.print_all();
+	// fea::cpu_info.print_all();
 }
 } // namespace
