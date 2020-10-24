@@ -49,6 +49,10 @@
 #include <string>
 #include <vector>
 
+// References :
+// https://en.wikipedia.org/wiki/CPUID
+// https://www.scss.tcd.ie/Jeremy.Jones/CS4021/processor-identification-cpuid-instruction-note.pdf
+
 namespace fea {
 
 namespace detail {
@@ -155,7 +159,7 @@ struct cpu_info_t {
 			}
 			// 0xB
 			if (highest_leaf >= 11) {
-				_eax11 = cpu_id{ 11 };
+				_eax0b = cpu_id{ 11 };
 			}
 
 			if (highest_leaf >= 6) {
@@ -229,11 +233,13 @@ public:
 		return _is_amd;
 	}
 
-	// Reference : https://en.wikipedia.org/wiki/CPUID
-
-	// EAX=1 CPUID feature bits
+	/**
+	 * EAX=1 feature bits
+	 */
+#pragma region EAX1
 
 	// EAX
+
 	uint8_t stepping_id() const {
 		constexpr uint32_t mask = 0x0000'000f;
 		uint32_t ret = _eax1.eax.to_ulong();
@@ -275,7 +281,9 @@ public:
 		return uint8_t(ret);
 	}
 
+
 	// EBX
+
 	uint8_t brand_index() const {
 		constexpr uint32_t mask = 0x0000'00ff;
 		uint32_t ret = _eax1.eax.to_ulong();
@@ -311,199 +319,456 @@ public:
 		return uint8_t(ret);
 	}
 
-	// EDX
-	bool fpu() const {
-		return _eax1.edx[0];
-	}
-	bool vme() const {
-		return _eax1.edx[1];
-	}
-	bool de() const {
-		return _eax1.edx[2];
-	}
-	bool pse() const {
-		return _eax1.edx[3];
-	}
-	bool tsc() const {
-		return _eax1.edx[4];
-	}
-	bool msr() const {
-		return _eax1.edx[5];
-	}
-	bool pae() const {
-		return _eax1.edx[6];
-	}
-	bool mce() const {
-		return _eax1.edx[7];
-	}
-	bool cx8() const {
-		return _eax1.edx[8];
-	}
-	bool apic() const {
-		return _eax1.edx[9];
-	}
-	// 10
-	bool sep() const {
-		return _eax1.edx[11];
-	}
-	bool mtrr() const {
-		return _eax1.edx[12];
-	}
-	bool pge() const {
-		return _eax1.edx[13];
-	}
-	bool mca() const {
-		return _eax1.edx[14];
-	}
-	bool cmov() const {
-		return _eax1.edx[15];
-	}
-	bool pat() const {
-		return _eax1.edx[16];
-	}
-	bool pse36() const {
-		return _eax1.edx[17];
-	}
-	bool psn() const {
-		return _eax1.edx[18];
-	}
-	bool clfsh() const {
-		return _eax1.edx[19];
-	}
-	// 20
-	bool ds() const {
-		return _eax1.edx[21];
-	}
-	bool acpi() const {
-		return _eax1.edx[22];
-	}
-	bool mmx() const {
-		return _eax1.edx[23];
-	}
-	bool fxsr() const {
-		return _eax1.edx[24];
-	}
-	bool sse() const {
-		return _eax1.edx[25];
-	}
-	bool sse2() const {
-		return _eax1.edx[26];
-	}
-	bool ss() const {
-		return _eax1.edx[27];
-	}
-	bool htt() const {
-		return _eax1.edx[28];
-	}
-	bool tm() const {
-		return _eax1.edx[29];
-	}
-	bool ia64() const {
-		return _eax1.edx[30];
-	}
-	bool pbe() const {
-		return _eax1.edx[31];
-	}
 
 	// ECX
+
+	// Streaming SIMD Extensions 3
+	// The processor supports the Streaming SIMD Extensions 3 instructions.
 	bool sse3() const {
 		return _eax1.ecx[0];
 	}
+
+	// PCLMULDQ Instruction
+	// The processor supports PCLMULDQ instruction.
 	bool pclmulqdq() const {
 		return _eax1.ecx[1];
 	}
+
+	// 64-Bit Debug Store
+	// Indicates that the processor has the ability to write a history of the
+	// 64-bit branch to and from addresses into a memory buffer.
 	bool dtes64() const {
 		return _eax1.ecx[2];
 	}
+
+	// MONITOR/MWAIT
+	// The processor supports the MONITOR and MWAIT instructions.
 	bool monitor() const {
 		return _eax1.ecx[3];
 	}
+
+	// CPL Qualified Debug Store
+	// The processor supports the extensions to the Debug Store feature to allow
+	// for branch message storage qualified by CPL.
 	bool ds_cpl() const {
 		return _eax1.ecx[4];
 	}
+
+	// Virtual Machine Extensions
+	// The processor supports Virtualization Technology.
 	bool vmx() const {
 		return _eax1.ecx[5];
 	}
+
+	// Safer Mode Extensions
+	// The processor supports Trusted Execution Technology.
 	bool smx() const {
 		return _eax1.ecx[6];
 	}
+
+	// Enhanced SpeedStep Technology
+	// The processor supports Enhanced SpeedStep Technology and implements the
+	// IA32_PERF_STS and IA32_PERF_CTL registers.
 	bool est() const {
 		return _eax1.ecx[7];
 	}
+
+	// Thermal Monitor 2
+	// The processor implements the Thermal Monitor 2 thermal control circuit
+	// (TCC).
 	bool tm2() const {
 		return _eax1.ecx[8];
 	}
+
+	// Supplemental Streaming SIMD Extensions 3
+	// The processor supports the Supplemental Streaming SIMD Extensions 3
+	// instructions.
 	bool ssse3() const {
 		return _eax1.ecx[9];
 	}
+
+	// L1 Context ID
+	// The L1 data cache mode can be set to either adaptive mode or shared mode
+	// by the BIOS.
 	bool cnxt_id() const {
 		return _eax1.ecx[10];
 	}
+
+	// Silicon Debug interface
+	// A value of 1 indicates the processor supports IA32_DEBUG_INTERFACE MSR
+	// for silicon debug.
 	bool sdbg() const {
 		return _eax1.ecx[11];
 	}
+
+	// Fused Multiply Add
+	// The processor supports FMA extensions using YMM state.
 	bool fma() const {
 		return _eax1.ecx[12];
 	}
+
+	// CMPXCHG16B
+	// The processor supports the CMPXCHG16B instruction.
 	bool cx16() const {
 		return _eax1.ecx[13];
 	}
+
+	// xTPR Update Control
+	// The processor supports the ability to disable sending Task Priority
+	// messages.  When this feature flag is set, Task Priority messages may be
+	// disabled.  Bit 23 (Echo TPR disable) in the IA32_MISC_ENABLE MSR controls
+	// the sending of Task Priority messages.
 	bool xtpr() const {
 		return _eax1.ecx[14];
 	}
+
+	// Perfmon and Debug Capability
+	// The processor supports the Performance Capabilities MSR.
+	// IA32_PERF_CAPABILITIES register is MSR 345h.
 	bool pdcm() const {
 		return _eax1.ecx[15];
 	}
-	// 16
+
+	// 16 - reserved
+
+	// Process Context Identifiers
+	// The processor supports PCIDs and that software may set CR4.PCIDE to 1
 	bool pcid() const {
 		return _eax1.ecx[17];
 	}
+
+	// Direct Cache Access
+	// The processor supports the ability to prefetch data from a memory mapped
+	// device.
 	bool dca() const {
 		return _eax1.ecx[18];
 	}
+
+	// Streaming SIMD Extensions 4.1
+	// The processor supports the Streaming SIMD Extensions 4.1 instructions.
 	bool sse41() const {
 		return _eax1.ecx[19];
 	}
+
+	// Streaming SIMD Extensions 4.2
+	// The processor supports the Streaming SIMD Extensions 4.2 instructions.
 	bool sse42() const {
 		return _eax1.ecx[20];
 	}
+
+	// Extended xAPIC Support
+	// The processor supports x2APIC feature.
 	bool x2apic() const {
 		return _eax1.ecx[21];
 	}
+
+	// MOVBE Instruction
+	// The processor supports MOVBE instruction.
 	bool movbe() const {
 		return _eax1.ecx[22];
 	}
+
+	// POPCNT Instruction
+	// The processor supports the POPCNT instruction.
 	bool popcnt() const {
 		return _eax1.ecx[23];
 	}
+
+	// Time Stamp Counter Deadline
+	// The processor’s local APIC timer supports one-shot operation using a TSC
+	// deadline value.
 	bool tsc_deadline() const {
 		return _eax1.ecx[24];
 	}
+
+	// AES Instruction Extensions
+	// The processor supports the AES instruction extensions.
 	bool aes() const {
 		return _eax1.ecx[25];
 	}
+
+	// XSAVE/XSTOR States
+	// The processor supports the XSAVE/XRSTOR processor extended states
+	// feature, the XSETBV/XGETBV instructions, and the XFEATURE_ENABLED_MASK
+	// register (XCR0).
 	bool xsave() const {
 		return _eax1.ecx[26];
 	}
+
+	// OS-Enabled Extended State Management
+	// A value of 1 indicates that the OS has enabled XSETBV/XGETBV instructions
+	// to access the XFEATURE_ENABLED_MASK register (XCR0), and support for
+	// processor extended state management using XSAVE/XRSTOR.
 	bool osxsave() const {
 		return _eax1.ecx[27];
 	}
+
+	// Advanced Vector Extensions
+	// The processor supports the AVX instruction extensions.
 	bool avx() const {
 		return _eax1.ecx[28];
 	}
+
+	// 16-bit floating-point conversion instructions
+	// A value of 1 indicates that the processor supports 16-bit floating-point
+	// conversion instructions.
 	bool f16c() const {
 		return _eax1.ecx[29];
 	}
+
+	// RDRAND instruction supported
+	// A value of 1 indicates that processor supports RDRAND instruction.
 	bool rdrnd() const {
 		return _eax1.ecx[30];
 	}
+
+	// Hypervisor
+	// Hypervisor present (always zero on physical CPUs).
 	bool hypervisor() const {
 		return _eax1.ecx[31];
 	}
 
 
-	// EAX=7 CPUID feature bits
+	// EDX
+
+	// Floating-point Unit On-Chip
+	// The processor contains an FPU that supports the Intel387 floating-point
+	// instruction set.
+	bool fpu() const {
+		return _eax1.edx[0];
+	}
+
+	// Virtual Mode Extension
+	// The processor supports extensions to virtual-8086 mode.
+	bool vme() const {
+		return _eax1.edx[1];
+	}
+
+	// Debugging Extension
+	// The processor supports I/O breakpoints, including the CR4.DE bit for
+	// enabling debug extensions and optional trapping of access to the DR4 and
+	// DR5 registers.
+	bool de() const {
+		return _eax1.edx[2];
+	}
+
+	// Page Size Extension
+	// The processor supports 4-MB pages.
+	bool pse() const {
+		return _eax1.edx[3];
+	}
+
+	// Time Stamp Counter
+	// The RDTSC instruction is supported including the CR4.TSD bit for
+	// access/privilege control.
+	bool tsc() const {
+		return _eax1.edx[4];
+	}
+
+	// Model Specific Registers
+	// Model Specific Registers are implemented with the RDMSR, WRMSR
+	// instructions.
+	bool msr() const {
+		return _eax1.edx[5];
+	}
+
+	// Physical Address Extension
+	// Physical addresses greater than 32 bits are supported.
+	bool pae() const {
+		return _eax1.edx[6];
+	}
+
+	// Machine-Check Exception
+	// Machine-Check Exception, INT18, and the CR4.MCE enable bit are supported.
+	bool mce() const {
+		return _eax1.edx[7];
+	}
+
+	// CMPXCHG8 Instruction
+	// The compare and exchange 8-bytes instruction is supported.
+	bool cx8() const {
+		return _eax1.edx[8];
+	}
+
+	// On-chip APIC Hardware
+	// The processor contains a software-accessible local APIC.
+	bool apic() const {
+		return _eax1.edx[9];
+	}
+
+	// 10 - reserved
+
+	// Fast System Call
+	// Indicates whether the processor supports the Fast System Call
+	// instructions, SYSENTER and SYSEXIT. NOTE: Refer to Section 5.1.2.5 for
+	// further information regarding SYSENTER/SYSEXIT feature and SEP feature
+	// bit.
+	bool sep() const {
+		return _eax1.edx[11];
+	}
+
+	// Memory Type Range Registers
+	// The processor supports the Memory Type Range Registers specifically the
+	// MTRR_CAP register.
+	bool mtrr() const {
+		return _eax1.edx[12];
+	}
+
+	// Page Global Enable
+	// The global bit in the page directory entries (PDEs) and page table
+	// entries (PTEs) is supported, indicating TLB entries that are common to
+	// different processes and need not be flushed. The CR4.PGE bit controls
+	// this feature.
+	bool pge() const {
+		return _eax1.edx[13];
+	}
+
+	// Machine-Check Architecture
+	// The Machine-Check Architecture is supported, specifically the MCG_CAP
+	// register.
+	bool mca() const {
+		return _eax1.edx[14];
+	}
+
+	// Conditional Move Instruction
+	// The processor supports CMOVcc, and if the FPU feature flag (bit 0) is
+	// also set, supports the FCMOVCC and FCOMI instructions.
+	bool cmov() const {
+		return _eax1.edx[15];
+	}
+
+	// Page Attribute Table
+	// Indicates whether the processor supports the Page Attribute Table. This
+	// feature augments the Memory Type Range Registers (MTRRs), allowing an
+	// operating system to specify attributes of memory on 4K granularity
+	// through a linear address.
+	bool pat() const {
+		return _eax1.edx[16];
+	}
+
+	// 36-bit Page Size Extension
+	// Indicates whether the processor supports 4-MB pages that are capable of
+	// addressing physical memory beyond 4-GB. This feature indicates that the
+	// upper four bits of the physical address of the 4-MB page is encoded by
+	// bits 13-16 of the page directory entry.
+	bool pse36() const {
+		return _eax1.edx[17];
+	}
+
+	// Processor serial number is present and enabled
+	// The processor supports the 96-bit processor serial number feature, and
+	// the feature is enabled.Note: The Pentium 4 and subsequent processor
+	// families do not support this feature.
+	bool psn() const {
+		return _eax1.edx[18];
+	}
+
+	// CLFLUSH Instruction
+	// Indicates that the processor supports the CLFLUSH instruction.
+	bool clfsh() const {
+		return _eax1.edx[19];
+	}
+
+	// 20 - reserved
+
+	// Debug Store
+	// Indicates that the processor supports the ability to write debug
+	// information into a memory resident buffer. This feature is used by the
+	// branch trace store (BTS) and precise event-based sampling (PEBS)
+	// facilities.
+	bool ds() const {
+		return _eax1.edx[21];
+	}
+
+	// Thermal Monitor and Software Controlled Clock Facilities
+	// The processor implements internal MSRs that allow processor temperature
+	// to be monitored and processor performance to be modulated in predefined
+	// duty cycles under software control.
+	bool acpi() const {
+		return _eax1.edx[22];
+	}
+
+	// MMX technology
+	// The processor supports the MMX technology instruction set extensions to
+	// Intel Architecture.
+	bool mmx() const {
+		return _eax1.edx[23];
+	}
+
+	// FXSAVE and FXSTOR Instructions
+	// The FXSAVE and FXRSTOR instructions are supported for fast save and
+	// restore of the floating point context. Presence of this bit also
+	// indicates that CR4.OSFXSR is available for an operating system to
+	// indicate that it supports the FXSAVE and FXRSTOR instructions.
+	bool fxsr() const {
+		return _eax1.edx[24];
+	}
+
+	// Streaming SIMD Extensions
+	// The processor supports the Streaming SIMD Extensions to the Intel
+	// Architecture.
+	bool sse() const {
+		return _eax1.edx[25];
+	}
+
+	// Streaming SIMD Extensions 2
+	// Indicates the processor supports the Streaming SIMD Extensions 2
+	// Instructions.
+	bool sse2() const {
+		return _eax1.edx[26];
+	}
+
+	// Self-Snoop
+	// The processor supports the management of conflicting memory types by
+	// performing a snoop of its own cache structure for transactions issued to
+	// the bus.
+	bool ss() const {
+		return _eax1.edx[27];
+	}
+
+	// Multi-Threading
+	// The physical processor package is capable of supporting more than one
+	// logical processor. This field does not indicate that Hyper-Threading
+	// Technology or Core Multi-Processing (CMP) has been enabled for this
+	// specific processor. To determine if Hyper-Threading Technology or CMP is
+	// supported, compare value returned in EBX[23:16] after executing CPUID
+	// with EAX=1.  If the resulting value is > 1, then the processor supports
+	// Multi-Threading.
+	bool htt() const {
+		return _eax1.edx[28];
+	}
+
+	// Thermal Monitor
+	// The processor implements the Thermal Monitor automatic thermal control
+	// circuitry (TCC).
+	bool tm() const {
+		return _eax1.edx[29];
+	}
+
+	// IA64 processor emulating x86
+	bool ia64() const {
+		return _eax1.edx[30];
+	}
+
+	// Pending Break Enable
+	// The processor supports the use of the FERR#/PBE# pin when the processor
+	// is in the stop-clock state (STPCLK# is asserted) to signal the processor
+	// that an interrupt is pending and that the processor should return to
+	// normal operation to handle the interrupt. Bit 10 (PBE enable) in the
+	// IA32_MISC_ENABLE MSR enables this capability.
+	bool pbe() const {
+		return _eax1.edx[31];
+	}
+#pragma endregion
+
+
+	/**
+	 * EAX=7 feature bits
+	 */
+#pragma region EAX7
+
 	// EBX
+
 	bool fsgsbase() const {
 		return _eax7_ecx0.ebx[0];
 	}
@@ -753,16 +1018,110 @@ public:
 	bool ssbd() const {
 		return _eax7_ecx0.edx[31];
 	}
+#pragma endregion
 
 
-	// EAX=7, ECX=1
+	/**
+	 * EAX=7, ECX=1 feature bits
+	 */
+#pragma region EAX7ECX1
 	bool avx512_bf16() const {
 		return _eax7_ecx1.eax[5];
 	}
+#pragma endregion
 
 
-	// EAX=80000001h CPUID feature bits
+	/**
+	 * EAX=80000001h feature bits
+	 */
+#pragma region EAX80000001
+
+	// ECX
+
+	bool lahf_lm() const {
+		return _eax80000001.ecx[0];
+	}
+	bool cmp_legacy() const {
+		return _eax80000001.ecx[1];
+	}
+	bool svm() const {
+		return _eax80000001.ecx[2];
+	}
+	bool extapic() const {
+		return _eax80000001.ecx[3];
+	}
+	bool cr8_legacy() const {
+		return _eax80000001.ecx[4];
+	}
+	bool abm() const {
+		return _eax80000001.ecx[5];
+	}
+	bool sse4a() const {
+		return _eax80000001.ecx[6];
+	}
+	bool misalignsse() const {
+		return _eax80000001.ecx[7];
+	}
+	bool _3dnowprefetch() const {
+		return _eax80000001.ecx[8];
+	}
+	bool osvw() const {
+		return _eax80000001.ecx[9];
+	}
+	bool ibs() const {
+		return _eax80000001.ecx[10];
+	}
+	bool xop() const {
+		return _eax80000001.ecx[11];
+	}
+	bool skinit() const {
+		return _eax80000001.ecx[12];
+	}
+	bool wdt() const {
+		return _eax80000001.ecx[13];
+	}
+	// 14
+	bool lwp() const {
+		return _eax80000001.ecx[15];
+	}
+	bool fma4() const {
+		return _eax80000001.ecx[16];
+	}
+	bool tce() const {
+		return _eax80000001.ecx[17];
+	}
+	// 18
+	bool nodeid_msr() const {
+		return _eax80000001.ecx[19];
+	}
+	// 20
+	bool tbm() const {
+		return _eax80000001.ecx[21];
+	}
+	bool topoext() const {
+		return _eax80000001.ecx[22];
+	}
+	bool perfctr_core() const {
+		return _eax80000001.ecx[23];
+	}
+	bool perfctr_nb() const {
+		return _eax80000001.ecx[24];
+	}
+	// 25
+	bool dbx() const {
+		return _eax80000001.ecx[26];
+	}
+	bool perftsc() const {
+		return _eax80000001.ecx[27];
+	}
+	bool pcx_l2i() const {
+		return _eax80000001.ecx[28];
+	}
+	// 29 - 31
+
+
 	// EDX
+
 	bool fpu_ext() const {
 		return _eax80000001.edx[0];
 	}
@@ -851,133 +1210,88 @@ public:
 	bool _3dnow() const {
 		return _eax80000001.edx[31];
 	}
-
-	// ECX
-	bool lahf_lm() const {
-		return _eax80000001.ecx[0];
-	}
-	bool cmp_legacy() const {
-		return _eax80000001.ecx[1];
-	}
-	bool svm() const {
-		return _eax80000001.ecx[2];
-	}
-	bool extapic() const {
-		return _eax80000001.ecx[3];
-	}
-	bool cr8_legacy() const {
-		return _eax80000001.ecx[4];
-	}
-	bool abm() const {
-		return _eax80000001.ecx[5];
-	}
-	bool sse4a() const {
-		return _eax80000001.ecx[6];
-	}
-	bool misalignsse() const {
-		return _eax80000001.ecx[7];
-	}
-	bool _3dnowprefetch() const {
-		return _eax80000001.ecx[8];
-	}
-	bool osvw() const {
-		return _eax80000001.ecx[9];
-	}
-	bool ibs() const {
-		return _eax80000001.ecx[10];
-	}
-	bool xop() const {
-		return _eax80000001.ecx[11];
-	}
-	bool skinit() const {
-		return _eax80000001.ecx[12];
-	}
-	bool wdt() const {
-		return _eax80000001.ecx[13];
-	}
-	// 14
-	bool lwp() const {
-		return _eax80000001.ecx[15];
-	}
-	bool fma4() const {
-		return _eax80000001.ecx[16];
-	}
-	bool tce() const {
-		return _eax80000001.ecx[17];
-	}
-	// 18
-	bool nodeid_msr() const {
-		return _eax80000001.ecx[19];
-	}
-	// 20
-	bool tbm() const {
-		return _eax80000001.ecx[21];
-	}
-	bool topoext() const {
-		return _eax80000001.ecx[22];
-	}
-	bool perfctr_core() const {
-		return _eax80000001.ecx[23];
-	}
-	bool perfctr_nb() const {
-		return _eax80000001.ecx[24];
-	}
-	// 25
-	bool dbx() const {
-		return _eax80000001.ecx[26];
-	}
-	bool perftsc() const {
-		return _eax80000001.ecx[27];
-	}
-	bool pcx_l2i() const {
-		return _eax80000001.ecx[28];
-	}
-	// 29 - 31
+#pragma endregion
 
 
-	// Raw registers & unimplemented.
+	/**
+	 * Raw registers & unimplemented
+	 * If a function you need isn't available, you can construct a fea::cpu_id
+	 * object with your desired function leaf and subleaf to get the custom
+	 * feature bits.
+	 */
+#pragma region RAW
+
+	// INPUT EAX = 01H: Returns Model, Family, Stepping Information
+	// INPUT EAX = 01H: Returns Additional Information in EBX
+	// INPUT EAX = 01H: Returns Feature Information in ECX and EDX
 	const cpu_id& eax1() const {
 		return _eax1;
 	}
+
+	// INPUT EAX = 02H: TLB/Cache/Prefetch Information Returned in EAX, EBX,
+	// ECX, EDX
 	const cpu_id& eax2() const {
 		return _eax2;
 	}
+
+	// INPUT EAX = 03H: Processor Serial Number (Only available on Pentium 3)
 	const cpu_id& eax3() const {
 		return _eax3;
 	}
+
+	// INPUT EAX = 04H: Returns Deterministic Cache Parameters for Each Level
 	const cpu_id& eax4() const {
 		return _eax4;
 	}
+
+	// INPUT EAX = 06H: Returns Thermal and Power Management Features
 	const cpu_id& eax6() const {
 		return _eax6;
 	}
+
+	// INPUT EAX = 07H: Returns Structured Extended Feature Enumeration
+	// Information
 	const cpu_id& eax7_ecx0() const {
 		return _eax7_ecx0;
 	}
 	const cpu_id& eax7_ecx1() const {
 		return _eax7_ecx1;
 	}
-	// 0xB
-	const cpu_id& eax11() const {
-		return _eax11;
+
+	// INPUT EAX = 0BH: Returns Extended Topology Information
+	const cpu_id& eax0b() const {
+		return _eax0b;
 	}
+
+	// INPUT EAX=80000001H: Extended Processor Info and Feature Bits
 	const cpu_id& eax80000001() const {
 		return _eax80000001;
 	}
+
+	// 80000002H, 80000003H, 80000004H are decoded in brand string.
+
+	// INPUT EAX=80000005H: L1 Cache and TLB Identifiers
 	const cpu_id& eax80000005() const {
 		return _eax80000005;
 	}
+
+	// INPUT EAX=80000006H: Extended L2 Cache Features
 	const cpu_id& eax80000006() const {
 		return _eax80000006;
 	}
+
+	// INPUT EAX=80000007H: Advanced Power Management Information
 	const cpu_id& eax80000007() const {
 		return _eax80000007;
 	}
+
+	// INPUT EAX=80000008H: Virtual and Physical address Sizes
 	const cpu_id& eax80000008() const {
 		return _eax80000008;
 	}
+#pragma endregion
 
-
+	// Print all supported feature bits to console.
 	void print_all() const {
 		printf("%-18s%s\n", "vendor", vendor());
 		printf("%-18s%s\n", "brand", brand());
@@ -1222,7 +1536,7 @@ private:
 	cpu_id _eax2;
 	cpu_id _eax3;
 	cpu_id _eax4;
-	cpu_id _eax11;
+	cpu_id _eax0b;
 	cpu_id _eax6;
 	cpu_id _eax7_ecx0;
 	cpu_id _eax7_ecx1;
