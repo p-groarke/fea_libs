@@ -49,6 +49,8 @@
 #include <string>
 #include <vector>
 
+#define FEA_UNUSED(...)
+
 // References :
 // https://en.wikipedia.org/wiki/CPUID
 // https://www.scss.tcd.ie/Jeremy.Jones/CS4021/processor-identification-cpuid-instruction-note.pdf
@@ -228,7 +230,6 @@ public:
 	bool intel() const {
 		return _is_intel;
 	}
-
 	bool amd() const {
 		return _is_amd;
 	}
@@ -236,7 +237,7 @@ public:
 	/**
 	 * EAX=1 feature bits
 	 */
-#pragma region EAX1
+	FEA_UNUSED(#pragma region EAX1)
 
 	// EAX
 
@@ -335,8 +336,8 @@ public:
 	}
 
 	// 64-Bit Debug Store
-	// Indicates that the processor has the ability to write a history of the
-	// 64-bit branch to and from addresses into a memory buffer.
+	// Indicates that the processor has the ability to write a history of
+	// the 64-bit branch to and from addresses into a memory buffer.
 	bool dtes64() const {
 		return _eax1.ecx[2];
 	}
@@ -348,8 +349,8 @@ public:
 	}
 
 	// CPL Qualified Debug Store
-	// The processor supports the extensions to the Debug Store feature to allow
-	// for branch message storage qualified by CPL.
+	// The processor supports the extensions to the Debug Store feature to
+	// allow for branch message storage qualified by CPL.
 	bool ds_cpl() const {
 		return _eax1.ecx[4];
 	}
@@ -367,15 +368,15 @@ public:
 	}
 
 	// Enhanced SpeedStep Technology
-	// The processor supports Enhanced SpeedStep Technology and implements the
-	// IA32_PERF_STS and IA32_PERF_CTL registers.
+	// The processor supports Enhanced SpeedStep Technology and implements
+	// the IA32_PERF_STS and IA32_PERF_CTL registers.
 	bool est() const {
 		return _eax1.ecx[7];
 	}
 
 	// Thermal Monitor 2
-	// The processor implements the Thermal Monitor 2 thermal control circuit
-	// (TCC).
+	// The processor implements the Thermal Monitor 2 thermal control
+	// circuit (TCC).
 	bool tm2() const {
 		return _eax1.ecx[8];
 	}
@@ -388,15 +389,15 @@ public:
 	}
 
 	// L1 Context ID
-	// The L1 data cache mode can be set to either adaptive mode or shared mode
-	// by the BIOS.
+	// The L1 data cache mode can be set to either adaptive mode or shared
+	// mode by the BIOS.
 	bool cnxt_id() const {
 		return _eax1.ecx[10];
 	}
 
 	// Silicon Debug interface
-	// A value of 1 indicates the processor supports IA32_DEBUG_INTERFACE MSR
-	// for silicon debug.
+	// A value of 1 indicates the processor supports IA32_DEBUG_INTERFACE
+	// MSR for silicon debug.
 	bool sdbg() const {
 		return _eax1.ecx[11];
 	}
@@ -415,9 +416,9 @@ public:
 
 	// xTPR Update Control
 	// The processor supports the ability to disable sending Task Priority
-	// messages.  When this feature flag is set, Task Priority messages may be
-	// disabled.  Bit 23 (Echo TPR disable) in the IA32_MISC_ENABLE MSR controls
-	// the sending of Task Priority messages.
+	// messages.  When this feature flag is set, Task Priority messages may
+	// be disabled.  Bit 23 (Echo TPR disable) in the IA32_MISC_ENABLE MSR
+	// controls the sending of Task Priority messages.
 	bool xtpr() const {
 		return _eax1.ecx[14];
 	}
@@ -438,20 +439,22 @@ public:
 	}
 
 	// Direct Cache Access
-	// The processor supports the ability to prefetch data from a memory mapped
-	// device.
+	// The processor supports the ability to prefetch data from a memory
+	// mapped device.
 	bool dca() const {
 		return _eax1.ecx[18];
 	}
 
 	// Streaming SIMD Extensions 4.1
-	// The processor supports the Streaming SIMD Extensions 4.1 instructions.
+	// The processor supports the Streaming SIMD Extensions 4.1
+	// instructions.
 	bool sse41() const {
 		return _eax1.ecx[19];
 	}
 
 	// Streaming SIMD Extensions 4.2
-	// The processor supports the Streaming SIMD Extensions 4.2 instructions.
+	// The processor supports the Streaming SIMD Extensions 4.2
+	// instructions.
 	bool sse42() const {
 		return _eax1.ecx[20];
 	}
@@ -475,8 +478,8 @@ public:
 	}
 
 	// Time Stamp Counter Deadline
-	// The processor’s local APIC timer supports one-shot operation using a TSC
-	// deadline value.
+	// The processor’s local APIC timer supports one-shot operation using a
+	// TSC deadline value.
 	bool tsc_deadline() const {
 		return _eax1.ecx[24];
 	}
@@ -489,16 +492,16 @@ public:
 
 	// XSAVE/XSTOR States
 	// The processor supports the XSAVE/XRSTOR processor extended states
-	// feature, the XSETBV/XGETBV instructions, and the XFEATURE_ENABLED_MASK
-	// register (XCR0).
+	// feature, the XSETBV/XGETBV instructions, and the
+	// XFEATURE_ENABLED_MASK register (XCR0).
 	bool xsave() const {
 		return _eax1.ecx[26];
 	}
 
 	// OS-Enabled Extended State Management
-	// A value of 1 indicates that the OS has enabled XSETBV/XGETBV instructions
-	// to access the XFEATURE_ENABLED_MASK register (XCR0), and support for
-	// processor extended state management using XSAVE/XRSTOR.
+	// A value of 1 indicates that the OS has enabled XSETBV/XGETBV
+	// instructions to access the XFEATURE_ENABLED_MASK register (XCR0), and
+	// support for processor extended state management using XSAVE/XRSTOR.
 	bool osxsave() const {
 		return _eax1.ecx[27];
 	}
@@ -510,8 +513,8 @@ public:
 	}
 
 	// 16-bit floating-point conversion instructions
-	// A value of 1 indicates that the processor supports 16-bit floating-point
-	// conversion instructions.
+	// A value of 1 indicates that the processor supports 16-bit
+	// floating-point conversion instructions.
 	bool f16c() const {
 		return _eax1.ecx[29];
 	}
@@ -532,8 +535,8 @@ public:
 	// EDX
 
 	// Floating-point Unit On-Chip
-	// The processor contains an FPU that supports the Intel387 floating-point
-	// instruction set.
+	// The processor contains an FPU that supports the Intel387
+	// floating-point instruction set.
 	bool fpu() const {
 		return _eax1.edx[0];
 	}
@@ -546,8 +549,8 @@ public:
 
 	// Debugging Extension
 	// The processor supports I/O breakpoints, including the CR4.DE bit for
-	// enabling debug extensions and optional trapping of access to the DR4 and
-	// DR5 registers.
+	// enabling debug extensions and optional trapping of access to the DR4
+	// and DR5 registers.
 	bool de() const {
 		return _eax1.edx[2];
 	}
@@ -579,7 +582,8 @@ public:
 	}
 
 	// Machine-Check Exception
-	// Machine-Check Exception, INT18, and the CR4.MCE enable bit are supported.
+	// Machine-Check Exception, INT18, and the CR4.MCE enable bit are
+	// supported.
 	bool mce() const {
 		return _eax1.edx[7];
 	}
@@ -600,25 +604,25 @@ public:
 
 	// Fast System Call
 	// Indicates whether the processor supports the Fast System Call
-	// instructions, SYSENTER and SYSEXIT. NOTE: Refer to Section 5.1.2.5 for
-	// further information regarding SYSENTER/SYSEXIT feature and SEP feature
-	// bit.
+	// instructions, SYSENTER and SYSEXIT. NOTE: Refer to Section 5.1.2.5
+	// for further information regarding SYSENTER/SYSEXIT feature and SEP
+	// feature bit.
 	bool sep() const {
 		return _eax1.edx[11];
 	}
 
 	// Memory Type Range Registers
-	// The processor supports the Memory Type Range Registers specifically the
-	// MTRR_CAP register.
+	// The processor supports the Memory Type Range Registers specifically
+	// the MTRR_CAP register.
 	bool mtrr() const {
 		return _eax1.edx[12];
 	}
 
 	// Page Global Enable
 	// The global bit in the page directory entries (PDEs) and page table
-	// entries (PTEs) is supported, indicating TLB entries that are common to
-	// different processes and need not be flushed. The CR4.PGE bit controls
-	// this feature.
+	// entries (PTEs) is supported, indicating TLB entries that are common
+	// to different processes and need not be flushed. The CR4.PGE bit
+	// controls this feature.
 	bool pge() const {
 		return _eax1.edx[13];
 	}
@@ -638,27 +642,27 @@ public:
 	}
 
 	// Page Attribute Table
-	// Indicates whether the processor supports the Page Attribute Table. This
-	// feature augments the Memory Type Range Registers (MTRRs), allowing an
-	// operating system to specify attributes of memory on 4K granularity
-	// through a linear address.
+	// Indicates whether the processor supports the Page Attribute Table.
+	// This feature augments the Memory Type Range Registers (MTRRs),
+	// allowing an operating system to specify attributes of memory on 4K
+	// granularity through a linear address.
 	bool pat() const {
 		return _eax1.edx[16];
 	}
 
 	// 36-bit Page Size Extension
-	// Indicates whether the processor supports 4-MB pages that are capable of
-	// addressing physical memory beyond 4-GB. This feature indicates that the
-	// upper four bits of the physical address of the 4-MB page is encoded by
-	// bits 13-16 of the page directory entry.
+	// Indicates whether the processor supports 4-MB pages that are capable
+	// of addressing physical memory beyond 4-GB. This feature indicates
+	// that the upper four bits of the physical address of the 4-MB page is
+	// encoded by bits 13-16 of the page directory entry.
 	bool pse36() const {
 		return _eax1.edx[17];
 	}
 
 	// Processor serial number is present and enabled
-	// The processor supports the 96-bit processor serial number feature, and
-	// the feature is enabled.Note: The Pentium 4 and subsequent processor
-	// families do not support this feature.
+	// The processor supports the 96-bit processor serial number feature,
+	// and the feature is enabled.Note: The Pentium 4 and subsequent
+	// processor families do not support this feature.
 	bool psn() const {
 		return _eax1.edx[18];
 	}
@@ -673,24 +677,24 @@ public:
 
 	// Debug Store
 	// Indicates that the processor supports the ability to write debug
-	// information into a memory resident buffer. This feature is used by the
-	// branch trace store (BTS) and precise event-based sampling (PEBS)
+	// information into a memory resident buffer. This feature is used by
+	// the branch trace store (BTS) and precise event-based sampling (PEBS)
 	// facilities.
 	bool ds() const {
 		return _eax1.edx[21];
 	}
 
 	// Thermal Monitor and Software Controlled Clock Facilities
-	// The processor implements internal MSRs that allow processor temperature
-	// to be monitored and processor performance to be modulated in predefined
-	// duty cycles under software control.
+	// The processor implements internal MSRs that allow processor
+	// temperature to be monitored and processor performance to be modulated
+	// in predefined duty cycles under software control.
 	bool acpi() const {
 		return _eax1.edx[22];
 	}
 
 	// MMX technology
-	// The processor supports the MMX technology instruction set extensions to
-	// Intel Architecture.
+	// The processor supports the MMX technology instruction set extensions
+	// to Intel Architecture.
 	bool mmx() const {
 		return _eax1.edx[23];
 	}
@@ -720,8 +724,8 @@ public:
 
 	// Self-Snoop
 	// The processor supports the management of conflicting memory types by
-	// performing a snoop of its own cache structure for transactions issued to
-	// the bus.
+	// performing a snoop of its own cache structure for transactions issued
+	// to the bus.
 	bool ss() const {
 		return _eax1.edx[27];
 	}
@@ -730,17 +734,17 @@ public:
 	// The physical processor package is capable of supporting more than one
 	// logical processor. This field does not indicate that Hyper-Threading
 	// Technology or Core Multi-Processing (CMP) has been enabled for this
-	// specific processor. To determine if Hyper-Threading Technology or CMP is
-	// supported, compare value returned in EBX[23:16] after executing CPUID
-	// with EAX=1.  If the resulting value is > 1, then the processor supports
-	// Multi-Threading.
+	// specific processor. To determine if Hyper-Threading Technology or CMP
+	// is supported, compare value returned in EBX[23:16] after executing
+	// CPUID with EAX=1.  If the resulting value is > 1, then the processor
+	// supports Multi-Threading.
 	bool htt() const {
 		return _eax1.edx[28];
 	}
 
 	// Thermal Monitor
-	// The processor implements the Thermal Monitor automatic thermal control
-	// circuitry (TCC).
+	// The processor implements the Thermal Monitor automatic thermal
+	// control circuitry (TCC).
 	bool tm() const {
 		return _eax1.edx[29];
 	}
@@ -751,21 +755,21 @@ public:
 	}
 
 	// Pending Break Enable
-	// The processor supports the use of the FERR#/PBE# pin when the processor
-	// is in the stop-clock state (STPCLK# is asserted) to signal the processor
-	// that an interrupt is pending and that the processor should return to
-	// normal operation to handle the interrupt. Bit 10 (PBE enable) in the
-	// IA32_MISC_ENABLE MSR enables this capability.
+	// The processor supports the use of the FERR#/PBE# pin when the
+	// processor is in the stop-clock state (STPCLK# is asserted) to signal
+	// the processor that an interrupt is pending and that the processor
+	// should return to normal operation to handle the interrupt. Bit 10
+	// (PBE enable) in the IA32_MISC_ENABLE MSR enables this capability.
 	bool pbe() const {
 		return _eax1.edx[31];
 	}
-#pragma endregion
+	FEA_UNUSED(#pragma endregion)
 
 
 	/**
 	 * EAX=7 feature bits
 	 */
-#pragma region EAX7
+	FEA_UNUSED(#pragma region EAX7)
 
 	// EBX
 
@@ -1018,23 +1022,19 @@ public:
 	bool ssbd() const {
 		return _eax7_ecx0.edx[31];
 	}
-#pragma endregion
 
 
-	/**
-	 * EAX=7, ECX=1 feature bits
-	 */
-#pragma region EAX7ECX1
+	// EAX=7, ECX=1
 	bool avx512_bf16() const {
 		return _eax7_ecx1.eax[5];
 	}
-#pragma endregion
+	FEA_UNUSED(#pragma endregion)
 
 
 	/**
 	 * EAX=80000001h feature bits
 	 */
-#pragma region EAX80000001
+	FEA_UNUSED(#pragma region EAX80000001)
 
 	// ECX
 
@@ -1210,16 +1210,16 @@ public:
 	bool _3dnow() const {
 		return _eax80000001.edx[31];
 	}
-#pragma endregion
+	FEA_UNUSED(#pragma endregion)
 
 
 	/**
 	 * Raw registers & unimplemented
-	 * If a function you need isn't available, you can construct a fea::cpu_id
-	 * object with your desired function leaf and subleaf to get the custom
-	 * feature bits.
+	 * If a function you need isn't available, you can construct a
+	 * fea::cpu_id object with your desired function leaf and subleaf to get
+	 * the custom feature bits.
 	 */
-#pragma region RAW
+	FEA_UNUSED(#pragma region RAW)
 
 	// INPUT EAX = 01H: Returns Model, Family, Stepping Information
 	// INPUT EAX = 01H: Returns Additional Information in EBX
@@ -1234,12 +1234,14 @@ public:
 		return _eax2;
 	}
 
-	// INPUT EAX = 03H: Processor Serial Number (Only available on Pentium 3)
+	// INPUT EAX = 03H: Processor Serial Number (Only available on Pentium
+	// 3)
 	const cpu_id& eax3() const {
 		return _eax3;
 	}
 
-	// INPUT EAX = 04H: Returns Deterministic Cache Parameters for Each Level
+	// INPUT EAX = 04H: Returns Deterministic Cache Parameters for Each
+	// Level
 	const cpu_id& eax4() const {
 		return _eax4;
 	}
@@ -1289,7 +1291,7 @@ public:
 	const cpu_id& eax80000008() const {
 		return _eax80000008;
 	}
-#pragma endregion
+	FEA_UNUSED(#pragma endregion)
 
 	// Print all supported feature bits to console.
 	void print_all() const {
