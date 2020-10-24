@@ -991,11 +991,11 @@ public:
 		printf("%-18s%x\n", "stepping_id", stepping_id());
 		printf("\n");
 
-		printf("%-18s%hu\n", "brand_index", brand_index());
-		printf("%-18s%hu\n", "clflush_line_size", clflush_line_size());
-		printf("%-18s%hu\n", "num_addressable_ids",
+		printf("%-18s%hhu\n", "brand_index", brand_index());
+		printf("%-18s%hhu\n", "clflush_line_size", clflush_line_size());
+		printf("%-18s%hhu\n", "num_addressable_ids",
 				num_addressable_logical_ids());
-		printf("%-18s%hu\n", "local_apic_id", local_apic_id());
+		printf("%-18s%hhu\n", "local_apic_id", local_apic_id());
 		printf("\n");
 
 		printf("eax1 - edx\n");
@@ -1117,7 +1117,7 @@ public:
 		detail::print_bool("avx512_bitalg", avx512_bitalg());
 		detail::print_bool("avx512_vpopcntdq", avx512_vpopcntdq());
 		detail::print_bool("five_level_paging", five_level_paging());
-		printf("%-18s%hu\n", "mawau", mawau());
+		printf("%-18s%hhu\n", "mawau", mawau());
 		detail::print_bool("rdpid", rdpid());
 		detail::print_bool("cldemote", cldemote());
 		detail::print_bool("movdiri", movdiri());
