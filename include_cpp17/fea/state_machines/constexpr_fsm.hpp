@@ -30,6 +30,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/meta/tuple.hpp"
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -115,41 +117,6 @@ struct is_event_builder<T, typename event_<typename T::is_event_builder>::type>
 		: public std::true_type {};
 
 
-template <class T, class Tuple>
-struct tuple_idx {
-	static_assert(!std::is_same_v<Tuple, std::tuple<>>,
-			"could not find T in given Tuple");
-
-	// static constexpr size_t value = std::numeric_limits<size_t>::max();
-};
-template <class T, class... Types>
-struct tuple_idx<T, std::tuple<T, Types...>> {
-	static constexpr size_t value = 0;
-};
-template <class T, class U, class... Types>
-struct tuple_idx<T, std::tuple<U, Types...>> {
-	static constexpr size_t value
-			= 1 + tuple_idx<T, std::tuple<Types...>>::value;
-};
-
-template <class T, class Tuple>
-inline constexpr size_t tuple_idx_v = tuple_idx<T, Tuple>::value;
-
-
-template <class T, class Tuple>
-struct tuple_contains;
-template <class T>
-struct tuple_contains<T, std::tuple<>> : std::false_type {};
-template <class T, class U, class... Ts>
-struct tuple_contains<T, std::tuple<U, Ts...>>
-		: tuple_contains<T, std::tuple<Ts...>> {};
-template <class T, class... Ts>
-struct tuple_contains<T, std::tuple<T, Ts...>> : std::true_type {};
-
-template <class T, class Tuple>
-inline constexpr bool tuple_contains_v = tuple_contains<T, Tuple>::value;
-
-
 template <class Func, size_t... I>
 constexpr auto tuple_expander5000_impl(Func func, std::index_sequence<I...>) {
 	return func(std::integral_constant<size_t, I>{}...);
@@ -178,7 +145,7 @@ constexpr auto static_for(Func func, std::index_sequence<I...>) {
 }
 
 template <size_t N, class Func>
-constexpr void static_for(Func func) {
+constexpr auto static_for(Func func) {
 	return static_for(func, std::make_index_sequence<N>());
 }
 

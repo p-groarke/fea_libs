@@ -1550,6 +1550,11 @@ private:
 	cpu_id _eax80000008;
 };
 
+#if FEA_CPP17
 inline const cpu_info_t cpu_info;
+#else
+// You need to define the structure in 1 cpp file.
+extern const cpu_info_t cpu_info;
+#endif
 
 } // namespace fea
