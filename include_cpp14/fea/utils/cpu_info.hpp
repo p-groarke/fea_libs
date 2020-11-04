@@ -47,8 +47,8 @@
 #include <bitset>
 #include <cstdint>
 #include <string>
-#include <vector>
 
+// To ignore MSVC regions on other OSes.
 #define FEA_REGION(...)
 
 // References :
@@ -159,10 +159,6 @@ struct cpu_info_t {
 			if (highest_leaf >= 4) {
 				_eax4 = cpu_id{ 4 };
 			}
-			// 0xB
-			if (highest_leaf >= 11) {
-				_eax0b = cpu_id{ 11 };
-			}
 
 			if (highest_leaf >= 6) {
 				_eax6 = cpu_id{ 6 };
@@ -172,6 +168,11 @@ struct cpu_info_t {
 			if (highest_leaf >= 7) {
 				_eax7_ecx0 = cpu_id{ 7 };
 				_eax7_ecx1 = cpu_id{ 7, 1 };
+			}
+
+			// 0x0B
+			if (highest_leaf >= 11) {
+				_eax0b = cpu_id{ 11 };
 			}
 		}
 

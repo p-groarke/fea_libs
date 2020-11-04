@@ -249,8 +249,6 @@ TEST(cpu_info, basics) {
 			s = "rdrnd";
 		} else if (s == "lahf") {
 			s = "lahf_lm";
-		} else if (s == "lahf") {
-			s = "lahf_lm";
 		} else if (s == "ibrs") {
 			s = "spec_ctrl";
 		} else if (s == "vmm") {
