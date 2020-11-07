@@ -100,4 +100,25 @@ template <class T, class Tuple>
 inline constexpr bool tuple_contains_v = tuple_contains<T, Tuple>::value;
 #endif
 
+
+namespace detail {
+template <class Func, class Tuple, size_t... I>
+constexpr void tuple_foreach(Func func, Tuple& tup, std::index_sequence<I...>) {
+#if FEA_CPP17
+	// TODO : test it.
+	(func(std::get<I>(tup)), ...);
+#else
+	char dummy[] = { (void(func(std::get<I>(tup))), 0)... };
+#endif
+}
+} // namespace detail
+
+// Tuple foreach.
+// Your lambda will be called with each tuple's elements.
+// Provid lambda which accepts auto& or const auto&.
+template <class Func, class Tuple>
+constexpr void tuple_foreach(Func func, Tuple& tup) {
+	detail::tuple_foreach(
+			func, tup, std::make_index_sequence<std::tuple_size<Tuple>{}>{});
+}
 } // namespace fea

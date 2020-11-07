@@ -163,16 +163,35 @@ public:
 
 	// Capacity
 
+	// Checks if the event_stack is empty.
+	bool empty() const noexcept {
+		bool ret = true;
+		tuple_foreach([&](const auto& map) { ret &= map.empty(); }, _stacks);
+		return ret;
+	}
+
 	// Checks whether the event has subscribers.
 	template <EventEnum e>
 	bool empty() const noexcept {
 		return std::get<size_t(e)>(_stacks).empty();
 	}
 
+	// Returns total size of subscribers.
+	size_t size() const noexcept {
+		size_t ret = 0;
+		tuple_foreach([&](const auto& map) { ret += map.size(); }, _stacks);
+		return ret;
+	}
+
 	// Returns the number of subscribers to event.
 	template <EventEnum e>
 	size_t size() const noexcept {
 		return std::get<size_t(e)>(_stacks).size();
+	}
+
+	// Reserve same storage for all event subscribers.
+	void reserve(size_t new_cap) {
+		tuple_foreach([&](auto& map) { map.reserve(new_cap); }, _stacks);
 	}
 
 	// Reserve storage for event subscribers.
@@ -189,6 +208,11 @@ public:
 
 
 	// Modifiers
+
+	// Clear all event subscribers.
+	void clear() {
+		tuple_foreach([&](auto& map) { map.clear(); }, _stacks);
+	}
 
 	// Clear event subscribers.
 	template <EventEnum e>
@@ -231,7 +255,6 @@ public:
 			func_pair.second(std::forward<FuncArgs>(func_args)...);
 		}
 	}
-
 	// Trigger event e with arguments func_args.
 	template <EventEnum e, class... FuncArgs>
 	void trigger(FuncArgs&&... func_args) {
@@ -252,7 +275,6 @@ public:
 					}
 				});
 	}
-
 	// Trigger event e callbacks in parallel with arguments func_args.
 	template <EventEnum e, class... FuncArgs>
 	void trigger_mt(FuncArgs&&... func_args) {
