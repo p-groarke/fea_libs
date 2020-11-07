@@ -33,6 +33,7 @@
 
 #pragma once
 #include "fea/utils/platform.hpp"
+#include "fea/utils/unused.hpp"
 
 #include <tuple>
 #include <type_traits>
@@ -109,6 +110,7 @@ constexpr void tuple_foreach(Func func, Tuple& tup, std::index_sequence<I...>) {
 	(func(std::get<I>(tup)), ...);
 #else
 	char dummy[] = { (void(func(std::get<I>(tup))), '0')... };
+	unused(dummy);
 #endif
 }
 } // namespace detail
