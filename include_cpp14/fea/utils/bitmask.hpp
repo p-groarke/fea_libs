@@ -37,7 +37,8 @@
 #define FEA_ENABLE_BITMASK_OPERATORS(x) \
 	template <> \
 	struct has_bitmask_operators<x> : std::true_type { \
-		static_assert(std::is_enum_v<x> && !std::is_convertible_v<x, int>, \
+		static_assert( \
+				std::is_enum<x>::value && !std::is_convertible<x, int>::value, \
 				"template parameter is not an enum class type"); \
 	}
 

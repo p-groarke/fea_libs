@@ -1,13 +1,17 @@
-﻿/*
-#include "fea/events/event_stack.hpp"
+﻿#include "fea/events/event_stack.hpp"
 
 #include <array>
 
 namespace fea {
-template <class, class, class...>
-struct event_system;
-using notifier_id = event_id<event_system>;
 
+// template <class, class, class...>
+// struct event_system;
+// using notifier_id = event_id<event_system>;
+
+}
+
+
+/*
 template <class EventEnum, class ChannelEnum, class... FuncTypes>
 struct event_system {
 	event_system() = default;
