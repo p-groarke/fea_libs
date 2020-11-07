@@ -4,7 +4,7 @@
 
 namespace {
 TEST(event_stack, basics) {
-	enum class e : unsigned { one, two, three, count };
+	enum class e { one, two, three, count };
 	fea::event_stack<e, int(), int(), int(float, double)> s{};
 
 	EXPECT_TRUE(s.empty<e::one>());
@@ -28,10 +28,16 @@ TEST(event_stack, basics) {
 	std::atomic<int> t_two{ 0 };
 	std::atomic<int> t_three{ 0 };
 
+	fea::event_id<e, e::one> invalid_id;
+	EXPECT_FALSE(s.contains(invalid_id));
+
 	auto front_1 = s.subscribe<e::one>([&t_one]() {
 		++t_one;
 		return 0;
 	});
+	EXPECT_FALSE(s.contains(invalid_id));
+	EXPECT_TRUE(s.contains(front_1));
+
 	s.subscribe<e::one>([&t_one]() {
 		++t_one;
 		return 1;
@@ -48,12 +54,17 @@ TEST(event_stack, basics) {
 		++t_one;
 		return 4;
 	});
+	EXPECT_FALSE(s.contains(invalid_id));
+	EXPECT_TRUE(s.contains(back_1));
 	EXPECT_EQ(5, s.size<e::one>());
 
 	auto front_2 = s.subscribe<e::two>([&t_two]() {
 		++t_two;
 		return 0;
 	});
+	EXPECT_FALSE(s.contains(invalid_id));
+	EXPECT_TRUE(s.contains(front_2));
+
 	s.subscribe<e::two>([&t_two]() {
 		++t_two;
 		return 1;
@@ -70,12 +81,17 @@ TEST(event_stack, basics) {
 		++t_two;
 		return 4;
 	});
+	EXPECT_FALSE(s.contains(invalid_id));
+	EXPECT_TRUE(s.contains(back_2));
 	EXPECT_EQ(5, s.size<e::two>());
 
 	auto front_3 = s.subscribe<e::three>([&t_three](float, double) {
 		++t_three;
 		return 0;
 	});
+	EXPECT_FALSE(s.contains(invalid_id));
+	EXPECT_TRUE(s.contains(front_3));
+
 	s.subscribe<e::three>([&t_three](float, double) {
 		++t_three;
 		return 1;
@@ -92,6 +108,8 @@ TEST(event_stack, basics) {
 		++t_three;
 		return 4;
 	});
+	EXPECT_FALSE(s.contains(invalid_id));
+	EXPECT_TRUE(s.contains(back_3));
 	EXPECT_EQ(5, s.size<e::three>());
 
 	s.trigger<e::one>();

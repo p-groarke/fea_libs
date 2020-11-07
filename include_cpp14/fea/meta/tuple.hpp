@@ -58,7 +58,7 @@ auto make_tuple_from_count() {
 // Get the index of type T in Tuple.
 template <class T, class Tuple>
 struct tuple_idx {
-	static_assert(!std::is_same_v<Tuple, std::tuple<>>,
+	static_assert(!std::is_same<Tuple, std::tuple<>>::value,
 			"could not find T in given Tuple");
 };
 

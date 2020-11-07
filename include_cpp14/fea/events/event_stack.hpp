@@ -53,13 +53,13 @@ signatures.
 
 For ex:
 
-enum class my_events : unsigned { event1, event2, count };
+enum class my_events { event1, event2, count };
 fea::event_stack<my_events, void(), void(int)> my_stack;
 
 Your event enum must fulfill these requirements :
 	- Contains 'count' memember equal to count events.
 	- Must contain > 0 events.
-	- Must be unsigned.
+	- Members must be >= 0.
 
 You can then subscribe and unsubscribe callbacks.
 And you can trigger events with the appropriate function parameters.
@@ -80,7 +80,7 @@ private:
 			: _id(id) {
 	}
 
-	size_t _id;
+	size_t _id = (std::numeric_limits<size_t>::max)();
 };
 
 
@@ -89,13 +89,8 @@ template <class EventEnum, class... FuncTypes>
 struct event_stack {
 
 	// EventEnum must be enum.
-	static_assert(std::is_enum_v<EventEnum>,
+	static_assert(std::is_enum<EventEnum>::value,
 			"event_stack : template parameter EventEnum must be enum");
-
-	// EventEnum must be unsigned.
-	static_assert(
-			std::is_unsigned_v<typename std::underlying_type<EventEnum>::type>,
-			"event_stack : enum underlying type must be unsigned");
 
 	// EventEnum must contain member 'count' and must not be 0.
 	static_assert(size_t(EventEnum::count) != 0,
