@@ -108,7 +108,7 @@ constexpr void tuple_foreach(Func func, Tuple& tup, std::index_sequence<I...>) {
 	// TODO : test it.
 	(func(std::get<I>(tup)), ...);
 #else
-	char dummy[] = { (void(func(std::get<I>(tup))), 0)... };
+	char dummy[] = { (void(func(std::get<I>(tup))), '0')... };
 #endif
 }
 } // namespace detail

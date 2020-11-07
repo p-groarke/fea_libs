@@ -297,6 +297,9 @@ public:
 
 	// Modifiers
 
+	// Adds a notifier Id.
+	// You can attach callbacks to notifiers and their events.
+	// Notifiers are a runtime system.
 	notifier_id add_notifier() {
 		assert(_notifier_id_generator != (std::numeric_limits<size_t>::max)());
 
@@ -304,10 +307,10 @@ public:
 		++_notifier_id_generator;
 
 		_notifier_stacks.insert({ _notifier_id_generator, {} });
-
 		return { _notifier_id_generator };
 	}
 
+	// Removes a notifier Id and its callbacks.
 	void remove_notifier(notifier_id nid) {
 		_notifier_stacks.erase(nid._id);
 	}

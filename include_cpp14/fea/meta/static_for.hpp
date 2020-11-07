@@ -10,7 +10,8 @@ constexpr void static_for(Func func, std::index_sequence<I...>) {
 	// TODO : test it.
 	return (func(std::integral_constant<size_t, I>{}), ...);
 #else
-	char dummy[] = { (void(func(std::integral_constant<size_t, I>{})), 0)... };
+	char dummy[]
+			= { (void(func(std::integral_constant<size_t, I>{})), '0')... };
 #endif
 }
 } // namespace detail
