@@ -226,7 +226,7 @@ public:
 	// Checks whether the notifier event has subscribers.
 	template <EventEnum e>
 	bool empty(notifier_id nid) const noexcept {
-		return _notifier_stacks.at(nid._id).empty<e>();
+		return _notifier_stacks.at(nid._id).template empty<e>();
 	}
 
 	// Checks whether the channel has any subscribers.
@@ -237,7 +237,7 @@ public:
 	// Checks whether the channel event has subscribers.
 	template <ChannelEnum c, EventEnum e>
 	bool empty() const noexcept {
-		return std::get<size_t(c)>(_channel_stacks).empty<e>();
+		return std::get<size_t(c)>(_channel_stacks).template empty<e>();
 	}
 
 	// Returns the number of subscribers.
@@ -247,7 +247,7 @@ public:
 	// Returns the number of subscribers to event.
 	template <EventEnum e>
 	size_t size(notifier_id nid) const noexcept {
-		return _notifier_stacks.at(nid._id).size<e>();
+		return _notifier_stacks.at(nid._id).template size<e>();
 	}
 
 	// Returns the number of subscribers.
@@ -258,7 +258,7 @@ public:
 	// Returns the number of subscribers to event.
 	template <ChannelEnum c, EventEnum e>
 	size_t size() const noexcept {
-		return std::get<size_t(c)>(_channel_stacks).size<e>();
+		return std::get<size_t(c)>(_channel_stacks).template size<e>();
 	}
 
 	// Reserve storage for all event subscribers.
@@ -268,7 +268,7 @@ public:
 	// Reserve storage for event subscribers.
 	template <EventEnum e>
 	void reserve(notifier_id nid, size_t new_cap) {
-		_notifier_stacks.at(nid._id).reserve<e>(new_cap);
+		_notifier_stacks.at(nid._id).template reserve<e>(new_cap);
 	}
 
 	// Reserve storage for all event subscribers.
@@ -279,19 +279,19 @@ public:
 	// Reserve storage for event subscribers.
 	template <ChannelEnum c, EventEnum e>
 	void reserve(size_t new_cap) {
-		std::get<size_t(c)>(_channel_stacks).reserve<e>(new_cap);
+		std::get<size_t(c)>(_channel_stacks).template reserve<e>(new_cap);
 	}
 
 	// How many subscribers can be held in allocated storage.
 	template <EventEnum e>
 	size_t capacity(notifier_id nid) const noexcept {
-		return _notifier_stacks.at(nid._id).capacity<e>();
+		return _notifier_stacks.at(nid._id).template capacity<e>();
 	}
 
 	// How many subscribers can be held in allocated storage.
 	template <ChannelEnum c, EventEnum e>
 	size_t capacity() const noexcept {
-		return std::get<size_t(c)>(_channel_stacks).capacity<e>();
+		return std::get<size_t(c)>(_channel_stacks).template capacity<e>();
 	}
 
 
