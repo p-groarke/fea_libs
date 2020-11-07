@@ -43,7 +43,31 @@
 #include <type_traits>
 #include <utility>
 
+
+/*
+event_stack is a data structure to hold callbacks associated with trigger
+events.
+
+You create an event_stack by providing an enum of your events, and the callback
+signatures.
+
+For ex:
+
+enum class my_events : unsigned { event1, event2, count };
+fea::event_stack<my_events, void(), void(int)> my_stack;
+
+Your event enum must fulfill these requirements :
+	- Contains 'count' memember equal to count events.
+	- Must contain > 0 events.
+	- Must be unsigned.
+
+You can then subscribe and unsubscribe callbacks.
+And you can trigger events with the appropriate function parameters.
+*/
+
 namespace fea {
+// A callback Id.
+// Used to access or unsubscribe a callback.
 template <class EventEnum, EventEnum e>
 struct event_id {
 	event_id() = default;
@@ -60,6 +84,7 @@ private:
 };
 
 
+// A container to associate callbacks with event triggers.
 template <class EventEnum, class... FuncTypes>
 struct event_stack {
 
@@ -88,7 +113,6 @@ private:
 	// Stores the counters to generate ids.
 	using id_gen_tuple_t = decltype(
 			fea::make_tuple_from_count<size_t, sizeof...(FuncTypes)>());
-
 
 	// Event tuple must be size 'count'.
 	static_assert(
@@ -180,11 +204,7 @@ public:
 	// Subscribe a callback to an event.
 	// Returns the subscriber id.
 	template <EventEnum e, class Func>
-	event_id<EventEnum, e> subscribe(Func&& func) {
-		// static_assert(std::is_invocable_v(decltype(std::forward<Func>(func)),
-		//					  stack_func_t<e>),
-		//		"");
-
+	event_id<EventEnum, e> subscribe(Func&& callback) {
 		size_t& id_generator = std::get<size_t(e)>(_id_generators);
 		assert(id_generator != (std::numeric_limits<size_t>::max)());
 
@@ -193,7 +213,7 @@ public:
 
 		// Insert callback.
 		std::get<size_t(e)>(_stacks).insert(
-				{ id_generator, std::forward<Func>(func) });
+				{ id_generator, std::forward<Func>(callback) });
 
 		// Return id.
 		return { id_generator };
@@ -210,11 +230,6 @@ public:
 	// Trigger event e with arguments func_args.
 	template <EventEnum e, class... FuncArgs>
 	void trigger(FuncArgs&&... func_args) const {
-		// static_assert(std::is_invocable_v<stack_func_t<e>,
-		//					  decltype(std::forward<FuncArgs>(func_args))...>,
-		//		"event_stack : function cannot be invoked with provided "
-		//		"arguments");
-
 		for (const auto& func_pair : std::get<size_t(e)>(_stacks)) {
 			// std::invoke is not compile time, plus it makes debugging
 			// difficult.
@@ -225,24 +240,14 @@ public:
 	// Trigger event e with arguments func_args.
 	template <EventEnum e, class... FuncArgs>
 	void trigger(FuncArgs&&... func_args) {
-		// static_assert(std::is_invocable_v<stack_func_t<e>,
-		//					  decltype(std::forward<FuncArgs>(func_args))...>,
-		//		"event_stack : function cannot be invoked with provided "
-		//		"arguments");
-
 		for (auto& func_pair : std::get<size_t(e)>(_stacks)) {
 			func_pair.second(std::forward<FuncArgs>(func_args)...);
 		}
 	}
 
-	// Trigger event e in parallel with arguments func_args.
+	// Trigger event e callbacks in parallel with arguments func_args.
 	template <EventEnum e, class... FuncArgs>
 	void trigger_mt(FuncArgs&&... func_args) const {
-		// static_assert(std::is_invocable_v<stack_func_t<e>,
-		//					  decltype(std::forward<FuncArgs>(func_args))...>,
-		//		"event_stack : function cannot be invoked with provided "
-		//		"arguments");
-
 		auto& map = std::get<size_t(e)>(_stacks);
 		tbb::parallel_for(tbb::blocked_range<size_t>{ 0, map.size() },
 				[&, this](const tbb::blocked_range<size_t>& range) {
@@ -253,14 +258,9 @@ public:
 				});
 	}
 
-	// Trigger event e in parallel with arguments func_args.
+	// Trigger event e callbacks in parallel with arguments func_args.
 	template <EventEnum e, class... FuncArgs>
 	void trigger_mt(FuncArgs&&... func_args) {
-		// static_assert(std::is_invocable_v<stack_func_t<e>,
-		//					  decltype(std::forward<FuncArgs>(func_args))...>,
-		//		"event_stack : function cannot be invoked with provided "
-		//		"arguments");
-
 		auto& map = std::get<size_t(e)>(_stacks);
 		tbb::parallel_for(tbb::blocked_range<size_t>{ 0, map.size() },
 				[&](const tbb::blocked_range<size_t>& range) {
@@ -272,228 +272,9 @@ public:
 	}
 
 private:
-	//// Number of events. User must declare 'count' in his enum.
-	// static constexpr size_t _event_count{ size_t(EventEnum::count) };
-
 	event_tuple_t _stacks{};
 	id_gen_tuple_t _id_generators{};
 };
 
 
 } // namespace fea
-
-/*
-namespace fea {
-template <template <class...> class T>
-using event_id = std::pair<unsigned, unsigned>;
-
-template <class, class...>
-struct event_stack;
-using event_stack_id = event_id<event_stack>;
-
-template <class EventEnum, class... FuncTypes>
-struct event_stack {
-	event_stack() = default;
-	~event_stack() = default;
-	event_stack(const event_stack&) = default;
-	event_stack(event_stack&&) = default;
-	event_stack& operator=(const event_stack&) = default;
-	event_stack& operator=(event_stack&&) = default;
-
-private:
-	using tuple_t
-			= std::tuple<slot_map<stdext::inplace_function<FuncTypes>>...>;
-
-	using underlying_t = typename std::underlying_type_t<EventEnum>;
-
-	static constexpr underlying_t underlying(EventEnum e) {
-		return static_cast<underlying_t>(e);
-	}
-
-	template <EventEnum e>
-	using stack_t = typename std::tuple_element_t<underlying(e), tuple_t>;
-
-	template <EventEnum e>
-	using stack_func_t = typename stack_t<e>::mapped_type;
-
-public:
-	// Element access
-	template <EventEnum e>
-	const auto& at(event_stack_id id) const {
-		return std::get<underlying(e)>(_stacks).at(id);
-	}
-
-	template <EventEnum e>
-	auto& at(event_stack_id id) {
-		return const_cast<stack_func_t<e>&>(
-				static_cast<const event_stack&>(*this).at<e>(id));
-	}
-
-
-	// Capacity
-	template <EventEnum e>
-	bool empty() const noexcept {
-		return std::get<underlying(e)>(_stacks).empty();
-	}
-
-	template <EventEnum e>
-	size_t size() const noexcept {
-		return std::get<underlying(e)>(_stacks).size();
-	}
-
-	template <EventEnum e>
-	void reserve(size_t new_cap) {
-		std::get<underlying(e)>(_stacks).reserve(new_cap);
-	}
-
-	template <EventEnum e>
-	size_t capacity() const noexcept {
-		return std::get<underlying(e)>(_stacks).capacity();
-	}
-
-
-	// Modifiers
-	template <EventEnum e>
-	void clear() {
-		std::get<underlying(e)>(_stacks).clear();
-	}
-
-	// TODO : version with all events, ex: subscribe([](){}, [](){}, [](){})
-	template <EventEnum e, class Func>
-	event_stack_id subscribe(Func&& func) {
-		// static_assert(std::is_invocable_v(decltype(std::forward<Func>(func)),
-		//					  stack_func_t<e>),
-		//		"");
-
-		return std::get<underlying(e)>(_stacks).insert(
-				std::forward<Func>(func));
-	}
-
-	template <class... Funcs>
-	auto subscribe(Funcs&&... funcs) {
-		static_assert(sizeof...(Funcs) == _event_count,
-				"event_stack : didn't provide adequate number of event "
-				"functions");
-
-		auto tup = std::make_tuple(std::forward<Funcs>(funcs)...);
-		auto ret = make_tuple_from_count<event_stack_id, _event_count>();
-
-		detail::static_for<_event_count>([&](auto idx) {
-			std::get<idx>(ret)
-					= std::get<idx>(_stacks).insert(std::get<idx>(tup));
-		});
-		return ret;
-	}
-
-	// TODO : version with all events
-	template <EventEnum e>
-	void unsubscribe(event_stack_id id) {
-		std::get<underlying(e)>(_stacks).erase(id);
-	}
-
-	// Execution
-	template <EventEnum e, class... FuncArgs>
-	void execute(FuncArgs&&... func_args) const {
-		static_assert(std::is_invocable_v<stack_func_t<e>,
-							  decltype(std::forward<FuncArgs>(func_args))...>,
-				"event_stack : function cannot be invoked with provided "
-				"arguments");
-
-		for (const auto& func : std::get<underlying(e)>(_stacks)) {
-			std::invoke(func, std::forward<FuncArgs>(func_args)...);
-		}
-	}
-
-	template <EventEnum e, class... FuncArgs>
-	void execute(FuncArgs&&... func_args) {
-		static_assert(std::is_invocable_v<stack_func_t<e>,
-							  decltype(std::forward<FuncArgs>(func_args))...>,
-				"event_stack : function cannot be invoked with provided "
-				"arguments");
-
-		for (auto& func : std::get<underlying(e)>(_stacks)) {
-			std::invoke(func, std::forward<FuncArgs>(func_args)...);
-		}
-	}
-
-	template <EventEnum e, class... FuncArgs>
-	void execute_mt(FuncArgs&&... func_args) const {
-		static_assert(std::is_invocable_v<stack_func_t<e>,
-							  decltype(std::forward<FuncArgs>(func_args))...>,
-				"event_stack : function cannot be invoked with provided "
-				"arguments");
-
-		auto& slotmap = std::get<underlying(e)>(_stacks);
-		tbb::parallel_for(tbb::blocked_range<size_t>{ 0, slotmap.size() },
-				[&](const tbb::blocked_range<size_t>& range) {
-					for (size_t i = range.begin(); i < range.end(); ++i) {
-						std::invoke(slotmap.data()[i],
-								std::forward<FuncArgs>(func_args)...);
-					}
-				});
-	}
-
-	template <EventEnum e, class... FuncArgs>
-	void execute_mt(FuncArgs&&... func_args) {
-		static_assert(std::is_invocable_v<stack_func_t<e>,
-							  decltype(std::forward<FuncArgs>(func_args))...>,
-				"event_stack : function cannot be invoked with provided "
-				"arguments");
-
-		auto& slotmap = std::get<underlying(e)>(_stacks);
-		tbb::parallel_for(tbb::blocked_range<size_t>{ 0, slotmap.size() },
-				[&](const tbb::blocked_range<size_t>& range) {
-					for (size_t i = range.begin(); i < range.end(); ++i) {
-						std::invoke(slotmap.data()[i],
-								std::forward<FuncArgs>(func_args)...);
-					}
-				});
-	}
-
-private:
-	static constexpr size_t _event_count{ static_cast<size_t>(
-			EventEnum::count) };
-	tuple_t _stacks{};
-
-	static_assert(std::is_enum_v<EventEnum>,
-			"event_stack : template parameter EventEnum must be enum");
-
-	static_assert(std::is_unsigned_v<underlying_t>,
-			"event_stack : enum underlying type must be unsigned");
-
-	static_assert(static_cast<underlying_t>(_event_count) != 0,
-			"event_stack : enum must declare count and count must not be 0");
-
-	static_assert(
-			!(sizeof...(FuncTypes) < static_cast<underlying_t>(_event_count)),
-			"event_stack : must provide function types for every event");
-
-	static_assert(
-			!(sizeof...(FuncTypes) > static_cast<underlying_t>(_event_count)),
-			"event_stack : too many function types for events");
-
-	static_assert(std::tuple_size_v<decltype(_stacks)> != 0,
-			"event_stack : tuple size must not be 0");
-};
-
-// FIXME : slot_map doesn't support value construction
-// template <class EventEnum, class... FuncTypes>
-// template <class... Args>
-// event_stack<EventEnum, FuncTypes...>::event_stack(Args&&... funcs)
-//		: _stacks(stdext::slot_map<FuncTypes>(std::forward<Args>(funcs))...) {
-//}
-
-namespace detail {
-enum class defensive_test : unsigned { blee, count };
-using defensive_test_t = event_stack<defensive_test, void()>;
-// FEA_FULFILLS_RULE_OF_6(defensive_test_t);
-static_assert(std::is_default_constructible_v<defensive_test_t>);
-static_assert(std::is_destructible_v<defensive_test_t>);
-static_assert(std::is_move_constructible_v<defensive_test_t>);
-// static_assert(std::is_move_assignable_v<defensive_test_t>);
-static_assert(std::is_copy_constructible_v<defensive_test_t>);
-// static_assert(std::is_copy_assignable_v<defensive_test_t>);
-FEA_FULFILLS_FAST_VECTOR(defensive_test_t);
-} // namespace detail
-} // namespace fea
-*/
