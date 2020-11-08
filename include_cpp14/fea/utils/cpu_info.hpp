@@ -119,14 +119,17 @@ struct cpu_info_t {
 			uint32_t highest_leaf = eax0.eax.to_ulong();
 
 			// Vendor ID String (0x0)
-			char vendor[13] = { 0 };
+			std::array<char, 13> vendor{};
 			std::array<char, 16> as_string = eax0.to_string();
-			std::copy(as_string.begin() + 4, as_string.begin() + 8, &vendor[0]);
-			std::copy(as_string.begin() + 12, as_string.end(), &vendor[4]);
-			std::copy(
-					as_string.begin() + 8, as_string.begin() + 12, &vendor[8]);
 
-			_vendor = vendor;
+			std::copy(as_string.begin() + 4, as_string.begin() + 8,
+					vendor.begin());
+			std::copy(as_string.begin() + 12, as_string.end(),
+					vendor.begin() + 4);
+			std::copy(as_string.begin() + 8, as_string.begin() + 12,
+					vendor.begin() + 8);
+
+			_vendor = vendor.data();
 
 			if (_vendor == "GenuineIntel") {
 				_is_intel = true;
