@@ -211,7 +211,7 @@ public:
 
 	// Clear all event subscribers.
 	void clear() {
-		tuple_foreach([&](auto& map) { map.clear(); }, _stacks);
+		tuple_foreach([](auto& map) { map.clear(); }, _stacks);
 	}
 
 	// Clear event subscribers.

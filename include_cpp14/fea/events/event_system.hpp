@@ -156,7 +156,7 @@ public:
 	}
 
 	// Does the channel contain subscriber?
-	template <EventEnum e, ChannelEnum c>
+	template <ChannelEnum c, EventEnum e>
 	bool contains(event_sys_id<EventEnum, e, ChannelEnum, c> id) {
 		return std::get<size_t(c)>(_channel_stacks).contains(id._eid);
 	}
@@ -165,56 +165,89 @@ public:
 		return false;
 	}
 
-	//// Access notifier callback.
-	// template <EventEnum e>
-	// const auto& at(notifier_id nid, event_id<EventEnum, e> id) const {
-	//	return _notifier_stacks.at(nid._id).at(id);
-	//}
-	//// Access notifier callback.
-	// template <EventEnum e>
-	// auto& at(notifier_id nid, event_id<EventEnum, e> id) {
-	//	return _notifier_stacks.at(nid._id).at(id);
-	//}
+	// Access notifier callback.
+	template <EventEnum e>
+	const auto& at(event_sys_id<EventEnum, e> id) const {
+		return _notifier_stacks.at(id._nid._id).at(id._eid);
+	}
+	// Access notifier callback.
+	template <EventEnum e>
+	auto& at(event_sys_id<EventEnum, e> id) {
+		return _notifier_stacks.at(id._nid._id).at(id._eid);
+	}
 
-	//// Access channel callback.
-	// template <ChannelEnum c, EventEnum e>
-	// const auto& at(event_id<EventEnum, e> id) const {
-	//	return std::get<size_t(c)>(_channel_stacks).at(id);
-	//}
-	//// Access channel callback.
-	// template <ChannelEnum c, EventEnum e>
-	// auto& at(event_id<EventEnum, e> id) {
-	//	return std::get<size_t(c)>(_channel_stacks).at(id);
-	//}
+	// Access channel callback.
+	template <ChannelEnum c, EventEnum e>
+	const auto& at(event_sys_id<EventEnum, e, ChannelEnum, c> id) const {
+		return std::get<size_t(c)>(_channel_stacks).at(id._eid);
+	}
+	// Access channel callback.
+	template <ChannelEnum c, EventEnum e>
+	auto& at(event_sys_id<EventEnum, e, ChannelEnum, c> id) {
+		return std::get<size_t(c)>(_channel_stacks).at(id._eid);
+	}
 
-	//// Access notifier callback without id checks.
-	// template <EventEnum e>
-	// const auto& at_unchecked(notifier_id nid, event_id<EventEnum, e> id)
-	// const { 	assert(contains(nid, id)); 	return
-	//_notifier_stacks.at_unchecked(nid._id).at_unchecked(id);
-	//}
-	//// Access notifier callback without id checks.
-	// template <EventEnum e>
-	// auto& at_unchecked(notifier_id nid, event_id<EventEnum, e> id) {
-	//	assert(contains(nid, id));
-	//	return _notifier_stacks.at_unchecked(nid._id).at_unchecked(id);
-	//}
+	// Access notifier callback without id checks.
+	template <EventEnum e>
+	const auto& at_unchecked(event_sys_id<EventEnum, e> id) const {
+		assert(contains(id));
+		return _notifier_stacks.at_unchecked(id._nid._id).at_unchecked(id._eid);
+	}
+	// Access notifier callback without id checks.
+	template <EventEnum e>
+	auto& at_unchecked(event_sys_id<EventEnum, e> id) {
+		assert(contains(id));
+		return _notifier_stacks.at_unchecked(id._nid._id).at_unchecked(id._eid);
+	}
 
-	//// Access notifier callback without id checks.
-	// template <ChannelEnum c, EventEnum e>
-	// const auto& at_unchecked(event_id<EventEnum, e> id) const {
-	//	assert(contains<c>(id));
-	//	return std::get<size_t(c)>(_channel_stacks).at_unchecked(id);
-	//}
-	//// Access notifier callback without id checks.
-	// template <ChannelEnum c, EventEnum e>
-	// auto& at_unchecked(event_id<EventEnum, e> id) {
-	//	assert(contains<c>(id));
-	//	return std::get<size_t(c)>(_channel_stacks).at_unchecked(id);
-	//}
+	// Access notifier callback without id checks.
+	template <ChannelEnum c, EventEnum e>
+	const auto& at_unchecked(
+			event_sys_id<EventEnum, e, ChannelEnum, c> id) const {
+		assert(contains(id));
+		return std::get<size_t(c)>(_channel_stacks).at_unchecked(id._eid);
+	}
+	// Access notifier callback without id checks.
+	template <ChannelEnum c, EventEnum e>
+	auto& at_unchecked(event_sys_id<EventEnum, e, ChannelEnum, c> id) {
+		assert(contains(id));
+		return std::get<size_t(c)>(_channel_stacks).at_unchecked(id._eid);
+	}
 
 
 	// Capacity
+
+	// Checks whether any notifier or channel has subscribers.
+	// Warning : O(n) on notifiers and channels.
+	bool empty() const noexcept {
+		for (const auto& stack_pair : _notifier_stacks) {
+			if (!stack_pair.second.empty()) {
+				return false;
+			}
+		}
+
+		bool ret = true;
+		tuple_foreach([&](const auto& stack) { ret &= stack.empty(); },
+				_channel_stacks);
+		return ret;
+	}
+
+	// Checks whether event has subscribers.
+	// Warning : O(n) on notifiers and channels.
+	template <EventEnum e>
+	bool event_empty() const noexcept {
+		for (const auto& stack_pair : _notifier_stacks) {
+			if (!stack_pair.second.template empty<e>()) {
+				return false;
+			}
+		}
+
+		bool ret = true;
+		tuple_foreach(
+				[&](const auto& stack) { ret &= stack.template empty<e>(); },
+				_channel_stacks);
+		return ret;
+	}
 
 	// Checks whether the notifier has any subscribers.
 	bool empty(notifier_id nid) const noexcept {
@@ -235,6 +268,36 @@ public:
 	template <ChannelEnum c, EventEnum e>
 	bool empty() const noexcept {
 		return std::get<size_t(c)>(_channel_stacks).template empty<e>();
+	}
+
+	// Return total number of subscribers.
+	// Warning : O(n) on notifiers and channels.
+	size_t size() const noexcept {
+		size_t ret = 0;
+		for (const auto& stack_pair : _notifier_stacks) {
+			ret += stack_pair.second.size();
+		}
+
+		tuple_foreach([&](const auto& stack) { ret += stack.size(); },
+				_channel_stacks);
+
+		return ret;
+	}
+
+	// Return number of subscribers for event.
+	// Warning : O(n) on notifiers and channels.
+	template <EventEnum e>
+	size_t event_size() const noexcept {
+		size_t ret = 0;
+		for (const auto& stack_pair : _notifier_stacks) {
+			ret += stack_pair.second.template size<e>();
+		}
+
+		tuple_foreach(
+				[&](const auto& stack) { ret += stack.template size<e>(); },
+				_channel_stacks);
+
+		return ret;
 	}
 
 	// Returns the number of subscribers.
@@ -293,6 +356,54 @@ public:
 
 
 	// Modifiers
+
+	// Clear everything (all notifiers, callbacks, channel callbacks, etc).
+	void clear() {
+		_notifier_stacks.clear();
+		tuple_foreach([](auto& stack) { stack.clear(); }, _channel_stacks);
+	}
+
+	// Clear all callbacks from notifiers and channels (but keeps notifiers).
+	// Warning : O(n) on notifiers and channels.
+	void clear_subscribers() {
+		for (auto& stack_pair : _notifier_stacks) {
+			stack_pair.second.clear();
+		}
+		tuple_foreach([](auto& stack) { stack.clear(); }, _channel_stacks);
+	}
+
+	// Clear event subscribers from both notifiers and channels.
+	// Warning : O(n) on notifiers.
+	template <EventEnum e>
+	void event_clear() {
+		for (auto& stack_pair : _notifier_stacks) {
+			stack_pair.second.template clear<e>();
+		}
+		tuple_foreach([](auto& stack) { stack.template clear<e>(); },
+				_channel_stacks);
+	}
+
+	// Clear events from notifier.
+	void clear(notifier_id nid) {
+		_notifier_stacks.at(nid._id).clear();
+	}
+	// Clear events e from notifier.
+	template <EventEnum e>
+	void clear(notifier_id nid) {
+		_notifier_stacks.at(nid._id).template clear<e>();
+	}
+
+	// Clear events from channel.
+	template <ChannelEnum c>
+	void clear() {
+		std::get<size_t(c)>(_channel_stacks).clear();
+	}
+	// Clear events e from channel.
+	template <ChannelEnum c, EventEnum e>
+	void clear() {
+		std::get<size_t(c)>(_channel_stacks).template clear<e>();
+	}
+
 
 	// Adds a notifier Id.
 	// You can attach callbacks to notifiers and their events.
