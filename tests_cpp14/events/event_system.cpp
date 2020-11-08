@@ -13,10 +13,10 @@ TEST(event_system, basics) {
 	EXPECT_TRUE(s.event_empty<events::one>());
 	EXPECT_TRUE(s.event_empty<events::two>());
 	EXPECT_TRUE(s.event_empty<events::three>());
-	EXPECT_EQ(0, s.size());
-	EXPECT_EQ(0, s.event_size<events::one>());
-	EXPECT_EQ(0, s.event_size<events::two>());
-	EXPECT_EQ(0, s.event_size<events::three>());
+	EXPECT_EQ(0u, s.size());
+	EXPECT_EQ(0u, s.event_size<events::one>());
+	EXPECT_EQ(0u, s.event_size<events::two>());
+	EXPECT_EQ(0u, s.event_size<events::three>());
 
 	EXPECT_TRUE(s.empty<channels::one>());
 	EXPECT_TRUE(s.empty<channels::two>());
@@ -91,73 +91,73 @@ TEST(event_system, basics) {
 	EXPECT_TRUE((s.empty<channels::three, events::two>()));
 	EXPECT_TRUE((s.empty<channels::three, events::three>()));
 
-	EXPECT_EQ(0, s.size());
-	EXPECT_EQ(0, s.event_size<events::one>());
-	EXPECT_EQ(0, s.event_size<events::two>());
-	EXPECT_EQ(0, s.event_size<events::three>());
+	EXPECT_EQ(0u, s.size());
+	EXPECT_EQ(0u, s.event_size<events::one>());
+	EXPECT_EQ(0u, s.event_size<events::two>());
+	EXPECT_EQ(0u, s.event_size<events::three>());
 
-	EXPECT_EQ(0, s.size(nid1));
-	EXPECT_EQ(0, s.size(nid2));
-	EXPECT_EQ(0, s.size<events::one>(nid1));
-	EXPECT_EQ(0, s.size<events::two>(nid1));
-	EXPECT_EQ(0, s.size<events::three>(nid1));
-	EXPECT_EQ(0, s.size<events::one>(nid2));
-	EXPECT_EQ(0, s.size<events::two>(nid2));
-	EXPECT_EQ(0, s.size<events::three>(nid2));
+	EXPECT_EQ(0u, s.size(nid1));
+	EXPECT_EQ(0u, s.size(nid2));
+	EXPECT_EQ(0u, s.size<events::one>(nid1));
+	EXPECT_EQ(0u, s.size<events::two>(nid1));
+	EXPECT_EQ(0u, s.size<events::three>(nid1));
+	EXPECT_EQ(0u, s.size<events::one>(nid2));
+	EXPECT_EQ(0u, s.size<events::two>(nid2));
+	EXPECT_EQ(0u, s.size<events::three>(nid2));
 
-	EXPECT_EQ(0, s.size<channels::one>());
-	EXPECT_EQ(0, s.size<channels::two>());
-	EXPECT_EQ(0, (s.size<channels::one, events::one>()));
-	EXPECT_EQ(0, (s.size<channels::one, events::two>()));
-	EXPECT_EQ(0, (s.size<channels::one, events::three>()));
-	EXPECT_EQ(0, (s.size<channels::two, events::one>()));
-	EXPECT_EQ(0, (s.size<channels::two, events::two>()));
-	EXPECT_EQ(0, (s.size<channels::two, events::three>()));
+	EXPECT_EQ(0u, s.size<channels::one>());
+	EXPECT_EQ(0u, s.size<channels::two>());
+	EXPECT_EQ(0u, (s.size<channels::one, events::one>()));
+	EXPECT_EQ(0u, (s.size<channels::one, events::two>()));
+	EXPECT_EQ(0u, (s.size<channels::one, events::three>()));
+	EXPECT_EQ(0u, (s.size<channels::two, events::one>()));
+	EXPECT_EQ(0u, (s.size<channels::two, events::two>()));
+	EXPECT_EQ(0u, (s.size<channels::two, events::three>()));
 
 	s.reserve<events::one>(nid1, 1);
 	s.reserve<events::two>(nid1, 2);
 	s.reserve<events::three>(nid1, 3);
-	EXPECT_EQ(1, s.capacity<events::one>(nid1));
-	EXPECT_EQ(2, s.capacity<events::two>(nid1));
-	EXPECT_EQ(3, s.capacity<events::three>(nid1));
-	EXPECT_EQ(0, s.capacity<events::one>(nid2));
-	EXPECT_EQ(0, s.capacity<events::two>(nid2));
-	EXPECT_EQ(0, s.capacity<events::three>(nid2));
+	EXPECT_EQ(1u, s.capacity<events::one>(nid1));
+	EXPECT_EQ(2u, s.capacity<events::two>(nid1));
+	EXPECT_EQ(3u, s.capacity<events::three>(nid1));
+	EXPECT_EQ(0u, s.capacity<events::one>(nid2));
+	EXPECT_EQ(0u, s.capacity<events::two>(nid2));
+	EXPECT_EQ(0u, s.capacity<events::three>(nid2));
 
 	s.reserve(nid1, 4);
-	EXPECT_EQ(4, s.capacity<events::one>(nid1));
-	EXPECT_EQ(4, s.capacity<events::two>(nid1));
-	EXPECT_EQ(4, s.capacity<events::three>(nid1));
-	EXPECT_EQ(0, s.capacity<events::one>(nid2));
-	EXPECT_EQ(0, s.capacity<events::two>(nid2));
-	EXPECT_EQ(0, s.capacity<events::three>(nid2));
+	EXPECT_EQ(4u, s.capacity<events::one>(nid1));
+	EXPECT_EQ(4u, s.capacity<events::two>(nid1));
+	EXPECT_EQ(4u, s.capacity<events::three>(nid1));
+	EXPECT_EQ(0u, s.capacity<events::one>(nid2));
+	EXPECT_EQ(0u, s.capacity<events::two>(nid2));
+	EXPECT_EQ(0u, s.capacity<events::three>(nid2));
 
 	s.reserve<channels::one, events::one>(1);
 	s.reserve<channels::one, events::two>(2);
 	s.reserve<channels::one, events::three>(3);
-	EXPECT_EQ(1, (s.capacity<channels::one, events::one>()));
-	EXPECT_EQ(2, (s.capacity<channels::one, events::two>()));
-	EXPECT_EQ(3, (s.capacity<channels::one, events::three>()));
-	EXPECT_EQ(0, (s.capacity<channels::two, events::one>()));
-	EXPECT_EQ(0, (s.capacity<channels::two, events::two>()));
-	EXPECT_EQ(0, (s.capacity<channels::two, events::three>()));
-	EXPECT_EQ(0, (s.capacity<channels::three, events::one>()));
-	EXPECT_EQ(0, (s.capacity<channels::three, events::two>()));
-	EXPECT_EQ(0, (s.capacity<channels::three, events::three>()));
+	EXPECT_EQ(1u, (s.capacity<channels::one, events::one>()));
+	EXPECT_EQ(2u, (s.capacity<channels::one, events::two>()));
+	EXPECT_EQ(3u, (s.capacity<channels::one, events::three>()));
+	EXPECT_EQ(0u, (s.capacity<channels::two, events::one>()));
+	EXPECT_EQ(0u, (s.capacity<channels::two, events::two>()));
+	EXPECT_EQ(0u, (s.capacity<channels::two, events::three>()));
+	EXPECT_EQ(0u, (s.capacity<channels::three, events::one>()));
+	EXPECT_EQ(0u, (s.capacity<channels::three, events::two>()));
+	EXPECT_EQ(0u, (s.capacity<channels::three, events::three>()));
 
 	s.reserve<channels::one>(4);
-	EXPECT_EQ(4, (s.capacity<channels::one, events::one>()));
-	EXPECT_EQ(4, (s.capacity<channels::one, events::two>()));
-	EXPECT_EQ(4, (s.capacity<channels::one, events::three>()));
-	EXPECT_EQ(0, (s.capacity<channels::two, events::one>()));
-	EXPECT_EQ(0, (s.capacity<channels::two, events::two>()));
-	EXPECT_EQ(0, (s.capacity<channels::two, events::three>()));
-	EXPECT_EQ(0, (s.capacity<channels::three, events::one>()));
-	EXPECT_EQ(0, (s.capacity<channels::three, events::two>()));
-	EXPECT_EQ(0, (s.capacity<channels::three, events::three>()));
+	EXPECT_EQ(4u, (s.capacity<channels::one, events::one>()));
+	EXPECT_EQ(4u, (s.capacity<channels::one, events::two>()));
+	EXPECT_EQ(4u, (s.capacity<channels::one, events::three>()));
+	EXPECT_EQ(0u, (s.capacity<channels::two, events::one>()));
+	EXPECT_EQ(0u, (s.capacity<channels::two, events::two>()));
+	EXPECT_EQ(0u, (s.capacity<channels::two, events::three>()));
+	EXPECT_EQ(0u, (s.capacity<channels::three, events::one>()));
+	EXPECT_EQ(0u, (s.capacity<channels::three, events::two>()));
+	EXPECT_EQ(0u, (s.capacity<channels::three, events::three>()));
 
 	EXPECT_TRUE(s.empty());
-	EXPECT_EQ(0, s.size());
+	EXPECT_EQ(0u, s.size());
 
 
 	int test_event_one = 0;
@@ -181,17 +181,17 @@ TEST(event_system, basics) {
 	EXPECT_TRUE(s.empty<events::one>(nid2));
 	EXPECT_FALSE(s.empty<events::two>(nid2));
 
-	EXPECT_EQ(2, s.size());
-	EXPECT_EQ(1, s.event_size<events::one>());
-	EXPECT_EQ(1, s.event_size<events::two>());
-	EXPECT_EQ(0, s.event_size<events::three>());
+	EXPECT_EQ(2u, s.size());
+	EXPECT_EQ(1u, s.event_size<events::one>());
+	EXPECT_EQ(1u, s.event_size<events::two>());
+	EXPECT_EQ(0u, s.event_size<events::three>());
 
-	EXPECT_EQ(1, s.size(nid1));
-	EXPECT_EQ(1, s.size<events::one>(nid1));
-	EXPECT_EQ(0, s.size<events::two>(nid1));
-	EXPECT_EQ(1, s.size(nid2));
-	EXPECT_EQ(0, s.size<events::one>(nid2));
-	EXPECT_EQ(1, s.size<events::two>(nid2));
+	EXPECT_EQ(1u, s.size(nid1));
+	EXPECT_EQ(1u, s.size<events::one>(nid1));
+	EXPECT_EQ(0u, s.size<events::two>(nid1));
+	EXPECT_EQ(1u, s.size(nid2));
+	EXPECT_EQ(0u, s.size<events::one>(nid2));
+	EXPECT_EQ(1u, s.size<events::two>(nid2));
 
 	s.trigger<events::one>(nid1);
 	EXPECT_EQ(test_event_one, 1);
@@ -227,17 +227,17 @@ TEST(event_system, basics) {
 	EXPECT_TRUE(s.empty<events::one>(nid2));
 	EXPECT_TRUE(s.empty<events::two>(nid2));
 
-	EXPECT_EQ(0, s.size());
-	EXPECT_EQ(0, s.event_size<events::one>());
-	EXPECT_EQ(0, s.event_size<events::two>());
-	EXPECT_EQ(0, s.event_size<events::three>());
+	EXPECT_EQ(0u, s.size());
+	EXPECT_EQ(0u, s.event_size<events::one>());
+	EXPECT_EQ(0u, s.event_size<events::two>());
+	EXPECT_EQ(0u, s.event_size<events::three>());
 
-	EXPECT_EQ(0, s.size(nid1));
-	EXPECT_EQ(0, s.size<events::one>(nid1));
-	EXPECT_EQ(0, s.size<events::two>(nid1));
-	EXPECT_EQ(0, s.size(nid2));
-	EXPECT_EQ(0, s.size<events::one>(nid2));
-	EXPECT_EQ(0, s.size<events::two>(nid2));
+	EXPECT_EQ(0u, s.size(nid1));
+	EXPECT_EQ(0u, s.size<events::one>(nid1));
+	EXPECT_EQ(0u, s.size<events::two>(nid1));
+	EXPECT_EQ(0u, s.size(nid2));
+	EXPECT_EQ(0u, s.size<events::one>(nid2));
+	EXPECT_EQ(0u, s.size<events::two>(nid2));
 
 	s.trigger<events::one>(nid1);
 	EXPECT_EQ(test_event_one, 1);
@@ -278,17 +278,17 @@ TEST(event_system, basics) {
 	EXPECT_TRUE((s.empty<channels::two, events::one>()));
 	EXPECT_FALSE((s.empty<channels::two, events::two>()));
 
-	EXPECT_EQ(2, s.size());
-	EXPECT_EQ(1, s.event_size<events::one>());
-	EXPECT_EQ(1, s.event_size<events::two>());
-	EXPECT_EQ(0, s.event_size<events::three>());
+	EXPECT_EQ(2u, s.size());
+	EXPECT_EQ(1u, s.event_size<events::one>());
+	EXPECT_EQ(1u, s.event_size<events::two>());
+	EXPECT_EQ(0u, s.event_size<events::three>());
 
-	EXPECT_EQ(1, s.size<channels::one>());
-	EXPECT_EQ(1, (s.size<channels::one, events::one>()));
-	EXPECT_EQ(0, (s.size<channels::one, events::two>()));
-	EXPECT_EQ(1, s.size<channels::two>());
-	EXPECT_EQ(0, (s.size<channels::two, events::one>()));
-	EXPECT_EQ(1, (s.size<channels::two, events::two>()));
+	EXPECT_EQ(1u, s.size<channels::one>());
+	EXPECT_EQ(1u, (s.size<channels::one, events::one>()));
+	EXPECT_EQ(0u, (s.size<channels::one, events::two>()));
+	EXPECT_EQ(1u, s.size<channels::two>());
+	EXPECT_EQ(0u, (s.size<channels::two, events::one>()));
+	EXPECT_EQ(1u, (s.size<channels::two, events::two>()));
 
 	s.trigger<channels::one, events::one>();
 	EXPECT_EQ(test_event_one, 2);
@@ -324,17 +324,17 @@ TEST(event_system, basics) {
 	EXPECT_TRUE((s.empty<channels::two, events::one>()));
 	EXPECT_TRUE((s.empty<channels::two, events::two>()));
 
-	EXPECT_EQ(0, s.size());
-	EXPECT_EQ(0, s.event_size<events::one>());
-	EXPECT_EQ(0, s.event_size<events::two>());
-	EXPECT_EQ(0, s.event_size<events::three>());
+	EXPECT_EQ(0u, s.size());
+	EXPECT_EQ(0u, s.event_size<events::one>());
+	EXPECT_EQ(0u, s.event_size<events::two>());
+	EXPECT_EQ(0u, s.event_size<events::three>());
 
-	EXPECT_EQ(0, s.size<channels::one>());
-	EXPECT_EQ(0, (s.size<channels::one, events::one>()));
-	EXPECT_EQ(0, (s.size<channels::one, events::two>()));
-	EXPECT_EQ(0, s.size<channels::two>());
-	EXPECT_EQ(0, (s.size<channels::two, events::one>()));
-	EXPECT_EQ(0, (s.size<channels::two, events::two>()));
+	EXPECT_EQ(0u, s.size<channels::one>());
+	EXPECT_EQ(0u, (s.size<channels::one, events::one>()));
+	EXPECT_EQ(0u, (s.size<channels::one, events::two>()));
+	EXPECT_EQ(0u, s.size<channels::two>());
+	EXPECT_EQ(0u, (s.size<channels::two, events::one>()));
+	EXPECT_EQ(0u, (s.size<channels::two, events::two>()));
 
 	s.trigger<channels::one, events::one>();
 	EXPECT_EQ(test_event_one, 2);
@@ -410,14 +410,14 @@ TEST(event_system, basics) {
 	EXPECT_FALSE(s.event_empty<events::two>());
 	EXPECT_FALSE(s.event_empty<events::three>());
 
-	EXPECT_EQ(12, s.size());
-	EXPECT_EQ(4, s.event_size<events::one>());
-	EXPECT_EQ(4, s.event_size<events::two>());
-	EXPECT_EQ(4, s.event_size<events::three>());
-	EXPECT_EQ(3, s.size(nid1));
-	EXPECT_EQ(3, s.size(nid2));
-	EXPECT_EQ(3, s.size<channels::one>());
-	EXPECT_EQ(3, s.size<channels::two>());
+	EXPECT_EQ(12u, s.size());
+	EXPECT_EQ(4u, s.event_size<events::one>());
+	EXPECT_EQ(4u, s.event_size<events::two>());
+	EXPECT_EQ(4u, s.event_size<events::three>());
+	EXPECT_EQ(3u, s.size(nid1));
+	EXPECT_EQ(3u, s.size(nid2));
+	EXPECT_EQ(3u, s.size<channels::one>());
+	EXPECT_EQ(3u, s.size<channels::two>());
 
 	s.clear();
 	EXPECT_TRUE(s.empty());
@@ -425,10 +425,10 @@ TEST(event_system, basics) {
 	EXPECT_TRUE(s.event_empty<events::two>());
 	EXPECT_TRUE(s.event_empty<events::three>());
 
-	EXPECT_EQ(0, s.size());
-	EXPECT_EQ(0, s.event_size<events::one>());
-	EXPECT_EQ(0, s.event_size<events::two>());
-	EXPECT_EQ(0, s.event_size<events::three>());
+	EXPECT_EQ(0u, s.size());
+	EXPECT_EQ(0u, s.event_size<events::one>());
+	EXPECT_EQ(0u, s.event_size<events::two>());
+	EXPECT_EQ(0u, s.event_size<events::three>());
 
 	nid1 = s.add_notifier();
 	nid2 = s.add_notifier();
@@ -450,14 +450,14 @@ TEST(event_system, basics) {
 	EXPECT_FALSE(s.event_empty<events::two>());
 	EXPECT_FALSE(s.event_empty<events::three>());
 
-	EXPECT_EQ(12, s.size());
-	EXPECT_EQ(4, s.event_size<events::one>());
-	EXPECT_EQ(4, s.event_size<events::two>());
-	EXPECT_EQ(4, s.event_size<events::three>());
-	EXPECT_EQ(3, s.size(nid1));
-	EXPECT_EQ(3, s.size(nid2));
-	EXPECT_EQ(3, s.size<channels::one>());
-	EXPECT_EQ(3, s.size<channels::two>());
+	EXPECT_EQ(12u, s.size());
+	EXPECT_EQ(4u, s.event_size<events::one>());
+	EXPECT_EQ(4u, s.event_size<events::two>());
+	EXPECT_EQ(4u, s.event_size<events::three>());
+	EXPECT_EQ(3u, s.size(nid1));
+	EXPECT_EQ(3u, s.size(nid2));
+	EXPECT_EQ(3u, s.size<channels::one>());
+	EXPECT_EQ(3u, s.size<channels::two>());
 
 	s.event_clear<events::one>();
 	EXPECT_FALSE(s.empty());
@@ -465,14 +465,14 @@ TEST(event_system, basics) {
 	EXPECT_FALSE(s.event_empty<events::two>());
 	EXPECT_FALSE(s.event_empty<events::three>());
 
-	EXPECT_EQ(8, s.size());
-	EXPECT_EQ(0, s.event_size<events::one>());
-	EXPECT_EQ(4, s.event_size<events::two>());
-	EXPECT_EQ(4, s.event_size<events::three>());
-	EXPECT_EQ(2, s.size(nid1));
-	EXPECT_EQ(2, s.size(nid2));
-	EXPECT_EQ(2, s.size<channels::one>());
-	EXPECT_EQ(2, s.size<channels::two>());
+	EXPECT_EQ(8u, s.size());
+	EXPECT_EQ(0u, s.event_size<events::one>());
+	EXPECT_EQ(4u, s.event_size<events::two>());
+	EXPECT_EQ(4u, s.event_size<events::three>());
+	EXPECT_EQ(2u, s.size(nid1));
+	EXPECT_EQ(2u, s.size(nid2));
+	EXPECT_EQ(2u, s.size<channels::one>());
+	EXPECT_EQ(2u, s.size<channels::two>());
 
 	s.event_clear<events::two>();
 	EXPECT_FALSE(s.empty());
@@ -480,14 +480,14 @@ TEST(event_system, basics) {
 	EXPECT_TRUE(s.event_empty<events::two>());
 	EXPECT_FALSE(s.event_empty<events::three>());
 
-	EXPECT_EQ(4, s.size());
-	EXPECT_EQ(0, s.event_size<events::one>());
-	EXPECT_EQ(0, s.event_size<events::two>());
-	EXPECT_EQ(4, s.event_size<events::three>());
-	EXPECT_EQ(1, s.size(nid1));
-	EXPECT_EQ(1, s.size(nid2));
-	EXPECT_EQ(1, s.size<channels::one>());
-	EXPECT_EQ(1, s.size<channels::two>());
+	EXPECT_EQ(4u, s.size());
+	EXPECT_EQ(0u, s.event_size<events::one>());
+	EXPECT_EQ(0u, s.event_size<events::two>());
+	EXPECT_EQ(4u, s.event_size<events::three>());
+	EXPECT_EQ(1u, s.size(nid1));
+	EXPECT_EQ(1u, s.size(nid2));
+	EXPECT_EQ(1u, s.size<channels::one>());
+	EXPECT_EQ(1u, s.size<channels::two>());
 
 	s.event_clear<events::three>();
 	EXPECT_TRUE(s.empty());
@@ -495,14 +495,14 @@ TEST(event_system, basics) {
 	EXPECT_TRUE(s.event_empty<events::two>());
 	EXPECT_TRUE(s.event_empty<events::three>());
 
-	EXPECT_EQ(0, s.size());
-	EXPECT_EQ(0, s.event_size<events::one>());
-	EXPECT_EQ(0, s.event_size<events::two>());
-	EXPECT_EQ(0, s.event_size<events::three>());
-	EXPECT_EQ(0, s.size(nid1));
-	EXPECT_EQ(0, s.size(nid2));
-	EXPECT_EQ(0, s.size<channels::one>());
-	EXPECT_EQ(0, s.size<channels::two>());
+	EXPECT_EQ(0u, s.size());
+	EXPECT_EQ(0u, s.event_size<events::one>());
+	EXPECT_EQ(0u, s.event_size<events::two>());
+	EXPECT_EQ(0u, s.event_size<events::three>());
+	EXPECT_EQ(0u, s.size(nid1));
+	EXPECT_EQ(0u, s.size(nid2));
+	EXPECT_EQ(0u, s.size<channels::one>());
+	EXPECT_EQ(0u, s.size<channels::two>());
 
 	s.clear();
 
@@ -522,41 +522,41 @@ TEST(event_system, basics) {
 	s.subscribe<channels::two, events::three>([](float, double) {});
 
 	EXPECT_FALSE(s.empty(nid1));
-	EXPECT_EQ(3, s.size(nid1));
+	EXPECT_EQ(3u, s.size(nid1));
 	EXPECT_FALSE(s.empty(nid2));
-	EXPECT_EQ(3, s.size(nid2));
+	EXPECT_EQ(3u, s.size(nid2));
 	EXPECT_FALSE(s.empty<channels::one>());
-	EXPECT_EQ(3, s.size<channels::one>());
+	EXPECT_EQ(3u, s.size<channels::one>());
 	EXPECT_FALSE(s.empty<channels::two>());
-	EXPECT_EQ(3, s.size<channels::two>());
+	EXPECT_EQ(3u, s.size<channels::two>());
 
 	s.clear(nid1);
 	EXPECT_TRUE(s.empty(nid1));
-	EXPECT_EQ(0, s.size(nid1));
+	EXPECT_EQ(0u, s.size(nid1));
 	EXPECT_FALSE(s.empty(nid2));
-	EXPECT_EQ(3, s.size(nid2));
+	EXPECT_EQ(3u, s.size(nid2));
 
 	s.clear<events::one>(nid2);
 	EXPECT_TRUE(s.empty<events::one>(nid2));
-	EXPECT_EQ(0, s.size<events::one>(nid2));
+	EXPECT_EQ(0u, s.size<events::one>(nid2));
 	EXPECT_FALSE(s.empty<events::two>(nid2));
-	EXPECT_EQ(1, s.size<events::two>(nid2));
+	EXPECT_EQ(1u, s.size<events::two>(nid2));
 	EXPECT_FALSE(s.empty<events::three>(nid2));
-	EXPECT_EQ(1, s.size<events::three>(nid2));
+	EXPECT_EQ(1u, s.size<events::three>(nid2));
 
 	s.clear<channels::one>();
 	EXPECT_TRUE(s.empty<channels::one>());
-	EXPECT_EQ(0, s.size<channels::one>());
+	EXPECT_EQ(0u, s.size<channels::one>());
 	EXPECT_FALSE(s.empty<channels::two>());
-	EXPECT_EQ(3, s.size<channels::two>());
+	EXPECT_EQ(3u, s.size<channels::two>());
 
 	s.clear<channels::two, events::one>();
 	EXPECT_TRUE((s.empty<channels::two, events::one>()));
-	EXPECT_EQ(0, (s.size<channels::two, events::one>()));
+	EXPECT_EQ(0u, (s.size<channels::two, events::one>()));
 	EXPECT_FALSE((s.empty<channels::two, events::two>()));
-	EXPECT_EQ(1, (s.size<channels::two, events::two>()));
+	EXPECT_EQ(1u, (s.size<channels::two, events::two>()));
 	EXPECT_FALSE((s.empty<channels::two, events::three>()));
-	EXPECT_EQ(1, (s.size<channels::two, events::three>()));
+	EXPECT_EQ(1u, (s.size<channels::two, events::three>()));
 }
 
 } // namespace

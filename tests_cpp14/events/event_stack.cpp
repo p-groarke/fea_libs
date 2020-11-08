@@ -11,25 +11,25 @@ TEST(event_stack, basics) {
 	EXPECT_TRUE(s.empty<e::two>());
 	EXPECT_TRUE(s.empty<e::three>());
 	EXPECT_TRUE(s.empty());
-	EXPECT_EQ(0, s.size<e::one>());
-	EXPECT_EQ(0, s.size<e::two>());
-	EXPECT_EQ(0, s.size<e::three>());
-	EXPECT_EQ(0, s.size());
-	EXPECT_EQ(0, s.capacity<e::one>());
-	EXPECT_EQ(0, s.capacity<e::two>());
-	EXPECT_EQ(0, s.capacity<e::three>());
+	EXPECT_EQ(0u, s.size<e::one>());
+	EXPECT_EQ(0u, s.size<e::two>());
+	EXPECT_EQ(0u, s.size<e::three>());
+	EXPECT_EQ(0u, s.size());
+	EXPECT_EQ(0u, s.capacity<e::one>());
+	EXPECT_EQ(0u, s.capacity<e::two>());
+	EXPECT_EQ(0u, s.capacity<e::three>());
 
-	s.reserve<e::one>(4);
-	s.reserve<e::two>(4);
-	s.reserve<e::three>(4);
-	EXPECT_EQ(4, s.capacity<e::one>());
-	EXPECT_EQ(4, s.capacity<e::two>());
-	EXPECT_EQ(4, s.capacity<e::three>());
+	s.reserve<e::one>(4u);
+	s.reserve<e::two>(4u);
+	s.reserve<e::three>(4u);
+	EXPECT_EQ(4u, s.capacity<e::one>());
+	EXPECT_EQ(4u, s.capacity<e::two>());
+	EXPECT_EQ(4u, s.capacity<e::three>());
 
 	s.reserve(8);
-	EXPECT_EQ(8, s.capacity<e::one>());
-	EXPECT_EQ(8, s.capacity<e::two>());
-	EXPECT_EQ(8, s.capacity<e::three>());
+	EXPECT_EQ(8u, s.capacity<e::one>());
+	EXPECT_EQ(8u, s.capacity<e::two>());
+	EXPECT_EQ(8u, s.capacity<e::three>());
 
 	std::atomic<int> t_one{ 0 };
 	std::atomic<int> t_two{ 0 };
@@ -63,8 +63,8 @@ TEST(event_stack, basics) {
 	});
 	EXPECT_FALSE(s.contains(invalid_id));
 	EXPECT_TRUE(s.contains(back_1));
-	EXPECT_EQ(5, s.size<e::one>());
-	EXPECT_EQ(5, s.size());
+	EXPECT_EQ(5u, s.size<e::one>());
+	EXPECT_EQ(5u, s.size());
 
 	auto front_2 = s.subscribe<e::two>([&t_two]() {
 		++t_two;
@@ -91,8 +91,8 @@ TEST(event_stack, basics) {
 	});
 	EXPECT_FALSE(s.contains(invalid_id));
 	EXPECT_TRUE(s.contains(back_2));
-	EXPECT_EQ(5, s.size<e::two>());
-	EXPECT_EQ(10, s.size());
+	EXPECT_EQ(5u, s.size<e::two>());
+	EXPECT_EQ(10u, s.size());
 
 	auto front_3 = s.subscribe<e::three>([&t_three](float, double) {
 		++t_three;
@@ -119,8 +119,8 @@ TEST(event_stack, basics) {
 	});
 	EXPECT_FALSE(s.contains(invalid_id));
 	EXPECT_TRUE(s.contains(back_3));
-	EXPECT_EQ(5, s.size<e::three>());
-	EXPECT_EQ(15, s.size());
+	EXPECT_EQ(5u, s.size<e::three>());
+	EXPECT_EQ(15u, s.size());
 
 	s.trigger<e::one>();
 	EXPECT_EQ(5, t_one);
@@ -158,10 +158,10 @@ TEST(event_stack, basics) {
 	s.unsubscribe<e::two>(front_2);
 	s.unsubscribe<e::three>(front_3);
 
-	EXPECT_EQ(4, s.size<e::one>());
-	EXPECT_EQ(4, s.size<e::two>());
-	EXPECT_EQ(4, s.size<e::three>());
-	EXPECT_EQ(12, s.size());
+	EXPECT_EQ(4u, s.size<e::one>());
+	EXPECT_EQ(4u, s.size<e::two>());
+	EXPECT_EQ(4u, s.size<e::three>());
+	EXPECT_EQ(12u, s.size());
 	EXPECT_FALSE(s.empty<e::one>());
 	EXPECT_FALSE(s.empty<e::two>());
 	EXPECT_FALSE(s.empty<e::three>());
@@ -174,10 +174,10 @@ TEST(event_stack, basics) {
 	s.clear<e::three>();
 	EXPECT_TRUE(s.empty());
 
-	EXPECT_EQ(0, s.size<e::one>());
-	EXPECT_EQ(0, s.size<e::two>());
-	EXPECT_EQ(0, s.size<e::three>());
-	EXPECT_EQ(0, s.size());
+	EXPECT_EQ(0u, s.size<e::one>());
+	EXPECT_EQ(0u, s.size<e::two>());
+	EXPECT_EQ(0u, s.size<e::three>());
+	EXPECT_EQ(0u, s.size());
 	EXPECT_TRUE(s.empty<e::one>());
 	EXPECT_TRUE(s.empty<e::two>());
 	EXPECT_TRUE(s.empty<e::three>());
@@ -199,10 +199,10 @@ TEST(event_stack, basics) {
 	s.subscribe<e::three>([](float, double) { return 0; });
 
 	EXPECT_FALSE(s.empty());
-	EXPECT_EQ(15, s.size());
+	EXPECT_EQ(15u, s.size());
 	s.clear();
 	EXPECT_TRUE(s.empty());
-	EXPECT_EQ(0, s.size());
+	EXPECT_EQ(0u, s.size());
 }
 
 } // namespace
