@@ -35,13 +35,60 @@
 #include "fea/utils/bitmask.hpp"
 
 namespace fea {
-#if defined(NDEBUG)
-#define FEA_RELEASE_BUILD 1
-inline constexpr bool debug_build = false;
+#if __cplusplus == 202002L
+#undef FEA_CPP20
+#undef FEA_CPP17
+#undef FEA_CPP14
+#undef FEA_CPP11
+#undef FEA_CPP98
+#define FEA_CPP20 1
+#define FEA_CPP17 1
+#define FEA_CPP14 1
+#define FEA_CPP11 1
+#define FEA_CPP98 1
+#elif __cplusplus == 201703L
+#undef FEA_CPP17
+#undef FEA_CPP14
+#undef FEA_CPP11
+#undef FEA_CPP98
+#define FEA_CPP17 1
+#define FEA_CPP14 1
+#define FEA_CPP11 1
+#define FEA_CPP98 1
+#elif __cplusplus == 201402L
+#undef FEA_CPP14
+#undef FEA_CPP11
+#undef FEA_CPP98
+#define FEA_CPP14 1
+#define FEA_CPP11 1
+#define FEA_CPP98 1
+#elif __cplusplus == 201103L
+#undef FEA_CPP11
+#undef FEA_CPP98
+#define FEA_CPP11 1
+#define FEA_CPP98 1
 #else
+#undef FEA_CPP98
+#define FEA_CPP98 1
+#endif
+
+
+#if defined(NDEBUG)
+#undef FEA_RELEASE_BUILD
+#define FEA_RELEASE_BUILD 1
+
+#if FEA_CPP17
+inline constexpr bool debug_build = false;
+#endif
+#else
+#undef FEA_DEBUG_BUILD
 #define FEA_DEBUG_BUILD 1
+
+#if FEA_CPP17
 inline constexpr bool debug_build = true;
 #endif
+#endif
+
 
 enum class platform_t : unsigned {
 	aix,
@@ -62,69 +109,87 @@ enum class platform_group_t : unsigned {
 };
 FEA_ENABLE_BITMASK_OPERATORS(platform_group_t);
 
-//#define FEA_AIX 0
-//#define FEA_BSD 0
-//#define FEA_HPUX 0
-//#define FEA_LINUX 0
-//#define FEA_IOS 0
-//#define FEA_MACOS 0
-//#define FEA_SOLARIS 0
-//#define FEA_WINDOWS 0
-//
-//#define FEA_POSIX 0
-//#define FEA_UNIX 0
 
 #if defined(_AIX)
 #undef FEA_AIX
 #define FEA_AIX 1
+
+#if FEA_CPP17
 inline constexpr platform_t platform = platform_t::aix;
+#endif
 
 #elif defined(__unix__)
 }
 #include <sys/param.h>
 namespace fea {
+
 #if defined(BSD)
 #undef FEA_BSD
 #define FEA_BSD 1
+
+#if FEA_CPP17
 inline constexpr platform_t platform = platform_t::bsd;
+#endif
 #endif
 
 #elif defined(__hpux)
 #undef FEA_HPUX
 #define FEA_HPUX 1
+
+#if FEA_CPP17
 inline constexpr platform_t platform = platform_t::hpux;
+#endif
 
 #elif defined(__linux__)
 #undef FEA_LINUX
 #define FEA_LINUX 1
+
+#if FEA_CPP17
 inline constexpr platform_t platform = platform_t::linuxx;
+#endif
 
 #elif defined(__APPLE__) && defined(__MACH__)
 }
 #include <TargetConditionals.h>
 namespace fea {
+
 #if TARGET_OS_IPHONE == 1
 #undef FEA_IOS
 #define FEA_IOS 1
+
+#if FEA_CPP17
 inline constexpr platform_t platform = platform_t::ios;
+#endif
+
 #elif TARGET_OS_MAC == 1
 #undef FEA_MACOS
 #define FEA_MACOS 1
+
+#if FEA_CPP17
 inline constexpr platform_t platform = platform_t::macos;
+#endif
 #endif
 
 #elif defined(__sun) && defined(__SVR4)
 #undef FEA_SOLARIS
 #define FEA_SOLARIS 1
+
+#if FEA_CPP17
 inline constexpr platform_t platform = platform_t::solaris;
+#endif
 
 #elif defined(_WIN32)
 #undef FEA_WINDOWS
 #define FEA_WINDOWS 1
+
+#if FEA_CPP17
 inline constexpr platform_t platform = platform_t::windows;
+#endif
 
 #else
+#if FEA_CPP17
 inline constexpr platform_t platform = platform_t::count;
+#endif
 #endif
 
 #if !defined(_WIN32) \
@@ -133,7 +198,6 @@ inline constexpr platform_t platform = platform_t::count;
 				|| defined(__CYGWIN__))
 }
 #include <unistd.h>
-
 namespace fea {
 
 #if defined(_POSIX_VERSION)
@@ -141,16 +205,25 @@ namespace fea {
 #define FEA_POSIX 1
 #undef FEA_UNIX
 #define FEA_UNIX 1
+
+#if FEA_CPP17
 inline constexpr platform_group_t platform_group
 		= platform_group_t::posix | platform_group_t::unixx;
-#else
-#undef FEA_UNIX
-#define FEA_UNIX 1
-inline constexpr platform_group_t platform_group = platform_group_t::unixx;
 #endif
 
 #else
+#undef FEA_UNIX
+#define FEA_UNIX 1
+
+#if FEA_CPP17
+inline constexpr platform_group_t platform_group = platform_group_t::unixx;
+#endif
+#endif
+
+#else
+#if FEA_CPP17
 inline constexpr platform_group_t platform_group = platform_group_t::count;
+#endif
 #endif
 
 } // namespace fea

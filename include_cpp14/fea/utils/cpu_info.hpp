@@ -47,8 +47,8 @@
 #include <bitset>
 #include <cstdint>
 #include <string>
-#include <vector>
 
+// To ignore MSVC regions on other OSes.
 #define FEA_REGION(...)
 
 // References :
@@ -56,13 +56,6 @@
 // https://www.scss.tcd.ie/Jeremy.Jones/CS4021/processor-identification-cpuid-instruction-note.pdf
 
 namespace fea {
-
-namespace detail {
-void print_bool(const char* str, bool b) {
-	printf("%-18s%s\n", str, b ? "true" : "false");
-}
-} // namespace detail
-
 // Loosely based off :
 // https://docs.microsoft.com/en-us/cpp/intrinsics/cpuid-cpuidex?view=vs-2019
 // leaf is EAX, subleaf is ECX.
@@ -126,14 +119,17 @@ struct cpu_info_t {
 			uint32_t highest_leaf = eax0.eax.to_ulong();
 
 			// Vendor ID String (0x0)
-			char vendor[13] = { 0 };
+			std::array<char, 13> vendor{};
 			std::array<char, 16> as_string = eax0.to_string();
-			std::copy(as_string.begin() + 4, as_string.begin() + 8, &vendor[0]);
-			std::copy(as_string.begin() + 12, as_string.end(), &vendor[4]);
-			std::copy(
-					as_string.begin() + 8, as_string.begin() + 12, &vendor[8]);
 
-			_vendor = vendor;
+			std::copy(as_string.begin() + 4, as_string.begin() + 8,
+					vendor.begin());
+			std::copy(as_string.begin() + 12, as_string.end(),
+					vendor.begin() + 4);
+			std::copy(as_string.begin() + 8, as_string.begin() + 12,
+					vendor.begin() + 8);
+
+			_vendor = vendor.data();
 
 			if (_vendor == "GenuineIntel") {
 				_is_intel = true;
@@ -159,10 +155,6 @@ struct cpu_info_t {
 			if (highest_leaf >= 4) {
 				_eax4 = cpu_id{ 4 };
 			}
-			// 0xB
-			if (highest_leaf >= 11) {
-				_eax0b = cpu_id{ 11 };
-			}
 
 			if (highest_leaf >= 6) {
 				_eax6 = cpu_id{ 6 };
@@ -172,6 +164,11 @@ struct cpu_info_t {
 			if (highest_leaf >= 7) {
 				_eax7_ecx0 = cpu_id{ 7 };
 				_eax7_ecx1 = cpu_id{ 7, 1 };
+			}
+
+			// 0x0B
+			if (highest_leaf >= 11) {
+				_eax0b = cpu_id{ 11 };
 			}
 		}
 
@@ -187,7 +184,7 @@ struct cpu_info_t {
 			}
 
 			// Processor Brand String (0x80000002 to 0x80000004)
-			char brand[64] = { 0 };
+			std::array<char, 64> brand{};
 			if (highest_leaf >= 0x80000004) {
 				cpu_id eax802 = cpu_id{ 0x80000002 };
 				cpu_id eax803 = cpu_id{ 0x80000003 };
@@ -195,13 +192,13 @@ struct cpu_info_t {
 
 				std::array<char, 16> str;
 				str = eax802.to_string();
-				std::copy(str.begin(), str.end(), &brand[0]);
+				std::copy(str.begin(), str.end(), brand.begin());
 				str = eax803.to_string();
-				std::copy(str.begin(), str.end(), &brand[16]);
+				std::copy(str.begin(), str.end(), brand.begin() + 16);
 				str = eax804.to_string();
-				std::copy(str.begin(), str.end(), &brand[32]);
+				std::copy(str.begin(), str.end(), brand.begin() + 32);
 
-				_brand = brand;
+				_brand = brand.data();
 			}
 
 			if (highest_leaf >= 0x80000005) {
@@ -1295,6 +1292,10 @@ public:
 
 	// Print all supported feature bits to console.
 	void print_all() const {
+		auto print_bool = [](const char* str, bool b) {
+			printf("%-18s%s\n", str, b ? "true" : "false");
+		};
+
 		printf("%-18s%s\n", "vendor", vendor());
 		printf("%-18s%s\n", "brand", brand());
 		printf("\n");
@@ -1315,216 +1316,216 @@ public:
 		printf("\n");
 
 		printf("eax1 - edx\n");
-		detail::print_bool("fpu", fpu());
-		detail::print_bool("vme", vme());
-		detail::print_bool("de", de());
-		detail::print_bool("pse", pse());
-		detail::print_bool("tsc", tsc());
-		detail::print_bool("msr", msr());
-		detail::print_bool("pae", pae());
-		detail::print_bool("mce", mce());
-		detail::print_bool("cx8", cx8());
-		detail::print_bool("apic", apic());
-		detail::print_bool("sep", sep());
-		detail::print_bool("mtrr", mtrr());
-		detail::print_bool("pge", pge());
-		detail::print_bool("mca", mca());
-		detail::print_bool("cmov", cmov());
-		detail::print_bool("pat", pat());
-		detail::print_bool("pse36", pse36());
-		detail::print_bool("psn", psn());
-		detail::print_bool("clfsh", clfsh());
-		detail::print_bool("ds", ds());
-		detail::print_bool("acpi", acpi());
-		detail::print_bool("mmx", mmx());
-		detail::print_bool("fxsr", fxsr());
-		detail::print_bool("sse", sse());
-		detail::print_bool("sse2", sse2());
-		detail::print_bool("ss", ss());
-		detail::print_bool("htt", htt());
-		detail::print_bool("tm", tm());
-		detail::print_bool("ia64", ia64());
-		detail::print_bool("pbe", pbe());
+		print_bool("fpu", fpu());
+		print_bool("vme", vme());
+		print_bool("de", de());
+		print_bool("pse", pse());
+		print_bool("tsc", tsc());
+		print_bool("msr", msr());
+		print_bool("pae", pae());
+		print_bool("mce", mce());
+		print_bool("cx8", cx8());
+		print_bool("apic", apic());
+		print_bool("sep", sep());
+		print_bool("mtrr", mtrr());
+		print_bool("pge", pge());
+		print_bool("mca", mca());
+		print_bool("cmov", cmov());
+		print_bool("pat", pat());
+		print_bool("pse36", pse36());
+		print_bool("psn", psn());
+		print_bool("clfsh", clfsh());
+		print_bool("ds", ds());
+		print_bool("acpi", acpi());
+		print_bool("mmx", mmx());
+		print_bool("fxsr", fxsr());
+		print_bool("sse", sse());
+		print_bool("sse2", sse2());
+		print_bool("ss", ss());
+		print_bool("htt", htt());
+		print_bool("tm", tm());
+		print_bool("ia64", ia64());
+		print_bool("pbe", pbe());
 		printf("\n");
 
 		printf("eax1 - ecx\n");
-		detail::print_bool("sse3", sse3());
-		detail::print_bool("pclmulqdq", pclmulqdq());
-		detail::print_bool("dtes64", dtes64());
-		detail::print_bool("monitor", monitor());
-		detail::print_bool("ds_cpl", ds_cpl());
-		detail::print_bool("vmx", vmx());
-		detail::print_bool("smx", smx());
-		detail::print_bool("est", est());
-		detail::print_bool("tm2", tm2());
-		detail::print_bool("ssse3", ssse3());
-		detail::print_bool("cnxt_id", cnxt_id());
-		detail::print_bool("sdbg", sdbg());
-		detail::print_bool("fma", fma());
-		detail::print_bool("cx16", cx16());
-		detail::print_bool("xtpr", xtpr());
-		detail::print_bool("pdcm", pdcm());
-		detail::print_bool("pcid", pcid());
-		detail::print_bool("dca", dca());
-		detail::print_bool("sse41", sse41());
-		detail::print_bool("sse42", sse42());
-		detail::print_bool("x2apic", x2apic());
-		detail::print_bool("movbe", movbe());
-		detail::print_bool("popcnt", popcnt());
-		detail::print_bool("tsc_deadline", tsc_deadline());
-		detail::print_bool("aes", aes());
-		detail::print_bool("xsave", xsave());
-		detail::print_bool("osxsave", osxsave());
-		detail::print_bool("avx", avx());
-		detail::print_bool("f16c", f16c());
-		detail::print_bool("rdrnd", rdrnd());
-		detail::print_bool("hypervisor", hypervisor());
+		print_bool("sse3", sse3());
+		print_bool("pclmulqdq", pclmulqdq());
+		print_bool("dtes64", dtes64());
+		print_bool("monitor", monitor());
+		print_bool("ds_cpl", ds_cpl());
+		print_bool("vmx", vmx());
+		print_bool("smx", smx());
+		print_bool("est", est());
+		print_bool("tm2", tm2());
+		print_bool("ssse3", ssse3());
+		print_bool("cnxt_id", cnxt_id());
+		print_bool("sdbg", sdbg());
+		print_bool("fma", fma());
+		print_bool("cx16", cx16());
+		print_bool("xtpr", xtpr());
+		print_bool("pdcm", pdcm());
+		print_bool("pcid", pcid());
+		print_bool("dca", dca());
+		print_bool("sse41", sse41());
+		print_bool("sse42", sse42());
+		print_bool("x2apic", x2apic());
+		print_bool("movbe", movbe());
+		print_bool("popcnt", popcnt());
+		print_bool("tsc_deadline", tsc_deadline());
+		print_bool("aes", aes());
+		print_bool("xsave", xsave());
+		print_bool("osxsave", osxsave());
+		print_bool("avx", avx());
+		print_bool("f16c", f16c());
+		print_bool("rdrnd", rdrnd());
+		print_bool("hypervisor", hypervisor());
 		printf("\n");
 
 		printf("eax7_ecx0 - ebx\n");
-		detail::print_bool("fsgsbase", fsgsbase());
-		detail::print_bool("ia32_tsc_adjust", ia32_tsc_adjust());
-		detail::print_bool("sgx", sgx());
-		detail::print_bool("bmi1", bmi1());
-		detail::print_bool("hle", hle());
-		detail::print_bool("avx2", avx2());
-		detail::print_bool("fdp_excptn_only", fdp_excptn_only());
-		detail::print_bool("smep", smep());
-		detail::print_bool("bmi2", bmi2());
-		detail::print_bool("erms", erms());
-		detail::print_bool("invpcid", invpcid());
-		detail::print_bool("rtm", rtm());
-		detail::print_bool("pqm", pqm());
-		detail::print_bool("fpu_cs_ds", fpu_cs_ds());
-		detail::print_bool("mpx", mpx());
-		detail::print_bool("pqe", pqe());
-		detail::print_bool("avx512f", avx512_f());
-		detail::print_bool("avx512dq", avx512_dq());
-		detail::print_bool("rdseed", rdseed());
-		detail::print_bool("adx", adx());
-		detail::print_bool("smap", smap());
-		detail::print_bool("avx512ifma", avx512_ifma());
-		detail::print_bool("pcommit", pcommit());
-		detail::print_bool("clflushopt", clflushopt());
-		detail::print_bool("clwb", clwb());
-		detail::print_bool("intel_pt", intel_pt());
-		detail::print_bool("avx512pf", avx512_pf());
-		detail::print_bool("avx512er", avx512_er());
-		detail::print_bool("avx512cd", avx512_cd());
-		detail::print_bool("sha", sha());
-		detail::print_bool("avx512bw", avx512_bw());
-		detail::print_bool("avx512vl", avx512_vl());
+		print_bool("fsgsbase", fsgsbase());
+		print_bool("ia32_tsc_adjust", ia32_tsc_adjust());
+		print_bool("sgx", sgx());
+		print_bool("bmi1", bmi1());
+		print_bool("hle", hle());
+		print_bool("avx2", avx2());
+		print_bool("fdp_excptn_only", fdp_excptn_only());
+		print_bool("smep", smep());
+		print_bool("bmi2", bmi2());
+		print_bool("erms", erms());
+		print_bool("invpcid", invpcid());
+		print_bool("rtm", rtm());
+		print_bool("pqm", pqm());
+		print_bool("fpu_cs_ds", fpu_cs_ds());
+		print_bool("mpx", mpx());
+		print_bool("pqe", pqe());
+		print_bool("avx512f", avx512_f());
+		print_bool("avx512dq", avx512_dq());
+		print_bool("rdseed", rdseed());
+		print_bool("adx", adx());
+		print_bool("smap", smap());
+		print_bool("avx512ifma", avx512_ifma());
+		print_bool("pcommit", pcommit());
+		print_bool("clflushopt", clflushopt());
+		print_bool("clwb", clwb());
+		print_bool("intel_pt", intel_pt());
+		print_bool("avx512pf", avx512_pf());
+		print_bool("avx512er", avx512_er());
+		print_bool("avx512cd", avx512_cd());
+		print_bool("sha", sha());
+		print_bool("avx512bw", avx512_bw());
+		print_bool("avx512vl", avx512_vl());
 		printf("\n");
 
 
 		printf("eax7_ecx0 - ecx\n");
-		detail::print_bool("prefetchwt1", prefetchwt1());
-		detail::print_bool("avx512_vbmi", avx512_vbmi());
-		detail::print_bool("umip", umip());
-		detail::print_bool("pku", pku());
-		detail::print_bool("ospke", ospke());
-		detail::print_bool("waitpkg", waitpkg());
-		detail::print_bool("avx512_vbmi2", avx512_vbmi2());
-		detail::print_bool("cet_ss", cet_ss());
-		detail::print_bool("gfni", gfni());
-		detail::print_bool("vaes", vaes());
-		detail::print_bool("vpclmulqdq", vpclmulqdq());
-		detail::print_bool("avx512_vnni", avx512_vnni());
-		detail::print_bool("avx512_bitalg", avx512_bitalg());
-		detail::print_bool("avx512_vpopcntdq", avx512_vpopcntdq());
-		detail::print_bool("five_level_paging", five_level_paging());
+		print_bool("prefetchwt1", prefetchwt1());
+		print_bool("avx512_vbmi", avx512_vbmi());
+		print_bool("umip", umip());
+		print_bool("pku", pku());
+		print_bool("ospke", ospke());
+		print_bool("waitpkg", waitpkg());
+		print_bool("avx512_vbmi2", avx512_vbmi2());
+		print_bool("cet_ss", cet_ss());
+		print_bool("gfni", gfni());
+		print_bool("vaes", vaes());
+		print_bool("vpclmulqdq", vpclmulqdq());
+		print_bool("avx512_vnni", avx512_vnni());
+		print_bool("avx512_bitalg", avx512_bitalg());
+		print_bool("avx512_vpopcntdq", avx512_vpopcntdq());
+		print_bool("five_level_paging", five_level_paging());
 		printf("%-18s%hhu\n", "mawau", mawau());
-		detail::print_bool("rdpid", rdpid());
-		detail::print_bool("cldemote", cldemote());
-		detail::print_bool("movdiri", movdiri());
-		detail::print_bool("movdir64b", movdir64b());
-		detail::print_bool("enqcmd", enqcmd());
-		detail::print_bool("sgx_lc", sgx_lc());
-		detail::print_bool("pks", pks());
+		print_bool("rdpid", rdpid());
+		print_bool("cldemote", cldemote());
+		print_bool("movdiri", movdiri());
+		print_bool("movdir64b", movdir64b());
+		print_bool("enqcmd", enqcmd());
+		print_bool("sgx_lc", sgx_lc());
+		print_bool("pks", pks());
 		printf("\n");
 
 		printf("eax7_ecx0 - edx\n");
-		detail::print_bool("avx512_4vnniw", avx512_4vnniw());
-		detail::print_bool("avx512_4fmaps", avx512_4fmaps());
-		detail::print_bool("fsrm", fsrm());
-		detail::print_bool("avx512_vp2intersect", avx512_vp2intersect());
-		detail::print_bool("srbds_ctrl", srbds_ctrl());
-		detail::print_bool("md_clear", md_clear());
-		detail::print_bool("tsx_force_abort", tsx_force_abort());
-		detail::print_bool("serialize", serialize());
-		detail::print_bool("hybrid", hybrid());
-		detail::print_bool("tsxldtrk", tsxldtrk());
-		detail::print_bool("pconfig", pconfig());
-		detail::print_bool("lbr", lbr());
-		detail::print_bool("cet_ibt", cet_ibt());
-		detail::print_bool("amx_bf16", amx_bf16());
-		detail::print_bool("amx_tile", amx_tile());
-		detail::print_bool("amx_int8", amx_int8());
-		detail::print_bool("spec_ctrl", spec_ctrl());
-		detail::print_bool("stibp", stibp());
-		detail::print_bool("l1d_flush", l1d_flush());
-		detail::print_bool("ia32_arch_capabilities", ia32_arch_capabilities());
-		detail::print_bool("ia32_core_capabilities", ia32_core_capabilities());
-		detail::print_bool("ssbd", ssbd());
+		print_bool("avx512_4vnniw", avx512_4vnniw());
+		print_bool("avx512_4fmaps", avx512_4fmaps());
+		print_bool("fsrm", fsrm());
+		print_bool("avx512_vp2intersect", avx512_vp2intersect());
+		print_bool("srbds_ctrl", srbds_ctrl());
+		print_bool("md_clear", md_clear());
+		print_bool("tsx_force_abort", tsx_force_abort());
+		print_bool("serialize", serialize());
+		print_bool("hybrid", hybrid());
+		print_bool("tsxldtrk", tsxldtrk());
+		print_bool("pconfig", pconfig());
+		print_bool("lbr", lbr());
+		print_bool("cet_ibt", cet_ibt());
+		print_bool("amx_bf16", amx_bf16());
+		print_bool("amx_tile", amx_tile());
+		print_bool("amx_int8", amx_int8());
+		print_bool("spec_ctrl", spec_ctrl());
+		print_bool("stibp", stibp());
+		print_bool("l1d_flush", l1d_flush());
+		print_bool("ia32_arch_capabilities", ia32_arch_capabilities());
+		print_bool("ia32_core_capabilities", ia32_core_capabilities());
+		print_bool("ssbd", ssbd());
 		printf("\n");
 
 		printf("eax7_ecx1 - eax\n");
-		detail::print_bool("avx512_bf16", avx512_bf16());
+		print_bool("avx512_bf16", avx512_bf16());
 		printf("\n");
 
-		detail::print_bool("fpu_ext", fpu_ext());
-		detail::print_bool("vme_ext", vme_ext());
-		detail::print_bool("de_ext", de_ext());
-		detail::print_bool("pse_ext", pse_ext());
-		detail::print_bool("tsc_ext", tsc_ext());
-		detail::print_bool("msr_ext", msr_ext());
-		detail::print_bool("pae_ext", pae_ext());
-		detail::print_bool("mce_ext", mce_ext());
-		detail::print_bool("cx8_ext", cx8_ext());
-		detail::print_bool("apic_ext", apic_ext());
-		detail::print_bool("syscall", syscall());
-		detail::print_bool("mtrr_ext", mtrr_ext());
-		detail::print_bool("pge_ext", pge_ext());
-		detail::print_bool("mca_ext", mca_ext());
-		detail::print_bool("cmov_ext", cmov_ext());
-		detail::print_bool("pat_ext", pat_ext());
-		detail::print_bool("pse36_ext", pse36_ext());
-		detail::print_bool("mp", mp());
-		detail::print_bool("nx", nx());
-		detail::print_bool("mmxext", mmxext());
-		detail::print_bool("mmx_ext", mmx_ext());
-		detail::print_bool("fxsr_ext", fxsr_ext());
-		detail::print_bool("fxsr_opt", fxsr_opt());
-		detail::print_bool("pdpe1gb", pdpe1gb());
-		detail::print_bool("rdtscp", rdtscp());
-		detail::print_bool("lm", lm());
-		detail::print_bool("3dnowext", _3dnowext());
-		detail::print_bool("3dnow", _3dnow());
-		detail::print_bool("lahf_lm", lahf_lm());
-		detail::print_bool("cmp_legacy", cmp_legacy());
-		detail::print_bool("svm", svm());
-		detail::print_bool("extapic", extapic());
-		detail::print_bool("cr8_legacy", cr8_legacy());
-		detail::print_bool("abm", abm());
-		detail::print_bool("sse4a", sse4a());
-		detail::print_bool("misalignsse", misalignsse());
-		detail::print_bool("3dnowprefetch", _3dnowprefetch());
-		detail::print_bool("osvw", osvw());
-		detail::print_bool("ibs", ibs());
-		detail::print_bool("xop", xop());
-		detail::print_bool("skinit", skinit());
-		detail::print_bool("wdt", wdt());
-		detail::print_bool("lwp", lwp());
-		detail::print_bool("fma4", fma4());
-		detail::print_bool("tce", tce());
-		detail::print_bool("nodeid_msr", nodeid_msr());
-		detail::print_bool("tbm", tbm());
-		detail::print_bool("topoext", topoext());
-		detail::print_bool("perfctr_core", perfctr_core());
-		detail::print_bool("perfctr_nb", perfctr_nb());
-		detail::print_bool("dbx", dbx());
-		detail::print_bool("perftsc", perftsc());
-		detail::print_bool("pcx_l2i", pcx_l2i());
+		print_bool("fpu_ext", fpu_ext());
+		print_bool("vme_ext", vme_ext());
+		print_bool("de_ext", de_ext());
+		print_bool("pse_ext", pse_ext());
+		print_bool("tsc_ext", tsc_ext());
+		print_bool("msr_ext", msr_ext());
+		print_bool("pae_ext", pae_ext());
+		print_bool("mce_ext", mce_ext());
+		print_bool("cx8_ext", cx8_ext());
+		print_bool("apic_ext", apic_ext());
+		print_bool("syscall", syscall());
+		print_bool("mtrr_ext", mtrr_ext());
+		print_bool("pge_ext", pge_ext());
+		print_bool("mca_ext", mca_ext());
+		print_bool("cmov_ext", cmov_ext());
+		print_bool("pat_ext", pat_ext());
+		print_bool("pse36_ext", pse36_ext());
+		print_bool("mp", mp());
+		print_bool("nx", nx());
+		print_bool("mmxext", mmxext());
+		print_bool("mmx_ext", mmx_ext());
+		print_bool("fxsr_ext", fxsr_ext());
+		print_bool("fxsr_opt", fxsr_opt());
+		print_bool("pdpe1gb", pdpe1gb());
+		print_bool("rdtscp", rdtscp());
+		print_bool("lm", lm());
+		print_bool("3dnowext", _3dnowext());
+		print_bool("3dnow", _3dnow());
+		print_bool("lahf_lm", lahf_lm());
+		print_bool("cmp_legacy", cmp_legacy());
+		print_bool("svm", svm());
+		print_bool("extapic", extapic());
+		print_bool("cr8_legacy", cr8_legacy());
+		print_bool("abm", abm());
+		print_bool("sse4a", sse4a());
+		print_bool("misalignsse", misalignsse());
+		print_bool("3dnowprefetch", _3dnowprefetch());
+		print_bool("osvw", osvw());
+		print_bool("ibs", ibs());
+		print_bool("xop", xop());
+		print_bool("skinit", skinit());
+		print_bool("wdt", wdt());
+		print_bool("lwp", lwp());
+		print_bool("fma4", fma4());
+		print_bool("tce", tce());
+		print_bool("nodeid_msr", nodeid_msr());
+		print_bool("tbm", tbm());
+		print_bool("topoext", topoext());
+		print_bool("perfctr_core", perfctr_core());
+		print_bool("perfctr_nb", perfctr_nb());
+		print_bool("dbx", dbx());
+		print_bool("perftsc", perftsc());
+		print_bool("pcx_l2i", pcx_l2i());
 		printf("\n");
 	}
 
@@ -1550,6 +1551,11 @@ private:
 	cpu_id _eax80000008;
 };
 
+#if FEA_CPP17
 inline const cpu_info_t cpu_info;
+#else
+// You need to define the structure in 1 cpp file.
+extern const cpu_info_t cpu_info;
+#endif
 
 } // namespace fea
