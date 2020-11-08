@@ -120,7 +120,7 @@ constexpr void tuple_foreach(Func func, Tuple& tup, std::index_sequence<I...>) {
 // Provid lambda which accepts auto& or const auto&.
 template <class Func, class Tuple>
 constexpr void tuple_foreach(Func func, Tuple& tup) {
-	detail::tuple_foreach(
-			func, tup, std::make_index_sequence<std::tuple_size<Tuple>{}>{});
+	detail::tuple_foreach(func, tup,
+			std::make_index_sequence<std::tuple_size<Tuple>::value>{});
 }
 } // namespace fea
