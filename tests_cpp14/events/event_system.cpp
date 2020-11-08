@@ -124,128 +124,161 @@ TEST(event_system, basics) {
 	EXPECT_EQ(0, (s.capacity<channels::three, events::two>()));
 	EXPECT_EQ(0, (s.capacity<channels::three, events::three>()));
 
-	// int test_event_one = 0;
-	// int test_event_two = 0;
 
-	// auto eid1 = s.subscribe<events::one>(nid1, [&]() { ++test_event_one; });
+	int test_event_one = 0;
+	int test_event_two = 0;
 
-	// auto eid2 = s.subscribe<events::two>(
-	//		nid2, [&](int i) { test_event_two += i; });
+	// Notifiers
 
-	// s.execute_event<events::one>(nid1);
-	// EXPECT_EQ(test_event_one, 1);
-	// EXPECT_EQ(test_event_two, 0);
-	// s.execute_event<events::two>(nid1, 42);
-	// EXPECT_EQ(test_event_one, 1);
-	// EXPECT_EQ(test_event_two, 0);
-	// s.execute_event<events::three>(nid1, 42.f, -42.0);
-	// EXPECT_EQ(test_event_one, 1);
-	// EXPECT_EQ(test_event_two, 0);
-	// s.execute_event<events::one>(nid2);
-	// EXPECT_EQ(test_event_one, 1);
-	// EXPECT_EQ(test_event_two, 0);
-	// s.execute_event<events::two>(nid2, 42);
-	// EXPECT_EQ(test_event_one, 1);
-	// EXPECT_EQ(test_event_two, 42);
-	// s.execute_event<events::three>(nid2, 42.f, -42.0);
-	// EXPECT_EQ(test_event_one, 1);
-	// EXPECT_EQ(test_event_two, 42);
+	auto eid1 = s.subscribe<events::one>(nid1, [&]() { ++test_event_one; });
+	auto eid2 = s.subscribe<events::two>(
+			nid2, [&](int i) { test_event_two += i; });
 
-	// s.unsubscribe<events::one>(nid1, eid1);
-	// s.unsubscribe<events::two>(nid2, eid2);
+	EXPECT_FALSE(s.empty(nid1));
+	EXPECT_FALSE(s.empty<events::one>(nid1));
+	EXPECT_TRUE(s.empty<events::two>(nid1));
+	EXPECT_FALSE(s.empty(nid2));
+	EXPECT_TRUE(s.empty<events::one>(nid2));
+	EXPECT_FALSE(s.empty<events::two>(nid2));
 
-	// s.execute_event<events::one>(nid1);
-	// EXPECT_EQ(test_event_one, 1);
-	// EXPECT_EQ(test_event_two, 42);
-	// s.execute_event<events::two>(nid1, 42);
-	// EXPECT_EQ(test_event_one, 1);
-	// EXPECT_EQ(test_event_two, 42);
-	// s.execute_event<events::three>(nid1, 42.f, -42.0);
-	// EXPECT_EQ(test_event_one, 1);
-	// EXPECT_EQ(test_event_two, 42);
-	// s.execute_event<events::one>(nid2);
-	// EXPECT_EQ(test_event_one, 1);
-	// EXPECT_EQ(test_event_two, 42);
-	// s.execute_event<events::two>(nid2, 42);
-	// EXPECT_EQ(test_event_one, 1);
-	// EXPECT_EQ(test_event_two, 42);
-	// s.execute_event<events::three>(nid2, 42.f, -42.0);
-	// EXPECT_EQ(test_event_one, 1);
-	// EXPECT_EQ(test_event_two, 42);
+	EXPECT_EQ(1, s.size(nid1));
+	EXPECT_EQ(1, s.size<events::one>(nid1));
+	EXPECT_EQ(0, s.size<events::two>(nid1));
+	EXPECT_EQ(1, s.size(nid2));
+	EXPECT_EQ(0, s.size<events::one>(nid2));
+	EXPECT_EQ(1, s.size<events::two>(nid2));
 
-	// eid1 = s.subscribe<events::one>(channels::one, [&]() { ++test_event_one;
-	// }); eid2 = s.subscribe<events::two>( 		channels::two, [&](int i) {
-	// test_event_two += i; });
+	s.trigger<events::one>(nid1);
+	EXPECT_EQ(test_event_one, 1);
+	EXPECT_EQ(test_event_two, 0);
+	s.trigger<events::two>(nid1, 42);
+	EXPECT_EQ(test_event_one, 1);
+	EXPECT_EQ(test_event_two, 0);
+	s.trigger<events::three>(nid1, 42.f, -42.0);
+	EXPECT_EQ(test_event_one, 1);
+	EXPECT_EQ(test_event_two, 0);
+	s.trigger<events::one>(nid2);
+	EXPECT_EQ(test_event_one, 1);
+	EXPECT_EQ(test_event_two, 0);
+	s.trigger<events::two>(nid2, 42);
+	EXPECT_EQ(test_event_one, 1);
+	EXPECT_EQ(test_event_two, 42);
+	s.trigger<events::three>(nid2, 42.f, -42.0);
+	EXPECT_EQ(test_event_one, 1);
+	EXPECT_EQ(test_event_two, 42);
 
-	// s.execute_event<events::one>(channels::one);
-	// EXPECT_EQ(test_event_one, 2);
-	// EXPECT_EQ(test_event_two, 42);
-	// s.execute_event<events::two>(channels::one, 42);
-	// EXPECT_EQ(test_event_one, 2);
-	// EXPECT_EQ(test_event_two, 42);
-	// s.execute_event<events::three>(channels::one, 42.f, -42.0);
-	// EXPECT_EQ(test_event_one, 2);
-	// EXPECT_EQ(test_event_two, 42);
-	// s.execute_event<events::one>(channels::two);
-	// EXPECT_EQ(test_event_one, 2);
-	// EXPECT_EQ(test_event_two, 42);
-	// s.execute_event<events::two>(channels::two, 1);
-	// EXPECT_EQ(test_event_one, 2);
-	// EXPECT_EQ(test_event_two, 43);
-	// s.execute_event<events::three>(channels::one, 42.f, -42.0);
-	// EXPECT_EQ(test_event_one, 2);
-	// EXPECT_EQ(test_event_two, 43);
+	s.unsubscribe<events::one>(eid1);
+	s.unsubscribe<events::two>(eid2);
 
-	// s.unsubscribe<events::one>(channels::one, eid1);
-	// s.unsubscribe<events::two>(channels::two, eid2);
+	EXPECT_TRUE(s.empty(nid1));
+	EXPECT_TRUE(s.empty<events::one>(nid1));
+	EXPECT_TRUE(s.empty<events::two>(nid1));
+	EXPECT_TRUE(s.empty(nid2));
+	EXPECT_TRUE(s.empty<events::one>(nid2));
+	EXPECT_TRUE(s.empty<events::two>(nid2));
 
-	// s.execute_event<events::one>(channels::one);
-	// EXPECT_EQ(test_event_one, 2);
-	// EXPECT_EQ(test_event_two, 43);
-	// s.execute_event<events::two>(channels::one, 42);
-	// EXPECT_EQ(test_event_one, 2);
-	// EXPECT_EQ(test_event_two, 43);
-	// s.execute_event<events::three>(channels::one, 42.f, -42.0);
-	// EXPECT_EQ(test_event_one, 2);
-	// EXPECT_EQ(test_event_two, 43);
-	// s.execute_event<events::one>(channels::two);
-	// EXPECT_EQ(test_event_one, 2);
-	// EXPECT_EQ(test_event_two, 43);
-	// s.execute_event<events::two>(channels::two, 1);
-	// EXPECT_EQ(test_event_one, 2);
-	// EXPECT_EQ(test_event_two, 43);
-	// s.execute_event<events::three>(channels::one, 42.f, -42.0);
-	// EXPECT_EQ(test_event_one, 2);
-	// EXPECT_EQ(test_event_two, 43);
-}
+	EXPECT_EQ(0, s.size(nid1));
+	EXPECT_EQ(0, s.size<events::one>(nid1));
+	EXPECT_EQ(0, s.size<events::two>(nid1));
+	EXPECT_EQ(0, s.size(nid2));
+	EXPECT_EQ(0, s.size<events::one>(nid2));
+	EXPECT_EQ(0, s.size<events::two>(nid2));
 
-TEST(event_system, multi_subscribe) {
-	// enum class events : unsigned { one, two, three, count };
-	// enum class channels : unsigned { one, count };
-	// fea::event_system<events, channels, void(), void(), void()> s{};
+	s.trigger<events::one>(nid1);
+	EXPECT_EQ(test_event_one, 1);
+	EXPECT_EQ(test_event_two, 42);
+	s.trigger<events::two>(nid1, 42);
+	EXPECT_EQ(test_event_one, 1);
+	EXPECT_EQ(test_event_two, 42);
+	s.trigger<events::three>(nid1, 42.f, -42.0);
+	EXPECT_EQ(test_event_one, 1);
+	EXPECT_EQ(test_event_two, 42);
+	s.trigger<events::one>(nid2);
+	EXPECT_EQ(test_event_one, 1);
+	EXPECT_EQ(test_event_two, 42);
+	s.trigger<events::two>(nid2, 42);
+	EXPECT_EQ(test_event_one, 1);
+	EXPECT_EQ(test_event_two, 42);
+	s.trigger<events::three>(nid2, 42.f, -42.0);
+	EXPECT_EQ(test_event_one, 1);
+	EXPECT_EQ(test_event_two, 42);
 
-	// fea::notifier_id nid1 = s.add_notifier();
-	//// fea::notifier_id nid2 = s.add_notifier();
 
-	// int test_event_one = 0;
+	// Channels
 
-	// auto [eid1, eid2, eid3] = s.subscribe(
-	//		nid1, [&]() { ++test_event_one; }, [&]() { ++test_event_one; },
-	//		[&]() { ++test_event_one; });
+	auto c_eid1 = s.subscribe<channels::one, events::one>(
+			[&]() { ++test_event_one; });
+	auto c_eid2 = s.subscribe<channels::two, events::two>(
+			[&](int i) { test_event_two += i; });
 
-	// s.execute_event<events::one>(nid1);
-	// s.execute_event<events::two>(nid1);
-	// s.execute_event<events::three>(nid1);
-	// EXPECT_EQ(test_event_one, 3);
+	EXPECT_FALSE(s.empty<channels::one>());
+	EXPECT_FALSE((s.empty<channels::one, events::one>()));
+	EXPECT_TRUE((s.empty<channels::one, events::two>()));
+	EXPECT_FALSE(s.empty<channels::two>());
+	EXPECT_TRUE((s.empty<channels::two, events::one>()));
+	EXPECT_FALSE((s.empty<channels::two, events::two>()));
 
-	// auto [cid1, cid2, cid3] = s.subscribe(
-	//		channels::one, [&]() { ++test_event_one; },
-	//		[&]() { ++test_event_one; }, [&]() { ++test_event_one; });
+	EXPECT_EQ(1, s.size<channels::one>());
+	EXPECT_EQ(1, (s.size<channels::one, events::one>()));
+	EXPECT_EQ(0, (s.size<channels::one, events::two>()));
+	EXPECT_EQ(1, s.size<channels::two>());
+	EXPECT_EQ(0, (s.size<channels::two, events::one>()));
+	EXPECT_EQ(1, (s.size<channels::two, events::two>()));
 
-	// s.execute_event<events::one>(channels::one);
-	// s.execute_event<events::two>(channels::one);
-	// s.execute_event<events::three>(channels::one);
-	// EXPECT_EQ(test_event_one, 6);
+	s.trigger<channels::one, events::one>();
+	EXPECT_EQ(test_event_one, 2);
+	EXPECT_EQ(test_event_two, 42);
+	s.trigger<channels::one, events::two>(42);
+	EXPECT_EQ(test_event_one, 2);
+	EXPECT_EQ(test_event_two, 42);
+	s.trigger<channels::one, events::three>(42.f, -42.0);
+	EXPECT_EQ(test_event_one, 2);
+	EXPECT_EQ(test_event_two, 42);
+	s.trigger<channels::two, events::one>();
+	EXPECT_EQ(test_event_one, 2);
+	EXPECT_EQ(test_event_two, 42);
+	s.trigger<channels::two, events::two>(1);
+	EXPECT_EQ(test_event_one, 2);
+	EXPECT_EQ(test_event_two, 43);
+	s.trigger<channels::one, events::three>(42.f, -42.0);
+	EXPECT_EQ(test_event_one, 2);
+	EXPECT_EQ(test_event_two, 43);
+
+	s.unsubscribe(c_eid1);
+	s.unsubscribe(c_eid2);
+
+	EXPECT_TRUE(s.empty<channels::one>());
+	EXPECT_TRUE((s.empty<channels::one, events::one>()));
+	EXPECT_TRUE((s.empty<channels::one, events::two>()));
+	EXPECT_TRUE(s.empty<channels::two>());
+	EXPECT_TRUE((s.empty<channels::two, events::one>()));
+	EXPECT_TRUE((s.empty<channels::two, events::two>()));
+
+	EXPECT_EQ(0, s.size<channels::one>());
+	EXPECT_EQ(0, (s.size<channels::one, events::one>()));
+	EXPECT_EQ(0, (s.size<channels::one, events::two>()));
+	EXPECT_EQ(0, s.size<channels::two>());
+	EXPECT_EQ(0, (s.size<channels::two, events::one>()));
+	EXPECT_EQ(0, (s.size<channels::two, events::two>()));
+
+	s.trigger<channels::one, events::one>();
+	EXPECT_EQ(test_event_one, 2);
+	EXPECT_EQ(test_event_two, 43);
+	s.trigger<channels::one, events::two>(42);
+	EXPECT_EQ(test_event_one, 2);
+	EXPECT_EQ(test_event_two, 43);
+	s.trigger<channels::one, events::three>(42.f, -42.0);
+	EXPECT_EQ(test_event_one, 2);
+	EXPECT_EQ(test_event_two, 43);
+	s.trigger<channels::two, events::one>();
+	EXPECT_EQ(test_event_one, 2);
+	EXPECT_EQ(test_event_two, 43);
+	s.trigger<channels::two, events::two>(1);
+	EXPECT_EQ(test_event_one, 2);
+	EXPECT_EQ(test_event_two, 43);
+	s.trigger<channels::one, events::three>(42.f, -42.0);
+	EXPECT_EQ(test_event_one, 2);
+	EXPECT_EQ(test_event_two, 43);
 }
 
 } // namespace

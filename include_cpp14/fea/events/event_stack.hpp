@@ -136,24 +136,24 @@ public:
 		return std::get<size_t(e)>(_stacks).contains(id._id);
 	}
 
-	// Access const callback ref.
+	// Access callback.
 	template <EventEnum e>
 	const auto& at(event_id<EventEnum, e> id) const {
 		return std::get<size_t(e)>(_stacks).at(id._id);
 	}
-	// Access callback ref.
+	// Access callback.
 	template <EventEnum e>
 	auto& at(event_id<EventEnum, e> id) {
 		return std::get<size_t(e)>(_stacks).at(id._id);
 	}
 
-	// Access const callback ref without id checks.
+	// Access callback without id checks.
 	template <EventEnum e>
 	const auto& at_unchecked(event_id<EventEnum, e> id) const {
 		assert(contains<e>(id));
 		return std::get<size_t(e)>(_stacks).at_unchecked(id._id);
 	}
-	// Access callback ref without id checks.
+	// Access callback without id checks.
 	template <EventEnum e>
 	auto& at_unchecked(event_id<EventEnum, e> id) {
 		assert(contains<e>(id));

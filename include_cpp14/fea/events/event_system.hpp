@@ -119,9 +119,6 @@ struct event_system {
 	//		"event_system : your channel enum must contain count and cannot "
 	//		"have 0 events");
 
-	// static_assert(std::is_unsigned_v<channel_underlying_t>,
-	//		"event_system : enum class must be unsigned integral");
-
 private:
 	// Stores the channel stacks.
 	using channel_tuple_t = decltype(
@@ -168,48 +165,48 @@ public:
 		return false;
 	}
 
-	//// Access notifier const callback ref.
+	//// Access notifier callback.
 	// template <EventEnum e>
 	// const auto& at(notifier_id nid, event_id<EventEnum, e> id) const {
 	//	return _notifier_stacks.at(nid._id).at(id);
 	//}
-	//// Access notifier callback ref.
+	//// Access notifier callback.
 	// template <EventEnum e>
 	// auto& at(notifier_id nid, event_id<EventEnum, e> id) {
 	//	return _notifier_stacks.at(nid._id).at(id);
 	//}
 
-	//// Access channel const callback ref.
+	//// Access channel callback.
 	// template <ChannelEnum c, EventEnum e>
 	// const auto& at(event_id<EventEnum, e> id) const {
 	//	return std::get<size_t(c)>(_channel_stacks).at(id);
 	//}
-	//// Access channel callback ref.
+	//// Access channel callback.
 	// template <ChannelEnum c, EventEnum e>
 	// auto& at(event_id<EventEnum, e> id) {
 	//	return std::get<size_t(c)>(_channel_stacks).at(id);
 	//}
 
-	//// Access notifier const callback ref without id checks.
+	//// Access notifier callback without id checks.
 	// template <EventEnum e>
 	// const auto& at_unchecked(notifier_id nid, event_id<EventEnum, e> id)
 	// const { 	assert(contains(nid, id)); 	return
 	//_notifier_stacks.at_unchecked(nid._id).at_unchecked(id);
 	//}
-	//// Access notifier callback ref without id checks.
+	//// Access notifier callback without id checks.
 	// template <EventEnum e>
 	// auto& at_unchecked(notifier_id nid, event_id<EventEnum, e> id) {
 	//	assert(contains(nid, id));
 	//	return _notifier_stacks.at_unchecked(nid._id).at_unchecked(id);
 	//}
 
-	//// Access notifier const callback ref without id checks.
+	//// Access notifier callback without id checks.
 	// template <ChannelEnum c, EventEnum e>
 	// const auto& at_unchecked(event_id<EventEnum, e> id) const {
 	//	assert(contains<c>(id));
 	//	return std::get<size_t(c)>(_channel_stacks).at_unchecked(id);
 	//}
-	//// Access notifier callback ref without id checks.
+	//// Access notifier callback without id checks.
 	// template <ChannelEnum c, EventEnum e>
 	// auto& at_unchecked(event_id<EventEnum, e> id) {
 	//	assert(contains<c>(id));
@@ -299,7 +296,6 @@ public:
 
 	// Adds a notifier Id.
 	// You can attach callbacks to notifiers and their events.
-	// Notifiers are a runtime system.
 	notifier_id add_notifier() {
 		assert(_notifier_id_generator != (std::numeric_limits<size_t>::max)());
 
@@ -315,50 +311,46 @@ public:
 		_notifier_stacks.erase(nid._id);
 	}
 
+	// Subscribe a callback to an event from notifier nid.
+	template <EventEnum e, class Func>
+	event_sys_id<EventEnum, e> subscribe(notifier_id nid, Func&& callback) {
+		return { nid,
+			_notifier_stacks.at(nid._id).template subscribe<e>(
+					std::forward<Func>(callback)) };
+	}
 
-	// template <EventEnum e, class Func>
-	// event_stack_id subscribe(notifier_id nid, Func&& func) {
-	//	return _object_stacks.at(nid).subscribe<e>(std::forward<Func>(func));
-	//}
+	// Subscribe a callback to an event from a channel.
+	template <ChannelEnum c, EventEnum e, class Func>
+	event_sys_id<EventEnum, e, ChannelEnum, c> subscribe(Func&& func) {
+		return { std::get<size_t(c)>(_channel_stacks)
+						 .template subscribe<e>(std::forward<Func>(func)) };
+	}
 
-	// template <class... Funcs>
-	// auto subscribe(notifier_id nid, Funcs&&... funcs) {
-	//	return _object_stacks.at(nid).subscribe(std::forward<Funcs>(funcs)...);
-	//}
+	// Unsubscribe a callback from event e of notifier nid.
+	template <EventEnum e>
+	void unsubscribe(event_sys_id<EventEnum, e> id) {
+		_notifier_stacks.at(id._nid._id).template unsubscribe<e>(id._eid);
+	}
 
-	//// Channels
-	// template <EventEnum e, class Func>
-	// event_stack_id subscribe(ChannelEnum c, Func&& func) {
-	//	return _channel_stacks[underlying_chan(c)].subscribe<e>(
-	//			std::forward<Func>(func));
-	//}
+	// Unsubscribe a callback from event e of specified channel.
+	template <ChannelEnum c, EventEnum e>
+	void unsubscribe(event_sys_id<EventEnum, e, ChannelEnum, c> id) {
+		std::get<size_t(c)>(_channel_stacks).template unsubscribe<e>(id._eid);
+	}
 
-	// template <class... Funcs>
-	// auto subscribe(ChannelEnum c, Funcs&&... funcs) {
-	//	return _channel_stacks[underlying_chan(c)].subscribe(
-	//			std::forward<Funcs>(funcs)...);
-	//}
+	// Trigger event of notifier nid.
+	template <EventEnum e, class... Args>
+	void trigger(notifier_id nid, Args&&... args) {
+		_notifier_stacks.at(nid._id).template trigger<e>(
+				std::forward<Args>(args)...);
+	}
 
-	// template <EventEnum e>
-	// void unsubscribe(notifier_id nid, event_stack_id id) {
-	//	_object_stacks.at(nid).unsubscribe<e>(id);
-	//}
-
-	// template <EventEnum e>
-	// void unsubscribe(ChannelEnum c, event_stack_id id) {
-	//	_channel_stacks[underlying_chan(c)].unsubscribe<e>(id);
-	//}
-
-	// template <EventEnum e, class... Args>
-	// void execute_event(notifier_id nid, Args&&... args) {
-	//	_object_stacks.at(nid).execute<e>(std::forward<Args>(args)...);
-	//}
-
-	// template <EventEnum e, class... Args>
-	// void execute_event(ChannelEnum c, Args&&... args) {
-	//	_channel_stacks[underlying_chan(c)].execute<e>(
-	//			std::forward<Args>(args)...);
-	//}
+	// Trigger event of specified channel.
+	template <ChannelEnum c, EventEnum e, class... Args>
+	void trigger(Args&&... args) {
+		std::get<size_t(c)>(_channel_stacks)
+				.template trigger<e>(std::forward<Args>(args)...);
+	}
 
 private:
 	// Notifier events.
