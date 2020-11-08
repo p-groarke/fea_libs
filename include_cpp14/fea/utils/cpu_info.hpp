@@ -184,7 +184,7 @@ struct cpu_info_t {
 			}
 
 			// Processor Brand String (0x80000002 to 0x80000004)
-			char brand[64] = { 0 };
+			std::array<char, 64> brand{};
 			if (highest_leaf >= 0x80000004) {
 				cpu_id eax802 = cpu_id{ 0x80000002 };
 				cpu_id eax803 = cpu_id{ 0x80000003 };
@@ -192,13 +192,13 @@ struct cpu_info_t {
 
 				std::array<char, 16> str;
 				str = eax802.to_string();
-				std::copy(str.begin(), str.end(), &brand[0]);
+				std::copy(str.begin(), str.end(), brand.begin());
 				str = eax803.to_string();
-				std::copy(str.begin(), str.end(), &brand[16]);
+				std::copy(str.begin(), str.end(), brand.begin() + 16);
 				str = eax804.to_string();
-				std::copy(str.begin(), str.end(), &brand[32]);
+				std::copy(str.begin(), str.end(), brand.begin() + 32);
 
-				_brand = brand;
+				_brand = brand.data();
 			}
 
 			if (highest_leaf >= 0x80000005) {

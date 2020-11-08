@@ -49,11 +49,21 @@ auto make_tuple_from_count(std::index_sequence<Is...>) {
 }
 } // namespace detail
 
+#if FEA_WINDOWS
+// VS2015 complains about removing this unused function.
+#pragma warning(push)
+#pragma warning(disable : 4505)
+#endif
+
 // Create a tuple using type T and count N.
 template <class T, size_t N>
 auto make_tuple_from_count() {
 	return detail::make_tuple_from_count<T>(std::make_index_sequence<N>{});
 }
+
+#if FEA_WINDOWS
+#pragma warning(pop)
+#endif
 
 
 // Get the index of type T in Tuple.
@@ -103,7 +113,7 @@ inline constexpr bool tuple_contains_v = tuple_contains<T, Tuple>::value;
 
 
 namespace detail {
-// Can't be constexpr for vs2015.
+// Can't be constexpr for VS2015.
 template <class Func, class Tuple, size_t... I>
 void tuple_foreach(Func func, Tuple& tup, std::index_sequence<I...>) {
 #if FEA_CPP17

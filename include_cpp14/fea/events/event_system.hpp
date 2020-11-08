@@ -465,13 +465,14 @@ public:
 
 private:
 	// Notifier events.
-	unsigned_map<size_t, event_stack<EventEnum, FuncTypes...>> _notifier_stacks;
+	unsigned_map<size_t, event_stack<EventEnum, FuncTypes...>>
+			_notifier_stacks{};
 
 	// Generates notifier ids.
 	size_t _notifier_id_generator = 0;
 
 	// Channel events.
-	channel_tuple_t _channel_stacks;
+	channel_tuple_t _channel_stacks{};
 };
 
 } // namespace fea
