@@ -1,14 +1,13 @@
 ﻿#pragma once
+#include "fea/utils/platform.hpp"
+
 #include <chrono>
 #include <ctime>
 #include <iomanip>
 #include <sstream>
 
-// https://github.com/HowardHinnant/date/issues/474
-#define HAS_UNCAUGHT_EXCEPTIONS 1
 #include <date/date.h>
 #include <date/tz.h>
-#undef HAS_UNCAUGHT_EXCEPTIONS
 
 namespace fea {
 // Extra helpers.

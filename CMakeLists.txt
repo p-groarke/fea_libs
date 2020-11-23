@@ -60,7 +60,8 @@ function(set_compile_options REQUIRED_ARG EXPOSURE)
 	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
 		# using Intel C++
 	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-		target_compile_definitions(${REQUIRED_ARG} ${EXPOSURE} NOMINMAX UNICODE _UNICODE)
+		target_compile_definitions(${REQUIRED_ARG} ${EXPOSURE} NOMINMAX UNICODE _UNICODE
+			_SILENCE_CXX17_UNCAUGHT_EXCEPTION_DEPRECATION_WARNING)
 		target_compile_options(${REQUIRED_ARG} ${EXPOSURE} /Zc:__cplusplus /Zc:alignedNew
 			/permissive- /W4 /WX /utf-8
 		)
