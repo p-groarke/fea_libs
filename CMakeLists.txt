@@ -85,6 +85,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # External dependencies.
 find_package(TBB CONFIG REQUIRED)
+find_package(date CONFIG REQUIRED)
 
 
 # Main Project
@@ -92,7 +93,7 @@ file(GLOB_RECURSE HEADER_FILES_CPP14 "include_cpp14/${PROJECT_NAME}/*.hpp")
 file(GLOB_RECURSE HEADER_FILES_CPP17 "include_cpp17/${PROJECT_NAME}/*.hpp")
 add_library(${PROJECT_NAME} INTERFACE)
 set_compile_options(${PROJECT_NAME} INTERFACE)
-target_link_libraries(${PROJECT_NAME} INTERFACE TBB::TBB)
+target_link_libraries(${PROJECT_NAME} INTERFACE TBB::TBB date::date)
 
 # To see files in IDE
 target_sources(${PROJECT_NAME} INTERFACE
