@@ -20,9 +20,9 @@ TEST(high_range_duration, basics) {
 		nano_time += date::days(5);
 
 		fea::high_range_duration hrd{ nano_time };
-		EXPECT_EQ(hrd.days().count(), 5);
-		EXPECT_EQ(hrd.seconds().count(), 5);
-		EXPECT_EQ(hrd.remainder().count(), 5);
+		EXPECT_EQ(hrd.days().count(), 5u);
+		EXPECT_EQ(hrd.seconds().count(), 5u);
+		EXPECT_EQ(hrd.remainder().count(), 5u);
 		EXPECT_EQ(hrd.total_remainder().count(), nano_time.count());
 	}
 
@@ -38,9 +38,9 @@ TEST(high_range_duration, basics) {
 
 		fea::high_range_duration hrd2{ hrd };
 		hrd2 += hrd;
-		EXPECT_EQ(hrd2.days().count(), 10);
-		EXPECT_EQ(hrd2.seconds().count(), 10);
-		EXPECT_EQ(hrd2.remainder().count(), 10);
+		EXPECT_EQ(hrd2.days().count(), 10u);
+		EXPECT_EQ(hrd2.seconds().count(), 10u);
+		EXPECT_EQ(hrd2.remainder().count(), 10u);
 		EXPECT_EQ(size_t(hrd2.total_remainder().count()), add_answer.count());
 
 		fea::unanoseconds nano_time2{ 1s };
@@ -51,9 +51,9 @@ TEST(high_range_duration, basics) {
 		hrd2 = hrd;
 		hrd2 += hrd_add;
 
-		EXPECT_EQ(hrd2.days().count(), 5);
-		EXPECT_EQ(hrd2.seconds().count(), 6);
-		EXPECT_EQ(hrd2.remainder().count(), 1);
+		EXPECT_EQ(hrd2.days().count(), 5u);
+		EXPECT_EQ(hrd2.seconds().count(), 6u);
+		EXPECT_EQ(hrd2.remainder().count(), 1u);
 		EXPECT_EQ(size_t(hrd2.total_remainder().count()), add_answer.count());
 
 		nano_time2 = 24h;
@@ -64,9 +64,9 @@ TEST(high_range_duration, basics) {
 		hrd2 = hrd;
 		hrd2 += hrd_add;
 
-		EXPECT_EQ(hrd2.days().count(), 6);
-		EXPECT_EQ(hrd2.seconds().count(), 1);
-		EXPECT_EQ(hrd2.remainder().count(), 5);
+		EXPECT_EQ(hrd2.days().count(), 6u);
+		EXPECT_EQ(hrd2.seconds().count(), 1u);
+		EXPECT_EQ(hrd2.remainder().count(), 5u);
 		EXPECT_EQ(size_t(hrd2.total_remainder().count()), add_answer.count());
 
 		nano_time2 = 24h;
@@ -79,9 +79,9 @@ TEST(high_range_duration, basics) {
 		hrd2 = hrd;
 		hrd2 += hrd_add;
 
-		EXPECT_EQ(hrd2.days().count(), 6);
-		EXPECT_EQ(hrd2.seconds().count(), 2);
-		EXPECT_EQ(hrd2.remainder().count(), 1);
+		EXPECT_EQ(hrd2.days().count(), 6u);
+		EXPECT_EQ(hrd2.seconds().count(), 2u);
+		EXPECT_EQ(hrd2.remainder().count(), 1u);
 		EXPECT_EQ(size_t(hrd2.total_remainder().count()), add_answer.count());
 	}
 }

@@ -26,7 +26,7 @@ TEST(timer, experiment) {
 	fea::timer<void()> t{ fea::dseconds(10) };
 	std::this_thread::sleep_for(2s);
 	t.update();
-	EXPECT_GE(t.elapsed().count(), 20);
+	EXPECT_GE(t.elapsed().count(), 20.0);
 }
 
 TEST(timer, basics) {
@@ -69,15 +69,15 @@ TEST(timer, basics) {
 	// printf("\n");
 	EXPECT_GE(timer.elapsed(), fea::dseconds(100ms));
 
-	EXPECT_EQ(event_count.num_secs, 1);
-	EXPECT_EQ(event_count.num_mins, 1);
-	EXPECT_EQ(event_count.num_hrs, 1);
-	EXPECT_EQ(event_count.num_days, 1);
-	EXPECT_EQ(event_count.num_weeks, 1);
-	EXPECT_EQ(event_count.num_months, 1);
-	EXPECT_EQ(event_count.num_years, 1);
-	EXPECT_EQ(event_count.num_elapsed_callback, 1);
-	EXPECT_EQ(event_count.num_time_callback, 1);
+	EXPECT_EQ(event_count.num_secs, 1u);
+	EXPECT_EQ(event_count.num_mins, 1u);
+	EXPECT_EQ(event_count.num_hrs, 1u);
+	EXPECT_EQ(event_count.num_days, 1u);
+	EXPECT_EQ(event_count.num_weeks, 1u);
+	EXPECT_EQ(event_count.num_months, 1u);
+	EXPECT_EQ(event_count.num_years, 1u);
+	EXPECT_EQ(event_count.num_elapsed_callback, 1u);
+	EXPECT_EQ(event_count.num_time_callback, 1u);
 
 	auto elapsed_before_pause = timer.elapsed();
 	auto time_before_pause = timer.time();
@@ -90,8 +90,8 @@ TEST(timer, basics) {
 	auto elapsed_after_pause = timer.elapsed();
 	auto time_after_pause = timer.time();
 
-	EXPECT_EQ(event_count.num_pause, 1);
-	EXPECT_EQ(event_count.num_unpause, 2); // 1 for start transition
+	EXPECT_EQ(event_count.num_pause, 1u);
+	EXPECT_EQ(event_count.num_unpause, 2u); // 1 for start transition
 	EXPECT_EQ(0s, time_after_pause - time_before_pause);
 	EXPECT_EQ(0s, elapsed_after_pause - elapsed_before_pause);
 }

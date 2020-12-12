@@ -76,7 +76,7 @@ You can subscribe to:
 	- Time events (ex. callback every second, minute, hour, etc).
 	- Pause/UnPause events.
 	- Elapsed callbacks (ex. callback after x seconds).
-	- Specific time callbacks (ex. callback at 3:30pm).
+	- Specific time callbacks (ex. callback at 01/01/2021 3:30pm).
 
 
 Imprecision Behavior
@@ -323,6 +323,7 @@ private:
 			_counter += hr_dt;
 		}
 
+		// TODO : Split into seconds and days.
 		dclock_seconds<Clock> current_time = time();
 
 		if (_seconds_ticks + 1s <= current_time) {
@@ -441,7 +442,6 @@ private:
 
 	// Elapsed time.
 	clock_high_range_duration_t _counter;
-	// dseconds _counter;
 
 	// Time increment speed. Aka, 1 second : x seconds.
 	dseconds _ratio;

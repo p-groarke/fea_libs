@@ -46,30 +46,28 @@ template <class Duration>
 using steady_time
 		= std::chrono::time_point<std::chrono::steady_clock, Duration>;
 
-using steady_seconds = typename steady_time<std::chrono::seconds>;
-using steady_minutes = typename steady_time<std::chrono::minutes>;
-using steady_hours = typename steady_time<std::chrono::hours>;
-using steady_days = typename steady_time<date::days>;
-using steady_weeks = typename steady_time<date::weeks>;
-using steady_months = typename steady_time<date::months>;
-using steady_years = typename steady_time<date::years>;
+using steady_seconds = steady_time<std::chrono::seconds>;
+using steady_minutes = steady_time<std::chrono::minutes>;
+using steady_hours = steady_time<std::chrono::hours>;
+using steady_days = steady_time<date::days>;
+using steady_weeks = steady_time<date::weeks>;
+using steady_months = steady_time<date::months>;
+using steady_years = steady_time<date::years>;
 
 template <class Clock>
-using clock_seconds =
-		typename std::chrono::time_point<Clock, std::chrono::seconds>;
+using clock_seconds = std::chrono::time_point<Clock, std::chrono::seconds>;
 template <class Clock>
-using clock_minutes =
-		typename std::chrono::time_point<Clock, std::chrono::minutes>;
+using clock_minutes = std::chrono::time_point<Clock, std::chrono::minutes>;
 template <class Clock>
-using clock_hours = typename std::chrono::time_point<Clock, std::chrono::hours>;
+using clock_hours = std::chrono::time_point<Clock, std::chrono::hours>;
 template <class Clock>
-using clock_days = typename std::chrono::time_point<Clock, date::days>;
+using clock_days = std::chrono::time_point<Clock, date::days>;
 template <class Clock>
-using clock_weeks = typename std::chrono::time_point<Clock, date::weeks>;
+using clock_weeks = std::chrono::time_point<Clock, date::weeks>;
 template <class Clock>
-using clock_months = typename std::chrono::time_point<Clock, date::months>;
+using clock_months = std::chrono::time_point<Clock, date::months>;
 template <class Clock>
-using clock_years = typename std::chrono::time_point<Clock, date::years>;
+using clock_years = std::chrono::time_point<Clock, date::years>;
 
 
 /*
@@ -90,21 +88,21 @@ using uweeks = std::chrono::duration<size_t, date::weeks::period>;
 using umonths = std::chrono::duration<size_t, date::months::period>;
 using uyears = std::chrono::duration<size_t, date::years::period>;
 
-using usys_seconds = typename date::sys_time<useconds>;
-using usys_minutes = typename date::sys_time<uminutes>;
-using usys_hours = typename date::sys_time<uhours>;
-using usys_days = typename date::sys_time<udays>;
-using usys_weeks = typename date::sys_time<uweeks>;
-using usys_months = typename date::sys_time<umonths>;
-using usys_years = typename date::sys_time<uyears>;
+using usys_seconds = date::sys_time<useconds>;
+using usys_minutes = date::sys_time<uminutes>;
+using usys_hours = date::sys_time<uhours>;
+using usys_days = date::sys_time<udays>;
+using usys_weeks = date::sys_time<uweeks>;
+using usys_months = date::sys_time<umonths>;
+using usys_years = date::sys_time<uyears>;
 
-using usteady_seconds = typename steady_time<useconds>;
-using usteady_minutes = typename steady_time<uminutes>;
-using usteady_hours = typename steady_time<uhours>;
-using usteady_days = typename steady_time<udays>;
-using usteady_weeks = typename steady_time<uweeks>;
-using usteady_months = typename steady_time<umonths>;
-using usteady_years = typename steady_time<uyears>;
+using usteady_seconds = steady_time<useconds>;
+using usteady_minutes = steady_time<uminutes>;
+using usteady_hours = steady_time<uhours>;
+using usteady_days = steady_time<udays>;
+using usteady_weeks = steady_time<uweeks>;
+using usteady_months = steady_time<umonths>;
+using usteady_years = steady_time<uyears>;
 
 
 /*
@@ -119,36 +117,36 @@ using fweeks = std::chrono::duration<float, date::weeks::period>;
 using fmonths = std::chrono::duration<float, date::months::period>;
 using fyears = std::chrono::duration<float, date::years::period>;
 
-using fsys_seconds = typename date::sys_time<fseconds>;
-using fsys_minutes = typename date::sys_time<fminutes>;
-using fsys_hours = typename date::sys_time<fhours>;
-using fsys_days = typename date::sys_time<fdays>;
-using fsys_weeks = typename date::sys_time<fweeks>;
-using fsys_months = typename date::sys_time<fmonths>;
-using fsys_years = typename date::sys_time<fyears>;
+using fsys_seconds = date::sys_time<fseconds>;
+using fsys_minutes = date::sys_time<fminutes>;
+using fsys_hours = date::sys_time<fhours>;
+using fsys_days = date::sys_time<fdays>;
+using fsys_weeks = date::sys_time<fweeks>;
+using fsys_months = date::sys_time<fmonths>;
+using fsys_years = date::sys_time<fyears>;
 
-using fsteady_seconds = typename steady_time<fseconds>;
-using fsteady_minutes = typename steady_time<fminutes>;
-using fsteady_hours = typename steady_time<fhours>;
-using fsteady_days = typename steady_time<fdays>;
-using fsteady_weeks = typename steady_time<fweeks>;
-using fsteady_months = typename steady_time<fmonths>;
-using fsteady_years = typename steady_time<fyears>;
+using fsteady_seconds = steady_time<fseconds>;
+using fsteady_minutes = steady_time<fminutes>;
+using fsteady_hours = steady_time<fhours>;
+using fsteady_days = steady_time<fdays>;
+using fsteady_weeks = steady_time<fweeks>;
+using fsteady_months = steady_time<fmonths>;
+using fsteady_years = steady_time<fyears>;
 
 template <class Clock>
-using fclock_seconds = typename std::chrono::time_point<Clock, fseconds>;
+using fclock_seconds = std::chrono::time_point<Clock, fseconds>;
 template <class Clock>
-using fclock_minutes = typename std::chrono::time_point<Clock, fminutes>;
+using fclock_minutes = std::chrono::time_point<Clock, fminutes>;
 template <class Clock>
-using fclock_hours = typename std::chrono::time_point<Clock, fhours>;
+using fclock_hours = std::chrono::time_point<Clock, fhours>;
 template <class Clock>
-using fclock_days = typename std::chrono::time_point<Clock, fdays>;
+using fclock_days = std::chrono::time_point<Clock, fdays>;
 template <class Clock>
-using fclock_weeks = typename std::chrono::time_point<Clock, fweeks>;
+using fclock_weeks = std::chrono::time_point<Clock, fweeks>;
 template <class Clock>
-using fclock_months = typename std::chrono::time_point<Clock, fmonths>;
+using fclock_months = std::chrono::time_point<Clock, fmonths>;
 template <class Clock>
-using fclock_years = typename std::chrono::time_point<Clock, fyears>;
+using fclock_years = std::chrono::time_point<Clock, fyears>;
 
 
 /*
@@ -163,36 +161,36 @@ using dweeks = std::chrono::duration<double, date::weeks::period>;
 using dmonths = std::chrono::duration<double, date::months::period>;
 using dyears = std::chrono::duration<double, date::years::period>;
 
-using dsys_seconds = typename date::sys_time<dseconds>;
-using dsys_minutes = typename date::sys_time<dminutes>;
-using dsys_hours = typename date::sys_time<dhours>;
-using dsys_days = typename date::sys_time<ddays>;
-using dsys_weeks = typename date::sys_time<dweeks>;
-using dsys_months = typename date::sys_time<dmonths>;
-using dsys_years = typename date::sys_time<dyears>;
+using dsys_seconds = date::sys_time<dseconds>;
+using dsys_minutes = date::sys_time<dminutes>;
+using dsys_hours = date::sys_time<dhours>;
+using dsys_days = date::sys_time<ddays>;
+using dsys_weeks = date::sys_time<dweeks>;
+using dsys_months = date::sys_time<dmonths>;
+using dsys_years = date::sys_time<dyears>;
 
-using dsteady_seconds = typename steady_time<dseconds>;
-using dsteady_minutes = typename steady_time<dminutes>;
-using dsteady_hours = typename steady_time<dhours>;
-using dsteady_days = typename steady_time<ddays>;
-using dsteady_weeks = typename steady_time<dweeks>;
-using dsteady_months = typename steady_time<dmonths>;
-using dsteady_years = typename steady_time<dyears>;
+using dsteady_seconds = steady_time<dseconds>;
+using dsteady_minutes = steady_time<dminutes>;
+using dsteady_hours = steady_time<dhours>;
+using dsteady_days = steady_time<ddays>;
+using dsteady_weeks = steady_time<dweeks>;
+using dsteady_months = steady_time<dmonths>;
+using dsteady_years = steady_time<dyears>;
 
 template <class Clock>
-using dclock_seconds = typename std::chrono::time_point<Clock, dseconds>;
+using dclock_seconds = std::chrono::time_point<Clock, dseconds>;
 template <class Clock>
-using dclock_minutes = typename std::chrono::time_point<Clock, dminutes>;
+using dclock_minutes = std::chrono::time_point<Clock, dminutes>;
 template <class Clock>
-using dclock_hours = typename std::chrono::time_point<Clock, dhours>;
+using dclock_hours = std::chrono::time_point<Clock, dhours>;
 template <class Clock>
-using dclock_days = typename std::chrono::time_point<Clock, ddays>;
+using dclock_days = std::chrono::time_point<Clock, ddays>;
 template <class Clock>
-using dclock_weeks = typename std::chrono::time_point<Clock, dweeks>;
+using dclock_weeks = std::chrono::time_point<Clock, dweeks>;
 template <class Clock>
-using dclock_months = typename std::chrono::time_point<Clock, dmonths>;
+using dclock_months = std::chrono::time_point<Clock, dmonths>;
 template <class Clock>
-using dclock_years = typename std::chrono::time_point<Clock, dyears>;
+using dclock_years = std::chrono::time_point<Clock, dyears>;
 
 
 // Other useful types.
