@@ -266,7 +266,7 @@ public:
 	// Trigger event e callbacks in parallel with arguments func_args.
 	template <EventEnum e, class... FuncArgs>
 	void trigger_mt(FuncArgs&&... func_args) const {
-		auto& map = std::get<size_t(e)>(_stacks);
+		const auto& map = std::get<size_t(e)>(_stacks);
 		tbb::parallel_for(tbb::blocked_range<size_t>{ 0, map.size() },
 				[&, this](const tbb::blocked_range<size_t>& range) {
 					for (size_t i = range.begin(); i < range.end(); ++i) {

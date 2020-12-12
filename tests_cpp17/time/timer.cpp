@@ -20,6 +20,15 @@ struct event_counter {
 	size_t num_time_callback = 0;
 };
 
+TEST(timer, experiment) {
+	using namespace std::chrono_literals;
+
+	fea::timer<void()> t{ fea::dseconds(10) };
+	std::this_thread::sleep_for(2s);
+	t.update();
+	EXPECT_GE(t.elapsed().count(), 20);
+}
+
 TEST(timer, basics) {
 	event_counter event_count;
 

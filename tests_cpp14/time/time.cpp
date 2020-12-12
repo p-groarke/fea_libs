@@ -1,5 +1,6 @@
 ﻿#include <chrono>
 #include <cstdio>
+#include <fea/time/high_range_duration.hpp>
 #include <fea/time/time.hpp>
 #include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
@@ -233,23 +234,37 @@ TEST(time, timepoint_conversions) {
 	}
 }
 
-// TEST(time, experiments) {
-//	using namespace std::chrono;
-//	system_clock::duration sys_max_dur{
-//		std::numeric_limits<system_clock::duration::rep>::max()
-//	};
-//	steady_clock::duration steady_max_dur{
-//		std::numeric_limits<steady_clock::duration::rep>::max()
-//	};
-//
-//	system_clock::time_point sys_max_time{ sys_max_dur };
-//	steady_clock::time_point steady_max_time{ steady_max_dur };
-//
-//	fea::steady_seconds steady_s{ std::chrono::seconds(
-//			std::numeric_limits<long long>::max()) };
-//
-//	std::cout << fea::to_string(sys_max_time) << std::endl;
-//	std::cout << fea::to_string(steady_max_time) << std::endl;
-//	std::cout << fea::to_string(steady_s) << std::endl;
-//}
+using uduration = std::chrono::duration<size_t, std::nano>;
+using utime_point
+		= std::chrono::time_point<std::chrono::steady_clock, uduration>;
+
+TEST(time, experiments) {
+	using namespace std::chrono;
+	system_clock::duration sys_max_dur{
+		std::numeric_limits<system_clock::duration::rep>::max()
+	};
+	steady_clock::duration steady_max_dur{
+		std::numeric_limits<steady_clock::duration::rep>::max()
+	};
+	uduration u_max_dur{ std::numeric_limits<uduration::rep>::max() };
+
+	system_clock::time_point sys_max_time{ sys_max_dur };
+	steady_clock::time_point steady_max_time{ steady_max_dur };
+	utime_point u_max_time{ u_max_dur };
+
+	std::cout << fea::to_string(sys_max_time) << std::endl;
+	std::cout << fea::to_string(steady_max_time) << std::endl;
+
+	{
+		auto stdy_d = date::floor<date::days>(u_max_time);
+		// date::sys_days sys_d = fea::to_sys(stdy_d);
+		// auto ymd = date::year_month_day(sys_d);
+
+		auto s = date::floor<std::chrono::seconds>(u_max_time) - stdy_d;
+
+		// std::string ustr = date::format("%F ", ymd) + date::format("%T", s);
+		std::string ustr = date::format("%T", s);
+		std::cout << ustr << std::endl;
+	}
+}
 } // namespace

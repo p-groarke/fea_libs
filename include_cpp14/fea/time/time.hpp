@@ -1,4 +1,35 @@
-﻿#pragma once
+﻿/*
+BSD 3-Clause License
+
+Copyright (c) 2020, Philippe Groarke
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+* Neither the name of the copyright holder nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+#pragma once
 #include "fea/utils/platform.hpp"
 
 #include <chrono>
@@ -10,7 +41,7 @@
 #include <date/tz.h>
 
 namespace fea {
-// Extra helpers.
+// Extra aliases
 template <class Duration>
 using steady_time
 		= std::chrono::time_point<std::chrono::steady_clock, Duration>;
@@ -41,7 +72,44 @@ template <class Clock>
 using clock_years = typename std::chrono::time_point<Clock, date::years>;
 
 
-// floats
+/*
+unsigned, uses size_t
+*/
+
+using unanoseconds
+		= std::chrono::duration<size_t, std::chrono::nanoseconds::period>;
+using umicroseconds
+		= std::chrono::duration<size_t, std::chrono::microseconds::period>;
+using umilliseconds
+		= std::chrono::duration<size_t, std::chrono::milliseconds::period>;
+using useconds = std::chrono::duration<size_t>;
+using uminutes = std::chrono::duration<size_t, std::chrono::minutes::period>;
+using uhours = std::chrono::duration<size_t, std::chrono::hours::period>;
+using udays = std::chrono::duration<size_t, date::days::period>;
+using uweeks = std::chrono::duration<size_t, date::weeks::period>;
+using umonths = std::chrono::duration<size_t, date::months::period>;
+using uyears = std::chrono::duration<size_t, date::years::period>;
+
+using usys_seconds = typename date::sys_time<useconds>;
+using usys_minutes = typename date::sys_time<uminutes>;
+using usys_hours = typename date::sys_time<uhours>;
+using usys_days = typename date::sys_time<udays>;
+using usys_weeks = typename date::sys_time<uweeks>;
+using usys_months = typename date::sys_time<umonths>;
+using usys_years = typename date::sys_time<uyears>;
+
+using usteady_seconds = typename steady_time<useconds>;
+using usteady_minutes = typename steady_time<uminutes>;
+using usteady_hours = typename steady_time<uhours>;
+using usteady_days = typename steady_time<udays>;
+using usteady_weeks = typename steady_time<uweeks>;
+using usteady_months = typename steady_time<umonths>;
+using usteady_years = typename steady_time<uyears>;
+
+
+/*
+floats
+*/
 
 using fseconds = std::chrono::duration<float>;
 using fminutes = std::chrono::duration<float, std::chrono::minutes::period>;
@@ -82,7 +150,10 @@ using fclock_months = typename std::chrono::time_point<Clock, fmonths>;
 template <class Clock>
 using fclock_years = typename std::chrono::time_point<Clock, fyears>;
 
-// doubles
+
+/*
+doubles
+*/
 
 using dseconds = std::chrono::duration<double>;
 using dminutes = std::chrono::duration<double, std::chrono::minutes::period>;
@@ -123,10 +194,19 @@ using dclock_months = typename std::chrono::time_point<Clock, dmonths>;
 template <class Clock>
 using dclock_years = typename std::chrono::time_point<Clock, dyears>;
 
+
 // Other useful types.
 using hh_mm_ss = date::hh_mm_ss<std::chrono::seconds>;
+using uhh_mm_ss = date::hh_mm_ss<useconds>;
 using fhh_mm_ss = date::hh_mm_ss<fseconds>;
 using dhh_mm_ss = date::hh_mm_ss<dseconds>;
+
+
+// Converts duration to size_t duration.
+// Useful if you do high value arithmetic.
+template <class Duration>
+using size_t_duration
+		= std::chrono::duration<size_t, typename Duration::period>;
 
 
 // Helper functions
@@ -244,10 +324,10 @@ inline steady_days to_steady(date::year_month_day ymd) {
 // - modulo = 60, 59s to 2s == 3s elapsed.
 // - modulo = 24, 23h to 2h == 3h elapsed.
 // - modulo = 365, 364d to 2d == 3d elapsed.
-template <template <class, class> class Duration = std::chrono::duration,
-		class T, class Period>
-auto elapsed(Duration<T, Period> start, Duration<T, Period> end, T modulo) {
-	return Duration<T, Period>{ T(
+template <class T, class Period>
+auto elapsed(std::chrono::duration<T, Period> start,
+		std::chrono::duration<T, Period> end, T modulo) {
+	return std::chrono::duration<T, Period>{ T(
 			std::fmod((end - start).count() + modulo, modulo)) };
 }
 
@@ -264,8 +344,6 @@ std::string to_string_precise(date::sys_time<T> tp) {
 
 template <class T>
 std::string to_string(steady_time<T> tp) {
-	using namespace std::chrono;
-
 	return to_string(to_sys(tp));
 }
 

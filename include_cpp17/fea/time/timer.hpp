@@ -1,6 +1,38 @@
-﻿#pragma once
+﻿/*
+BSD 3-Clause License
+
+Copyright (c) 2020, Philippe Groarke
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+* Neither the name of the copyright holder nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+#pragma once
 #include "fea/events/event_stack.hpp"
 #include "fea/state_machines/fsm.hpp"
+#include "fea/time/high_range_duration.hpp"
 #include "fea/time/time.hpp"
 
 #include <cassert>
@@ -56,7 +88,7 @@ elapsed since last update. It will call it once.
 */
 
 namespace fea {
-enum class timer_event : unsigned {
+enum class timer_event : uint8_t {
 	// Ticks every X.
 	seconds,
 	minutes,
@@ -108,13 +140,17 @@ public:
 			/*on_unpause*/ void(EventArgs...)>;
 
 	using clock_duration_t = typename Clock::duration;
+	using uclock_duration_t = typename size_t_duration<clock_duration_t>;
 	using time_point_t = typename Clock::time_point;
+	using clock_high_range_duration_t =
+			typename high_range_duration<typename uclock_duration_t::rep,
+					typename uclock_duration_t::period>;
 
 	// Create a timer starting at start_time and increasing at time_ratio rate.
 	timer(dclock_seconds<Clock> start_time, dseconds time_ratio = dseconds(1.0))
-			: _counter(0.0)
+			: _counter(uclock_duration_t{ 0 })
 			, _ratio(time_ratio)
-			, _start_time(start_time)
+			, _start_time(start_time.time_since_epoch())
 			, _new_update_time(Clock::now()) {
 
 		dclock_seconds<Clock> current_time = time();
@@ -191,12 +227,13 @@ public:
 
 	// Elapsed seconds since start of timer.
 	dseconds elapsed() const {
-		return _counter;
+		return _counter.total_seconds();
 	}
 
 	// Current time of timer (taking start_time into consideration).
 	dclock_seconds<Clock> time() const {
-		return _start_time + _counter;
+		clock_high_range_duration_t t = _start_time + _counter;
+		return dclock_seconds<Clock>{ t.total_seconds() };
 	}
 
 	// Change start_time.
@@ -205,7 +242,7 @@ public:
 	}
 	// Get timer start_time().
 	dclock_seconds<Clock> start_time() const {
-		return _start_time;
+		return dclock_seconds<Clock>{ _start_time.total_seconds() };
 	}
 
 	// Change time speed ratio.
@@ -280,8 +317,10 @@ private:
 		{
 			auto _last_update_time = _new_update_time;
 			_new_update_time = Clock::now();
-			_counter += dseconds(_new_update_time - _last_update_time)
-					* _ratio.count();
+			dseconds dt = _new_update_time - _last_update_time;
+			dt *= _ratio.count();
+			clock_high_range_duration_t hr_dt{ dt };
+			_counter += hr_dt;
 		}
 
 		dclock_seconds<Clock> current_time = time();
@@ -401,19 +440,20 @@ private:
 	}
 
 	// Elapsed time.
-	dseconds _counter;
+	clock_high_range_duration_t _counter;
+	// dseconds _counter;
 
-	// Time increment speed.
+	// Time increment speed. Aka, 1 second : x seconds.
 	dseconds _ratio;
 
 	// User provided start time or now().
-	dclock_seconds<Clock> _start_time;
+	clock_high_range_duration_t _start_time;
 
 	// The timepoint of this frame, used to compute time difference between
 	// updates.
 	time_point_t _new_update_time;
 
-
+	// These are timestamps of the last triggered time events.
 	dclock_seconds<Clock> _seconds_ticks;
 	dclock_minutes<Clock> _minutes_ticks;
 	dclock_hours<Clock> _hours_ticks;
@@ -422,9 +462,13 @@ private:
 	dclock_months<Clock> _months_ticks;
 	dclock_years<Clock> _years_ticks;
 
+	// The time event system.
 	event_stack_t _event_stack;
+
+	// The pause/unpause statemachine.
 	fsm_t _smachine;
 
+	// The elapsed and timepoint callbacks.
 	std::vector<std::pair<dseconds, std::function<void(EventArgs...)>>>
 			_elapsed_callbacks;
 	std::vector<
@@ -446,8 +490,10 @@ using sys_timer = timer<EventSignature, std::chrono::system_clock, false>;
 template <class EventSignature>
 using sys_timer_mt = timer<EventSignature, std::chrono::system_clock, true>;
 
+// For consistency.
 template <class EventSignature>
 using steady_timer = timer<EventSignature, std::chrono::steady_clock, false>;
+// For consistency.
 template <class EventSignature>
 using steady_timer_mt = timer<EventSignature, std::chrono::steady_clock, true>;
 
