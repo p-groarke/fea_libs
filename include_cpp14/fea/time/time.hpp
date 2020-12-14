@@ -33,15 +33,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fea/utils/platform.hpp"
 
 #include <chrono>
+#include <cmath>
 #include <ctime>
+#include <date/date.h>
+#include <date/tz.h>
 #include <iomanip>
 #include <sstream>
 
-#include <date/date.h>
-#include <date/tz.h>
-
 namespace fea {
-// Extra aliases
+using sys_months = date::sys_time<date::months>;
+using sys_years = date::sys_time<date::years>;
+
 template <class Duration>
 using steady_time
 		= std::chrono::time_point<std::chrono::steady_clock, Duration>;
@@ -327,6 +329,50 @@ auto elapsed(std::chrono::duration<T, Period> start,
 		std::chrono::duration<T, Period> end, T modulo) {
 	return std::chrono::duration<T, Period>{ T(
 			std::fmod((end - start).count() + modulo, modulo)) };
+}
+
+inline date::year_month_day floor_months(const date::year_month_day& ymd) {
+	return { ymd.year(), ymd.month(), date::day(1) };
+}
+
+inline date::year_month_day floor_years(const date::year_month_day& ymd) {
+	return { ymd.year(), date::month(1), date::day(1) };
+}
+
+inline date::days this_month_days(date::sys_days d) {
+	date::year_month_day ymd{ floor_months(d) };
+	date::sys_days this_month_sdays{ ymd };
+
+	auto next_month = ymd + date::months(1);
+	date::sys_days next_month_sdays{ next_month };
+	return next_month_sdays - this_month_sdays;
+}
+inline date::days next_month_days(date::sys_days d) {
+	date::year_month_day ymd{ floor_months(d) };
+	ymd += date::months(1);
+	date::sys_days this_month_sdays{ ymd };
+
+	auto next_month = ymd + date::months(1);
+	date::sys_days next_month_sdays{ next_month };
+	return next_month_sdays - this_month_sdays;
+}
+
+inline date::days this_year_days(date::sys_days d) {
+	date::year_month_day ymd{ floor_years(d) };
+	date::sys_days this_year_sdays{ ymd };
+
+	auto next_year = ymd + date::years(1);
+	date::sys_days next_year_sdays{ next_year };
+	return next_year_sdays - this_year_sdays;
+}
+inline date::days next_year_days(date::sys_days d) {
+	date::year_month_day ymd{ floor_years(d) };
+	ymd += date::years(1);
+	date::sys_days this_year_sdays{ ymd };
+
+	auto next_year = ymd + date::years(1);
+	date::sys_days next_year_sdays{ next_year };
+	return next_year_sdays - this_year_sdays;
 }
 
 template <class T>

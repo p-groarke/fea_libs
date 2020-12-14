@@ -42,90 +42,95 @@ You may extract precise time using days, seconds and remainder functions.
 Or choose to loose precision, using total_days, total_seconds and
 total_remainder functions. Unprecise time is returned using double time, to give
 it a chance.
+
+TODO : high_range_time_point
 */
 
 namespace fea {
 // Splits duration into days, seconds and remainder.
 // Allows for very large values (years+) while retaining nanosecond precision
 // for example.
-template <class Rep, class Period>
 struct high_range_duration {
-	using days_t = size_t_duration<date::days>;
-	using seconds_t = size_t_duration<std::chrono::seconds>;
-	using remainder_t = std::chrono::duration<size_t, Period>;
-	using dremainder_t = std::chrono::duration<double, Period>;
+	using rep = size_t;
+	using period = typename unanoseconds::period;
+	using dnanoseconds_t
+			= std::chrono::duration<double, std::chrono::nanoseconds::period>;
 
-	static_assert(!std::is_same<days_t, remainder_t>::value,
-			"fea::high_range_duration : using days as precise time doesn't "
-			"make sense");
-	static_assert(!std::is_same<seconds_t, remainder_t>::value,
-			"fea::high_range_duration : using seconds as precise time doesn't "
-			"make sense");
+	constexpr high_range_duration() = default;
 
-	constexpr high_range_duration(
-			std::chrono::duration<Rep, Period> most_precise_dur)
-			: _days(date::floor<days_t>(most_precise_dur))
-			, _seconds(date::floor<seconds_t>(most_precise_dur) - _days)
-			, _remainder(most_precise_dur - _seconds - _days) {
-	}
-	constexpr high_range_duration(seconds_t secs)
-			: _days(date::floor<days_t>(secs))
-			, _seconds(date::floor<seconds_t>(secs) - _days)
-			, _remainder(0) {
-	}
-	constexpr high_range_duration(days_t d)
-			: _days(date::floor<days_t>(d))
+	constexpr high_range_duration(udays d)
+			: _days(date::floor<udays>(d))
 			, _seconds(0)
-			, _remainder(0) {
+			, _nanoseconds(0) {
+	}
+	constexpr high_range_duration(useconds secs)
+			: _days(date::floor<udays>(secs))
+			, _seconds(secs - _days)
+			, _nanoseconds(0) {
+	}
+	constexpr high_range_duration(unanoseconds nano)
+			: _days(date::floor<udays>(nano))
+			, _seconds(date::floor<useconds>(nano - _days))
+			, _nanoseconds(nano - _seconds - _days) {
 	}
 
+	constexpr high_range_duration(ddays d)
+			: _days(date::floor<udays>(d))
+			, _seconds(date::floor<useconds>(d - _days))
+			, _nanoseconds(date::floor<unanoseconds>(d - _seconds - _days)) {
+	}
 	constexpr high_range_duration(dseconds secs)
-			: _days(date::floor<days_t>(secs))
-			, _seconds(date::floor<seconds_t>(secs) - _days)
-			, _remainder(date::floor<remainder_t>(secs) - _seconds - _days) {
+			: _days(date::floor<udays>(secs))
+			, _seconds(date::floor<useconds>(secs - _days))
+			, _nanoseconds(date::floor<unanoseconds>(secs - _seconds - _days)) {
+	}
+
+	constexpr high_range_duration(date::year_month_day ymd)
+			: _days(date::sys_days(ymd).time_since_epoch())
+			, _seconds(0)
+			, _nanoseconds(0) {
 	}
 
 	// Imprecise and can overflow.
-	// Looses most precision in remainder.
-	constexpr ddays total_days() const {
-		return ddays(_days) + ddays(_seconds) + ddays(_remainder);
+	// Looses most precision in nanoseconds.
+	constexpr ddays count_days() const {
+		return ddays(_days) + ddays(_seconds) + ddays(_nanoseconds);
 	}
 	// Imprecise and can overflow.
-	// Looses precision in days and remainder.
-	constexpr dseconds total_seconds() const {
-		return dseconds(_days) + dseconds(_seconds) + dseconds(_remainder);
+	// Looses precision in days and nanoseconds.
+	constexpr dseconds count() const {
+		return dseconds(_days) + dseconds(_seconds) + dseconds(_nanoseconds);
 	}
 	// Imprecise and can overflow.
 	// Looses most precision in days.
-	constexpr dremainder_t total_remainder() const {
-		return dremainder_t(_days) + dremainder_t(_seconds)
-				+ dremainder_t(_remainder);
+	constexpr dnanoseconds_t count_nanoseconds() const {
+		return dnanoseconds_t(_days) + dnanoseconds_t(_seconds)
+				+ dnanoseconds_t(_nanoseconds);
 	}
 
 	// Return stored days.
-	constexpr days_t days() const {
+	constexpr udays days() const noexcept {
 		return _days;
 	}
 	// Return stored seconds.
-	constexpr seconds_t seconds() const {
+	constexpr useconds seconds() const noexcept {
 		return _seconds;
 	}
 	// Return stored remainder.
-	constexpr remainder_t remainder() const {
-		return _remainder;
+	constexpr unanoseconds nanoseconds() const noexcept {
+		return _nanoseconds;
 	}
 
 	high_range_duration& operator+=(const high_range_duration& rhs) {
 		// First add everything.
 		_days += rhs._days;
 		_seconds += rhs._seconds;
-		_remainder += rhs._remainder;
+		_nanoseconds += rhs._nanoseconds;
 
 		// Then carry over seconds and days.
 		carry_over();
 		return *this;
 	}
-
 	// Hidden friends :
 	// https://www.justsoftwaresolutions.co.uk/cplusplus/hidden-friends.html
 	friend high_range_duration operator+(
@@ -135,20 +140,161 @@ struct high_range_duration {
 		return ret;
 	}
 
+	high_range_duration& operator+=(const udays& rhs) {
+		_days += rhs;
+		return *this;
+	}
+	friend high_range_duration operator+(
+			const high_range_duration& lhs, const udays& rhs) {
+		high_range_duration ret{ lhs };
+		ret += rhs;
+		return ret;
+	}
+
+	high_range_duration& operator+=(const useconds& rhs) {
+		_seconds += rhs;
+		carry_over();
+		return *this;
+	}
+	friend high_range_duration operator+(
+			const high_range_duration& lhs, const useconds& rhs) {
+		high_range_duration ret{ lhs };
+		ret += rhs;
+		return ret;
+	}
+
+	high_range_duration& operator+=(const unanoseconds& rhs) {
+		_nanoseconds += rhs;
+		carry_over();
+		return *this;
+	}
+	friend high_range_duration operator+(
+			const high_range_duration& lhs, const unanoseconds& rhs) {
+		high_range_duration ret{ lhs };
+		ret += rhs;
+		return ret;
+	}
+
+	// TODO : unit tests
+	// Will saturate to 0 if rhs > lhs (high_range_duration is unsigned).
+	high_range_duration& operator-=(const high_range_duration& rhs) {
+		if (_days < rhs._days) {
+			_days = udays{ 0 };
+			_seconds = useconds{ 0 };
+			_nanoseconds = unanoseconds{ 0 };
+			return *this;
+		} else {
+			_days -= rhs._days;
+		}
+
+		if (_seconds < rhs._seconds) {
+			_seconds = useconds{ 0 };
+			_nanoseconds = unanoseconds{ 0 };
+			return *this;
+		} else {
+			_seconds -= rhs._seconds;
+		}
+
+		if (_nanoseconds < rhs._nanoseconds) {
+			_nanoseconds = unanoseconds{ 0 };
+		} else {
+			_nanoseconds -= rhs._nanoseconds;
+		}
+
+		return *this;
+	}
+	friend high_range_duration operator-(
+			const high_range_duration& lhs, const high_range_duration& rhs) {
+		high_range_duration ret{ lhs };
+		ret -= rhs;
+		return ret;
+	}
+
+	friend bool operator==(
+			const high_range_duration& lhs, const high_range_duration& rhs) {
+		return lhs._days == rhs._days && lhs._seconds == rhs._seconds
+				&& lhs._nanoseconds == rhs._nanoseconds;
+	}
+	friend bool operator!=(
+			const high_range_duration& lhs, const high_range_duration& rhs) {
+		return !(lhs == rhs);
+	}
+	friend bool operator<(
+			const high_range_duration& lhs, const high_range_duration& rhs) {
+		if (lhs._days < rhs._days) {
+			return true;
+		} else if (lhs._days > rhs._days) {
+			return false;
+		}
+
+		if (lhs._seconds < rhs._seconds) {
+			return true;
+		} else if (lhs._seconds > rhs._seconds) {
+			return false;
+		}
+
+		return lhs._nanoseconds < rhs._nanoseconds;
+	}
+	friend bool operator>(
+			const high_range_duration& lhs, const high_range_duration& rhs) {
+		return rhs < lhs;
+	}
+	friend bool operator<=(
+			const high_range_duration& lhs, const high_range_duration& rhs) {
+		return !(rhs < lhs);
+	}
+	friend bool operator>=(
+			const high_range_duration& lhs, const high_range_duration& rhs) {
+		return !(lhs < rhs);
+	}
+
+	static constexpr high_range_duration zero() noexcept {
+		return {};
+	}
+
+	static constexpr high_range_duration(min)() noexcept {
+		return zero();
+	}
+
+	static constexpr high_range_duration(max)() noexcept {
+		high_range_duration ret;
+		ret._days = udays{ (std::numeric_limits<size_t>::max)() };
+		ret._seconds = useconds{ (std::numeric_limits<size_t>::max)() };
+		ret._nanoseconds = unanoseconds{ (std::numeric_limits<size_t>::max)() };
+		return ret;
+	}
+
+	template <class FloorDuration>
+	friend static constexpr high_range_duration floor(
+			const high_range_duration& rhs) noexcept {
+		using namespace std::chrono;
+		high_range_duration ret;
+		ret._days
+				= duration_cast<udays>((date::floor<FloorDuration>(rhs._days)));
+
+		ret._seconds = duration_cast<useconds>(
+				date::floor<FloorDuration>(rhs._seconds));
+
+		ret._nanoseconds = duration_cast<unanoseconds>(
+				date::floor<FloorDuration>(rhs._nanoseconds));
+
+		return ret;
+	}
+
 private:
 	// Decomposes time into remainder, seconds and days.
 	void carry_over() {
-		seconds_t s_leftover = date::floor<seconds_t>(_remainder);
-		_remainder -= s_leftover;
+		useconds s_leftover = date::floor<useconds>(_nanoseconds);
+		_nanoseconds -= unanoseconds{ s_leftover };
 		_seconds += s_leftover;
 
-		days_t d_leftover = date::floor<days_t>(_seconds);
-		_seconds -= d_leftover;
+		udays d_leftover = date::floor<udays>(_seconds);
+		_seconds -= useconds{ d_leftover };
 		_days += d_leftover;
 	}
 
-	days_t _days;
-	seconds_t _seconds;
-	remainder_t _remainder;
+	udays _days{ 0 };
+	useconds _seconds{ 0 };
+	unanoseconds _nanoseconds{ 0 };
 };
 } // namespace fea

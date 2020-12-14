@@ -267,4 +267,77 @@ TEST(time, experiments) {
 		std::cout << ustr << std::endl;
 	}
 }
+
+TEST(time, year_month_days) {
+	// 2020 is leap year.
+	using namespace date::literals;
+
+	date::sys_days t{ 2020_y / date::jan / 8_d };
+	EXPECT_EQ(fea::this_month_days(t).count(), 31);
+	EXPECT_EQ(fea::next_month_days(t).count(), 29);
+
+	t = date::sys_days{ 2020_y / date::feb / 8_d };
+	EXPECT_EQ(fea::this_month_days(t).count(), 29);
+	EXPECT_EQ(fea::next_month_days(t).count(), 31);
+
+	t = date::sys_days{ 2019_y / date::jan / 8_d };
+	EXPECT_EQ(fea::this_month_days(t).count(), 31);
+	EXPECT_EQ(fea::next_month_days(t).count(), 28);
+
+	t = date::sys_days{ 2019_y / date::feb / 8_d };
+	EXPECT_EQ(fea::this_month_days(t).count(), 28);
+	EXPECT_EQ(fea::next_month_days(t).count(), 31);
+
+	t = date::sys_days{ 2020_y / date::mar / 8_d };
+	EXPECT_EQ(fea::this_month_days(t).count(), 31);
+	EXPECT_EQ(fea::next_month_days(t).count(), 30);
+
+	t = date::sys_days{ 2020_y / date::apr / 8_d };
+	EXPECT_EQ(fea::this_month_days(t).count(), 30);
+	EXPECT_EQ(fea::next_month_days(t).count(), 31);
+
+	t = date::sys_days{ 2020_y / date::may / 8_d };
+	EXPECT_EQ(fea::this_month_days(t).count(), 31);
+	EXPECT_EQ(fea::next_month_days(t).count(), 30);
+
+	t = date::sys_days{ 2020_y / date::jun / 8_d };
+	EXPECT_EQ(fea::this_month_days(t).count(), 30);
+	EXPECT_EQ(fea::next_month_days(t).count(), 31);
+
+	t = date::sys_days{ 2020_y / date::jul / 8_d };
+	EXPECT_EQ(fea::this_month_days(t).count(), 31);
+	EXPECT_EQ(fea::next_month_days(t).count(), 31);
+
+	t = date::sys_days{ 2020_y / date::aug / 8_d };
+	EXPECT_EQ(fea::this_month_days(t).count(), 31);
+	EXPECT_EQ(fea::next_month_days(t).count(), 30);
+
+	t = date::sys_days{ 2020_y / date::sep / 8_d };
+	EXPECT_EQ(fea::this_month_days(t).count(), 30);
+	EXPECT_EQ(fea::next_month_days(t).count(), 31);
+
+	t = date::sys_days{ 2020_y / date::oct / 8_d };
+	EXPECT_EQ(fea::this_month_days(t).count(), 31);
+	EXPECT_EQ(fea::next_month_days(t).count(), 30);
+
+	t = date::sys_days{ 2020_y / date::nov / 8_d };
+	EXPECT_EQ(fea::this_month_days(t).count(), 30);
+	EXPECT_EQ(fea::next_month_days(t).count(), 31);
+
+	t = date::sys_days{ 2020_y / date::dec / 8_d };
+	EXPECT_EQ(fea::this_month_days(t).count(), 31);
+	EXPECT_EQ(fea::next_month_days(t).count(), 31);
+
+	t = date::sys_days{ 2020_y / date::mar / 8_d };
+	EXPECT_EQ(fea::this_year_days(t).count(), 366);
+	EXPECT_EQ(fea::next_year_days(t).count(), 365);
+
+	t = date::sys_days{ 2019_y / date::mar / 8_d };
+	EXPECT_EQ(fea::this_year_days(t).count(), 365);
+	EXPECT_EQ(fea::next_year_days(t).count(), 366);
+
+	t = date::sys_days{ 2021_y / date::mar / 8_d };
+	EXPECT_EQ(fea::this_year_days(t).count(), 365);
+	EXPECT_EQ(fea::next_year_days(t).count(), 365);
+}
 } // namespace

@@ -60,7 +60,8 @@ TEST(timer, basics) {
 	timer.subscribe_elapsed(
 			fea::ddays(1), [&]() { ++event_count.num_elapsed_callback; });
 
-	timer.subscribe_time(timer.start_time() + fea::ddays(1),
+	timer.subscribe_time(
+			fea::dsteady_seconds(timer.start_time().count() + fea::ddays(1)),
 			[&]() { ++event_count.num_time_callback; });
 
 	std::this_thread::sleep_for(100ms);
@@ -97,22 +98,109 @@ TEST(timer, basics) {
 }
 
 TEST(timer, start_date) {
-	auto real_start_time = std::chrono::steady_clock::now();
+	auto start_days = 2000_y / date::feb / 2_d;
+	auto start_time = fea::dhours(8) + fea::dminutes(30) + fea::dseconds(30.5);
 
-	auto start_days = 2020_y / date::jan / 1_d;
+	fea::high_range_duration hrd{ start_days };
+	hrd += start_time;
 
-	fea::dsteady_seconds start_date = fea::to_steady(start_days)
-			+ fea::dhours(8) + fea::dminutes(30) + fea::dseconds(30.5);
+	fea::timer<void()> timer{ start_days, 10s };
+	timer.start_time() += start_time;
 
-	fea::timer<void()> timer{ start_date, 10s };
-	EXPECT_EQ(timer.time(), start_date);
-
-	fea::dseconds seconds_time_diff
-			= std::chrono::floor<fea::dseconds>(start_date - real_start_time);
+	EXPECT_EQ(timer.time_precise().days(), hrd.days());
+	EXPECT_EQ(timer.time_precise().seconds(), hrd.seconds());
+	EXPECT_EQ(timer.time_precise().nanoseconds(), hrd.nanoseconds());
 
 	std::this_thread::sleep_for(100ms);
 	timer.update();
 	EXPECT_GE(timer.elapsed(), fea::dseconds(100ms));
+}
+
+TEST(timer, three_seconds) {
+	using namespace std::chrono;
+	// 1 second == 1 second.
+	fea::timer<void()> timer;
+
+	size_t seconds_passed = 0;
+	timer.events().subscribe<fea::timer_event::seconds>(
+			[&]() { ++seconds_passed; });
+
+	const fea::useconds stop_time{ 3 };
+
+	auto start_time = steady_clock::now();
+	while (timer.elapsed_precise().seconds() < stop_time) {
+		timer.update();
+	}
+	auto end_time = steady_clock::now();
+
+	auto e = end_time - start_time;
+	seconds elapsed = date::round<seconds>(e);
+	EXPECT_EQ(elapsed.count(), 3);
+
+	EXPECT_EQ(seconds_passed, 3u);
+}
+TEST(timer, three_days) {
+	using namespace std::chrono;
+	// 1 second == 1 day.
+	fea::timer<void()> timer(fea::dseconds{ fea::ddays{ 1 } });
+
+	size_t minutes_passed = 0;
+	size_t hours_passed = 0;
+	size_t days_passed = 0;
+	timer.events().subscribe<fea::timer_event::minutes>(
+			[&]() { ++minutes_passed; });
+	timer.events().subscribe<fea::timer_event::hours>(
+			[&]() { ++hours_passed; });
+	timer.events().subscribe<fea::timer_event::days>([&]() { ++days_passed; });
+
+	const fea::udays stop_time{ 3 };
+
+	auto start_time = steady_clock::now();
+	while (timer.elapsed_precise().days() < stop_time) {
+		timer.update();
+	}
+	auto end_time = steady_clock::now();
+
+	auto e = end_time - start_time;
+	seconds elapsed = date::round<seconds>(e);
+	EXPECT_EQ(elapsed.count(), 3);
+
+	EXPECT_EQ(minutes_passed, 4320u);
+	EXPECT_EQ(hours_passed, 72u);
+	EXPECT_EQ(days_passed, 3u);
+}
+
+TEST(timer, three_years) {
+	using namespace std::chrono;
+	// 1 second == 12 months.
+	fea::timer<void()> timer{ fea::dmonths{ 12 } };
+
+	size_t weeks_passed = 0;
+	size_t months_passed = 0;
+	size_t years_passed = 0;
+	timer.events().subscribe<fea::timer_event::weeks>(
+			[&]() { ++weeks_passed; });
+	timer.events().subscribe<fea::timer_event::months>(
+			[&]() { ++months_passed; });
+	timer.events().subscribe<fea::timer_event::years>(
+			[&]() { ++years_passed; });
+
+	// 1972 is leap year
+	const fea::udays stop_time{ 1096 };
+
+	auto start_time = steady_clock::now();
+	while (timer.elapsed_precise().days() < stop_time) {
+		timer.update();
+	}
+	auto end_time = steady_clock::now();
+
+	auto e = end_time - start_time;
+	seconds elapsed = date::round<seconds>(e);
+	EXPECT_EQ(elapsed.count(), 3);
+
+	EXPECT_EQ(weeks_passed, 156u);
+	EXPECT_EQ(months_passed, 36u);
+	EXPECT_EQ(years_passed, 3u);
 }
 
 } // namespace

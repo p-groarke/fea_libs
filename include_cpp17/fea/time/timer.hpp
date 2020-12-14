@@ -142,26 +142,23 @@ public:
 	using clock_duration_t = typename Clock::duration;
 	using uclock_duration_t = typename size_t_duration<clock_duration_t>;
 	using time_point_t = typename Clock::time_point;
-	using clock_high_range_duration_t =
-			typename high_range_duration<typename uclock_duration_t::rep,
-					typename uclock_duration_t::period>;
 
 	// Create a timer starting at start_time and increasing at time_ratio rate.
-	timer(dclock_seconds<Clock> start_time, dseconds time_ratio = dseconds(1.0))
+	timer(high_range_duration start_time, dseconds time_ratio = dseconds(1.0))
 			: _counter(uclock_duration_t{ 0 })
 			, _ratio(time_ratio)
-			, _start_time(start_time.time_since_epoch())
+			, _start_time(start_time)
 			, _new_update_time(Clock::now()) {
 
-		dclock_seconds<Clock> current_time = time();
+		high_range_duration current_time = time_precise();
 
-		_seconds_ticks = std::chrono::floor<std::chrono::seconds>(current_time);
-		_minutes_ticks = std::chrono::floor<std::chrono::minutes>(current_time);
-		_hours_ticks = std::chrono::floor<std::chrono::hours>(current_time);
-		_days_ticks = date::floor<date::days>(current_time);
-		_weeks_ticks = date::floor<date::weeks>(current_time);
-		_months_ticks = date::floor<date::months>(current_time);
-		_years_ticks = date::floor<date::years>(current_time);
+		_last_second_tick = floor<useconds>(current_time);
+		_last_minute_tick = floor<uminutes>(current_time);
+		_last_hour_tick = floor<uhours>(current_time);
+		_last_day_tick = floor<udays>(current_time);
+		_last_week_tick = floor<uweeks>(current_time);
+		_last_month_tick = floor<umonths>(current_time);
+		_last_year_tick = floor<uyears>(current_time);
 
 		{
 			fsm_state_t updating_state;
@@ -185,20 +182,25 @@ public:
 			_smachine.add_state<state::paused>(std::move(paused_state));
 		}
 	}
+	explicit timer(dclock_seconds<Clock> start_time,
+			dseconds time_ratio = dseconds(1.0))
+			: timer(start_time.time_since_epoch(), time_ratio) {
+	}
 
 	// Create a timer at date ymd, increasing by time_ratio speed.
-	timer(date::year_month_day ymd, dseconds time_ratio = dseconds(1.0))
-			: timer(fea::to_steady(ymd), time_ratio) {
+	explicit timer(
+			date::year_month_day ymd, dseconds time_ratio = dseconds(1.0))
+			: timer(high_range_duration(ymd), time_ratio) {
 	}
 
 	// Create a timer increasing by time_ratio speed. Starts at now().
-	timer(dseconds time_ratio)
-			: timer(Clock::now(), time_ratio) {
+	explicit timer(dseconds time_ratio)
+			: timer(high_range_duration(dseconds(0.0)), time_ratio) {
 	}
 
 	// Create a timer starting at now.
 	timer()
-			: timer(Clock::now()) {
+			: timer(high_range_duration(dseconds(0.0))) {
 	}
 
 	// Update the timer. Call this continually. Pass in callback signature
@@ -226,23 +228,32 @@ public:
 	}
 
 	// Elapsed seconds since start of timer.
+	dseconds elapsed_days() const {
+		return _counter.count_days();
+	}
 	dseconds elapsed() const {
-		return _counter.total_seconds();
+		return _counter.count();
+	}
+	const high_range_duration& elapsed_precise() const {
+		return _counter;
 	}
 
 	// Current time of timer (taking start_time into consideration).
 	dclock_seconds<Clock> time() const {
-		clock_high_range_duration_t t = _start_time + _counter;
-		return dclock_seconds<Clock>{ t.total_seconds() };
+		high_range_duration t = _start_time + _counter;
+		return dclock_seconds<Clock>{ t.count() };
+	}
+	high_range_duration time_precise() const {
+		return _start_time + _counter;
 	}
 
-	// Change start_time.
-	void start_time(dclock_seconds<Clock> st) {
-		_start_time = st;
-	}
 	// Get timer start_time().
-	dclock_seconds<Clock> start_time() const {
-		return dclock_seconds<Clock>{ _start_time.total_seconds() };
+	const high_range_duration& start_time() const {
+		return _start_time;
+	}
+	// Change start_time.
+	high_range_duration& start_time() {
+		return _start_time;
 	}
 
 	// Change time speed ratio.
@@ -266,6 +277,7 @@ public:
 	}
 
 	// Will execute your callback after e has elapsed. Local time.
+	// TODO : Add subscribe with high_range_duration.
 	void subscribe_elapsed(
 			dseconds e, const std::function<void(EventArgs...)>& func) {
 		assert(e > elapsed()); // asserts nice when threading.
@@ -278,6 +290,7 @@ public:
 	}
 
 	// Will execute your callback at time t. Absolute time.
+	// TODO : Add subscribe with high_range_duration.
 	void subscribe_time(dclock_seconds<Clock> t,
 			const std::function<void(EventArgs...)>& func) {
 		assert(t > time());
@@ -286,7 +299,8 @@ public:
 				+ " : subscribing callback that will never be called" };
 		}
 
-		_time_callbacks.push_back({ t, func });
+		// TODO : high_range_timepoint
+		_time_callbacks.push_back({ t.time_since_epoch(), func });
 	}
 
 private:
@@ -319,73 +333,124 @@ private:
 			_new_update_time = Clock::now();
 			dseconds dt = _new_update_time - _last_update_time;
 			dt *= _ratio.count();
-			clock_high_range_duration_t hr_dt{ dt };
+			high_range_duration hr_dt{ dt };
 			_counter += hr_dt;
 		}
 
-		// TODO : Split into seconds and days.
-		dclock_seconds<Clock> current_time = time();
+		high_range_duration current_time = time_precise();
 
-		if (_seconds_ticks + 1s <= current_time) {
-			if constexpr (MultiThreaded) {
-				_event_stack.trigger_mt<timer_event::seconds>(event_args...);
-			} else {
-				_event_stack.trigger<timer_event::seconds>(event_args...);
-			}
-			_seconds_ticks
-					= std::chrono::floor<std::chrono::seconds>(current_time);
+		// seconds
+		if (_last_second_tick + useconds(1) > current_time) {
+			return update_callbacks(event_args...);
 		}
-		if (_minutes_ticks + 1min <= current_time) {
-			if constexpr (MultiThreaded) {
-				_event_stack.trigger_mt<timer_event::minutes>(event_args...);
-			} else {
-				_event_stack.trigger<timer_event::minutes>(event_args...);
-			}
-			_minutes_ticks
-					= std::chrono::floor<std::chrono::minutes>(current_time);
+
+		if constexpr (MultiThreaded) {
+			_event_stack.trigger_mt<timer_event::seconds>(event_args...);
+		} else {
+			_event_stack.trigger<timer_event::seconds>(event_args...);
 		}
-		if (_hours_ticks + 1h <= current_time) {
-			if constexpr (MultiThreaded) {
-				_event_stack.trigger_mt<timer_event::hours>(event_args...);
-			} else {
-				_event_stack.trigger<timer_event::hours>(event_args...);
-			}
-			_hours_ticks = std::chrono::floor<std::chrono::hours>(current_time);
+		_last_second_tick = floor<useconds>(current_time);
+
+		// minutes
+		if (_last_minute_tick + useconds(1min) > current_time) {
+			return update_callbacks(event_args...);
 		}
-		if (_days_ticks + ddays(1) <= current_time) {
-			if constexpr (MultiThreaded) {
-				_event_stack.trigger_mt<timer_event::days>(event_args...);
-			} else {
-				_event_stack.trigger<timer_event::days>(event_args...);
-			}
-			_days_ticks = date::floor<date::days>(current_time);
+
+		if constexpr (MultiThreaded) {
+			_event_stack.trigger_mt<timer_event::minutes>(event_args...);
+		} else {
+			_event_stack.trigger<timer_event::minutes>(event_args...);
 		}
-		if (_weeks_ticks + dweeks(1) <= current_time) {
+		_last_minute_tick = floor<uminutes>(current_time);
+
+		// hours
+		if (_last_hour_tick + useconds(1h) > current_time) {
+			return update_callbacks(event_args...);
+		}
+
+		if constexpr (MultiThreaded) {
+			_event_stack.trigger_mt<timer_event::hours>(event_args...);
+		} else {
+			_event_stack.trigger<timer_event::hours>(event_args...);
+		}
+		_last_hour_tick = floor<uhours>(current_time);
+
+		// days
+		if (_last_day_tick + udays(1) > current_time) {
+			return update_callbacks(event_args...);
+		}
+
+		if constexpr (MultiThreaded) {
+			_event_stack.trigger_mt<timer_event::days>(event_args...);
+		} else {
+			_event_stack.trigger<timer_event::days>(event_args...);
+		}
+		_last_day_tick = floor<udays>(current_time);
+
+		// weeks, don't block months and years (weeks are desynchronized).
+		if (_last_week_tick + udays(uweeks(1)) <= current_time) {
 			if constexpr (MultiThreaded) {
 				_event_stack.trigger_mt<timer_event::weeks>(event_args...);
 			} else {
 				_event_stack.trigger<timer_event::weeks>(event_args...);
 			}
-			_weeks_ticks = date::floor<date::weeks>(current_time);
-		}
-		if (_months_ticks + dmonths(1) <= current_time) {
-			if constexpr (MultiThreaded) {
-				_event_stack.trigger_mt<timer_event::months>(event_args...);
-			} else {
-				_event_stack.trigger<timer_event::months>(event_args...);
-			}
-			_months_ticks = date::floor<date::months>(current_time);
-		}
-		if (_years_ticks + dyears(1) <= current_time) {
-			if constexpr (MultiThreaded) {
-				_event_stack.trigger_mt<timer_event::years>(event_args...);
-			} else {
-				_event_stack.trigger<timer_event::years>(event_args...);
-			}
-			_years_ticks = date::floor<date::years>(current_time);
+			_last_week_tick = floor<uweeks>(current_time);
 		}
 
-		dseconds current_elapsed_time = elapsed();
+		// months
+		// Find the number of days that need to have elapsed before we are at
+		// next month (according to gregorian calendar).
+		udays jump_month = _last_month_tick.days();
+		jump_month += fea::this_month_days(date::sys_days(jump_month));
+
+		if (jump_month > current_time.days()) {
+			return update_callbacks(event_args...);
+		}
+
+		if constexpr (MultiThreaded) {
+			_event_stack.trigger_mt<timer_event::months>(event_args...);
+		} else {
+			_event_stack.trigger<timer_event::months>(event_args...);
+		}
+		_last_month_tick = floor_months(date::sys_days{ current_time.days() });
+
+		assert(unsigned(date::year_month_day(
+					   date::sys_days(_last_month_tick.days()))
+								.day())
+				== 1u);
+
+		// years
+		// Find the number of days that need to have elapsed before we are at
+		// next year (according to gregorian calendar).
+		udays jump_year = _last_year_tick.days();
+		jump_year += fea::this_year_days(date::sys_days{ jump_year });
+
+		if (jump_year > current_time.days()) {
+			return update_callbacks(event_args...);
+		}
+
+		if constexpr (MultiThreaded) {
+			_event_stack.trigger_mt<timer_event::years>(event_args...);
+		} else {
+			_event_stack.trigger<timer_event::years>(event_args...);
+		}
+		_last_year_tick = floor_years(date::sys_days{ current_time.days() });
+
+		assert(unsigned(date::year_month_day(
+					   date::sys_days(_last_year_tick.days()))
+								.day())
+				== 1u);
+		assert(unsigned(date::year_month_day(
+					   date::sys_days(_last_year_tick.days()))
+								.month())
+				== 1u);
+
+		update_callbacks(event_args...);
+	}
+
+	void update_callbacks(EventArgs... event_args) {
+		high_range_duration current_time = time_precise();
+		high_range_duration current_elapsed_time = elapsed_precise();
 
 		// Gather events that need to be executed and removed.
 		auto new_end = std::remove_if(_elapsed_callbacks.begin(),
@@ -441,26 +506,28 @@ private:
 	}
 
 	// Elapsed time.
-	clock_high_range_duration_t _counter;
+	high_range_duration _counter;
 
 	// Time increment speed. Aka, 1 second : x seconds.
 	dseconds _ratio;
 
-	// User provided start time or now().
-	clock_high_range_duration_t _start_time;
+	// User provided start time.
+	// TODO : high_range_timepoint
+	high_range_duration _start_time;
 
 	// The timepoint of this frame, used to compute time difference between
 	// updates.
 	time_point_t _new_update_time;
 
 	// These are timestamps of the last triggered time events.
-	dclock_seconds<Clock> _seconds_ticks;
-	dclock_minutes<Clock> _minutes_ticks;
-	dclock_hours<Clock> _hours_ticks;
-	dclock_days<Clock> _days_ticks;
-	dclock_weeks<Clock> _weeks_ticks;
-	dclock_months<Clock> _months_ticks;
-	dclock_years<Clock> _years_ticks;
+	high_range_duration _last_second_tick;
+	high_range_duration _last_minute_tick;
+	high_range_duration _last_hour_tick;
+	// TODO : These don't need to be high_range_duration
+	high_range_duration _last_day_tick;
+	high_range_duration _last_week_tick;
+	high_range_duration _last_month_tick;
+	high_range_duration _last_year_tick;
 
 	// The time event system.
 	event_stack_t _event_stack;
@@ -469,10 +536,11 @@ private:
 	fsm_t _smachine;
 
 	// The elapsed and timepoint callbacks.
-	std::vector<std::pair<dseconds, std::function<void(EventArgs...)>>>
+	std::vector<
+			std::pair<high_range_duration, std::function<void(EventArgs...)>>>
 			_elapsed_callbacks;
 	std::vector<
-			std::pair<dclock_seconds<Clock>, std::function<void(EventArgs...)>>>
+			std::pair<high_range_duration, std::function<void(EventArgs...)>>>
 			_time_callbacks;
 };
 

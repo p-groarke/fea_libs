@@ -565,7 +565,7 @@ TEST(event_system, multithreading) {
 	fea::event_system<events, channels, void(), void(int), void(float, double)>
 			s{};
 
-	std::atomic<int> test_event_one = 0;
+	std::atomic<int> test_event_one{ 0 };
 
 	auto nid1 = s.add_notifier();
 	s.subscribe<events::one>(nid1, [&]() { ++test_event_one; });
@@ -580,7 +580,7 @@ TEST(event_system, multithreading) {
 	s.subscribe<events::one>(nid1, [&]() { ++test_event_one; });
 
 	s.trigger_mt<events::one>(nid1);
-	EXPECT_EQ(test_event_one, 10);
+	EXPECT_EQ(test_event_one.load(), 10);
 
 	s.subscribe<channels::one, events::one>([&]() { ++test_event_one; });
 	s.subscribe<channels::one, events::one>([&]() { ++test_event_one; });
@@ -594,6 +594,6 @@ TEST(event_system, multithreading) {
 	s.subscribe<channels::one, events::one>([&]() { ++test_event_one; });
 
 	s.trigger_mt<channels::one, events::one>();
-	EXPECT_EQ(test_event_one, 20);
+	EXPECT_EQ(test_event_one.load(), 20);
 }
 } // namespace
