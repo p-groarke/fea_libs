@@ -129,8 +129,6 @@ private:
 		count,
 	};
 	using fsm_t = fea::fsm<transition, state, void(timer*, EventArgs...)>;
-	using fsm_state_t
-			= fea::fsm_state<transition, state, void(timer*, EventArgs...)>;
 
 public:
 	using event_stack_t = event_stack<timer_event,
@@ -145,7 +143,7 @@ public:
 			/*on_unpause*/ void(EventArgs...)>;
 
 	using clock_duration_t = typename Clock::duration;
-	using uclock_duration_t = typename size_t_duration<clock_duration_t>;
+	using uclock_duration_t = size_t_duration<clock_duration_t>;
 	using time_point_t = typename Clock::time_point;
 
 	// Create a timer starting at start_time and increasing at time_ratio rate.
@@ -165,8 +163,10 @@ public:
 		_last_month_tick = floor<umonths>(current_time);
 		_last_year_tick = floor<uyears>(current_time);
 
+		fsm_builder<transition, state, void(timer*, EventArgs...)> builder;
+
 		{
-			fsm_state_t updating_state;
+			auto updating_state = builder.make_state();
 			updating_state.add_event<fea::fsm_event::on_enter>(
 					&timer::on_updating_enter);
 			updating_state.add_event<fea::fsm_event::on_update>(
@@ -177,7 +177,7 @@ public:
 		}
 
 		{
-			fsm_state_t paused_state;
+			auto paused_state = builder.make_state();
 			paused_state.add_event<fea::fsm_event::on_enter>(
 					&timer::on_pause_enter);
 			// paused_state.add_event<fea::fsm_event::on_exit>(

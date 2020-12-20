@@ -19,6 +19,9 @@ TEST(time, basics) {
 	fea::localtime(&t, &local_tm);
 	fea::gmtime(&t, &gm_tm);
 
+	// Windows doesn't provide IANA database, and downloading in CI is
+	// problematic. This test is run on macOS and Linux.
+#if !defined(FEA_WINDOWS)
 	std::tm test_localtm = fea::to_local_tm(now);
 	EXPECT_EQ(test_localtm.tm_sec, local_tm.tm_sec);
 	EXPECT_EQ(test_localtm.tm_min, local_tm.tm_min);
@@ -29,6 +32,7 @@ TEST(time, basics) {
 	EXPECT_EQ(test_localtm.tm_wday, local_tm.tm_wday);
 	EXPECT_EQ(test_localtm.tm_yday, local_tm.tm_yday);
 	EXPECT_EQ(test_localtm.tm_isdst, local_tm.tm_isdst);
+#endif
 
 	std::tm test_gmtm = fea::to_utc_tm(now);
 	EXPECT_EQ(test_gmtm.tm_sec, gm_tm.tm_sec);
@@ -160,8 +164,12 @@ TEST(time, timepoint_conversions) {
 		system_clock::time_point sys_tp = system_clock::now();
 		steady_clock::time_point steady_tp = fea::to_steady(sys_tp);
 
-		std::cout << fea::to_string(sys_tp) << std::endl;
-		std::cout << fea::to_string(steady_tp) << std::endl;
+		std::string sys_str = fea::to_string(sys_tp);
+		std::string steady_str = fea::to_string(steady_tp);
+		EXPECT_EQ(steady_str, sys_str);
+
+		// std::cout << sys_str << std::endl;
+		// std::cout << steady_str << std::endl;
 
 		auto sys_count = sys_tp.time_since_epoch().count();
 
@@ -179,8 +187,12 @@ TEST(time, timepoint_conversions) {
 		steady_clock::time_point steady_tp = steady_clock::now();
 		system_clock::time_point sys_tp = fea::to_sys(steady_tp);
 
-		std::cout << fea::to_string(steady_tp) << std::endl;
-		std::cout << fea::to_string(sys_tp) << std::endl;
+		std::string steady_str = fea::to_string(steady_tp);
+		std::string sys_str = fea::to_string(sys_tp);
+		EXPECT_EQ(sys_str, steady_str);
+
+		// std::cout << steady_str << std::endl;
+		// std::cout << sys_str << std::endl;
 
 		auto steady_count = steady_tp.time_since_epoch().count();
 
@@ -198,8 +210,12 @@ TEST(time, timepoint_conversions) {
 		date::sys_days sys_d = 2020_y / date::jan / 1_d;
 		fea::steady_days stdy_d = fea::to_steady(sys_d);
 
-		std::cout << fea::to_string(sys_d) << std::endl;
-		std::cout << fea::to_string(stdy_d) << std::endl;
+		std::string sys_str = fea::to_string(sys_d);
+		std::string steady_str = fea::to_string(stdy_d);
+		EXPECT_EQ(steady_str, sys_str);
+
+		// std::cout << sys_str << std::endl;
+		// std::cout << steady_str << std::endl;
 
 		auto sys_count = sys_d.time_since_epoch().count();
 		auto steady_count = stdy_d.time_since_epoch().count();
@@ -215,8 +231,12 @@ TEST(time, timepoint_conversions) {
 
 		date::sys_days sys_d = fea::to_sys(stdy_d);
 
-		std::cout << fea::to_string(stdy_d) << std::endl;
-		std::cout << fea::to_string(sys_d) << std::endl;
+		std::string steady_str = fea::to_string(stdy_d);
+		std::string sys_str = fea::to_string(sys_d);
+		EXPECT_EQ(sys_str, steady_str);
+
+		// std::cout << steady_str << std::endl;
+		// std::cout << sys_str << std::endl;
 
 		auto steady_count = stdy_d.time_since_epoch().count();
 		auto sys_count = sys_d.time_since_epoch().count();
@@ -225,6 +245,7 @@ TEST(time, timepoint_conversions) {
 	}
 }
 
+/*
 using uduration = std::chrono::duration<size_t, std::nano>;
 using utime_point
 		= std::chrono::time_point<std::chrono::steady_clock, uduration>;
@@ -258,6 +279,7 @@ TEST(time, experiments) {
 		std::cout << ustr << std::endl;
 	}
 }
+*/
 
 TEST(time, year_month_days) {
 	// 2020 is leap year.
