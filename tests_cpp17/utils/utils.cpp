@@ -17,11 +17,11 @@ enum class bm {
 	four = 0b1000,
 	all_set = 0b1111,
 };
-}
-FEA_ENABLE_IS_BITMASK(bm);
+FEA_ENABLE_BITMASK_OPERATORS(bm)
+} // namespace
+FEA_ENABLE_IS_BITMASK(bm)
 
 namespace {
-FEA_ENABLE_BITMASK_OPERATORS(bm);
 static_assert(fea::is_bitmask<bm>::value,
 		"utils : fea::is_bitmask type-trait should be true");
 static_assert(fea::is_bitmask_v<bm>,
@@ -29,25 +29,25 @@ static_assert(fea::is_bitmask_v<bm>,
 
 TEST(utils, bitmask) {
 
-	EXPECT_EQ(size_t(bm::one | bm::one), 0b0001);
-	EXPECT_EQ(size_t(bm::one | bm::two), 0b0011);
+	EXPECT_EQ(size_t(bm::one | bm::one), 0b0001u);
+	EXPECT_EQ(size_t(bm::one | bm::two), 0b0011u);
 	EXPECT_EQ(bm::one | bm::two | bm::three | bm::four, bm::all_set);
-	EXPECT_EQ(size_t(bm::one & bm::two), 0b0000);
-	EXPECT_EQ(size_t(bm::one & bm::one), 0b0001);
-	EXPECT_EQ(size_t((bm::one | bm::two) & bm::all_set), 0b0011);
-	EXPECT_EQ(size_t(bm::one ^ bm::two), 0b0011);
-	EXPECT_EQ(size_t(bm::one ^ bm::one), 0b0000);
-	EXPECT_EQ(size_t(~bm::all_set & bm::all_set), 0b0000);
-	EXPECT_EQ(size_t(~bm::one & bm::all_set), 0b1110);
-	EXPECT_EQ(size_t(bm::one >> 1), 0b0000);
-	EXPECT_EQ(size_t(bm::one << 1), 0b0010);
-	EXPECT_EQ(size_t(bm::all_set >> 1), 0b0111);
-	EXPECT_EQ(size_t(bm::all_set << 1), 0b11110);
+	EXPECT_EQ(size_t(bm::one & bm::two), 0b0000u);
+	EXPECT_EQ(size_t(bm::one & bm::one), 0b0001u);
+	EXPECT_EQ(size_t((bm::one | bm::two) & bm::all_set), 0b0011u);
+	EXPECT_EQ(size_t(bm::one ^ bm::two), 0b0011u);
+	EXPECT_EQ(size_t(bm::one ^ bm::one), 0b0000u);
+	EXPECT_EQ(size_t(~bm::all_set & bm::all_set), 0b0000u);
+	EXPECT_EQ(size_t(~bm::one & bm::all_set), 0b1110u);
+	EXPECT_EQ(size_t(bm::one >> 1), 0b0000u);
+	EXPECT_EQ(size_t(bm::one << 1), 0b0010u);
+	EXPECT_EQ(size_t(bm::all_set >> 1), 0b0111u);
+	EXPECT_EQ(size_t(bm::all_set << 1), 0b11110u);
 
 	bm t = bm::one;
 
 	t |= bm::two;
-	EXPECT_EQ(size_t(t), 0b0011);
+	EXPECT_EQ(size_t(t), 0b0011u);
 	t |= bm::three;
 	t |= bm::four;
 	EXPECT_EQ(t, bm::all_set);
@@ -56,14 +56,14 @@ TEST(utils, bitmask) {
 	t &= bm::one;
 	EXPECT_EQ(t, bm::one);
 	t ^= bm::two;
-	EXPECT_EQ(size_t(t), 0b0011);
+	EXPECT_EQ(size_t(t), 0b0011u);
 	t ^= bm::one;
-	EXPECT_EQ(size_t(t), 0b0010);
+	EXPECT_EQ(size_t(t), 0b0010u);
 	t = bm::all_set;
 	t <<= 1;
-	EXPECT_EQ(size_t(t), 0b11110);
+	EXPECT_EQ(size_t(t), 0b11110u);
 	t >>= 2;
-	EXPECT_EQ(size_t(t), 0b0111);
+	EXPECT_EQ(size_t(t), 0b0111u);
 }
 
 TEST(utils, str_basics) {
