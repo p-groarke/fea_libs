@@ -377,7 +377,7 @@ inline date::days next_year_days(date::sys_days d) {
 
 template <class T>
 std::string to_string(date::sys_time<T> tp) {
-	auto s = std::chrono::floor<std::chrono::seconds>(tp);
+	auto s = date::floor<std::chrono::seconds>(tp);
 	return date::format("%F %T", s);
 }
 

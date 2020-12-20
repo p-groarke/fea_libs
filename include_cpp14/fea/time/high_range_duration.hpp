@@ -265,7 +265,7 @@ struct high_range_duration {
 	}
 
 	template <class FloorDuration>
-	friend static constexpr high_range_duration floor(
+	friend constexpr high_range_duration floor(
 			const high_range_duration& rhs) noexcept {
 		using namespace std::chrono;
 		high_range_duration ret;

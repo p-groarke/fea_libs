@@ -139,16 +139,38 @@ TEST(timer, three_seconds) {
 
 	EXPECT_EQ(seconds_passed, 3u);
 }
+
+TEST(timer, three_minutes) {
+	using namespace std::chrono;
+	// 1 second == 1 minute.
+	fea::timer<void()> timer(fea::dseconds{ fea::dminutes{ 1 } });
+
+	size_t minutes_passed = 0;
+	timer.events().subscribe<fea::timer_event::minutes>(
+			[&]() { ++minutes_passed; });
+
+	const fea::uminutes stop_time{ 3 };
+
+	auto start_time = steady_clock::now();
+	while (timer.elapsed_precise().seconds() < stop_time) {
+		timer.update();
+	}
+	auto end_time = steady_clock::now();
+
+	auto e = end_time - start_time;
+	seconds elapsed = date::round<seconds>(e);
+	EXPECT_EQ(elapsed.count(), 3);
+
+	EXPECT_EQ(minutes_passed, 3u);
+}
+
 TEST(timer, three_days) {
 	using namespace std::chrono;
 	// 1 second == 1 day.
 	fea::timer<void()> timer(fea::dseconds{ fea::ddays{ 1 } });
 
-	size_t minutes_passed = 0;
 	size_t hours_passed = 0;
 	size_t days_passed = 0;
-	timer.events().subscribe<fea::timer_event::minutes>(
-			[&]() { ++minutes_passed; });
 	timer.events().subscribe<fea::timer_event::hours>(
 			[&]() { ++hours_passed; });
 	timer.events().subscribe<fea::timer_event::days>([&]() { ++days_passed; });
@@ -165,7 +187,6 @@ TEST(timer, three_days) {
 	seconds elapsed = date::round<seconds>(e);
 	EXPECT_EQ(elapsed.count(), 3);
 
-	EXPECT_EQ(minutes_passed, 4320u);
 	EXPECT_EQ(hours_passed, 72u);
 	EXPECT_EQ(days_passed, 3u);
 }
