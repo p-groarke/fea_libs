@@ -288,20 +288,7 @@ struct high_range_duration {
 
 	template <class FloorDuration>
 	friend constexpr high_range_duration floor(
-			const high_range_duration& rhs) noexcept {
-		using namespace std::chrono;
-		high_range_duration ret;
-		ret._days
-				= duration_cast<udays>((date::floor<FloorDuration>(rhs._days)));
-
-		ret._seconds = duration_cast<useconds>(
-				date::floor<FloorDuration>(rhs._seconds));
-
-		ret._nanoseconds = duration_cast<unanoseconds>(
-				date::floor<FloorDuration>(rhs._nanoseconds));
-
-		return ret;
-	}
+			const high_range_duration& rhs) noexcept;
 
 private:
 	// Decomposes time into remainder, seconds and days.
@@ -319,4 +306,19 @@ private:
 	useconds _seconds{ 0 };
 	unanoseconds _nanoseconds{ 0 };
 };
+
+template <class FloorDuration>
+constexpr high_range_duration floor(const high_range_duration& rhs) noexcept {
+	using namespace std::chrono;
+	high_range_duration ret;
+	ret._days = duration_cast<udays>((date::floor<FloorDuration>(rhs._days)));
+
+	ret._seconds
+			= duration_cast<useconds>(date::floor<FloorDuration>(rhs._seconds));
+
+	ret._nanoseconds = duration_cast<unanoseconds>(
+			date::floor<FloorDuration>(rhs._nanoseconds));
+
+	return ret;
+}
 } // namespace fea

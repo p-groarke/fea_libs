@@ -32,7 +32,7 @@
  **/
 
 #pragma once
-#include <cuchar>
+#include <cstddef>
 #include <type_traits>
 
 /*

@@ -273,11 +273,11 @@ public:
 	}
 
 	// Get current ratio.
-	double ratio() const {
+	dseconds ratio() const {
 		return _ratio;
 	}
 	// Change time speed ratio.
-	double& ratio() {
+	dseconds& ratio() {
 		return _ratio;
 	}
 
