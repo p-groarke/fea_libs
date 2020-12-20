@@ -78,6 +78,7 @@ namespace fea {
 #define FEA_RELEASE_BUILD 1
 
 #if FEA_CPP17
+inline constexpr bool release_build = true;
 inline constexpr bool debug_build = false;
 #endif
 
@@ -86,6 +87,7 @@ inline constexpr bool debug_build = false;
 #define FEA_DEBUG_BUILD 1
 
 #if FEA_CPP17
+inline constexpr bool release_build = false;
 inline constexpr bool debug_build = true;
 #endif
 #endif
@@ -122,7 +124,7 @@ inline constexpr platform_t platform = platform_t::aix;
 #endif
 
 #elif defined(__unix__)
-}
+} // namespace fea
 #include <sys/param.h>
 namespace fea {
 
@@ -152,7 +154,7 @@ inline constexpr platform_t platform = platform_t::linuxx;
 #endif
 
 #elif defined(__APPLE__) && defined(__MACH__)
-}
+} // namespace fea
 #include <TargetConditionals.h>
 namespace fea {
 
@@ -199,7 +201,7 @@ inline constexpr platform_t platform = platform_t::count;
 		&& (defined(__unix__) || defined(__unix) \
 				|| (defined(__APPLE__) && defined(__MACH__)) \
 				|| defined(__CYGWIN__))
-}
+} // namespace fea
 #include <unistd.h>
 namespace fea {
 
