@@ -211,6 +211,24 @@ using size_t_duration
 
 // Helper functions
 
+// Platform independent gmtime.
+inline void gmtime(const std::time_t* timer, std::tm* buf) {
+#if FEA_WINDOWS
+	gmtime_s(buf, timer);
+#else
+	gmtime_r(timer, buf);
+#endif
+}
+
+// Platform independent localtime.
+inline void localtime(const std::time_t* timer, std::tm* buf) {
+#if FEA_WINDOWS
+	localtime_s(buf, timer);
+#else
+	localtime_r(timer, buf);
+#endif
+}
+
 // Converts sys_time timepoint to std::tm.
 // Ignores local timezone.
 template <class T>

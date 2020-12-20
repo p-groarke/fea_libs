@@ -35,13 +35,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /*
 A duration that can represent a high range of time values.
 
-Accumulates time using days, seconds and provided remainder duration. Allows to
+Accumulates time using days, seconds and nanoseconds duration. Allows to
 accumulate a multiple year duration with nanosecond precision, for example.
 
 You may extract precise time using days, seconds and remainder functions.
 Or choose to loose precision, using total_days, total_seconds and
-total_remainder functions. Unprecise time is returned using double time, to give
-it a chance.
+total_nanoseconds functions. Unprecise time is returned using double time, to
+give it a chance.
+
+high_range_duration stores time as unsigned, careful when substracting.
+Substractions do saturate to 0.
 
 TODO : high_range_time_point
 */
@@ -120,6 +123,11 @@ struct high_range_duration {
 	constexpr unanoseconds nanoseconds() const noexcept {
 		return _nanoseconds;
 	}
+
+
+	/**
+	 * Operators
+	 */
 
 	high_range_duration& operator+=(const high_range_duration& rhs) {
 		// First add everything.
@@ -248,14 +256,22 @@ struct high_range_duration {
 		return !(lhs < rhs);
 	}
 
+	/**
+	 * Standard functions
+	 */
+
+	// Returns "zero" value (aka default constructed).
 	static constexpr high_range_duration zero() noexcept {
 		return {};
 	}
 
+	// Returns minimum possible value (equal to zero, since high_range_duration
+	// is unsigned).
 	static constexpr high_range_duration(min)() noexcept {
 		return zero();
 	}
 
+	// Returns maximum possible value.
 	static constexpr high_range_duration(max)() noexcept {
 		high_range_duration ret;
 		ret._days = udays{ (std::numeric_limits<size_t>::max)() };

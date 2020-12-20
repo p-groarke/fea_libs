@@ -85,6 +85,11 @@ cannot keep up, the timer will try and catch up and invoke callbacks once per
 update.
 For ex, the timer will *not* call the seconds callback 5 times if 5 seconds has
 elapsed since last update. It will call it once.
+
+Months & Years
+When using the timer as a calendar timer, months and leap years are computed
+according to the gregorian calendar. When using these features, you probably
+want to instantiate a sys_timer, or set a start date when using steady_timer.
 */
 
 namespace fea {
@@ -193,12 +198,12 @@ public:
 			: timer(high_range_duration(ymd), time_ratio) {
 	}
 
-	// Create a timer increasing by time_ratio speed. Starts at now().
+	// Create a timer increasing by time_ratio speed.
 	explicit timer(dseconds time_ratio)
 			: timer(high_range_duration(dseconds(0.0)), time_ratio) {
 	}
 
-	// Create a timer starting at now.
+	// Create a timer starting at 0, aka Jan 01 1970.
 	timer()
 			: timer(high_range_duration(dseconds(0.0))) {
 	}
@@ -227,22 +232,31 @@ public:
 		printf("time : %s\n", date_s.c_str());
 	}
 
-	// Elapsed seconds since start of timer.
+	// Elapsed days since start of timer.
+	// Imprecise.
 	dseconds elapsed_days() const {
 		return _counter.count_days();
 	}
+	// Elapsed seconds since start of timer.
+	// Imprecise.
 	dseconds elapsed() const {
 		return _counter.count();
 	}
+
+	// Precise elapsed construct.
 	const high_range_duration& elapsed_precise() const {
 		return _counter;
 	}
 
 	// Current time of timer (taking start_time into consideration).
+	// Imprecise.
 	dclock_seconds<Clock> time() const {
 		high_range_duration t = _start_time + _counter;
 		return dclock_seconds<Clock>{ t.count() };
 	}
+
+	// Current time of timer (taking start_time into consideration).
+	// Precise construct.
 	high_range_duration time_precise() const {
 		return _start_time + _counter;
 	}
@@ -251,17 +265,17 @@ public:
 	const high_range_duration& start_time() const {
 		return _start_time;
 	}
-	// Change start_time.
+	// Change timer start_time.
 	high_range_duration& start_time() {
 		return _start_time;
 	}
 
-	// Change time speed ratio.
-	void ratio(double r) {
-		_ratio = r;
-	}
 	// Get current ratio.
 	double ratio() const {
+		return _ratio;
+	}
+	// Change time speed ratio.
+	double& ratio() {
 		return _ratio;
 	}
 
@@ -272,6 +286,7 @@ public:
 	}
 	// Access continuous events to subscribe to tick events.
 	// For ex, seconds, minutes, hours, days, etc.
+	// See 'event_stack' header for help on the event_stack api.
 	event_stack_t& events() {
 		return _event_stack;
 	}
@@ -523,7 +538,6 @@ private:
 	high_range_duration _last_second_tick;
 	high_range_duration _last_minute_tick;
 	high_range_duration _last_hour_tick;
-	// TODO : These don't need to be high_range_duration
 	high_range_duration _last_day_tick;
 	high_range_duration _last_week_tick;
 	high_range_duration _last_month_tick;

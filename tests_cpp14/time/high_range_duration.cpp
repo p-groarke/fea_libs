@@ -56,6 +56,7 @@ TEST(time_high_range_duration, basics) {
 		EXPECT_EQ(size_t(hrd2.count_nanoseconds().count()), add_answer.count());
 	}
 
+	// More addition
 	{
 		fea::useconds sec_time{ 0 };
 		sec_time += 48h;

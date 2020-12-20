@@ -16,17 +16,8 @@ TEST(time, basics) {
 	std::tm local_tm{};
 	std::tm gm_tm{};
 
-#if FEA_WINDOWS
-	localtime_s(&local_tm, &t);
-#else
-	localtime_r(&t, &local_tm);
-#endif
-
-#if FEA_WINDOWS
-	gmtime_s(&gm_tm, &t);
-#else
-	gmtime_s(&t, &gm_tm);
-#endif
+	fea::localtime(&t, &local_tm);
+	fea::gmtime(&t, &gm_tm);
 
 	std::tm test_localtm = fea::to_local_tm(now);
 	EXPECT_EQ(test_localtm.tm_sec, local_tm.tm_sec);

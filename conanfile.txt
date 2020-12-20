@@ -8,6 +8,7 @@ cmake_find_package_multi
 
 [options]
 gtest:build_gmock=False
+date:use_system_tz_db=True
 
 [imports]
 bin, *.pdb -> ./bin
