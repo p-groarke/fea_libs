@@ -94,6 +94,12 @@ struct high_range_duration {
 			, _nanoseconds(0) {
 	}
 
+	constexpr high_range_duration(udays d, useconds secs, unanoseconds nano)
+			: _days(d)
+			, _seconds(secs)
+			, _nanoseconds(nano) {
+	}
+
 	// Imprecise and can overflow.
 	// Looses most precision in nanoseconds.
 	constexpr ddays count_days() const {
@@ -273,11 +279,11 @@ struct high_range_duration {
 
 	// Returns maximum possible value.
 	static constexpr high_range_duration(max)() noexcept {
-		high_range_duration ret;
-		ret._days = udays{ (std::numeric_limits<size_t>::max)() };
-		ret._seconds = useconds{ (std::numeric_limits<size_t>::max)() };
-		ret._nanoseconds = unanoseconds{ (std::numeric_limits<size_t>::max)() };
-		return ret;
+		return high_range_duration{
+			udays{ (std::numeric_limits<size_t>::max)() },
+			useconds{ (std::numeric_limits<size_t>::max)() },
+			unanoseconds{ (std::numeric_limits<size_t>::max)() },
+		};
 	}
 
 	template <class FloorDuration>

@@ -129,6 +129,8 @@ private:
 		count,
 	};
 	using fsm_t = fea::fsm<transition, state, void(timer*, EventArgs...)>;
+	using fsm_state_t
+			= fea::fsm_state<transition, state, void(timer*, EventArgs...)>;
 
 public:
 	using event_stack_t = event_stack<timer_event,
@@ -163,28 +165,28 @@ public:
 		_last_month_tick = floor<umonths>(current_time);
 		_last_year_tick = floor<uyears>(current_time);
 
-		fsm_builder<transition, state, void(timer*, EventArgs...)> builder;
-
 		{
-			auto updating_state = builder.make_state();
-			updating_state.add_event<fea::fsm_event::on_enter>(
+			fsm_state_t updating_state;
+			updating_state.template add_event<fea::fsm_event::on_enter>(
 					&timer::on_updating_enter);
-			updating_state.add_event<fea::fsm_event::on_update>(
+			updating_state.template add_event<fea::fsm_event::on_update>(
 					&timer::on_update);
-			updating_state
-					.add_transition<transition::do_pause, state::paused>();
-			_smachine.add_state<state::updating>(std::move(updating_state));
+			updating_state.template add_transition<transition::do_pause,
+					state::paused>();
+			_smachine.template add_state<state::updating>(
+					std::move(updating_state));
 		}
 
 		{
-			auto paused_state = builder.make_state();
-			paused_state.add_event<fea::fsm_event::on_enter>(
+			fsm_state_t paused_state;
+			paused_state.template add_event<fea::fsm_event::on_enter>(
 					&timer::on_pause_enter);
 			// paused_state.add_event<fea::fsm_event::on_exit>(
 			//		&timer::on_pause_exit);
-			paused_state
-					.add_transition<transition::do_unpause, state::updating>();
-			_smachine.add_state<state::paused>(std::move(paused_state));
+			paused_state.template add_transition<transition::do_unpause,
+					state::updating>();
+			_smachine.template add_state<state::paused>(
+					std::move(paused_state));
 		}
 	}
 	explicit timer(dclock_seconds<Clock> start_time,
@@ -216,12 +218,12 @@ public:
 
 	// Pause the timer. Pass in callback signature arguments.
 	void pause(EventArgs... event_args) {
-		_smachine.trigger<transition::do_pause>(this, event_args...);
+		_smachine.template trigger<transition::do_pause>(this, event_args...);
 	}
 
 	// Pause the timer. Pass in callback signature arguments.
 	void unpause(EventArgs... event_args) {
-		_smachine.trigger<transition::do_unpause>(this, event_args...);
+		_smachine.template trigger<transition::do_unpause>(this, event_args...);
 	}
 
 	// Print elapsed time and timer time to console.
@@ -321,9 +323,10 @@ public:
 private:
 	void on_pause_enter(EventArgs... event_args, fsm_t&) {
 		if constexpr (MultiThreaded) {
-			_event_stack.trigger_mt<timer_event::on_pause>(event_args...);
+			_event_stack.template trigger_mt<timer_event::on_pause>(
+					event_args...);
 		} else {
-			_event_stack.trigger<timer_event::on_pause>(event_args...);
+			_event_stack.template trigger<timer_event::on_pause>(event_args...);
 		}
 	}
 
@@ -332,9 +335,11 @@ private:
 
 	void on_updating_enter(EventArgs... event_args, fsm_t&) {
 		if constexpr (MultiThreaded) {
-			_event_stack.trigger_mt<timer_event::on_unpause>(event_args...);
+			_event_stack.template trigger_mt<timer_event::on_unpause>(
+					event_args...);
 		} else {
-			_event_stack.trigger<timer_event::on_unpause>(event_args...);
+			_event_stack.template trigger<timer_event::on_unpause>(
+					event_args...);
 		}
 	}
 
@@ -360,9 +365,10 @@ private:
 		}
 
 		if constexpr (MultiThreaded) {
-			_event_stack.trigger_mt<timer_event::seconds>(event_args...);
+			_event_stack.template trigger_mt<timer_event::seconds>(
+					event_args...);
 		} else {
-			_event_stack.trigger<timer_event::seconds>(event_args...);
+			_event_stack.template trigger<timer_event::seconds>(event_args...);
 		}
 		_last_second_tick = floor<useconds>(current_time);
 
@@ -372,9 +378,10 @@ private:
 		}
 
 		if constexpr (MultiThreaded) {
-			_event_stack.trigger_mt<timer_event::minutes>(event_args...);
+			_event_stack.template trigger_mt<timer_event::minutes>(
+					event_args...);
 		} else {
-			_event_stack.trigger<timer_event::minutes>(event_args...);
+			_event_stack.template trigger<timer_event::minutes>(event_args...);
 		}
 		_last_minute_tick = floor<uminutes>(current_time);
 
@@ -384,9 +391,9 @@ private:
 		}
 
 		if constexpr (MultiThreaded) {
-			_event_stack.trigger_mt<timer_event::hours>(event_args...);
+			_event_stack.template trigger_mt<timer_event::hours>(event_args...);
 		} else {
-			_event_stack.trigger<timer_event::hours>(event_args...);
+			_event_stack.template trigger<timer_event::hours>(event_args...);
 		}
 		_last_hour_tick = floor<uhours>(current_time);
 
@@ -396,18 +403,20 @@ private:
 		}
 
 		if constexpr (MultiThreaded) {
-			_event_stack.trigger_mt<timer_event::days>(event_args...);
+			_event_stack.template trigger_mt<timer_event::days>(event_args...);
 		} else {
-			_event_stack.trigger<timer_event::days>(event_args...);
+			_event_stack.template trigger<timer_event::days>(event_args...);
 		}
 		_last_day_tick = floor<udays>(current_time);
 
 		// weeks, don't block months and years (weeks are desynchronized).
 		if (_last_week_tick + udays(uweeks(1)) <= current_time) {
 			if constexpr (MultiThreaded) {
-				_event_stack.trigger_mt<timer_event::weeks>(event_args...);
+				_event_stack.template trigger_mt<timer_event::weeks>(
+						event_args...);
 			} else {
-				_event_stack.trigger<timer_event::weeks>(event_args...);
+				_event_stack.template trigger<timer_event::weeks>(
+						event_args...);
 			}
 			_last_week_tick = floor<uweeks>(current_time);
 		}
@@ -423,9 +432,10 @@ private:
 		}
 
 		if constexpr (MultiThreaded) {
-			_event_stack.trigger_mt<timer_event::months>(event_args...);
+			_event_stack.template trigger_mt<timer_event::months>(
+					event_args...);
 		} else {
-			_event_stack.trigger<timer_event::months>(event_args...);
+			_event_stack.template trigger<timer_event::months>(event_args...);
 		}
 		_last_month_tick = floor_months(date::sys_days{ current_time.days() });
 
@@ -445,9 +455,9 @@ private:
 		}
 
 		if constexpr (MultiThreaded) {
-			_event_stack.trigger_mt<timer_event::years>(event_args...);
+			_event_stack.template trigger_mt<timer_event::years>(event_args...);
 		} else {
-			_event_stack.trigger<timer_event::years>(event_args...);
+			_event_stack.template trigger<timer_event::years>(event_args...);
 		}
 		_last_year_tick = floor_years(date::sys_days{ current_time.days() });
 

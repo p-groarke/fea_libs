@@ -17,6 +17,6 @@ TEST(delta_time, basics) {
 	auto end_time = std::chrono::steady_clock::now();
 
 	auto clock_dt = end_time - start_time;
-	EXPECT_LT(dt_gen.dt(), clock_dt);
+	EXPECT_LT(dt_gen.ns_dt(), clock_dt);
 }
 } // namespace

@@ -50,6 +50,10 @@ struct delta_time {
 		return _dt;
 	}
 
+	std::chrono::steady_clock::duration ns_dt() const {
+		return _dt;
+	}
+
 private:
 	std::chrono::steady_clock::time_point _new_frame_time
 			= std::chrono::steady_clock::now();

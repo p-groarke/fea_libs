@@ -194,7 +194,10 @@ TEST(time, timepoint_conversions) {
 		// std::cout << steady_str << std::endl;
 		// std::cout << sys_str << std::endl;
 
-		auto steady_count = steady_tp.time_since_epoch().count();
+		auto steady_dur = steady_clock::duration{
+			date::floor<system_clock::duration>(steady_tp.time_since_epoch())
+		};
+		auto steady_count = steady_dur.count();
 
 		// We still need to have identical duration types.
 		// Cast to system clock duration.
