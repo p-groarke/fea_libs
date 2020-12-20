@@ -53,7 +53,7 @@ struct delta_time {
 private:
 	std::chrono::steady_clock::time_point _new_frame_time
 			= std::chrono::steady_clock::now();
-	std::chrono::steady_clock::duration _dt;
+	std::chrono::steady_clock::duration _dt{ 0 };
 };
 
 } // namespace fea

@@ -35,7 +35,7 @@
 #include "fea/utils/bitmask.hpp"
 
 namespace fea {
-#if __cplusplus == 202002L
+#if __cplusplus >= 202002L
 #undef FEA_CPP20
 #undef FEA_CPP17
 #undef FEA_CPP14
@@ -46,7 +46,7 @@ namespace fea {
 #define FEA_CPP14 1
 #define FEA_CPP11 1
 #define FEA_CPP98 1
-#elif __cplusplus == 201703L
+#elif __cplusplus >= 201703L
 #undef FEA_CPP17
 #undef FEA_CPP14
 #undef FEA_CPP11
@@ -55,14 +55,14 @@ namespace fea {
 #define FEA_CPP14 1
 #define FEA_CPP11 1
 #define FEA_CPP98 1
-#elif __cplusplus == 201402L
+#elif __cplusplus >= 201402L
 #undef FEA_CPP14
 #undef FEA_CPP11
 #undef FEA_CPP98
 #define FEA_CPP14 1
 #define FEA_CPP11 1
 #define FEA_CPP98 1
-#elif __cplusplus == 201103L
+#elif __cplusplus >= 201103L
 #undef FEA_CPP11
 #undef FEA_CPP98
 #define FEA_CPP11 1
@@ -80,6 +80,7 @@ namespace fea {
 #if FEA_CPP17
 inline constexpr bool debug_build = false;
 #endif
+
 #else
 #undef FEA_DEBUG_BUILD
 #define FEA_DEBUG_BUILD 1

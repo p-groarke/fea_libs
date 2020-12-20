@@ -1,5 +1,6 @@
 ﻿#include <cstdio>
 #include <cstring>
+#include <fea/utils/bitmask.hpp>
 #include <fea/utils/file.hpp>
 #include <fea/utils/scope.hpp>
 #include <fea/utils/string.hpp>
@@ -9,7 +10,63 @@
 extern const char* argv0;
 
 namespace {
-TEST(fea_utils, str_basics) {
+enum class bm {
+	one = 0b0001,
+	two = 0b0010,
+	three = 0b0100,
+	four = 0b1000,
+	all_set = 0b1111,
+};
+}
+FEA_ENABLE_IS_BITMASK(bm);
+
+namespace {
+FEA_ENABLE_BITMASK_OPERATORS(bm);
+static_assert(fea::is_bitmask<bm>::value,
+		"utils : fea::is_bitmask type-trait should be true");
+static_assert(fea::is_bitmask_v<bm>,
+		"utils : fea::is_bitmask type-trait should be true");
+
+TEST(utils, bitmask) {
+
+	EXPECT_EQ(size_t(bm::one | bm::one), 0b0001);
+	EXPECT_EQ(size_t(bm::one | bm::two), 0b0011);
+	EXPECT_EQ(bm::one | bm::two | bm::three | bm::four, bm::all_set);
+	EXPECT_EQ(size_t(bm::one & bm::two), 0b0000);
+	EXPECT_EQ(size_t(bm::one & bm::one), 0b0001);
+	EXPECT_EQ(size_t((bm::one | bm::two) & bm::all_set), 0b0011);
+	EXPECT_EQ(size_t(bm::one ^ bm::two), 0b0011);
+	EXPECT_EQ(size_t(bm::one ^ bm::one), 0b0000);
+	EXPECT_EQ(size_t(~bm::all_set & bm::all_set), 0b0000);
+	EXPECT_EQ(size_t(~bm::one & bm::all_set), 0b1110);
+	EXPECT_EQ(size_t(bm::one >> 1), 0b0000);
+	EXPECT_EQ(size_t(bm::one << 1), 0b0010);
+	EXPECT_EQ(size_t(bm::all_set >> 1), 0b0111);
+	EXPECT_EQ(size_t(bm::all_set << 1), 0b11110);
+
+	bm t = bm::one;
+
+	t |= bm::two;
+	EXPECT_EQ(size_t(t), 0b0011);
+	t |= bm::three;
+	t |= bm::four;
+	EXPECT_EQ(t, bm::all_set);
+	t &= bm::all_set;
+	EXPECT_EQ(t, bm::all_set);
+	t &= bm::one;
+	EXPECT_EQ(t, bm::one);
+	t ^= bm::two;
+	EXPECT_EQ(size_t(t), 0b0011);
+	t ^= bm::one;
+	EXPECT_EQ(size_t(t), 0b0010);
+	t = bm::all_set;
+	t <<= 1;
+	EXPECT_EQ(size_t(t), 0b11110);
+	t >>= 2;
+	EXPECT_EQ(size_t(t), 0b0111);
+}
+
+TEST(utils, str_basics) {
 	std::string str = "a string weeee, bang, ding, ow";
 	EXPECT_TRUE(fea::contains(str, "ding"));
 	EXPECT_FALSE(fea::contains(str, "dong"));
@@ -41,7 +98,7 @@ TEST(fea_utils, str_basics) {
 	EXPECT_EQ(capscpy, "is SCREAMING");
 }
 
-TEST(fea_utils, thread_basics) {
+TEST(utils, thread_basics) {
 	struct my_obj {
 		size_t data{ 0 };
 	};
@@ -67,7 +124,7 @@ TEST(fea_utils, thread_basics) {
 	mt_ref.read([&](const my_obj& o) { EXPECT_EQ(o.data, 100u); });
 }
 
-TEST(fea_utils, scope_basics) {
+TEST(utils, scope_basics) {
 	size_t test_var = 0;
 
 	{
@@ -76,7 +133,7 @@ TEST(fea_utils, scope_basics) {
 	EXPECT_EQ(test_var, 1u);
 }
 
-TEST(fea_utils, file_basics) {
+TEST(utils, file_basics) {
 	std::filesystem::path exe_path = fea::executable_dir(argv0);
 	std::filesystem::path testfiles_dir = exe_path / "tests_data/";
 

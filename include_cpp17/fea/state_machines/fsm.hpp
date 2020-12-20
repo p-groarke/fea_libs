@@ -215,42 +215,40 @@ struct fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 			if (to_from_state != StateEnum::count
 					&& _on_enter_from_state_funcs[size_t(to_from_state)]) {
 				// has enter_from state
-				std::invoke(_on_enter_from_state_funcs[size_t(to_from_state)],
+				_on_enter_from_state_funcs[size_t(to_from_state)](
 						func_args..., machine);
 
 			} else if (to_from_transition != TransitionEnum::count
 					&& _on_enter_from_transition_funcs[size_t(
 							to_from_transition)]) {
 				// has enter_from transition
-				std::invoke(_on_enter_from_transition_funcs[size_t(
-									to_from_transition)],
+				_on_enter_from_transition_funcs[size_t(to_from_transition)](
 						func_args..., machine);
 
 			} else if (_on_enter_func) {
-				std::invoke(_on_enter_func, func_args..., machine);
+				_on_enter_func(func_args..., machine);
 			}
 
 		} else if constexpr (Event == fsm_event::on_update) {
 			if (_on_update_func) {
-				return std::invoke(_on_update_func, func_args..., machine);
+				return _on_update_func(func_args..., machine);
 			}
 		} else if constexpr (Event == fsm_event::on_exit) {
 			if (to_from_state != StateEnum::count
 					&& _on_exit_to_state_funcs[size_t(to_from_state)]) {
 				// has exit_to
-				std::invoke(_on_exit_to_state_funcs[size_t(to_from_state)],
+				_on_exit_to_state_funcs[size_t(to_from_state)](
 						func_args..., machine);
 
 			} else if (to_from_transition != TransitionEnum::count
 					&& _on_exit_to_transition_funcs[size_t(
 							to_from_transition)]) {
 				// has exit_to
-				std::invoke(_on_exit_to_transition_funcs[size_t(
-									to_from_transition)],
+				_on_exit_to_transition_funcs[size_t(to_from_transition)](
 						func_args..., machine);
 
 			} else if (_on_exit_func) {
-				std::invoke(_on_exit_func, func_args..., machine);
+				_on_exit_func(func_args..., machine);
 			}
 		}
 	}
@@ -381,7 +379,7 @@ struct fsm<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 	// Processes delay_trigger if that was called.
 	FuncRet update(FuncArgs... func_args) {
 		while (_has_delayed_trigger) {
-			std::invoke(_delayed_trigger_func, func_args..., *this);
+			_delayed_trigger_func(func_args..., *this);
 		}
 
 		maybe_init(func_args...);
