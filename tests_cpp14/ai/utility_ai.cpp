@@ -6,6 +6,43 @@
 namespace {
 // TODO : Needs way more tests. Needs an answer for negative predicates (do they
 // invalidate the function or we average as usual).
+TEST(utility_ai, basics) {
+	bool test_passed = false;
+
+	enum class ufunc {
+		pass,
+		fail,
+		count, // count is mandatory
+	};
+
+	fea::utility_ai<ufunc, void(), float()> ai;
+	ai.create_function<ufunc::pass>(
+			[&]() { test_passed = true; }, []() { return 1.f; });
+
+	ai.add_predicate<ufunc::pass>([]() { return 1.f; });
+	ai.add_predicates<ufunc::pass>([]() { return 1.f; }, []() { return 1.f; },
+			[]() { return 1.f; }, []() { return 1.f; });
+
+	// Should throw or assert, missing 1 utility function.
+#if FEA_DEBUG_BUILD
+	EXPECT_DEATH(ai.validate(), "");
+	EXPECT_DEATH(ai.trigger(), "");
+	EXPECT_DEATH(ai.trigger_mt(), "");
+#else
+	EXPECT_THROW(ai.validate(), std::runtime_error);
+	EXPECT_THROW(ai.trigger(), std::runtime_error);
+	EXPECT_THROW(ai.trigger_mt(), std::runtime_error);
+#endif
+
+	ai.create_function<ufunc::fail>(
+			[&]() { test_passed = false; }, []() { return 0.f; });
+
+	ai.trigger();
+	EXPECT_TRUE(test_passed);
+
+	ai.trigger_mt();
+	EXPECT_TRUE(test_passed);
+}
 
 struct cat {
 	cat(const char* name_, float sleepy_head_)
@@ -15,9 +52,11 @@ struct cat {
 		// Initialize utility_ai.
 		// Creates the 2 utility functions with 1 predicate and an action each.
 		// Uses member functions because pretty.
-		ai.create_function<utility_func::sleep>(
-				&cat::wants_sleep, &cat::do_sleep);
-		ai.create_function<utility_func::idle>(&cat::wants_idle, &cat::do_idle);
+		ai.create_function<util_func::sleep>(
+				&cat::do_sleep, &cat::wants_sleep, &cat::wants_sleep /*etc*/);
+		ai.add_predicate<util_func::sleep>(&cat::wants_sleep);
+
+		ai.create_function<util_func::idle>(&cat::do_idle, &cat::wants_idle);
 	}
 
 	void update(fea::dseconds dt) {
@@ -79,13 +118,13 @@ struct cat {
 	size_t id = cat_id_counter++;
 
 	// Utility AI
-	enum class utility_func {
+	enum class util_func {
 		sleep,
 		idle,
 		count,
 	};
 
-	fea::utility_ai<utility_func, float(cat*), void(cat*)> ai;
+	fea::utility_ai<util_func, void(cat*), float(cat*)> ai;
 };
 
 size_t cat::cat_id_counter = 0;

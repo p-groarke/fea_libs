@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "fea/defensive/defensive.hpp"
+#include "fea/meta/static_for.hpp"
 #include "fea/utils/platform.hpp"
 
 #include <algorithm>
@@ -52,43 +52,63 @@ namespace fea {
 template <class, class, class>
 struct utility_ai;
 
-template <class FunctionEnum, class PredReturn, class... PredArgs,
-		class ActionReturn, class... ActionArgs>
-struct utility_ai<FunctionEnum, PredReturn(PredArgs...),
-		ActionReturn(ActionArgs...)> {
-	using predicate_t = std::function<PredReturn(ActionArgs...)>;
+template <class FunctionEnum, class ActionReturn, class... ActionArgs,
+		class PredReturn, class... PredArgs>
+struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
+		PredReturn(PredArgs...)> {
 	using action_t = std::function<ActionReturn(ActionArgs...)>;
+	using predicate_t = std::function<PredReturn(ActionArgs...)>;
 
 	utility_ai() = default;
+	utility_ai(const utility_ai&) = default;
+	utility_ai(utility_ai&&) = default;
+	utility_ai& operator=(const utility_ai&) = default;
+	utility_ai& operator=(utility_ai&&) = default;
 
 	// Create the utility function F.
 	// You must provide a predicate and an action. The signatures must match the
 	// created struct.
 	// Remember predicates always return float.
-	template <FunctionEnum F, class PredFunc, class ActionFunc>
-	void create_function(PredFunc&& predicate_func, ActionFunc&& action_func) {
+	template <FunctionEnum F, class ActionFunc, class... PredFuncs>
+	void create_function(
+			ActionFunc&& action_func, PredFuncs&&... predicate_funcs) {
+		static_assert(sizeof...(PredFuncs) != 0,
+				"fea::utility_ai : must provide at least 1 predicate for "
+				"utility function");
+
 		std::get<size_t(F)>(_utility_functions)
-				= { F, { std::forward<PredFunc>(predicate_func) },
+				= { F, { std::forward<PredFuncs>(predicate_funcs)... },
 					  std::forward<ActionFunc>(action_func) };
 	}
 
-	// Add a predicate to an existing utility function.
+	// Add multiple predicates to an existing utility function.
 	// You must have created the function before calling this.
-	template <FunctionEnum F, class PredFunc>
-	void add_predicate(PredFunc&& predicate_function) {
+	template <FunctionEnum F, class... PredFuncs>
+	void add_predicates(PredFuncs&&... predicate_functions) {
 		utility_function& u_func = std::get<size_t(F)>(_utility_functions);
 		assert(u_func.id == F);
 
 #if !defined(FEA_NOTHROW)
 		if (u_func.id != F) {
 			throw std::invalid_argument{ std::string{ __FUNCTION__ }
-				+ " : Adding predicate to non-initialized utility function. "
-				  "Remember to call create_function before adding extra "
+				+ " : Adding predicate to non-initialized utility function."
+				  " Remember to call create_function before adding extra "
 				  "predicates." };
 		}
 #endif
 
-		u_func.predicates.push_back(std::forward<PredFunc>(predicate_function));
+		fold(
+				[&, this](auto&& f) {
+					u_func.predicates.push_back(std::forward<decltype(f)>(f));
+				},
+				std::forward<PredFuncs>(predicate_functions)...);
+	}
+
+	// Add a predicate to an existing utility function.
+	// You must have created the function before calling this.
+	template <FunctionEnum F, class PredFunc>
+	void add_predicate(PredFunc&& predicate_function) {
+		add_predicates<F>(std::forward<PredFunc>(predicate_function));
 	}
 
 	// The first time execute is called, a somewhat heavy verification step is
@@ -160,7 +180,10 @@ struct utility_ai<FunctionEnum, PredReturn(PredArgs...),
 	// The action is executed on the caller thread.
 	ActionReturn trigger_mt(
 			PredArgs... predicate_args, ActionArgs... action_args) {
+#if defined(FEA_NOTHROW) && FEA_RELEASE_BUILD
+#else
 		validate();
+#endif
 
 		std::array<float, size_t(FunctionEnum::count)> scores;
 		tbb::parallel_for(
