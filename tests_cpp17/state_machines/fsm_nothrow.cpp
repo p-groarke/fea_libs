@@ -1,5 +1,6 @@
-﻿#define FEA_FSM_NOTHROW
+﻿#define FEA_NOTHROW
 #include <fea/state_machines/fsm.hpp>
+#include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 
 
@@ -103,7 +104,7 @@ TEST(fsm_nothrow, example) {
 	EXPECT_EQ(mtest_data.num_onexitto_calls, 0u);
 
 	// Currently doesn't handle walk to jump transition.
-#if !defined(NDEBUG)
+#if FEA_DEBUG
 	EXPECT_DEATH(machine.trigger<transition::do_jump>(mtest_data), "");
 #endif
 

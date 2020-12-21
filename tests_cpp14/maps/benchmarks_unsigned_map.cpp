@@ -1,10 +1,12 @@
-﻿#if defined(NDEBUG) && defined(FEA_BENCHMARKS)
+﻿#include <fea/utils/platform.hpp>
+
+#if defined(FEA_RELEASE) && defined(FEA_BENCHMARKS)
 
 #include <algorithm>
 #include <array>
 #include <cstdio>
-#include <fea/unsigned_map/unsigned_map.hpp>
 #include <fea/benchmark/benchmark.hpp>
+#include <fea/unsigned_map/unsigned_map.hpp>
 #include <gtest/gtest.h>
 #include <map>
 #include <random>
@@ -12,7 +14,7 @@
 #include <unordered_map>
 
 namespace {
-#if defined(NDEBUG)
+#if FEA_RELEASE
 constexpr size_t num_keys = 5'000'000;
 #else
 constexpr size_t num_keys = 100'000;

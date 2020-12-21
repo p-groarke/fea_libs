@@ -148,7 +148,7 @@ struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
 	ActionReturn trigger(
 			PredArgs... predicate_args, ActionArgs... action_args) {
 
-#if defined(FEA_NOTHROW) && FEA_RELEASE_BUILD
+#if defined(FEA_NOTHROW) && FEA_RELEASE
 #else
 		validate();
 #endif
@@ -180,7 +180,7 @@ struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
 	// The action is executed on the caller thread.
 	ActionReturn trigger_mt(
 			PredArgs... predicate_args, ActionArgs... action_args) {
-#if defined(FEA_NOTHROW) && FEA_RELEASE_BUILD
+#if defined(FEA_NOTHROW) && FEA_RELEASE
 #else
 		validate();
 #endif

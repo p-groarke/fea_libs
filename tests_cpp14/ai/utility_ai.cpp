@@ -15,16 +15,23 @@ TEST(utility_ai, basics) {
 		count, // count is mandatory
 	};
 
+	// Create a utility ai with :
+	// - utility functions ufunc
+	// - action signature void()
+	// - predicate signature float()
 	fea::utility_ai<ufunc, void(), float()> ai;
+
+	// Create the function.
 	ai.create_function<ufunc::pass>(
 			[&]() { test_passed = true; }, []() { return 1.f; });
 
+	// Add predicates.
 	ai.add_predicate<ufunc::pass>([]() { return 1.f; });
 	ai.add_predicates<ufunc::pass>([]() { return 1.f; }, []() { return 1.f; },
 			[]() { return 1.f; }, []() { return 1.f; });
 
 	// Should throw or assert, missing 1 utility function.
-#if FEA_DEBUG_BUILD
+#if FEA_DEBUG
 	EXPECT_DEATH(ai.validate(), "");
 	EXPECT_DEATH(ai.trigger(), "");
 	EXPECT_DEATH(ai.trigger_mt(), "");

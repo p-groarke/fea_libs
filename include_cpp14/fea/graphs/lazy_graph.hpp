@@ -813,7 +813,7 @@ struct lazy_graph {
 
 		std::reverse(eval_graph.begin(), eval_graph.end());
 
-#if !defined(NDEBUG)
+#if FEA_DEBUG
 		// Make sure there are no duplicate nodes (aka, duplicate messages).
 		std::vector<Id> dup = eval_graph;
 		std::sort(dup.begin(), dup.end());

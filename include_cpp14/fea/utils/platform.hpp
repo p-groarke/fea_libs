@@ -103,15 +103,15 @@ FEA_INLINE_VAR constexpr bool nothrow_build = false;
 
 // NDEBUG is often double negative, offer alternatives.
 #if defined(NDEBUG)
-#undef FEA_RELEASE_BUILD
-#define FEA_RELEASE_BUILD 1
+#undef FEA_RELEASE
+#define FEA_RELEASE 1
 
 FEA_INLINE_VAR constexpr bool release_build = true;
 FEA_INLINE_VAR constexpr bool debug_build = false;
 
 #else
-#undef FEA_DEBUG_BUILD
-#define FEA_DEBUG_BUILD 1
+#undef FEA_DEBUG
+#define FEA_DEBUG 1
 
 FEA_INLINE_VAR constexpr bool release_build = false;
 FEA_INLINE_VAR constexpr bool debug_build = true;

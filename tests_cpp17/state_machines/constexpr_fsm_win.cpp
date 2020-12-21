@@ -1,4 +1,6 @@
-﻿#if defined(_MSC_VER) && (_MSC_VER >= 1920 /* VS 2019 */)
+﻿#include <fea/utils/platform.hpp>
+
+#if defined(FEA_WINDOWS) && (_MSC_VER >= 1920 /* VS 2019 */)
 // Demo of VS2019 hack.
 // No need for macros since it supports static constexpr variables in functions.
 
@@ -151,7 +153,7 @@ TEST(constexpr_fsm, example_windows) {
 
 
 TEST(constexpr_fsm, compiler_letter_windows) {
-#if defined(NDEBUG)
+#if FEA_RELEASE
 	static constexpr bool debug_build = false;
 #else
 	static constexpr bool debug_build = true;

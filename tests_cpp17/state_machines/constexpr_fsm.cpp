@@ -1,5 +1,6 @@
 ﻿#include <cstdio>
 #include <fea/state_machines/constexpr_fsm.hpp>
+#include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 
 namespace fea {
@@ -139,7 +140,7 @@ TEST(constexpr_fsm, example) {
 
 
 TEST(constexpr_fsm, compiler_letter) {
-#if defined(NDEBUG)
+#if FEA_RELEASE
 	static constexpr bool debug_build = false;
 #else
 	static constexpr bool debug_build = true;
