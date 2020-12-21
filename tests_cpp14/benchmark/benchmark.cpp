@@ -9,6 +9,8 @@ using namespace std::chrono_literals;
 namespace {
 
 TEST(fea_benchmark, basics) {
+	// TODO : This tests nothing, rewrite.
+
 	fea::bench::suite suite;
 	suite.title("suite test");
 	suite.benchmark("test1 blee", []() { std::this_thread::sleep_for(0.1s); });

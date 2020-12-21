@@ -60,7 +60,8 @@ function(set_compile_options REQUIRED_ARG EXPOSURE)
 	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
 		# using Intel C++
 	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-		target_compile_definitions(${REQUIRED_ARG} ${EXPOSURE} NOMINMAX UNICODE _UNICODE)
+		target_compile_definitions(${REQUIRED_ARG} ${EXPOSURE} NOMINMAX UNICODE _UNICODE
+			_SILENCE_CXX17_UNCAUGHT_EXCEPTION_DEPRECATION_WARNING)
 		target_compile_options(${REQUIRED_ARG} ${EXPOSURE} /Zc:__cplusplus /Zc:alignedNew
 			/permissive- /W4 /WX /utf-8
 		)
@@ -85,6 +86,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # External dependencies.
 find_package(TBB CONFIG REQUIRED)
+find_package(date CONFIG REQUIRED)
 
 
 # Main Project
@@ -92,7 +94,7 @@ file(GLOB_RECURSE HEADER_FILES_CPP14 "include_cpp14/${PROJECT_NAME}/*.hpp")
 file(GLOB_RECURSE HEADER_FILES_CPP17 "include_cpp17/${PROJECT_NAME}/*.hpp")
 add_library(${PROJECT_NAME} INTERFACE)
 set_compile_options(${PROJECT_NAME} INTERFACE)
-target_link_libraries(${PROJECT_NAME} INTERFACE TBB::TBB)
+target_link_libraries(${PROJECT_NAME} INTERFACE TBB::TBB date::date)
 
 # To see files in IDE
 target_sources(${PROJECT_NAME} INTERFACE

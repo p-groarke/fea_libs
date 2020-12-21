@@ -35,7 +35,7 @@
 #include "fea/utils/bitmask.hpp"
 
 namespace fea {
-#if __cplusplus == 202002L
+#if __cplusplus >= 202002L
 #undef FEA_CPP20
 #undef FEA_CPP17
 #undef FEA_CPP14
@@ -46,7 +46,7 @@ namespace fea {
 #define FEA_CPP14 1
 #define FEA_CPP11 1
 #define FEA_CPP98 1
-#elif __cplusplus == 201703L
+#elif __cplusplus >= 201703L
 #undef FEA_CPP17
 #undef FEA_CPP14
 #undef FEA_CPP11
@@ -55,14 +55,14 @@ namespace fea {
 #define FEA_CPP14 1
 #define FEA_CPP11 1
 #define FEA_CPP98 1
-#elif __cplusplus == 201402L
+#elif __cplusplus >= 201402L
 #undef FEA_CPP14
 #undef FEA_CPP11
 #undef FEA_CPP98
 #define FEA_CPP14 1
 #define FEA_CPP11 1
 #define FEA_CPP98 1
-#elif __cplusplus == 201103L
+#elif __cplusplus >= 201103L
 #undef FEA_CPP11
 #undef FEA_CPP98
 #define FEA_CPP11 1
@@ -78,13 +78,16 @@ namespace fea {
 #define FEA_RELEASE_BUILD 1
 
 #if FEA_CPP17
+inline constexpr bool release_build = true;
 inline constexpr bool debug_build = false;
 #endif
+
 #else
 #undef FEA_DEBUG_BUILD
 #define FEA_DEBUG_BUILD 1
 
 #if FEA_CPP17
+inline constexpr bool release_build = false;
 inline constexpr bool debug_build = true;
 #endif
 #endif
@@ -107,9 +110,11 @@ enum class platform_group_t : unsigned {
 	unixx = 0b0010,
 	count = 0b0000,
 };
-FEA_ENABLE_BITMASK_OPERATORS(platform_group_t);
+FEA_ENABLE_BITMASK_OPERATORS(platform_group_t)
+} // namespace fea
+FEA_ENABLE_IS_BITMASK(platform_group_t)
 
-
+namespace fea {
 #if defined(_AIX)
 #undef FEA_AIX
 #define FEA_AIX 1
@@ -119,7 +124,7 @@ inline constexpr platform_t platform = platform_t::aix;
 #endif
 
 #elif defined(__unix__)
-}
+} // namespace fea
 #include <sys/param.h>
 namespace fea {
 
@@ -149,7 +154,7 @@ inline constexpr platform_t platform = platform_t::linuxx;
 #endif
 
 #elif defined(__APPLE__) && defined(__MACH__)
-}
+} // namespace fea
 #include <TargetConditionals.h>
 namespace fea {
 
@@ -196,7 +201,7 @@ inline constexpr platform_t platform = platform_t::count;
 		&& (defined(__unix__) || defined(__unix) \
 				|| (defined(__APPLE__) && defined(__MACH__)) \
 				|| defined(__CYGWIN__))
-}
+} // namespace fea
 #include <unistd.h>
 namespace fea {
 

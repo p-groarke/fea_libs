@@ -1,12 +1,14 @@
 [requires]
-gtest/1.10.0@_/_
+gtest/1.10.0
 tbb/2019_u9
+date/3.0.0
 
 [generators]
 cmake_find_package_multi
 
 [options]
 gtest:build_gmock=False
+date:use_system_tz_db=True
 
 [imports]
 bin, *.pdb -> ./bin

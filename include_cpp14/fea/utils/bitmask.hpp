@@ -32,89 +32,104 @@
  **/
 
 #pragma once
+#include <cstddef>
 #include <type_traits>
 
-#define FEA_ENABLE_BITMASK_OPERATORS(x) \
-	template <> \
-	struct has_bitmask_operators<x> : std::true_type { \
-		static_assert( \
-				std::is_enum<x>::value && !std::is_convertible<x, int>::value, \
-				"template parameter is not an enum class type"); \
-	}
+/*
+Helper to add bitmask operations to an enum class.
+
+This allows you to work with type-safe bitmasks without having to cast
+constantly.
+
+https://wiggling-bits.net/using-enum-classes-as-type-safe-bitmasks/
+
+Doesn't use the enable_if version because compile times + keeping it simple.
+
+If you want to use is_bitmask type-trait, you must enable it in a global
+namespace using FEA_ENABLE_IS_BITMASK.
+*/
 
 namespace fea {
 template <class T>
-struct has_bitmask_operators : std::false_type {};
+struct is_bitmask : std::false_type {};
 
-#if __cplusplus >= 201703L
+#if FEA_CPP17
 template <class T>
-inline constexpr bool has_bitmask_operators_v = has_bitmask_operators<T>::value;
+inline constexpr bool is_bitmask_v = is_bitmask<T>::value;
+#else
+template <class T>
+static constexpr bool is_bitmask_v = is_bitmask<T>::value;
 #endif
-
-
-template <class T>
-inline constexpr typename std::enable_if_t<has_bitmask_operators<T>::value, T>
-operator|(T lhs, T rhs) {
-	using underlying = typename std::underlying_type_t<T>;
-	return static_cast<T>(
-			static_cast<underlying>(lhs) | static_cast<underlying>(rhs));
-}
-
-template <class T>
-inline constexpr typename std::enable_if_t<has_bitmask_operators<T>::value, T>
-operator&(T lhs, T rhs) {
-	using underlying = typename std::underlying_type_t<T>;
-	return static_cast<T>(
-			static_cast<underlying>(lhs) & static_cast<underlying>(rhs));
-}
-
-template <class T>
-inline constexpr typename std::enable_if_t<has_bitmask_operators<T>::value, T>
-operator^(T lhs, T rhs) {
-	using underlying = typename std::underlying_type_t<T>;
-	return static_cast<T>(
-			static_cast<underlying>(lhs) ^ static_cast<underlying>(rhs));
-}
-
-template <class T>
-inline constexpr typename std::enable_if_t<has_bitmask_operators<T>::value, T>
-operator~(T rhs) {
-	using underlying = typename std::underlying_type_t<T>;
-	return static_cast<T>(~static_cast<underlying>(rhs));
-}
-
-template <class T>
-inline constexpr typename std::enable_if_t<has_bitmask_operators<T>::value, T&>
-operator|=(T& lhs, T rhs) {
-	using underlying = typename std::underlying_type_t<T>;
-	lhs = static_cast<T>(
-			static_cast<underlying>(lhs) | static_cast<underlying>(rhs));
-	return lhs;
-}
-
-template <class T>
-inline constexpr typename std::enable_if_t<has_bitmask_operators<T>::value, T&>
-operator&=(T& lhs, T rhs) {
-	using underlying = typename std::underlying_type_t<T>;
-	lhs = static_cast<T>(
-			static_cast<underlying>(lhs) & static_cast<underlying>(rhs));
-	return lhs;
-}
-
-template <class T>
-inline constexpr typename std::enable_if_t<has_bitmask_operators<T>::value, T&>
-operator^=(T& lhs, T rhs) {
-	using underlying = typename std::underlying_type_t<T>;
-	lhs = static_cast<T>(
-			static_cast<underlying>(lhs) ^ static_cast<underlying>(rhs));
-	return lhs;
-}
-
-/* Helper */
-template <class T>
-inline constexpr typename std::enable_if_t<has_bitmask_operators<T>::value,
-		std::underlying_type_t<T>>
-bitmask_cast(T e) {
-	return static_cast<std::underlying_type_t<T>>(e);
-}
 } // namespace fea
+
+// Unfortunately, must be defined seperately because this must be in global
+// namespace.
+#define FEA_ENABLE_IS_BITMASK(e) \
+	namespace fea { \
+	template <> \
+	struct is_bitmask<e> : std::true_type {}; \
+	}
+
+
+// Implements arithmetic bit operations on enum class.
+// Keeps your code type-safe.
+#define FEA_ENABLE_BITMASK_OPERATORS(e) \
+	inline constexpr e operator|(e lhs, e rhs) { \
+		using underlying_t = typename std::underlying_type<e>::type; \
+		return e(underlying_t(lhs) | underlying_t(rhs)); \
+	} \
+\
+	inline constexpr e operator&(e lhs, e rhs) { \
+		using underlying_t = typename std::underlying_type<e>::type; \
+		return e(underlying_t(lhs) & underlying_t(rhs)); \
+	} \
+\
+	inline constexpr e operator^(e lhs, e rhs) { \
+		using underlying_t = typename std::underlying_type<e>::type; \
+		return e(underlying_t(lhs) ^ underlying_t(rhs)); \
+	} \
+\
+	inline constexpr e operator~(e rhs) { \
+		using underlying_t = typename std::underlying_type<e>::type; \
+		return e(~underlying_t(rhs)); \
+	} \
+\
+	inline constexpr e operator<<(e lhs, size_t rhs) { \
+		using underlying_t = typename std::underlying_type<e>::type; \
+		return e(underlying_t(lhs) << rhs); \
+	} \
+\
+	inline constexpr e operator>>(e lhs, size_t rhs) { \
+		using underlying_t = typename std::underlying_type<e>::type; \
+		return e(underlying_t(lhs) >> rhs); \
+	} \
+\
+	inline constexpr e& operator|=(e& lhs, e rhs) { \
+		using underlying_t = typename std::underlying_type<e>::type; \
+		lhs = e(underlying_t(lhs) | underlying_t(rhs)); \
+		return lhs; \
+	} \
+\
+	inline constexpr e& operator&=(e& lhs, e rhs) { \
+		using underlying_t = typename std::underlying_type<e>::type; \
+		lhs = e(underlying_t(lhs) & underlying_t(rhs)); \
+		return lhs; \
+	} \
+\
+	inline constexpr e& operator^=(e& lhs, e rhs) { \
+		using underlying_t = typename std::underlying_type<e>::type; \
+		lhs = e(underlying_t(lhs) ^ underlying_t(rhs)); \
+		return lhs; \
+	} \
+\
+	inline constexpr e& operator<<=(e& lhs, size_t rhs) { \
+		using underlying_t = typename std::underlying_type<e>::type; \
+		lhs = e(underlying_t(lhs) << rhs); \
+		return lhs; \
+	} \
+\
+	inline constexpr e& operator>>=(e& lhs, size_t rhs) { \
+		using underlying_t = typename std::underlying_type<e>::type; \
+		lhs = e(underlying_t(lhs) >> rhs); \
+		return lhs; \
+	}

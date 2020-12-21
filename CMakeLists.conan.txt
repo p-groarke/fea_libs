@@ -1,5 +1,18 @@
 cmake_minimum_required (VERSION 3.10)
 project(conan-setup NONE)
 
-execute_process(COMMAND conan install ${CMAKE_CURRENT_SOURCE_DIR} --build missing -s build_type=Debug)
-execute_process(COMMAND conan install ${CMAKE_CURRENT_SOURCE_DIR} --build missing -s build_type=Release)
+# message("sizeof_void : ${CMAKE_SIZEOF_VOID_P }\n")
+# message("host platform : ${CMAKE_HOST_SYSTEM_PROCESSOR}")
+# message("target platform : ${CMAKE_GENERATOR_PLATFORM}\n")
+
+# Cross-compiling to 32bits on Windows.
+if (CMAKE_HOST_SYSTEM_PROCESSOR MATCHES AMD64 AND CMAKE_GENERATOR_PLATFORM MATCHES Win32)
+	message("Cross-compiling to 32bits.\n")
+	set(CONAN_ARCH "-s arch=x86")
+	separate_arguments(CONAN_ARCH UNIX_COMMAND "${CONAN_ARCH}")
+else()
+	set(CONAN_ARCH)
+endif()
+
+execute_process(COMMAND conan install ${CMAKE_CURRENT_SOURCE_DIR} --build missing -s build_type=Debug ${CONAN_ARCH})
+execute_process(COMMAND conan install ${CMAKE_CURRENT_SOURCE_DIR} --build missing -s build_type=Release ${CONAN_ARCH})
