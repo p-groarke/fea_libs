@@ -49,21 +49,11 @@ auto make_tuple_from_count(std::index_sequence<Is...>) {
 }
 } // namespace detail
 
-#if FEA_WINDOWS
-// VS2015 complains about removing this unused function.
-#pragma warning(push)
-#pragma warning(disable : 4505)
-#endif
-
 // Create a tuple using type T and count N.
 template <class T, size_t N>
 auto make_tuple_from_count() {
 	return detail::make_tuple_from_count<T>(std::make_index_sequence<N>{});
 }
-
-#if FEA_WINDOWS
-#pragma warning(pop)
-#endif
 
 
 // Get the index of type T in Tuple.
@@ -75,20 +65,21 @@ struct tuple_idx {
 
 template <class T, class... Types>
 struct tuple_idx<T, std::tuple<T, Types...>> {
+	// Ends recursion, returns 0 for index addition.
 	static constexpr size_t value = 0;
 };
 
 template <class T, class U, class... Types>
 struct tuple_idx<T, std::tuple<U, Types...>> {
+	// Recursion ends once T is found with 1 + 0 (see previous
+	// specicialization).
 	static constexpr size_t value
 			= 1 + tuple_idx<T, std::tuple<Types...>>::value;
 };
 
-#if FEA_CPP17
 // Get the index of type T in Tuple.
 template <class T, class Tuple>
-inline constexpr size_t tuple_idx_v = tuple_idx<T, Tuple>::value;
-#endif
+FEA_INLINE_VAR constexpr size_t tuple_idx_v = tuple_idx<T, Tuple>::value;
 
 
 // Does Tuple contain type T?
@@ -105,17 +96,15 @@ struct tuple_contains<T, std::tuple<U, Ts...>>
 template <class T, class... Ts>
 struct tuple_contains<T, std::tuple<T, Ts...>> : std::true_type {};
 
-#if FEA_CPP17
 // Does Tuple contain type T?
 template <class T, class Tuple>
-inline constexpr bool tuple_contains_v = tuple_contains<T, Tuple>::value;
-#endif
+FEA_INLINE_VAR constexpr bool tuple_contains_v
+		= tuple_contains<T, Tuple>::value;
 
 
 namespace detail {
-// Can't be constexpr for VS2015.
 template <class Func, class Tuple, size_t... I>
-void tuple_foreach(Func func, Tuple& tup, std::index_sequence<I...>) {
+constexpr void tuple_foreach(Func func, Tuple& tup, std::index_sequence<I...>) {
 #if FEA_CPP17
 	// TODO : test it.
 	(func(std::get<I>(tup)), ...);
@@ -130,8 +119,30 @@ void tuple_foreach(Func func, Tuple& tup, std::index_sequence<I...>) {
 // Your lambda will be called with each tuple's elements.
 // Provid lambda which accepts auto& or const auto&.
 template <class Func, class Tuple>
-void tuple_foreach(Func func, Tuple& tup) {
+constexpr void tuple_foreach(Func func, Tuple& tup) {
 	detail::tuple_foreach(func, tup,
 			std::make_index_sequence<std::tuple_size<Tuple>::value>{});
 }
+
+
+// C++ < 17 std::apply
+#if FEA_CPP17
+using std::apply;
+#else
+namespace detail {
+template <class F, class Tuple, size_t... Idx>
+constexpr decltype(auto) apply_impl(
+		F&& f, Tuple&& t, std::index_sequence<Idx...>) {
+	return std::forward<F>(f)(std::get<Idx>(std::forward<Tuple>(t))...);
+}
+} // namespace detail
+
+template <class F, class Tuple>
+constexpr decltype(auto) apply(F&& f, Tuple&& t) {
+	return detail::apply_impl(std::forward<F>(f), std::forward<Tuple>(t),
+			std::make_index_sequence<std::tuple_size<
+					typename std::remove_reference<Tuple>::type>::value>{});
+}
+#endif
+
 } // namespace fea

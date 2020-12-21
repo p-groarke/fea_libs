@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
-#include <fea/utils/platform.hpp>
+#include "fea/utils/platform.hpp"
 
 #if FEA_POSIX
 #include <cpuid.h>
@@ -47,9 +47,6 @@
 #include <bitset>
 #include <cstdint>
 #include <string>
-
-// To ignore MSVC regions on other OSes.
-#define FEA_REGION(...)
 
 // References :
 // https://en.wikipedia.org/wiki/CPUID
@@ -1555,6 +1552,8 @@ private:
 inline const cpu_info_t cpu_info;
 #else
 // You need to define the structure in 1 cpp file.
+// We don't use a static var here since cpu_info is heavy and that could really
+// bloat your executable.
 extern const cpu_info_t cpu_info;
 #endif
 
