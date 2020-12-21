@@ -6,6 +6,7 @@
 #include <array>
 #include <cassert>
 #include <functional>
+#include <tbb/parallel_for.h>
 #include <vector>
 
 #if !defined(FEA_NOTHROW)
@@ -122,9 +123,15 @@ struct utility_ai<FunctionEnum, PredReturn(PredArgs...),
 		_validated = true;
 	}
 
+	// Evaluates all utility functions, picks the function with the highest
+	// predicate score and executes it.
 	ActionReturn trigger(
 			PredArgs... predicate_args, ActionArgs... action_args) {
+
+#if defined(FEA_NOTHROW) && FEA_RELEASE_BUILD
+#else
 		validate();
+#endif
 
 		// Don't use std::max_element, it would compute score twice for each
 		// utility func.
@@ -143,6 +150,41 @@ struct utility_ai<FunctionEnum, PredReturn(PredArgs...),
 			}
 		}
 
+		// Something went horribly wrong.
+		assert(winner_idx != (std::numeric_limits<size_t>::max)());
+		return _utility_functions[winner_idx].action(action_args...);
+	}
+
+	// Same as trigger, but evaluates scores in multiple threads.
+	// Your predicates must be thread safe.
+	// The action is executed on the caller thread.
+	ActionReturn trigger_mt(
+			PredArgs... predicate_args, ActionArgs... action_args) {
+		validate();
+
+		std::array<float, size_t(FunctionEnum::count)> scores;
+		tbb::parallel_for(
+				tbb::blocked_range<size_t>{ 0, size_t(FunctionEnum::count) },
+				[&, this](const tbb::blocked_range<size_t>& range) {
+					for (size_t i = range.begin(); i < range.end(); ++i) {
+						scores[i] = evaluate_score(i, predicate_args...);
+					}
+				});
+
+		size_t winner_idx = (std::numeric_limits<size_t>::max)();
+		float max_score = (std::numeric_limits<float>::lowest)();
+
+		// TODO : What happens when predicates return negative,
+		// should guarantee skip?
+		for (size_t i = 0; i < size_t(FunctionEnum::count); ++i) {
+			if (scores[i] > max_score) {
+				winner_idx = i;
+				max_score = scores[i];
+			}
+		}
+
+		// Something went horribly wrong.
+		assert(winner_idx != (std::numeric_limits<size_t>::max)());
 		return _utility_functions[winner_idx].action(action_args...);
 	}
 

@@ -4,6 +4,9 @@
 #include <gtest/gtest.h>
 
 namespace {
+// TODO : Needs way more tests. Needs an answer for negative predicates (do they
+// invalidate the function or we average as usual).
+
 struct cat {
 	cat(const char* name_, float sleepy_head_)
 			: name(name_)
@@ -23,6 +26,14 @@ struct cat {
 		// print();
 
 		ai.trigger(this, this);
+	}
+
+	void update_mt(fea::dseconds dt) {
+		awake_hours += dt * 60.f * 60.f;
+
+		// print();
+
+		ai.trigger_mt(this, this);
 	}
 
 	void print() const {
@@ -79,36 +90,68 @@ struct cat {
 
 size_t cat::cat_id_counter = 0;
 
-// TODO : Needs way more tests. Needs an answer for negative predicates (do they
-// invalidate the function or we average as usual).
 TEST(utility_ai, meow) {
 	fea::delta_time dtc;
-	std::vector<cat> cats{
-		{ "little_shit", 0.f },
-		{ "fluffy", 0.5f },
-		{ "fatty", 1.f },
-	};
 
-	for (cat& c : cats) {
-		c.update(fea::dseconds{ 9.f });
-	}
-	EXPECT_FALSE(cats[0].sleeping);
-	EXPECT_FALSE(cats[1].sleeping);
-	EXPECT_TRUE(cats[2].sleeping);
+	// single-thread
+	{
+		std::vector<cat> cats{
+			{ "little_shit", 0.f },
+			{ "fluffy", 0.5f },
+			{ "fatty", 1.f },
+		};
 
-	for (cat& c : cats) {
-		c.update(fea::dseconds{ 3.f });
-	}
-	EXPECT_FALSE(cats[0].sleeping);
-	EXPECT_TRUE(cats[1].sleeping);
-	EXPECT_TRUE(cats[2].sleeping);
+		for (cat& c : cats) {
+			c.update(fea::dseconds{ 9.f });
+		}
+		EXPECT_FALSE(cats[0].sleeping);
+		EXPECT_FALSE(cats[1].sleeping);
+		EXPECT_TRUE(cats[2].sleeping);
 
-	for (cat& c : cats) {
-		c.update(fea::dseconds{ 3.f });
+		for (cat& c : cats) {
+			c.update(fea::dseconds{ 3.f });
+		}
+		EXPECT_FALSE(cats[0].sleeping);
+		EXPECT_TRUE(cats[1].sleeping);
+		EXPECT_TRUE(cats[2].sleeping);
+
+		for (cat& c : cats) {
+			c.update(fea::dseconds{ 3.f });
+		}
+		EXPECT_TRUE(cats[0].sleeping);
+		EXPECT_TRUE(cats[1].sleeping);
+		EXPECT_TRUE(cats[2].sleeping);
 	}
-	EXPECT_TRUE(cats[0].sleeping);
-	EXPECT_TRUE(cats[1].sleeping);
-	EXPECT_TRUE(cats[2].sleeping);
+
+	// multi-thread
+	{
+		std::vector<cat> cats{
+			{ "little_shit", 0.f },
+			{ "fluffy", 0.5f },
+			{ "fatty", 1.f },
+		};
+
+		for (cat& c : cats) {
+			c.update_mt(fea::dseconds{ 9.f });
+		}
+		EXPECT_FALSE(cats[0].sleeping);
+		EXPECT_FALSE(cats[1].sleeping);
+		EXPECT_TRUE(cats[2].sleeping);
+
+		for (cat& c : cats) {
+			c.update_mt(fea::dseconds{ 3.f });
+		}
+		EXPECT_FALSE(cats[0].sleeping);
+		EXPECT_TRUE(cats[1].sleeping);
+		EXPECT_TRUE(cats[2].sleeping);
+
+		for (cat& c : cats) {
+			c.update_mt(fea::dseconds{ 3.f });
+		}
+		EXPECT_TRUE(cats[0].sleeping);
+		EXPECT_TRUE(cats[1].sleeping);
+		EXPECT_TRUE(cats[2].sleeping);
+	}
 }
 
 } // namespace
