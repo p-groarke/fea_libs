@@ -35,6 +35,7 @@
 #include "fea/utils/bitmask.hpp"
 
 namespace fea {
+// Nicer way to check for C++ versions.
 #if __cplusplus >= 202002L
 #undef FEA_CPP20
 #undef FEA_CPP17
@@ -73,25 +74,44 @@ namespace fea {
 #endif
 
 
+/**
+ * Helper Defines
+ */
+// C++17 offers inline variables, but they can be replaced by static vars in
+// older versions.
+#if FEA_CPP17
+#undef FEA_INLINE_VAR
+#define FEA_INLINE_VAR inline
+#else
+#undef FEA_INLINE_VAR
+#define FEA_INLINE_VAR static
+#endif
+
+// Allows using MSVC regions without causing errors on other OSes.
+#define FEA_REGION(...)
+
+// NDEBUG is often double negative, offer alternatives.
 #if defined(NDEBUG)
 #undef FEA_RELEASE_BUILD
 #define FEA_RELEASE_BUILD 1
 
-#if FEA_CPP17
-inline constexpr bool release_build = true;
-inline constexpr bool debug_build = false;
-#endif
+FEA_INLINE_VAR constexpr bool release_build = true;
+FEA_INLINE_VAR constexpr bool debug_build = false;
 
 #else
 #undef FEA_DEBUG_BUILD
 #define FEA_DEBUG_BUILD 1
 
-#if FEA_CPP17
-inline constexpr bool release_build = false;
-inline constexpr bool debug_build = true;
-#endif
+FEA_INLINE_VAR constexpr bool release_build = false;
+FEA_INLINE_VAR constexpr bool debug_build = true;
 #endif
 
+
+/**
+ * OS Detection
+ */
+
+// Detect the OS precisely and set both defines and a global constexpr enum.
 
 enum class platform_t : unsigned {
 	aix,
@@ -119,9 +139,7 @@ namespace fea {
 #undef FEA_AIX
 #define FEA_AIX 1
 
-#if FEA_CPP17
-inline constexpr platform_t platform = platform_t::aix;
-#endif
+FEA_INLINE_VAR constexpr platform_t platform = platform_t::aix;
 
 #elif defined(__unix__)
 } // namespace fea
@@ -132,26 +150,20 @@ namespace fea {
 #undef FEA_BSD
 #define FEA_BSD 1
 
-#if FEA_CPP17
-inline constexpr platform_t platform = platform_t::bsd;
-#endif
+FEA_INLINE_VAR constexpr platform_t platform = platform_t::bsd;
 #endif
 
 #elif defined(__hpux)
 #undef FEA_HPUX
 #define FEA_HPUX 1
 
-#if FEA_CPP17
-inline constexpr platform_t platform = platform_t::hpux;
-#endif
+FEA_INLINE_VAR constexpr platform_t platform = platform_t::hpux;
 
 #elif defined(__linux__)
 #undef FEA_LINUX
 #define FEA_LINUX 1
 
-#if FEA_CPP17
-inline constexpr platform_t platform = platform_t::linuxx;
-#endif
+FEA_INLINE_VAR constexpr platform_t platform = platform_t::linuxx;
 
 #elif defined(__APPLE__) && defined(__MACH__)
 } // namespace fea
@@ -162,39 +174,29 @@ namespace fea {
 #undef FEA_IOS
 #define FEA_IOS 1
 
-#if FEA_CPP17
-inline constexpr platform_t platform = platform_t::ios;
-#endif
+FEA_INLINE_VAR constexpr platform_t platform = platform_t::ios;
 
 #elif TARGET_OS_MAC == 1
 #undef FEA_MACOS
 #define FEA_MACOS 1
 
-#if FEA_CPP17
-inline constexpr platform_t platform = platform_t::macos;
-#endif
+FEA_INLINE_VAR constexpr platform_t platform = platform_t::macos;
 #endif
 
 #elif defined(__sun) && defined(__SVR4)
 #undef FEA_SOLARIS
 #define FEA_SOLARIS 1
 
-#if FEA_CPP17
-inline constexpr platform_t platform = platform_t::solaris;
-#endif
+FEA_INLINE_VAR constexpr platform_t platform = platform_t::solaris;
 
 #elif defined(_WIN32)
 #undef FEA_WINDOWS
 #define FEA_WINDOWS 1
 
-#if FEA_CPP17
-inline constexpr platform_t platform = platform_t::windows;
-#endif
+FEA_INLINE_VAR constexpr platform_t platform = platform_t::windows;
 
 #else
-#if FEA_CPP17
-inline constexpr platform_t platform = platform_t::count;
-#endif
+FEA_INLINE_VAR constexpr platform_t platform = platform_t::count;
 #endif
 
 #if !defined(_WIN32) \
@@ -211,24 +213,21 @@ namespace fea {
 #undef FEA_UNIX
 #define FEA_UNIX 1
 
-#if FEA_CPP17
-inline constexpr platform_group_t platform_group
+FEA_INLINE_VAR constexpr platform_group_t platform_group
 		= platform_group_t::posix | platform_group_t::unixx;
-#endif
 
 #else
 #undef FEA_UNIX
 #define FEA_UNIX 1
 
-#if FEA_CPP17
-inline constexpr platform_group_t platform_group = platform_group_t::unixx;
-#endif
+FEA_INLINE_VAR constexpr platform_group_t platform_group
+		= platform_group_t::unixx;
 #endif
 
 #else
-#if FEA_CPP17
-inline constexpr platform_group_t platform_group = platform_group_t::count;
+FEA_INLINE_VAR constexpr platform_group_t platform_group
+		= platform_group_t::count;
 #endif
-#endif
+
 
 } // namespace fea
