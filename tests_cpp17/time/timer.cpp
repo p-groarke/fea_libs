@@ -191,16 +191,38 @@ TEST(timer, three_days) {
 	EXPECT_EQ(days_passed, 3u);
 }
 
+TEST(timer, three_weeks) {
+	using namespace std::chrono;
+	// 1 second == 1 week.
+	fea::timer<void()> timer{ fea::dweeks{ 1 } };
+
+	size_t weeks_passed = 0;
+	timer.events().subscribe<fea::timer_event::weeks>(
+			[&]() { ++weeks_passed; });
+
+	// 1972 is leap year
+	const fea::udays stop_time{ fea::uweeks{ 3 } };
+
+	auto start_time = steady_clock::now();
+	while (timer.elapsed_precise().days() < stop_time) {
+		timer.update();
+	}
+	auto end_time = steady_clock::now();
+
+	auto e = end_time - start_time;
+	seconds elapsed = date::round<seconds>(e);
+	EXPECT_EQ(elapsed.count(), 3);
+
+	EXPECT_EQ(weeks_passed, 3u);
+}
+
 TEST(timer, three_years) {
 	using namespace std::chrono;
 	// 1 second == 12 months.
 	fea::timer<void()> timer{ fea::dmonths{ 12 } };
 
-	size_t weeks_passed = 0;
 	size_t months_passed = 0;
 	size_t years_passed = 0;
-	timer.events().subscribe<fea::timer_event::weeks>(
-			[&]() { ++weeks_passed; });
 	timer.events().subscribe<fea::timer_event::months>(
 			[&]() { ++months_passed; });
 	timer.events().subscribe<fea::timer_event::years>(
@@ -219,7 +241,6 @@ TEST(timer, three_years) {
 	seconds elapsed = date::round<seconds>(e);
 	EXPECT_EQ(elapsed.count(), 3);
 
-	EXPECT_EQ(weeks_passed, 156u);
 	EXPECT_EQ(months_passed, 36u);
 	EXPECT_EQ(years_passed, 3u);
 }
