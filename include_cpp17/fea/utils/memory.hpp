@@ -37,8 +37,8 @@
 namespace fea {
 
 template <class T>
-[[nodiscard]] constexpr std::conditional_t<
-		!std::is_move_constructible_v<T> && std::is_copy_constructible_v<T>,
+[[nodiscard]] constexpr std::conditional_t<!std::is_move_constructible<T>::value
+				&& std::is_copy_constructible<T>::value,
 		const T&, T&&>
 maybe_move(T& _Arg) noexcept {
 	return std::move(_Arg);

@@ -472,9 +472,9 @@ struct lazy_graph {
 	// called on valid nodes.
 	// This call is heavy, so the overhead of std::function is minimized.
 	void clean(Id id,
-			const std::function<void(Id /* node_id */,
-					const std::vector<Id>& /* node_parents */,
-					const std::vector<Id>& /* dirty_parents */)>& func) {
+			/* void(your_node, vector<parent, was_dirty>)*/
+			const std::function<void(
+					Id, const std::vector<std::pair<Id, bool>>&)>& func) {
 		if (_nodes.at(id).is_root()) {
 			return;
 		}
@@ -483,8 +483,7 @@ struct lazy_graph {
 		const std::vector<Id>& graph = evaluation_graph(id);
 
 		// Stored here to reuse memory.
-		std::vector<Id> callback_parents;
-		std::vector<Id> callback_dirty_parents;
+		std::vector<std::pair<Id, bool>> callback_parents;
 
 		// Now that we have the correct evaluation graph, evaluate it.
 		// Call the user funcion with the current node id and provide it's
@@ -497,7 +496,6 @@ struct lazy_graph {
 			node_t& n = _nodes.at(nid);
 
 			callback_parents.clear();
-			callback_dirty_parents.clear();
 
 			// Nodes that don't depend on anything never need to be updated.
 			if (n.is_root()) {
@@ -511,11 +509,13 @@ struct lazy_graph {
 
 			// eh, not great. better way to pass on parents to user funcion?
 			for (std::pair<const Id, DirtyVersion>& parent : parents) {
-				callback_parents.push_back(parent.first);
+				callback_parents.push_back({ parent.first, false });
 
 				DirtyVersion parent_version = _nodes.at(parent.first).version();
 				if (parent.second != parent_version) {
-					callback_dirty_parents.push_back(parent.first);
+					callback_parents.back().second = true;
+
+					// clean my parent tracking version
 					parent.second = parent_version;
 					dirty = true;
 
@@ -530,7 +530,7 @@ struct lazy_graph {
 			// And finally, call the user lambda. Provide it with its id and
 			// parent ids.
 			// todo : pass parent ids
-			func(nid, callback_parents, callback_dirty_parents);
+			func(nid, callback_parents);
 			make_dirty(nid);
 		}
 	}
@@ -542,9 +542,9 @@ struct lazy_graph {
 	// called on valid nodes.
 	// This call is heavy, so the overhead of std::function is minimized.
 	void clean(const std::vector<Id>& ids,
-			const std::function<void(Id /* node_id */,
-					const std::vector<Id>& /* node_parents */,
-					const std::vector<Id>& /* dirty_parents */)>& func) {
+			/* void(your_node, vector<parent, was_dirty>)*/
+			const std::function<void(
+					Id, const std::vector<std::pair<Id, bool>>&)>& func) {
 
 		for (Id id : ids) {
 			clean(id, func);
@@ -560,9 +560,9 @@ struct lazy_graph {
 	// It is important to only read your parents, and only write to yourself
 	// during this evaluation!
 	void clean_mt(Id id,
-			const std::function<void(Id /* node_id */,
-					const std::vector<Id>& /* node_parents */,
-					const std::vector<Id>& /* dirty_parents */)>& func) {
+			/* void(your_node, vector<parent, was_dirty>)*/
+			const std::function<void(
+					Id, const std::vector<std::pair<Id, bool>>&)>& func) {
 
 		if (_nodes.at(id).is_root()) {
 			return;
@@ -611,17 +611,19 @@ struct lazy_graph {
 			bool dirty = false;
 			std::unordered_map<Id, DirtyVersion>& parents = n.parents();
 
-			std::vector<Id> callback_parents;
+			std::vector<std::pair<Id, bool>> callback_parents;
 			callback_parents.reserve(parents.size());
-			std::vector<Id> callback_dirty_parents;
 
 			// eh, not great. better way to pass on parents to user funcion?
 			for (std::pair<const Id, DirtyVersion>& parent : parents) {
-				callback_parents.push_back(parent.first);
+				callback_parents.push_back({ parent.first, false });
 
 				DirtyVersion parent_version = _nodes.at(parent.first).version();
 				if (parent.second != parent_version) {
-					callback_dirty_parents.push_back(parent.first);
+					// set the callback bool to dirty
+					callback_parents.back().second = true;
+
+					// clean the parent
 					parent.second = parent_version;
 					dirty = true;
 
@@ -634,11 +636,9 @@ struct lazy_graph {
 			}
 
 			evaluating.push_back(nid);
-			g.run([p = std::move(callback_parents),
-						  dp = std::move(callback_dirty_parents), nid, func,
-						  this]() {
+			g.run([p = std::move(callback_parents), nid, func, this]() {
 				// And finally, call the user lambda. Provide it with its id.
-				func(nid, p, dp);
+				func(nid, p);
 				make_dirty(nid);
 			});
 		}
@@ -657,9 +657,9 @@ struct lazy_graph {
 	// It is important to only read your parents, and only write to yourself
 	// during this evaluation!
 	void clean_mt(const std::vector<Id>& ids,
-			const std::function<void(Id /* node_id */,
-					const std::vector<Id>& /* node_parents */,
-					const std::vector<Id>& /* dirty_parents */)>& func) {
+			/* void(your_node, vector<parent, was_dirty>)*/
+			const std::function<void(
+					Id, const std::vector<std::pair<Id, bool>>&)>& func) {
 		// Figure out which graphs can run completely in parallel and which
 		// can't.
 		auto ind_data = are_eval_graphs_independent(ids);
@@ -835,7 +835,7 @@ private:
 	// We pass the node on to minimize map lookups.
 	// Your function should return true to stop recursion.
 	template <class Func>
-	bool recurse_down(Id id, Func func) const {
+	bool recurse_down(Id id, Func&& func) const {
 		const node_t& n = _nodes.at(id);
 		if (func(id, n)) {
 			return true;
@@ -851,7 +851,7 @@ private:
 		return false;
 	}
 	template <class Func>
-	bool recurse_down(Id id, Func func) {
+	bool recurse_down(Id id, Func&& func) {
 		node_t& n = _nodes.at(id);
 		if (func(id, n)) {
 			return true;
@@ -868,7 +868,7 @@ private:
 	}
 
 	template <class Func>
-	bool recurse_breadth_down(Id id, Func func) const {
+	bool recurse_breadth_down(Id id, Func&& func) const {
 		// We must gather the children in a container graph.
 		// We will iterate through this as long as there are new children,
 		// or the user function returns true.
@@ -897,7 +897,7 @@ private:
 	// We pass the node on to minimize map lookups.
 	// Your function should return true to stop recursion.
 	template <class Func>
-	bool recurse_up(Id id, Func func) const {
+	bool recurse_up(Id id, Func&& func) const {
 		const node_t& n = _nodes.at(id);
 		if (func(id, n)) {
 			return true;
@@ -914,7 +914,7 @@ private:
 	}
 
 	template <class Func>
-	bool recurse_breadth_up(Id id, Func func) const {
+	bool recurse_breadth_up(Id id, Func&& func) const {
 		// We need to gather a graph to recurse upwards.
 		// This graph *will* contain duplicates, it is up to the user
 		// function to cull them if desired.

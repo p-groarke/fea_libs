@@ -160,6 +160,8 @@ struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
 		float max_score = (std::numeric_limits<float>::lowest)();
 
 		for (size_t i = 0; i < size_t(FunctionEnum::count); ++i) {
+			// predicate_args are not forwarded, as they are used for multiple
+			// predicates.
 			float score = evaluate_score(i, predicate_args...);
 
 			// TODO : What happens when predicates return negative, should
@@ -172,7 +174,8 @@ struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
 
 		// Something went horribly wrong.
 		assert(winner_idx != (std::numeric_limits<size_t>::max)());
-		return _utility_functions[winner_idx].action(action_args...);
+		return _utility_functions[winner_idx].action(
+				std::forward<ActionArgs>(action_args)...);
 	}
 
 	// Same as trigger, but evaluates scores in multiple threads.
@@ -208,7 +211,8 @@ struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
 
 		// Something went horribly wrong.
 		assert(winner_idx != (std::numeric_limits<size_t>::max)());
-		return _utility_functions[winner_idx].action(action_args...);
+		return _utility_functions[winner_idx].action(
+				std::forward<ActionArgs>(action_args)...);
 	}
 
 private:

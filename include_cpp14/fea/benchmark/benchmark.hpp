@@ -137,7 +137,7 @@ struct suite {
 	// It is executed after each call to func.
 	template <class Func, class InBetweenFunc>
 	void benchmark(
-			const char* message, Func func, InBetweenFunc inbetween_func) {
+			const char* message, Func&& func, InBetweenFunc inbetween_func) {
 
 		std::chrono::duration<double> elapsed_time = std::chrono::seconds(0);
 		std::this_thread::sleep_for(_sleep_between);
@@ -160,8 +160,8 @@ struct suite {
 	}
 
 	template <class Func>
-	void benchmark(const char* message, Func func) {
-		benchmark(message, func, []() {});
+	void benchmark(const char* message, Func&& func) {
+		benchmark(message, std::forward<Func>(func), []() {});
 	}
 
 	void print(FILE* stream = stdout) {

@@ -34,6 +34,7 @@
 #pragma once
 #include "fea/utils/unused.hpp"
 
+#include <cstddef>
 #include <type_traits>
 #include <utility>
 
@@ -43,10 +44,9 @@ namespace fea {
 template <class Func, class... Args>
 constexpr void fold(Func&& func, Args&&... args) {
 #if FEA_CPP17
-	(std::forward<Func>(func)(std::forward<Args>(args)), ...);
+	(func(args), ...);
 #else
-	char dummy[] = { (
-			void(std::forward<Func>(func)(std::forward<Args>(args))), '0')... };
+	char dummy[] = { (void(func(args)), '0')... };
 	unused(dummy);
 #endif
 }
@@ -56,11 +56,10 @@ template <class Func, size_t... I>
 constexpr void static_for(Func&& func, std::index_sequence<I...>) {
 #if FEA_CPP17
 	// TODO : test it.
-	return (std::forward<Func>(func)(std::integral_constant<size_t, I>{}), ...);
+	return (func(std::integral_constant<size_t, I>{}), ...);
 #else
-	char dummy[] = { (
-			void(std::forward<Func>(func)(std::integral_constant<size_t, I>{})),
-			'0')... };
+	char dummy[]
+			= { (void(func(std::integral_constant<size_t, I>{})), '0')... };
 	unused(dummy);
 #endif
 }

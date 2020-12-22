@@ -11,11 +11,28 @@ namespace {
 bool contains(const std::vector<unsigned>& vec, unsigned i) {
 	return std::find(vec.begin(), vec.end(), i) != vec.end();
 }
+bool contains(const std::vector<std::pair<unsigned, bool>>& vec, unsigned i) {
+	return std::find_if(vec.begin(), vec.end(), [i](const auto& p) {
+		return p.first == i;
+	}) != vec.end();
+}
 
 size_t get_index(const std::vector<unsigned>& vec, unsigned i) {
 	auto it = std::find(vec.begin(), vec.end(), i);
 	return std::distance(vec.begin(), it);
 }
+size_t get_index(
+		const std::vector<std::pair<unsigned, bool>>& vec, unsigned i) {
+	auto it = std::find_if(vec.begin(), vec.end(),
+			[i](const auto& p) { return p.first == i; });
+	return std::distance(vec.begin(), it);
+}
+
+size_t num_dirty(const std::vector<std::pair<unsigned, bool>>& vec) {
+	return std::count_if(
+			vec.begin(), vec.end(), [](const auto& p) { return p.second; });
+}
+
 
 /**
  * Makes the following graphs :
@@ -70,7 +87,8 @@ void reset_graph(Graph& graph) {
 	graph.add_dependency(20, 17);
 }
 
-void test_parents(unsigned id, const std::vector<unsigned>& parents) {
+void test_parents(
+		unsigned id, const std::vector<std::pair<unsigned, bool>>& parents) {
 	if (id == 1) {
 		EXPECT_EQ(parents.size(), 1u);
 		EXPECT_TRUE(contains(parents, 0u));
@@ -194,13 +212,12 @@ TEST(fea_lazy_graph, threading) {
 
 	std::vector<unsigned> cleaned_ids;
 	std::mutex m;
-	graph.clean_mt(to_clean,
-			[&](unsigned id, const auto& parents, const auto& dirty_parents) {
-				std::lock_guard<std::mutex> g{ m };
-				test_parents(id, parents);
-				EXPECT_EQ(dirty_parents, parents);
-				cleaned_ids.push_back(id);
-			});
+	graph.clean_mt(to_clean, [&](unsigned id, const auto& parents) {
+		std::lock_guard<std::mutex> g{ m };
+		test_parents(id, parents);
+		EXPECT_EQ(num_dirty(parents), parents.size());
+		cleaned_ids.push_back(id);
+	});
 
 	for (unsigned i = 0; i < num_nodes; ++i) {
 		// Roots
@@ -247,20 +264,17 @@ TEST(fea_lazy_graph, threading) {
 	{
 		graph.make_dirty(3);
 		to_clean = { 7 };
-		graph.clean_mt(to_clean,
-				[&](unsigned id, const auto& parents,
-						const auto& dirty_parents) {
-					std::lock_guard<std::mutex> g{ m };
-					test_parents(id, parents);
-					if (id == 7) {
-						EXPECT_EQ(dirty_parents.size(), 1u);
-						EXPECT_NE(dirty_parents, parents);
-						EXPECT_TRUE(contains(dirty_parents, 3));
-					} else {
-						EXPECT_EQ(dirty_parents, parents);
-					}
-					cleaned_ids.push_back(id);
-				});
+		graph.clean_mt(to_clean, [&](unsigned id, const auto& parents) {
+			std::lock_guard<std::mutex> g{ m };
+			test_parents(id, parents);
+			if (id == 7) {
+				EXPECT_EQ(num_dirty(parents), 1u);
+				EXPECT_TRUE(contains(parents, 3));
+			} else {
+				EXPECT_EQ(num_dirty(parents), parents.size());
+			}
+			cleaned_ids.push_back(id);
+		});
 	}
 }
 } // namespace

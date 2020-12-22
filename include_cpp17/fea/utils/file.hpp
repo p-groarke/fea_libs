@@ -77,7 +77,7 @@ size_t file_size(IFStream& ifs) {
 
 
 template <class IFStream, class String, class Func>
-bool basic_read_text_file(const std::filesystem::path& fpath, Func func) {
+bool basic_read_text_file(const std::filesystem::path& fpath, Func&& func) {
 	IFStream ifs(fpath);
 	if (!ifs.is_open()) {
 		fprintf(stderr, "Couldn't open file : %s\n", fpath.string().c_str());
@@ -89,7 +89,7 @@ bool basic_read_text_file(const std::filesystem::path& fpath, Func func) {
 		if (line.size() > 0 && line.back() == '\r') {
 			line.pop_back();
 		}
-		std::invoke(func, std::move(line));
+		func(std::move(line));
 	}
 	return true;
 }
@@ -97,14 +97,16 @@ bool basic_read_text_file(const std::filesystem::path& fpath, Func func) {
 // Calls your function for every line in a text file. Removes linefeeds.
 // Pass in void(std::string&&)
 template <class Func>
-bool read_text_file(const std::filesystem::path& fpath, Func func) {
-	return basic_read_text_file<std::ifstream, std::string>(fpath, func);
+bool read_text_file(const std::filesystem::path& fpath, Func&& func) {
+	return basic_read_text_file<std::ifstream, std::string>(
+			fpath, std::forward<Func>(func));
 }
 // Calls your function for every line in a text file. Removes linefeeds.
 // Pass in void(std::wstring&&)
 template <class Func>
-bool wread_text_file(const std::filesystem::path& fpath, Func func) {
-	return basic_read_text_file<std::wifstream, std::wstring>(fpath, func);
+bool wread_text_file(const std::filesystem::path& fpath, Func&& func) {
+	return basic_read_text_file<std::wifstream, std::wstring>(
+			fpath, std::forward<Func>(func));
 }
 
 
