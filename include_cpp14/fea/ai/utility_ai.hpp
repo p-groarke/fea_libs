@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "fea/functional/function.hpp"
 #include "fea/meta/static_for.hpp"
 #include "fea/utils/platform.hpp"
 
@@ -27,9 +28,10 @@ Behaviors
 QUESTION : When a predicate returns negative, should the action be ignore
 completely, or should it still compute average.
 
-When creating a utility_ai, you must provide your predicate and actions
+When creating a utility_ai, you must provide your action and predicate
 arguments as you would to a std::function. The return type must be float for
-predicates. For example,
+predicates. Specify the action signature first, then the predicate signature.
+For example,
 
 enum class utility_function {
 	eat,
@@ -37,27 +39,34 @@ enum class utility_function {
 	count // count is mandatory
 };
 
-fea::utility_ai<utility_function, float(int), void(int&, double)> ai;
+fea::utility_ai<utility_function, void(int&, double), float(int)> ai;
 
-The predicate signature is : float(int)
 The action signature is : void(int&, double)
+The predicate signature is : float(int)
 
-When evaluating the utility_ai and triggering an action, provide predicate
-arguments first and then the action arguments. For example :
+When evaluating the utility_ai and triggering an action, provide action
+arguments first and then the predicate arguments. For example :
 
-ai.trigger(int, int&, double);
+ai.trigger(int&, double, int);
+
+CaptureLess Mode
+By default, the container stores your actions and predicates in std::function.
+This can be an issue for various reasons. To enable storing your callbacks as
+raw function pointers, use the _cl alias. For example,
+
+fea::utility_ai_cl<utility_function, void(int&, double), float(int)> ai;
 */
 
 namespace fea {
-template <class, class, class>
+template <class, class, class, bool = false>
 struct utility_ai;
 
 template <class FunctionEnum, class ActionReturn, class... ActionArgs,
-		class PredReturn, class... PredArgs>
+		class PredReturn, class... PredArgs, bool CaptureLess>
 struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
-		PredReturn(PredArgs...)> {
-	using action_t = std::function<ActionReturn(ActionArgs...)>;
-	using predicate_t = std::function<PredReturn(ActionArgs...)>;
+		PredReturn(PredArgs...), CaptureLess> {
+	using action_t = fea::function<ActionReturn(ActionArgs...), CaptureLess>;
+	using predicate_t = fea::function<PredReturn(ActionArgs...), CaptureLess>;
 
 	utility_ai() = default;
 	utility_ai(const utility_ai&) = default;
@@ -76,9 +85,10 @@ struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
 				"fea::utility_ai : must provide at least 1 predicate for "
 				"utility function");
 
-		std::get<size_t(F)>(_utility_functions)
-				= { F, { std::forward<PredFuncs>(predicate_funcs)... },
-					  std::forward<ActionFunc>(action_func) };
+		std::get<size_t(F)>(_utility_functions) = { F,
+			std::vector<predicate_t>{
+					std::forward<PredFuncs>(predicate_funcs)... },
+			std::forward<ActionFunc>(action_func) };
 	}
 
 	// Add multiple predicates to an existing utility function.
@@ -146,7 +156,7 @@ struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
 	// Evaluates all utility functions, picks the function with the highest
 	// predicate score and executes it.
 	ActionReturn trigger(
-			PredArgs... predicate_args, ActionArgs... action_args) {
+			ActionArgs... action_args, PredArgs... predicate_args) {
 
 #if defined(FEA_NOTHROW) && FEA_RELEASE
 #else
@@ -182,7 +192,7 @@ struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
 	// Your predicates must be thread safe.
 	// The action is executed on the caller thread.
 	ActionReturn trigger_mt(
-			PredArgs... predicate_args, ActionArgs... action_args) {
+			ActionArgs... action_args, PredArgs... predicate_args) {
 #if defined(FEA_NOTHROW) && FEA_RELEASE
 #else
 		validate();
@@ -226,6 +236,14 @@ private:
 			"function enum, and it must not be equal to 0.");
 
 	struct utility_function {
+		// utility_function() = default;
+		// utility_function(FunctionEnum id_,
+		//		std::vector<predicate_t>&& predicates_, action_t&& action_)
+		//		: id(id_)
+		//		, predicates(std::move(predicates_))
+		//		, action(std::move(action_)) {
+		//}
+
 		FunctionEnum id = FunctionEnum::count;
 		std::vector<predicate_t> predicates{};
 		action_t action{};
@@ -255,4 +273,13 @@ private:
 	// Did we run the validation step?
 	bool _validated = false;
 };
+
+
+// Alias for captureless utility_ai.
+// Captureless versions of classes do not use std::function, they store
+// callbacks as raw function pointers.
+template <class UtilityFunctionEnum, class ActionSignature,
+		class PredicateSignature>
+using utility_ai_cl = utility_ai<UtilityFunctionEnum, ActionSignature,
+		PredicateSignature, true>;
 } // namespace fea

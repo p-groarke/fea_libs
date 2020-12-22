@@ -32,8 +32,10 @@
  **/
 
 #pragma once
+#include "fea/meta/tuple.hpp"
 #include "fea/utils/platform.hpp"
 
+#include <tuple>
 #include <type_traits>
 
 namespace fea {
@@ -97,9 +99,57 @@ FEA_INLINE_VAR constexpr bool any_of_v = any_of<Traits...>::value;
 
 
 namespace detail {
+template <size_t, size_t, class, class...>
+struct idx_splice_impl;
+
+// Found idx.
+template <size_t TargetIdx, class BeforeTup, class T, class... Rest>
+struct idx_splice_impl<TargetIdx, TargetIdx, BeforeTup, T, Rest...> {
+	using before_tuple = BeforeTup;
+	using type = T;
+	using after_tuple = std::tuple<Rest...>;
+};
+
+template <size_t TargetIdx, size_t CurrentIdx, class BeforeTup, class T,
+		class... Rest>
+struct idx_splice_impl<TargetIdx, CurrentIdx, BeforeTup, T, Rest...>
+		: idx_splice_impl<TargetIdx, CurrentIdx + 1,
+				  fea::tuple_type_cat_t<BeforeTup, std::tuple<T>>, Rest...> {};
+
+} // namespace detail
+
+// Splice a parameter pack at index Idx.
+// Finds the type at Idx, and stores the remaining parameters (parameters after
+// splice point) in a tuple type.
+template <size_t Idx, class... Args>
+struct idx_splice : detail::idx_splice_impl<Idx, 0, std::tuple<>, Args...> {
+	static_assert(
+			Idx < sizeof...(Args), "fea::idx_splice : index out-of-range");
+};
+
+// Get the element type at index Idx in parameter pack.
+template <size_t Idx, class... Args>
+using idx_splice_t = typename idx_splice<Idx, Args...>::type;
+
+// Get the elements before Idx in parameter pack, stored as a tuple type.
+template <size_t Idx, class... Args>
+using idx_splice_before_t = typename idx_splice<Idx, Args...>::before_tuple;
+
+// Get the elements after Idx in parameter pack, stored as a tuple type.
+template <size_t Idx, class... Args>
+using idx_splice_after_t = typename idx_splice<Idx, Args...>::after_tuple;
+
+
+// Get the first type in a parameter pack.
+template <class T, class...>
+using first = T;
+
+
+namespace detail {
+// Used in is_detected.
 template <class...>
 using void_t = void;
-}
+} // namespace detail
 
 /*
 Checks if a given type has function.

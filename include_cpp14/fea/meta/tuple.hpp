@@ -148,4 +148,15 @@ constexpr decltype(auto) apply(F&& f, Tuple&& t) {
 }
 #endif
 
+// tuple_cats 2 tuple types together.
+template <class, class>
+struct tuple_type_cat;
+
+template <class... First, class... Second>
+struct tuple_type_cat<std::tuple<First...>, std::tuple<Second...>> {
+	using type = std::tuple<First..., Second...>;
+};
+
+template <class... Args>
+using tuple_type_cat_t = typename tuple_type_cat<Args...>::type;
 } // namespace fea
