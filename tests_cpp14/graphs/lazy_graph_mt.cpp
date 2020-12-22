@@ -21,12 +21,12 @@ size_t get_index(const std::vector<unsigned>& vec, unsigned i) {
 	auto it = std::find(vec.begin(), vec.end(), i);
 	return std::distance(vec.begin(), it);
 }
-size_t get_index(
-		const std::vector<std::pair<unsigned, bool>>& vec, unsigned i) {
-	auto it = std::find_if(vec.begin(), vec.end(),
-			[i](const auto& p) { return p.first == i; });
-	return std::distance(vec.begin(), it);
-}
+// size_t get_index(
+//		const std::vector<std::pair<unsigned, bool>>& vec, unsigned i) {
+//	auto it = std::find_if(vec.begin(), vec.end(),
+//			[i](const auto& p) { return p.first == i; });
+//	return std::distance(vec.begin(), it);
+//}
 
 size_t num_dirty(const std::vector<std::pair<unsigned, bool>>& vec) {
 	return std::count_if(
