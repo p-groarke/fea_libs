@@ -35,6 +35,7 @@
 #include "fea/utils/unused.hpp"
 
 #include <type_traits>
+#include <utility>
 
 namespace fea {
 // Fold expressions for c++ < 17.

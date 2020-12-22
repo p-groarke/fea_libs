@@ -98,7 +98,7 @@ struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
 #endif
 
 		fold(
-				[&, this](auto&& f) {
+				[&](auto&& f) {
 					u_func.predicates.push_back(std::forward<decltype(f)>(f));
 				},
 				std::forward<PredFuncs>(predicate_functions)...);
