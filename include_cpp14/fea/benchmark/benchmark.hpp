@@ -29,6 +29,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #pragma once
+#include "fea/utils/unused.hpp"
+
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
@@ -49,16 +51,10 @@
 
 namespace fea {
 namespace bench {
-// Compiler freaks out with macro-only usage.
-template <typename T>
-void m_unused(const T&) {
-}
-
-static std::chrono::time_point<std::chrono::high_resolution_clock> start_time,
-		end_time;
+static std::chrono::time_point<std::chrono::steady_clock> start_time, end_time;
 
 static inline void title(const char* message, FILE* stream = stdout) {
-	m_unused(message);
+	fea::unused(message);
 	BENCH_PRINT_STREAM(stream, "%.*s\n", (int)strlen(message),
 			"############################################################");
 	BENCH_PRINT_STREAM(stream, "%s\n", message);
@@ -73,12 +69,12 @@ static inline void start(const char* message = "", FILE* stream = stdout) {
 				"--------------------------------------------------------");
 	}
 
-	start_time = std::chrono::high_resolution_clock::now();
+	start_time = std::chrono::steady_clock::now();
 }
 
 static inline double stop(const char* message = "", FILE* stream = stdout) {
-	m_unused(message);
-	end_time = std::chrono::high_resolution_clock::now();
+	fea::unused(message);
+	end_time = std::chrono::steady_clock::now();
 	const std::chrono::duration<double> elapsed_time = end_time - start_time;
 
 	BENCH_PRINT_STREAM(stream, "%s%*fs\n", message, 70 - (int)strlen(message),
@@ -95,7 +91,7 @@ static inline double stop(const char* message = "", FILE* stream = stdout) {
  */
 static inline void escape(void* p) {
 #ifdef _MSC_VER
-	m_unused(p);
+	fea::unused(p);
 	_WriteBarrier();
 #else
 	asm volatile("" : : "g"(p) : "memory");
@@ -143,12 +139,12 @@ struct suite {
 		std::this_thread::sleep_for(_sleep_between);
 
 		for (size_t i = 0; i < _num_average; ++i) {
-			std::chrono::time_point<std::chrono::high_resolution_clock>
-					_start_time, _end_time;
+			std::chrono::time_point<std::chrono::steady_clock> _start_time,
+					_end_time;
 
-			_start_time = std::chrono::high_resolution_clock::now();
+			_start_time = std::chrono::steady_clock::now();
 			func();
-			_end_time = std::chrono::high_resolution_clock::now();
+			_end_time = std::chrono::steady_clock::now();
 
 			elapsed_time += _end_time - _start_time;
 

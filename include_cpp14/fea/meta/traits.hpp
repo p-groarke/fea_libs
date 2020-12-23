@@ -141,18 +141,16 @@ using idx_splice_after_t = typename idx_splice<Idx, Args...>::after_tuple;
 
 
 // Get the first type in a parameter pack.
-template <class T, class...>
-using first = T;
+template <class... Args>
+using first_t = idx_splice_t<0, Args...>;
 
+// Get the last type in a parameter pack.
+template <class... Args>
+using last_t = idx_splice_t<sizeof...(Args) - 1, Args...>;
 
-namespace detail {
-// Used in is_detected.
-template <class...>
-using void_t = void;
-} // namespace detail
 
 /*
-Checks if a given type has function.
+is_detected checks if a given type has function.
 You must call this with a "detector alias", for example :
 
 template <class T>
@@ -164,6 +162,13 @@ More info : https://en.cppreference.com/w/cpp/experimental/is_detected
 
 See unit tests for more examples.
 */
+
+namespace detail {
+// Used in is_detected.
+template <class...>
+using void_t = void;
+} // namespace detail
+
 template <template <class...> class Op, class = void, class...>
 struct is_detected : std::false_type {};
 template <template <class...> class Op, class... Args>
@@ -173,5 +178,39 @@ struct is_detected<Op, detail::void_t<Op<Args...>>, Args...> : std::true_type {
 template <template <class...> class Op, class... Args>
 FEA_INLINE_VAR constexpr bool is_detected_v
 		= is_detected<Op, void, Args...>::value;
+
+
+/*
+member_func_ptr is a trait which constructs a member function pointer, given Ret
+and Args...
+
+It uses the first argument of Args as the class type.
+If no Args are provided, aliases void*.
+*/
+
+namespace detail {
+template <class, class, bool, class...>
+struct member_func_ptr {
+	using type = void*;
+};
+
+template <class Ret, class T, class... Rest>
+struct member_func_ptr<Ret, T, true, Rest...> {
+	using type = Ret (T::*)(Rest...);
+};
+
+} // namespace detail
+
+template <class, class...>
+struct member_func_ptr {
+	using type = void*;
+};
+
+template <class Ret, class T, class... Rest>
+struct member_func_ptr<Ret, T*, Rest...>
+		: detail::member_func_ptr<Ret, T, std::is_class<T>::value, Rest...> {};
+
+template <class Ret, class... Args>
+using member_func_ptr_t = typename member_func_ptr<Ret, Args...>::type;
 
 } // namespace fea
