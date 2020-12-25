@@ -154,35 +154,6 @@ struct function_cl<true, FuncRet(T*, FuncArgs...)> {
 	}
 
 private:
-	// constexpr FuncRet do_plain(T* obj, FuncArgs... args) const {
-	//	return _func_union.c_func(obj, std::forward<FuncArgs>(args)...);
-	//}
-	// constexpr FuncRet do_member(T* obj, FuncArgs... args) const {
-	//	return (obj->*_func_union.mem_func)(std::forward<FuncArgs>(args)...);
-	//}
-	// constexpr FuncRet do_const_member(T* obj, FuncArgs... args) const {
-	//	return (obj->*_func_union.const_mem_func)(
-	//			std::forward<FuncArgs>(args)...);
-	//}
-
-	// friend auto operator->*(T& obj, FuncRet (*f)(T*, FuncArgs...)) {
-	//	return [o = &obj, f_ptr = f](FuncArgs... args) {
-	//		f_ptr(o, std::forward<decltype(FuncArgs)>(args)...);
-	//	};
-	//}
-
-	// friend auto operator->*(T& obj, FuncRet (T::*f)(FuncArgs...)) {
-	//	return [o = &obj, f_ptr = f](FuncArgs... args) {
-	//		(o->*f_ptr)(std::forward<decltype(FuncArgs)>(args)...);
-	//	};
-	//}
-
-	// friend auto operator->*(T& obj, FuncRet (T::*f)(FuncArgs...) const) {
-	//	return [o = &obj, f_ptr = f](FuncArgs... args) {
-	//		(o->*f_ptr)(std::forward<decltype(FuncArgs)>(args)...);
-	//	};
-	//}
-
 	union func_u {
 		constexpr explicit func_u(plain_t f) noexcept
 				: plain_func(f) {
