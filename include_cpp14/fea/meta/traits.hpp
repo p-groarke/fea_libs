@@ -149,6 +149,12 @@ template <class... Args>
 using last_t = idx_splice_t<sizeof...(Args) - 1, Args...>;
 
 
+namespace detail {
+// Used in is_detected.
+template <class...>
+using void_t = void;
+} // namespace detail
+
 /*
 is_detected checks if a given type has function.
 You must call this with a "detector alias", for example :
@@ -162,13 +168,6 @@ More info : https://en.cppreference.com/w/cpp/experimental/is_detected
 
 See unit tests for more examples.
 */
-
-namespace detail {
-// Used in is_detected.
-template <class...>
-using void_t = void;
-} // namespace detail
-
 template <template <class...> class Op, class = void, class...>
 struct is_detected : std::false_type {};
 template <template <class...> class Op, class... Args>

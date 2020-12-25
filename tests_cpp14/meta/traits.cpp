@@ -60,6 +60,9 @@ TEST(traits, all_none_any) {
 			none_numeric);
 }
 
+
+// is_detected
+// class with member functions
 struct potato {
 	void noargs_func() {
 	}
@@ -67,15 +70,19 @@ struct potato {
 	}
 };
 
+// class without member functions
 struct tomato {};
 
+// you must implement these "detectors"
 template <class T>
 using has_noargs_func = decltype(std::declval<T>().noargs_func());
 
+// you must implement these "detectors"
 template <class T>
 using has_args_func
 		= decltype(std::declval<T>().args_func(std::declval<int&>()));
 
+// detect if classes have the functions you want.
 TEST(traits, is_detected) {
 	static_assert(fea::is_detected_v<has_noargs_func, potato>,
 			"traits.cpp : failed test");
