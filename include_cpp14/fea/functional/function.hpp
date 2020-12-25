@@ -37,7 +37,6 @@
 
 #include <cassert>
 #include <functional>
-#include <variant>
 
 /*
 fea::function_cl is a holder for function pointers, which does the "right thing"
