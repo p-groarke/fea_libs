@@ -87,20 +87,31 @@ namespace fea {
 #define FEA_INLINE_VAR static
 #endif
 
+// Disables exceptions in classes that support it.
+// TODO : Review all classes that throw, make sure exceptions can be disabled,
+// or trigger build warning if they can't and this is set.
+#if defined(FEA_NOTHROW)
+#undef FEA_NOTHROW
+#define FEA_NOTHROW 1
+FEA_INLINE_VAR constexpr bool nothrow_build = true;
+#else
+FEA_INLINE_VAR constexpr bool nothrow_build = false;
+#endif
+
 // Allows using MSVC regions without causing errors on other OSes.
 #define FEA_REGION(...)
 
 // NDEBUG is often double negative, offer alternatives.
 #if defined(NDEBUG)
-#undef FEA_RELEASE_BUILD
-#define FEA_RELEASE_BUILD 1
+#undef FEA_RELEASE
+#define FEA_RELEASE 1
 
 FEA_INLINE_VAR constexpr bool release_build = true;
 FEA_INLINE_VAR constexpr bool debug_build = false;
 
 #else
-#undef FEA_DEBUG_BUILD
-#define FEA_DEBUG_BUILD 1
+#undef FEA_DEBUG
+#define FEA_DEBUG 1
 
 FEA_INLINE_VAR constexpr bool release_build = false;
 FEA_INLINE_VAR constexpr bool debug_build = true;

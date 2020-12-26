@@ -30,6 +30,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/utils/platform.hpp"
+
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -95,12 +97,6 @@ Notes :
 
 
 namespace detail {
-#if !defined(NDEBUG)
-inline constexpr bool debug_build = true;
-#else
-inline constexpr bool debug_build = false;
-#endif
-
 template <class Func, size_t... I>
 constexpr void static_for(Func func, std::index_sequence<I...>) {
 	(std::invoke(func, std::integral_constant<size_t, I>{}), ...);
@@ -991,7 +987,7 @@ private:
 			return;
 
 		// Pretty heave, only run in debug
-		if constexpr (detail::debug_build) {
+		if constexpr (fea::debug_build) {
 			// just check the first init
 			if (!_in_parallel) {
 				std::vector<std::string_view> names = _state_names;

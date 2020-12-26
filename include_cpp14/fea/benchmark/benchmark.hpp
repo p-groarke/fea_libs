@@ -29,6 +29,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #pragma once
+#include "fea/time/time.hpp"
+#include "fea/utils/unused.hpp"
+
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
@@ -49,16 +52,10 @@
 
 namespace fea {
 namespace bench {
-// Compiler freaks out with macro-only usage.
-template <typename T>
-void m_unused(const T&) {
-}
-
-static std::chrono::time_point<std::chrono::high_resolution_clock> start_time,
-		end_time;
+static std::chrono::time_point<std::chrono::steady_clock> start_time, end_time;
 
 static inline void title(const char* message, FILE* stream = stdout) {
-	m_unused(message);
+	fea::unused(message);
 	BENCH_PRINT_STREAM(stream, "%.*s\n", (int)strlen(message),
 			"############################################################");
 	BENCH_PRINT_STREAM(stream, "%s\n", message);
@@ -73,12 +70,12 @@ static inline void start(const char* message = "", FILE* stream = stdout) {
 				"--------------------------------------------------------");
 	}
 
-	start_time = std::chrono::high_resolution_clock::now();
+	start_time = std::chrono::steady_clock::now();
 }
 
 static inline double stop(const char* message = "", FILE* stream = stdout) {
-	m_unused(message);
-	end_time = std::chrono::high_resolution_clock::now();
+	fea::unused(message);
+	end_time = std::chrono::steady_clock::now();
 	const std::chrono::duration<double> elapsed_time = end_time - start_time;
 
 	BENCH_PRINT_STREAM(stream, "%s%*fs\n", message, 70 - (int)strlen(message),
@@ -95,7 +92,7 @@ static inline double stop(const char* message = "", FILE* stream = stdout) {
  */
 static inline void escape(void* p) {
 #ifdef _MSC_VER
-	m_unused(p);
+	fea::unused(p);
 	_WriteBarrier();
 #else
 	asm volatile("" : : "g"(p) : "memory");
@@ -118,10 +115,12 @@ static inline void clobber() {
 }
 
 struct suite {
+	// Set the title for the benchmark run. Optional.
 	void title(const char* message) {
 		_title = message;
 	}
 
+	// Run each benchmark num_runs times and average results.
 	void average(size_t num_runs) {
 		if (num_runs == 0) {
 			return;
@@ -129,41 +128,57 @@ struct suite {
 		_num_average = num_runs;
 	}
 
+	// Useful when profiling. Sleeps in between runs of the benchmarks.
+	void sleep_between(std::chrono::seconds seconds) {
+		_sleep_between = std::chrono::milliseconds(seconds);
+	}
+	void sleep_between(std::chrono::milliseconds milli_seconds) {
+		_sleep_between = milli_seconds;
+	}
+
 	// Run a benchmark on func.
 	// If averaging was set, will average the times.
 	// Pass in message (name of the benchmark).
+	// Pass in callable benchmark function or lambda.
 	// Pass in a function that will be executed in between runs
 	// (useful when averaging to reset things). This function isn't measured.
 	// It is executed after each call to func.
 	template <class Func, class InBetweenFunc>
 	void benchmark(
-			const char* message, Func func, InBetweenFunc inbetween_func) {
+			const char* message, Func&& func, InBetweenFunc&& inbetween_func) {
 
-		std::chrono::duration<double> elapsed_time = std::chrono::seconds(0);
+		clock_duration_t elapsed_time = clock_duration_t(0);
 		std::this_thread::sleep_for(_sleep_between);
 
 		for (size_t i = 0; i < _num_average; ++i) {
-			std::chrono::time_point<std::chrono::high_resolution_clock>
-					_start_time, _end_time;
+			std::chrono::time_point<std::chrono::steady_clock> _start_time,
+					_end_time;
 
-			_start_time = std::chrono::high_resolution_clock::now();
+			_start_time = std::chrono::steady_clock::now();
 			func();
-			_end_time = std::chrono::high_resolution_clock::now();
+			_end_time = std::chrono::steady_clock::now();
 
 			elapsed_time += _end_time - _start_time;
 
 			inbetween_func();
 		}
 
+		fea::dseconds elapsed_d(elapsed_time);
 		_results.push_back(
-				pair{ message, elapsed_time.count() / double(_num_average) });
+				pair{ message, elapsed_d.count() / double(_num_average) });
 	}
 
+	// Run a benchmark on func.
+	// If averaging was set, will average the times.
+	// Pass in message (name of the benchmark).
 	template <class Func>
-	void benchmark(const char* message, Func func) {
-		benchmark(message, func, []() {});
+	void benchmark(const char* message, Func&& func) {
+		benchmark(message, std::forward<Func>(func), []() {});
 	}
 
+	// Print the results of the benchmark run to selected stream output
+	// (defaults to stdout).
+	// Resets the suite to accept new benchmarks.
 	void print(FILE* stream = stdout) {
 		std::this_thread::sleep_for(_sleep_between);
 
@@ -183,34 +198,23 @@ struct suite {
 		if (_results.size() > 1) {
 			std::sort(_results.begin(), _results.end(),
 					[](const pair& lhs, const pair& rhs) {
-						return lhs.time > rhs.time;
+						return lhs.time < rhs.time;
 					});
 		}
 
 		for (const pair& p : _results) {
-			double ratio = _results.front().time / p.time;
+			double ratio = _results.back().time / p.time;
 			BENCH_PRINT_STREAM(stream, "%s%*fs        %fx\n", p.message,
 					70 - int(strlen(p.message)), p.time, ratio);
 		}
 		BENCH_PRINT_STREAM(stream, "%s", "\n");
-	}
 
-	void clear() {
-		_title = nullptr;
-		_num_average = 1;
 		_results.clear();
 	}
 
-	// Useful when profiling. Sleeps in between runs of the benchmarks.
-	void sleep_between(std::chrono::seconds seconds) {
-		_sleep_between = std::chrono::duration_cast<std::chrono::milliseconds>(
-				seconds);
-	}
-	void sleep_between(std::chrono::milliseconds milli_seconds) {
-		_sleep_between = milli_seconds;
-	}
-
 private:
+	using clock_duration_t = std::chrono::steady_clock::duration;
+
 	struct pair {
 		pair(const char* msg, double t)
 				: message(msg)

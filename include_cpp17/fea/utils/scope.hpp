@@ -37,8 +37,8 @@ namespace fea {
 
 template <class Func>
 struct on_exit {
-	on_exit(Func func)
-			: _func(func) {
+	on_exit(Func&& func)
+			: _func(std::forward<Func>(func)) {
 	}
 	~on_exit() {
 		_func();

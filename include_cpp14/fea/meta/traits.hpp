@@ -32,8 +32,10 @@
  **/
 
 #pragma once
+#include "fea/meta/tuple.hpp"
 #include "fea/utils/platform.hpp"
 
+#include <tuple>
 #include <type_traits>
 
 namespace fea {
@@ -97,12 +99,64 @@ FEA_INLINE_VAR constexpr bool any_of_v = any_of<Traits...>::value;
 
 
 namespace detail {
+template <size_t, size_t, class, class...>
+struct idx_splice_impl;
+
+// Found idx.
+template <size_t TargetIdx, class BeforeTup, class T, class... Rest>
+struct idx_splice_impl<TargetIdx, TargetIdx, BeforeTup, T, Rest...> {
+	using before_tuple = BeforeTup;
+	using type = T;
+	using after_tuple = std::tuple<Rest...>;
+};
+
+template <size_t TargetIdx, size_t CurrentIdx, class BeforeTup, class T,
+		class... Rest>
+struct idx_splice_impl<TargetIdx, CurrentIdx, BeforeTup, T, Rest...>
+		: idx_splice_impl<TargetIdx, CurrentIdx + 1,
+				  fea::tuple_type_cat_t<BeforeTup, std::tuple<T>>, Rest...> {};
+
+} // namespace detail
+
+// Splice a parameter pack at index Idx.
+// Finds the type at Idx, and stores the remaining parameters (parameters after
+// splice point) in a tuple type.
+template <size_t Idx, class... Args>
+struct idx_splice : detail::idx_splice_impl<Idx, 0, std::tuple<>, Args...> {
+	static_assert(
+			Idx < sizeof...(Args), "fea::idx_splice : index out-of-range");
+};
+
+// Get the element type at index Idx in parameter pack.
+template <size_t Idx, class... Args>
+using idx_splice_t = typename idx_splice<Idx, Args...>::type;
+
+// Get the elements before Idx in parameter pack, stored as a tuple type.
+template <size_t Idx, class... Args>
+using idx_splice_before_t = typename idx_splice<Idx, Args...>::before_tuple;
+
+// Get the elements after Idx in parameter pack, stored as a tuple type.
+template <size_t Idx, class... Args>
+using idx_splice_after_t = typename idx_splice<Idx, Args...>::after_tuple;
+
+
+// Get the first type in a parameter pack.
+template <class... Args>
+using first_t = idx_splice_t<0, Args...>;
+
+// Get the last type in a parameter pack.
+template <class... Args>
+using last_t = idx_splice_t<sizeof...(Args) - 1, Args...>;
+
+
+namespace detail {
+// Used in is_detected.
 template <class...>
 using void_t = void;
-}
+} // namespace detail
 
 /*
-Checks if a given type has function.
+is_detected checks if a given type has function.
 You must call this with a "detector alias", for example :
 
 template <class T>
@@ -123,5 +177,39 @@ struct is_detected<Op, detail::void_t<Op<Args...>>, Args...> : std::true_type {
 template <template <class...> class Op, class... Args>
 FEA_INLINE_VAR constexpr bool is_detected_v
 		= is_detected<Op, void, Args...>::value;
+
+
+/*
+member_func_ptr is a trait which constructs a member function pointer, given Ret
+and Args...
+
+It uses the first argument of Args as the class type.
+If no Args are provided, aliases void*.
+*/
+
+namespace detail {
+template <class, class, bool, class...>
+struct member_func_ptr {
+	using type = void*;
+};
+
+template <class Ret, class T, class... Rest>
+struct member_func_ptr<Ret, T, true, Rest...> {
+	using type = Ret (T::*)(Rest...);
+};
+
+} // namespace detail
+
+template <class, class...>
+struct member_func_ptr {
+	using type = void*;
+};
+
+template <class Ret, class T, class... Rest>
+struct member_func_ptr<Ret, T*, Rest...>
+		: detail::member_func_ptr<Ret, T, std::is_class<T>::value, Rest...> {};
+
+template <class Ret, class... Args>
+using member_func_ptr_t = typename member_func_ptr<Ret, Args...>::type;
 
 } // namespace fea

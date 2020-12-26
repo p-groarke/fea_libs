@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdint>
 #include <functional>
 
-#if !defined(FEA_FSM_NOTHROW)
+#if !defined(FEA_NOTHROW)
 #include <stdexcept>
 #endif
 
@@ -186,7 +186,7 @@ struct fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 		assert(std::get<size_t(Transition)>(_transitions) != StateEnum::count
 				&& "fsm_state : unhandled transition");
 
-#if !defined(FEA_FSM_NOTHROW)
+#if !defined(FEA_NOTHROW)
 		if (std::get<size_t(Transition)>(_transitions) == StateEnum::count) {
 			throw std::invalid_argument{ "fsm_state : unhandled transition" };
 		}
@@ -412,7 +412,7 @@ private:
 
 	const state_t& get_state(StateEnum s) const {
 		assert(s != StateEnum::count && "fsm : Accessing invalid state.");
-#if !defined(FEA_FSM_NOTHROW)
+#if !defined(FEA_NOTHROW)
 		if (s == StateEnum::count) {
 			throw std::runtime_error{ "fsm : Accessing invalid state." };
 		}
@@ -422,7 +422,7 @@ private:
 				&& "fsm : Accessing invalid state, did you forget to add a "
 				   "state?");
 
-#if !defined(FEA_FSM_NOTHROW)
+#if !defined(FEA_NOTHROW)
 		if (!_state_valid[size_t(s)]) {
 			throw std::runtime_error{
 				"fsm : Accessing invalid state, did you forget to add a state?"

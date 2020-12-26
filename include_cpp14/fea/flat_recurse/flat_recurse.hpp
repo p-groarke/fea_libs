@@ -63,7 +63,7 @@ inline std::pair<InputIt, InputIt> children_range(InputIt parent, StatePtr*) {
 // sub-tree should be culled.
 template <class InputIt, class Func, class CullPredicate,
 		class StatePtr = const void>
-inline void for_each_depthfirst(InputIt root, Func func,
+inline void for_each_depthfirst(InputIt root, Func&& func,
 		CullPredicate cull_pred, StatePtr* state_ptr = nullptr) {
 	// Traditional depth-first recursion.
 	if (cull_pred(root)) {
@@ -85,7 +85,7 @@ inline void for_each_depthfirst(InputIt root, Func func,
 // Executes func on each node.
 template <class InputIt, class Func, class StatePtr = const void>
 inline void for_each_depthfirst(
-		InputIt root, Func func, StatePtr* state_ptr = nullptr) {
+		InputIt root, Func&& func, StatePtr* state_ptr = nullptr) {
 
 	return for_each_depthfirst(
 			root, func, [](InputIt) { return false; }, state_ptr);
@@ -94,7 +94,7 @@ inline void for_each_depthfirst(
 
 template <class BidirIt, class Func, class CullPredicate,
 		class StatePtr = const void>
-inline void for_each_depthfirst_flat(BidirIt root, Func func,
+inline void for_each_depthfirst_flat(BidirIt root, Func&& func,
 		CullPredicate cull_pred, StatePtr* state_ptr = nullptr) {
 	static_assert(
 			!std::is_same<std::input_iterator_tag,
@@ -173,7 +173,7 @@ inline void for_each_depthfirst_flat(BidirIt root, Func func,
 // Executes func on each node.
 template <class BidirIt, class Func, class StatePtr = const void>
 inline void for_each_depthfirst_flat(
-		BidirIt root, Func func, StatePtr* state_ptr = nullptr) {
+		BidirIt root, Func&& func, StatePtr* state_ptr = nullptr) {
 
 	return for_each_depthfirst_flat(
 			root, func, [](BidirIt) { return false; }, state_ptr);
@@ -188,7 +188,7 @@ inline void for_each_depthfirst_flat(
 // sub-tree should be culled.
 template <class InputIt, class Func, class CullPredicate,
 		class StatePtr = const void>
-inline void for_each_breadthfirst(InputIt root, Func func,
+inline void for_each_breadthfirst(InputIt root, Func&& func,
 		CullPredicate cull_pred, StatePtr* state_ptr = nullptr) {
 	std::vector<InputIt> graph;
 	gather_breadthfirst(root, cull_pred, &graph, state_ptr);
@@ -205,7 +205,7 @@ inline void for_each_breadthfirst(InputIt root, Func func,
 // Executes func on each node.
 template <class InputIt, class Func, class StatePtr = const void>
 inline void for_each_breadthfirst(
-		InputIt root, Func func, StatePtr* state_ptr = nullptr) {
+		InputIt root, Func&& func, StatePtr* state_ptr = nullptr) {
 	std::vector<InputIt> graph;
 	gather_breadthfirst(root, &graph, state_ptr);
 

@@ -60,6 +60,9 @@ TEST(traits, all_none_any) {
 			none_numeric);
 }
 
+
+// is_detected
+// class with member functions
 struct potato {
 	void noargs_func() {
 	}
@@ -67,15 +70,19 @@ struct potato {
 	}
 };
 
+// class without member functions
 struct tomato {};
 
+// you must implement these "detectors"
 template <class T>
 using has_noargs_func = decltype(std::declval<T>().noargs_func());
 
+// you must implement these "detectors"
 template <class T>
 using has_args_func
 		= decltype(std::declval<T>().args_func(std::declval<int&>()));
 
+// detect if classes have the functions you want.
 TEST(traits, is_detected) {
 	static_assert(fea::is_detected_v<has_noargs_func, potato>,
 			"traits.cpp : failed test");
@@ -88,5 +95,85 @@ TEST(traits, is_detected) {
 
 	static_assert(!fea::is_detected_v<has_args_func, tomato>,
 			"traits.cpp : failed test");
+}
+
+TEST(traits, splice) {
+	static_assert(std::is_same<fea::idx_splice_t<0, int, double, float, short>,
+						  int>::value,
+			"traits.cpp : test failed");
+	static_assert(
+			std::is_same<fea::idx_splice_before_t<0, int, double, float, short>,
+					std::tuple<>>::value,
+			"traits.cpp : test failed");
+	static_assert(
+			std::is_same<fea::idx_splice_after_t<0, int, double, float, short>,
+					std::tuple<double, float, short>>::value,
+			"traits.cpp : test failed");
+
+	static_assert(std::is_same<fea::idx_splice_t<1, int, double, float, short>,
+						  double>::value,
+			"traits.cpp : test failed");
+	static_assert(
+			std::is_same<fea::idx_splice_before_t<1, int, double, float, short>,
+					std::tuple<int>>::value,
+			"traits.cpp : test failed");
+	static_assert(
+			std::is_same<fea::idx_splice_after_t<1, int, double, float, short>,
+					std::tuple<float, short>>::value,
+			"traits.cpp : test failed");
+
+	static_assert(std::is_same<fea::idx_splice_t<2, int, double, float, short>,
+						  float>::value,
+			"traits.cpp : test failed");
+	static_assert(
+			std::is_same<fea::idx_splice_before_t<2, int, double, float, short>,
+					std::tuple<int, double>>::value,
+			"traits.cpp : test failed");
+	static_assert(
+			std::is_same<fea::idx_splice_after_t<2, int, double, float, short>,
+					std::tuple<short>>::value,
+			"traits.cpp : test failed");
+
+	static_assert(std::is_same<fea::idx_splice_t<3, int, double, float, short>,
+						  short>::value,
+			"traits.cpp : test failed");
+	static_assert(
+			std::is_same<fea::idx_splice_before_t<3, int, double, float, short>,
+					std::tuple<int, double, float>>::value,
+			"traits.cpp : test failed");
+	static_assert(
+			std::is_same<fea::idx_splice_after_t<3, int, double, float, short>,
+					std::tuple<>>::value,
+			"traits.cpp : test failed");
+}
+
+struct obj {
+	void func(int) {
+	}
+};
+
+TEST(traits, member_func_ptr) {
+	static_assert(std::is_class<obj>::value, "");
+
+	using mem_fun = fea::member_func_ptr_t<void, obj*, int>;
+	static_assert(std::is_same<mem_fun, decltype(&obj::func)>::value,
+			"traits.cpp : test failed");
+
+	using mem_fun2 = fea::member_func_ptr_t<void, int>;
+	static_assert(
+			std::is_same<mem_fun2, void*>::value, "traits.cpp : test failed");
+
+	using mem_fun3 = fea::member_func_ptr_t<void, obj, int>;
+	static_assert(
+			std::is_same<mem_fun3, void*>::value, "traits.cpp : test failed");
+
+	using mem_fun4 = fea::member_func_ptr_t<void, obj*, int, double, float>;
+	static_assert(
+			std::is_same<mem_fun4, void (obj::*)(int, double, float)>::value,
+			"traits.cpp : test failed");
+
+	using mem_fun5 = fea::member_func_ptr_t<void, int*>;
+	static_assert(
+			std::is_same<mem_fun5, void*>::value, "traits.cpp : test failed");
 }
 } // namespace

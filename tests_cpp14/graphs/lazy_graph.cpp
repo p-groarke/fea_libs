@@ -88,8 +88,9 @@ TEST(fea_lazy_graph, example) {
 	// Provides id to clean.
 	graph.clean(2,
 			[](my_id_t /* id_to_clean */,
-					const std::vector<my_id_t>& /* my parents */,
-					const std::vector<my_id_t>& /* my dirty parents */) {
+					const std::vector<std::pair<my_id_t, bool>>& /* my parents
+																  */
+			) {
 				// do fancy things.
 			});
 
@@ -97,8 +98,9 @@ TEST(fea_lazy_graph, example) {
 	std::vector<my_id_t> my_nodes_to_clean{ 0, 1, 2 };
 	graph.clean(my_nodes_to_clean,
 			[](my_id_t /* id_to_update */,
-					const std::vector<my_id_t>& /* my parents */,
-					const std::vector<my_id_t>& /* my dirty parents */) {
+					const std::vector<std::pair<my_id_t, bool>>& /* my parents
+																  */
+			) {
 				// do fancy things.
 			});
 }
@@ -131,15 +133,15 @@ TEST(fea_lazy_graph, advanced_example) {
 	// It will lock between stages that aren't independent.
 	graph.clean_mt(2,
 			[](my_id_t /* node_to_clean */,
-					const std::vector<my_id_t>& /* parents */,
-					const std::vector<my_id_t>& /* dirty_parents */) {});
+					const std::vector<std::pair<my_id_t, bool>>& /* parents */
+			) {});
 
 	// Clean multiple nodes in a multithreaded eval.
 	// This is the BEST call to make for maximum threading.
 	// It will launch independent eval graphs in seperate threads, plus thread
 	// the graphs' breadths as it can.
 	std::vector<my_id_t> my_nodes_to_clean{ 0, 1, 2 };
-	graph.clean_mt(my_nodes_to_clean, [](my_id_t, const auto&, const auto&) {});
+	graph.clean_mt(my_nodes_to_clean, [](my_id_t, const auto&) {});
 
 
 	// Even more advanced calls.
@@ -165,9 +167,7 @@ TEST(fea_lazy_graph, advanced_example) {
 	// 'ind_data.independent_graphs' can be cleaned in parallel.
 	tbb::task_group g;
 	for (my_id_t id : ind_data.independent_graphs) {
-		g.run([&, id]() {
-			graph.clean_mt(id, [](my_id_t, const auto&, const auto&) {});
-		});
+		g.run([&, id]() { graph.clean_mt(id, [](my_id_t, const auto&) {}); });
 	}
 
 	// 'ind_data.dependent_graphs' cannot be cleaned in parallel.
@@ -175,7 +175,7 @@ TEST(fea_lazy_graph, advanced_example) {
 	g.run_and_wait([&]() {
 		for (my_id_t id : ind_data.independent_graphs) {
 			// Clean one at a time. But you can still call clean_mt at least.
-			graph.clean_mt(id, [](my_id_t, const auto&, const auto&) {});
+			graph.clean_mt(id, [](my_id_t, const auto&) {});
 		}
 	});
 }
@@ -183,10 +183,26 @@ TEST(fea_lazy_graph, advanced_example) {
 bool contains(const std::vector<unsigned>& vec, unsigned i) {
 	return std::find(vec.begin(), vec.end(), i) != vec.end();
 }
+bool contains(const std::vector<std::pair<unsigned, bool>>& vec, unsigned i) {
+	return std::find_if(vec.begin(), vec.end(), [i](const auto& p) {
+		return p.first == i;
+	}) != vec.end();
+}
 
 size_t get_index(const std::vector<unsigned>& vec, unsigned i) {
 	auto it = std::find(vec.begin(), vec.end(), i);
 	return std::distance(vec.begin(), it);
+}
+// size_t get_index(
+//		const std::vector<std::pair<unsigned, bool>>& vec, unsigned i) {
+//	auto it = std::find_if(vec.begin(), vec.end(),
+//			[i](const auto& p) { return p.first == i; });
+//	return std::distance(vec.begin(), it);
+//}
+
+size_t num_dirty(const std::vector<std::pair<unsigned, bool>>& vec) {
+	return std::count_if(
+			vec.begin(), vec.end(), [](const auto& p) { return p.second; });
 }
 
 /**
@@ -220,7 +236,8 @@ void reset_graph(Graph& graph) {
 	graph.add_dependency(7, 1);
 }
 
-void test_parents(unsigned id, const std::vector<unsigned>& parents) {
+void test_parents(
+		unsigned id, const std::vector<std::pair<unsigned, bool>>& parents) {
 	if (id == 1) {
 		EXPECT_EQ(parents.size(), 1u);
 		EXPECT_TRUE(contains(parents, 0u));
@@ -443,13 +460,12 @@ TEST(fea_lazy_graph, dirtyness) {
 
 	// Clean it.
 	std::vector<unsigned> cleaned_ids;
-	graph.clean(4,
-			[&](unsigned id, const auto& parents, const auto& dirty_parents) {
-				test_parents(id, parents);
-				EXPECT_EQ(parents, dirty_parents);
+	graph.clean(4, [&](unsigned id, const auto& parents) {
+		test_parents(id, parents);
+		EXPECT_EQ(num_dirty(parents), parents.size());
 
-				cleaned_ids.push_back(id);
-			});
+		cleaned_ids.push_back(id);
+	});
 
 	// Test the order of evaluation.
 	// Root is not cleaned, since it doesn't depend on anything.
@@ -499,12 +515,11 @@ TEST(fea_lazy_graph, dirtyness) {
 
 	// Clean it again.
 	cleaned_ids.clear();
-	graph.clean(7,
-			[&](unsigned id, const auto& parents, const auto& dirty_parents) {
-				test_parents(id, parents);
-				EXPECT_EQ(dirty_parents, parents);
-				cleaned_ids.push_back(id);
-			});
+	graph.clean(7, [&](unsigned id, const auto& parents) {
+		test_parents(id, parents);
+		EXPECT_EQ(num_dirty(parents), parents.size());
+		cleaned_ids.push_back(id);
+	});
 
 	// Test the order of evaluation.
 	EXPECT_GT(get_index(cleaned_ids, 2), get_index(cleaned_ids, 1));
@@ -566,12 +581,11 @@ TEST(fea_lazy_graph, dirtyness) {
 	}
 
 	cleaned_ids.clear();
-	graph.clean(2,
-			[&](unsigned id, const auto& parents, const auto& dirty_parents) {
-				test_parents(id, parents);
-				EXPECT_EQ(dirty_parents, parents);
-				cleaned_ids.push_back(id);
-			});
+	graph.clean(2, [&](unsigned id, const auto& parents) {
+		test_parents(id, parents);
+		EXPECT_EQ(num_dirty(parents), parents.size());
+		cleaned_ids.push_back(id);
+	});
 
 
 	// Test the order of evaluation.
@@ -602,12 +616,11 @@ TEST(fea_lazy_graph, dirtyness) {
 
 	graph.make_dirty(0);
 	cleaned_ids.clear();
-	graph.clean(5,
-			[&](unsigned id, const auto& parents, const auto& dirty_parents) {
-				test_parents(id, parents);
-				EXPECT_EQ(dirty_parents, parents);
-				cleaned_ids.push_back(id);
-			});
+	graph.clean(5, [&](unsigned id, const auto& parents) {
+		test_parents(id, parents);
+		EXPECT_EQ(num_dirty(parents), parents.size());
+		cleaned_ids.push_back(id);
+	});
 
 	// Test the order of evaluation.
 	EXPECT_GT(get_index(cleaned_ids, 2), get_index(cleaned_ids, 1));
@@ -641,7 +654,7 @@ TEST(fea_lazy_graph, dirtyness) {
 	EXPECT_FALSE(contains(cleaned_ids, 7u));
 
 	// Clean everything
-	graph.clean(7, [](unsigned, const auto&, const auto&) {});
+	graph.clean(7, [](unsigned, const auto&) {});
 	EXPECT_FALSE(graph.is_dirty(0));
 	EXPECT_FALSE(graph.is_dirty(1));
 	EXPECT_FALSE(graph.is_dirty(2));
@@ -664,12 +677,11 @@ TEST(fea_lazy_graph, dirtyness) {
 	EXPECT_TRUE(graph.is_dirty(7));
 
 	cleaned_ids.clear();
-	graph.clean(6,
-			[&](unsigned id, const auto& parents, const auto& dirty_parents) {
-				test_parents(id, parents);
-				EXPECT_EQ(dirty_parents, parents);
-				cleaned_ids.push_back(id);
-			});
+	graph.clean(6, [&](unsigned id, const auto& parents) {
+		test_parents(id, parents);
+		EXPECT_EQ(num_dirty(parents), parents.size());
+		cleaned_ids.push_back(id);
+	});
 
 	// Only should clean 6.
 	EXPECT_EQ(cleaned_ids.size(), 1u);
@@ -718,13 +730,12 @@ TEST(fea_lazy_graph, dirtyness_mt) {
 	// Clean it.
 	std::vector<unsigned> cleaned_ids;
 	std::mutex m;
-	graph.clean_mt(4,
-			[&](unsigned id, const auto& parents, const auto& dirty_parents) {
-				std::lock_guard<std::mutex> g{ m };
-				test_parents(id, parents);
-				EXPECT_EQ(dirty_parents, parents);
-				cleaned_ids.push_back(id);
-			});
+	graph.clean_mt(4, [&](unsigned id, const auto& parents) {
+		std::lock_guard<std::mutex> g{ m };
+		test_parents(id, parents);
+		EXPECT_EQ(num_dirty(parents), parents.size());
+		cleaned_ids.push_back(id);
+	});
 
 
 	// Test the order of evaluation.
@@ -775,13 +786,12 @@ TEST(fea_lazy_graph, dirtyness_mt) {
 
 	// Clean it again.
 	cleaned_ids.clear();
-	graph.clean_mt(7,
-			[&](unsigned id, const auto& parents, const auto& dirty_parents) {
-				std::lock_guard<std::mutex> g{ m };
-				test_parents(id, parents);
-				EXPECT_EQ(dirty_parents, parents);
-				cleaned_ids.push_back(id);
-			});
+	graph.clean_mt(7, [&](unsigned id, const auto& parents) {
+		std::lock_guard<std::mutex> g{ m };
+		test_parents(id, parents);
+		EXPECT_EQ(num_dirty(parents), parents.size());
+		cleaned_ids.push_back(id);
+	});
 
 	// Test the order of evaluation.
 	EXPECT_GT(get_index(cleaned_ids, 2), get_index(cleaned_ids, 1));
@@ -843,13 +853,12 @@ TEST(fea_lazy_graph, dirtyness_mt) {
 	}
 
 	cleaned_ids.clear();
-	graph.clean_mt(2,
-			[&](unsigned id, const auto& parents, const auto& dirty_parents) {
-				std::lock_guard<std::mutex> g{ m };
-				test_parents(id, parents);
-				EXPECT_EQ(dirty_parents, parents);
-				cleaned_ids.push_back(id);
-			});
+	graph.clean_mt(2, [&](unsigned id, const auto& parents) {
+		std::lock_guard<std::mutex> g{ m };
+		test_parents(id, parents);
+		EXPECT_EQ(num_dirty(parents), parents.size());
+		cleaned_ids.push_back(id);
+	});
 
 
 	// Test the order of evaluation.
@@ -880,13 +889,12 @@ TEST(fea_lazy_graph, dirtyness_mt) {
 
 	graph.make_dirty(0);
 	cleaned_ids.clear();
-	graph.clean_mt(5,
-			[&](unsigned id, const auto& parents, const auto& dirty_parents) {
-				std::lock_guard<std::mutex> g{ m };
-				test_parents(id, parents);
-				EXPECT_EQ(dirty_parents, parents);
-				cleaned_ids.push_back(id);
-			});
+	graph.clean_mt(5, [&](unsigned id, const auto& parents) {
+		std::lock_guard<std::mutex> g{ m };
+		test_parents(id, parents);
+		EXPECT_EQ(num_dirty(parents), parents.size());
+		cleaned_ids.push_back(id);
+	});
 
 
 	// Test the order of evaluation.
@@ -921,7 +929,7 @@ TEST(fea_lazy_graph, dirtyness_mt) {
 	EXPECT_FALSE(contains(cleaned_ids, 7u));
 
 	// Clean everything
-	graph.clean_mt(7, [](unsigned, const auto&, const auto&) {});
+	graph.clean_mt(7, [](unsigned, const auto&) {});
 	EXPECT_FALSE(graph.is_dirty(0));
 	EXPECT_FALSE(graph.is_dirty(1));
 	EXPECT_FALSE(graph.is_dirty(2));
@@ -944,13 +952,12 @@ TEST(fea_lazy_graph, dirtyness_mt) {
 	EXPECT_TRUE(graph.is_dirty(7));
 
 	cleaned_ids.clear();
-	graph.clean_mt(6,
-			[&](unsigned id, const auto& parents, const auto& dirty_parents) {
-				std::lock_guard<std::mutex> g{ m };
-				test_parents(id, parents);
-				EXPECT_EQ(dirty_parents, parents);
-				cleaned_ids.push_back(id);
-			});
+	graph.clean_mt(6, [&](unsigned id, const auto& parents) {
+		std::lock_guard<std::mutex> g{ m };
+		test_parents(id, parents);
+		EXPECT_EQ(num_dirty(parents), parents.size());
+		cleaned_ids.push_back(id);
+	});
 
 
 	// Only should clean 6.

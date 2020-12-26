@@ -37,6 +37,7 @@
 
 #include <tuple>
 #include <type_traits>
+#include <utility>
 
 namespace fea {
 namespace detail {
@@ -104,7 +105,8 @@ FEA_INLINE_VAR constexpr bool tuple_contains_v
 
 namespace detail {
 template <class Func, class Tuple, size_t... I>
-constexpr void tuple_foreach(Func func, Tuple& tup, std::index_sequence<I...>) {
+constexpr void tuple_foreach(
+		Func&& func, Tuple&& tup, std::index_sequence<I...>) {
 #if FEA_CPP17
 	// TODO : test it.
 	(func(std::get<I>(tup)), ...);
@@ -119,9 +121,10 @@ constexpr void tuple_foreach(Func func, Tuple& tup, std::index_sequence<I...>) {
 // Your lambda will be called with each tuple's elements.
 // Provid lambda which accepts auto& or const auto&.
 template <class Func, class Tuple>
-constexpr void tuple_foreach(Func func, Tuple& tup) {
-	detail::tuple_foreach(func, tup,
-			std::make_index_sequence<std::tuple_size<Tuple>::value>{});
+constexpr void tuple_foreach(Func&& func, Tuple&& tup) {
+	detail::tuple_foreach(std::forward<Func>(func), std::forward<Tuple>(tup),
+			std::make_index_sequence<
+					std::tuple_size<std::decay_t<Tuple>>::value>{});
 }
 
 
@@ -145,4 +148,15 @@ constexpr decltype(auto) apply(F&& f, Tuple&& t) {
 }
 #endif
 
+// tuple_cats 2 tuple types together.
+template <class, class>
+struct tuple_type_cat;
+
+template <class... First, class... Second>
+struct tuple_type_cat<std::tuple<First...>, std::tuple<Second...>> {
+	using type = std::tuple<First..., Second...>;
+};
+
+template <class... Args>
+using tuple_type_cat_t = typename tuple_type_cat<Args...>::type;
 } // namespace fea

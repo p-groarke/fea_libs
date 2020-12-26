@@ -40,7 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <limits>
 #include <tuple>
 
-#if !defined(FEA_FSM_NOTHROW)
+#if !defined(FEA_NOTHROW)
 #include <stdexcept>
 #endif
 

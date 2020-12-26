@@ -1,4 +1,5 @@
-﻿#if defined(NDEBUG) && defined(FEA_BENCHMARKS)
+﻿#include <fea/utils/platform.hpp>
+#if defined(FEA_RELEASE) && defined(FEA_BENCHMARKS)
 #include "global.hpp"
 #include "small_obj.hpp"
 
@@ -44,7 +45,7 @@ void reserve_split_vec(
 constexpr bool sleep_between = true;
 
 namespace deep {
-#if defined(NDEBUG)
+#if FEA_RELEASE
 size_t depth = 25;
 #else
 size_t depth = 10;
@@ -55,7 +56,7 @@ size_t num_nodes = node_count(depth, width);
 
 namespace wide {
 size_t depth = 5;
-#if defined(NDEBUG)
+#if FEA_RELEASE
 size_t width = 75;
 #else
 size_t width = 30;
