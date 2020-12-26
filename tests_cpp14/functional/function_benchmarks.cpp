@@ -1,5 +1,5 @@
 ﻿#include <fea/utils/platform.hpp>
-#if defined(FEA_RELEASE) //&& defined(FEA_BENCHMARKS)
+#if defined(FEA_RELEASE) && defined(FEA_BENCHMARKS)
 
 #include <fea/benchmark/benchmark.hpp>
 #include <fea/meta/traits.hpp>
