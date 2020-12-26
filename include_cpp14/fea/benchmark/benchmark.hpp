@@ -114,10 +114,12 @@ static inline void clobber() {
 }
 
 struct suite {
+	// Set the title for the benchmark run. Optional.
 	void title(const char* message) {
 		_title = message;
 	}
 
+	// Run each benchmark num_runs times and average results.
 	void average(size_t num_runs) {
 		if (num_runs == 0) {
 			return;
@@ -125,15 +127,25 @@ struct suite {
 		_num_average = num_runs;
 	}
 
+	// Useful when profiling. Sleeps in between runs of the benchmarks.
+	void sleep_between(std::chrono::seconds seconds) {
+		_sleep_between = std::chrono::duration_cast<std::chrono::milliseconds>(
+				seconds);
+	}
+	void sleep_between(std::chrono::milliseconds milli_seconds) {
+		_sleep_between = milli_seconds;
+	}
+
 	// Run a benchmark on func.
 	// If averaging was set, will average the times.
 	// Pass in message (name of the benchmark).
+	// Pass in callable benchmark function or lambda.
 	// Pass in a function that will be executed in between runs
 	// (useful when averaging to reset things). This function isn't measured.
 	// It is executed after each call to func.
 	template <class Func, class InBetweenFunc>
 	void benchmark(
-			const char* message, Func&& func, InBetweenFunc inbetween_func) {
+			const char* message, Func&& func, InBetweenFunc&& inbetween_func) {
 
 		std::chrono::duration<double> elapsed_time = std::chrono::seconds(0);
 		std::this_thread::sleep_for(_sleep_between);
@@ -155,11 +167,17 @@ struct suite {
 				pair{ message, elapsed_time.count() / double(_num_average) });
 	}
 
+	// Run a benchmark on func.
+	// If averaging was set, will average the times.
+	// Pass in message (name of the benchmark).
 	template <class Func>
 	void benchmark(const char* message, Func&& func) {
 		benchmark(message, std::forward<Func>(func), []() {});
 	}
 
+	// Print the results of the benchmark run to selected stream output
+	// (defaults to stdout).
+	// Resets the suite to accept new benchmarks.
 	void print(FILE* stream = stdout) {
 		std::this_thread::sleep_for(_sleep_between);
 
@@ -189,21 +207,8 @@ struct suite {
 					70 - int(strlen(p.message)), p.time, ratio);
 		}
 		BENCH_PRINT_STREAM(stream, "%s", "\n");
-	}
 
-	void clear() {
-		_title = nullptr;
-		_num_average = 1;
 		_results.clear();
-	}
-
-	// Useful when profiling. Sleeps in between runs of the benchmarks.
-	void sleep_between(std::chrono::seconds seconds) {
-		_sleep_between = std::chrono::duration_cast<std::chrono::milliseconds>(
-				seconds);
-	}
-	void sleep_between(std::chrono::milliseconds milli_seconds) {
-		_sleep_between = milli_seconds;
 	}
 
 private:

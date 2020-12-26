@@ -250,7 +250,6 @@ TEST(function_cl, benchmarks) {
 			}
 		});
 		suite.print();
-		suite.clear();
 	}
 
 	{
@@ -302,7 +301,6 @@ TEST(function_cl, benchmarks) {
 			}
 		});
 		suite.print();
-		suite.clear();
 
 
 		// Generate random indexes, the same for all benchmarks.

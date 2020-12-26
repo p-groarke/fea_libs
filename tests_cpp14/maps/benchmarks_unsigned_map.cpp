@@ -6,7 +6,7 @@
 #include <array>
 #include <cstdio>
 #include <fea/benchmark/benchmark.hpp>
-#include <fea/unsigned_map/unsigned_map.hpp>
+#include <fea/maps/unsigned_map.hpp>
 #include <gtest/gtest.h>
 #include <map>
 #include <random>
@@ -112,7 +112,6 @@ void benchmarks(const std::vector<size_t>& keys) {
 		fea::unsigned_map<size_t, small_obj> cpy(unsigned_map_small);
 	});
 	suite.print();
-	suite.clear();
 
 
 	// Bench : copy ctor big
@@ -130,7 +129,6 @@ void benchmarks(const std::vector<size_t>& keys) {
 		fea::unsigned_map<size_t, big_obj> cpy(unsigned_map_big);
 	});
 	suite.print();
-	suite.clear();
 
 
 	// Bench : clear small
@@ -145,7 +143,6 @@ void benchmarks(const std::vector<size_t>& keys) {
 	suite.benchmark(
 			"fea::unsigned_map clear", [&]() { unsigned_map_small.clear(); });
 	suite.print();
-	suite.clear();
 
 	// Bench : clear big
 	title.fill('\0');
@@ -159,7 +156,6 @@ void benchmarks(const std::vector<size_t>& keys) {
 	suite.benchmark(
 			"fea::unsigned_map clear", [&]() { unsigned_map_big.clear(); });
 	suite.print();
-	suite.clear();
 
 
 	// Bench : insert small_obj
@@ -186,7 +182,6 @@ void benchmarks(const std::vector<size_t>& keys) {
 		}
 	});
 	suite.print();
-	suite.clear();
 	map_small.clear();
 	unordered_map_small.clear();
 	unsigned_map_small.clear();
@@ -214,7 +209,6 @@ void benchmarks(const std::vector<size_t>& keys) {
 		}
 	});
 	suite.print();
-	suite.clear();
 	map_big.clear();
 	unordered_map_big.clear();
 	unsigned_map_big.clear();
@@ -261,7 +255,6 @@ void benchmarks(const std::vector<size_t>& keys) {
 		}
 	});
 	suite.print();
-	suite.clear();
 	map_small.clear();
 	unordered_map_small.clear();
 	unsigned_map_small.clear();
@@ -299,7 +292,6 @@ void benchmarks(const std::vector<size_t>& keys) {
 		}
 	});
 	suite.print();
-	suite.clear();
 	map_big.clear();
 	unordered_map_big.clear();
 	unsigned_map_big.clear();
@@ -330,7 +322,6 @@ void benchmarks(const std::vector<size_t>& keys) {
 		}
 	});
 	suite.print();
-	suite.clear();
 	map_big.clear();
 	unordered_map_small.clear();
 	unsigned_map_small.clear();
@@ -361,7 +352,6 @@ void benchmarks(const std::vector<size_t>& keys) {
 		}
 	});
 	suite.print();
-	suite.clear();
 	map_big.clear();
 	unordered_map_big.clear();
 	unsigned_map_big.clear();
@@ -402,7 +392,6 @@ void benchmarks(const std::vector<size_t>& keys) {
 		}
 	});
 	suite.print();
-	suite.clear();
 
 	map_small.clear();
 	unordered_map_small.clear();
@@ -442,7 +431,6 @@ void benchmarks(const std::vector<size_t>& keys) {
 		}
 	});
 	suite.print();
-	suite.clear();
 
 	map_big.clear();
 	unordered_map_big.clear();

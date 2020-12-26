@@ -62,6 +62,8 @@ template <bool, class>
 struct function_cl;
 
 // In this specialization, we are guaranteed to never hold member functions.
+// Thus, this is a true zero cost abstraction, only holding a pointer to
+// function.
 template <class FuncRet, class... FuncArgs>
 struct function_cl<false, FuncRet(FuncArgs...)> {
 	using plain_t = FuncRet (*)(FuncArgs...);
