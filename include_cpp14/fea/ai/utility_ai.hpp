@@ -49,6 +49,7 @@ arguments first and then the predicate arguments. For example :
 
 ai.trigger(int&, double, int);
 
+TODO :
 CaptureLess Mode
 By default, the container stores your actions and predicates in std::function.
 This can be an issue for various reasons. To enable storing your callbacks as
@@ -58,15 +59,15 @@ fea::utility_ai_cl<utility_function, void(int&, double), float(int)> ai;
 */
 
 namespace fea {
-template <class, class, class, bool = false>
+template <class, class, class>
 struct utility_ai;
 
 template <class FunctionEnum, class ActionReturn, class... ActionArgs,
-		class PredReturn, class... PredArgs, bool CaptureLess>
+		class PredReturn, class... PredArgs>
 struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
-		PredReturn(PredArgs...), CaptureLess> {
-	using action_t = fea::function<ActionReturn(ActionArgs...), CaptureLess>;
-	using predicate_t = fea::function<PredReturn(ActionArgs...), CaptureLess>;
+		PredReturn(PredArgs...)> {
+	using action_t = std::function<ActionReturn(ActionArgs...)>;
+	using predicate_t = std::function<PredReturn(ActionArgs...)>;
 
 	utility_ai() = default;
 	utility_ai(const utility_ai&) = default;
@@ -275,11 +276,12 @@ private:
 };
 
 
-// Alias for captureless utility_ai.
-// Captureless versions of classes do not use std::function, they store
-// callbacks as raw function pointers.
-template <class UtilityFunctionEnum, class ActionSignature,
-		class PredicateSignature>
-using utility_ai_cl = utility_ai<UtilityFunctionEnum, ActionSignature,
-		PredicateSignature, true>;
+// TODO
+//// Alias for captureless utility_ai.
+//// Captureless versions of classes do not use std::function, they store
+//// callbacks as raw function pointers.
+// template <class UtilityFunctionEnum, class ActionSignature,
+//		class PredicateSignature>
+// using utility_ai_cl = utility_ai<UtilityFunctionEnum, ActionSignature,
+//		PredicateSignature, true>;
 } // namespace fea

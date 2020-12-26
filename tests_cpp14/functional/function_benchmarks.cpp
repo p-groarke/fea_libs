@@ -254,7 +254,7 @@ TEST(function_cl, benchmarks) {
 	}
 
 	{
-		constexpr size_t vec_size = 100'000'000;
+		constexpr size_t vec_size = 10'000'000;
 		answer = 0;
 		std::vector<raw_ptr_t> raw_vec(vec_size, &bench_obj::func);
 		std::vector<std::function<void(bench_obj*, size_t&)>> std_function_vec(
@@ -268,7 +268,9 @@ TEST(function_cl, benchmarks) {
 		std::vector<fea::function_cl<void(bench_obj*, size_t&)>>
 				fea_function_cl_vec(vec_size, &bench_obj::func);
 
-		suite.title("Callables Stored In A Vector, Iterated Linearly");
+		std::string title = std::to_string(vec_size)
+				+ " Callables Stored In A Vector, Iterated Linearly";
+		suite.title(title.c_str());
 		suite.benchmark("Raw Member Pointer", [&]() {
 			for (size_t i = 0; i < raw_vec.size(); ++i) {
 				(obj.*raw_vec[i])(answer);
@@ -310,7 +312,9 @@ TEST(function_cl, benchmarks) {
 				[&]() { return vec_dist(engine); });
 
 
-		suite.title("Callables Stored In A Vector, Iterated Randomly");
+		title = std::to_string(vec_size)
+				+ " Callables Stored In A Vector, Iterated Randomly";
+		suite.title(title.c_str());
 		suite.benchmark("Raw Member Pointer", [&]() {
 			for (size_t i = 0; i < raw_vec.size(); ++i) {
 				size_t idx = random_idxes[i];

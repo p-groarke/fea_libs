@@ -54,7 +54,10 @@ TEST(tuple, basics) {
 		size_t idx = 0;
 
 		fea::tuple_foreach(
-				[&](auto v) { visited[idx++] = typeid(v).name(); }, tup);
+				[&](auto v) {
+					visited[idx++] = std::string{ typeid(v).name() };
+				},
+				tup);
 
 		const std::array<std::string, 4> expected{ "int", "double", "float",
 			"short" };
@@ -65,7 +68,7 @@ TEST(tuple, basics) {
 		std::tuple<int, double, float, short> tup{};
 		fea::apply(
 				[&](auto... args) {
-					EXPECT_EQ(sizeof...(args), 4);
+					EXPECT_EQ(sizeof...(args), 4u);
 					static_assert(std::is_same<std::tuple<decltype(args)...>,
 										  decltype(tup)>::value,
 							"tuple.cpp : test failed");
