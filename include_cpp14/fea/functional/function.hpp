@@ -71,7 +71,7 @@ struct function_cl<false, FuncRet(FuncArgs...)> {
 
 	// Accept raw function pointers and captureless lambdas.
 	constexpr function_cl(plain_t func)
-			: _c_func(func) {
+			: _plain_func(func) {
 	}
 
 	// Delete this constructor.
@@ -80,12 +80,33 @@ struct function_cl<false, FuncRet(FuncArgs...)> {
 	template <class T, class... Args>
 	constexpr function_cl(FuncRet (T::*)(Args...)) = delete;
 
-	constexpr FuncRet operator()(FuncArgs... func_args) const {
-		return _c_func(std::forward<FuncArgs>(func_args)...);
+	// Delete this constructor.
+	// Remember the first argument of a member signature must be a pointer to
+	// the class.
+	template <class T, class... Args>
+	constexpr function_cl(FuncRet (T::*)(Args...) const) = delete;
+
+	// Accept captureless lambdas.
+	template <class L>
+	constexpr function_cl(L&& l) noexcept
+			: _plain_func(plain_t(std::forward<L>(l))) {
+
+		static_assert(std::is_convertible<L, plain_t>::value,
+				"fea::function_cl : Cannot convert from L to function pointer. "
+				"Did you pass in a lambda with a capture?");
 	}
 
+	constexpr FuncRet operator()(FuncArgs... func_args) const {
+		return _plain_func(std::forward<FuncArgs>(func_args)...);
+	}
+
+	explicit operator bool() const noexcept {
+		return _plain_func != nullptr;
+	}
+
+
 private:
-	plain_t _c_func = nullptr;
+	plain_t _plain_func{ nullptr };
 };
 
 // We may, but are not guaranteed, store a member function pointer.
@@ -100,7 +121,8 @@ struct function_cl<true, FuncRet(T*, FuncArgs...)> {
 
 	// Accept raw function pointers and captureless lambdas.
 	constexpr function_cl(plain_t func) noexcept
-			: _func_union(func) {
+			: _func_union(func)
+			, _held_func(held_func::plain) {
 	}
 
 	// Accept member pointers.
@@ -113,6 +135,17 @@ struct function_cl<true, FuncRet(T*, FuncArgs...)> {
 	constexpr function_cl(const_member_t func) noexcept
 			: _func_union(func)
 			, _held_func(held_func::const_member) {
+	}
+
+	// Accept captureless lambdas.
+	template <class L>
+	constexpr function_cl(L&& l) noexcept
+			: _func_union(plain_t(std::forward<L>(l)))
+			, _held_func(held_func::plain) {
+
+		static_assert(std::is_convertible<L, plain_t>::value,
+				"fea::function_cl : Cannot convert from L to function pointer. "
+				"Did you pass in a lambda with a capture?");
 	}
 
 	constexpr FuncRet operator()(T* obj, FuncArgs... func_args) const {
@@ -131,6 +164,9 @@ struct function_cl<true, FuncRet(T*, FuncArgs...)> {
 		} break;
 		default: {
 			assert(false);
+			// Prevent compile error. This should never be executed.
+			return _func_union.plain_func(
+					obj, std::forward<FuncArgs>(func_args)...);
 		} break;
 		}
 	}
@@ -138,7 +174,7 @@ struct function_cl<true, FuncRet(T*, FuncArgs...)> {
 	explicit operator bool() const noexcept {
 		switch (_held_func) {
 		case held_func::plain: {
-			return _func_union.c_func != nullptr;
+			return _func_union.plain_func != nullptr;
 		} break;
 		case held_func::member: {
 			return _func_union.mem_func != nullptr;
@@ -147,13 +183,16 @@ struct function_cl<true, FuncRet(T*, FuncArgs...)> {
 			return _func_union.const_mem_func != nullptr;
 		} break;
 		default: {
-			assert(false);
+			return false;
 		} break;
 		}
 	}
 
 private:
 	union func_u {
+		constexpr func_u() noexcept
+				: plain_func(nullptr) {
+		}
 		constexpr explicit func_u(plain_t f) noexcept
 				: plain_func(f) {
 		}
@@ -173,11 +212,10 @@ private:
 		plain,
 		member,
 		const_member,
-		// count,
 	};
 
-	func_u _func_union{ plain_t(nullptr) };
-	held_func _held_func = held_func::plain;
+	func_u _func_union{};
+	held_func _held_func{};
 };
 
 // Selects the appropriate class by checking if first signature argument is a
