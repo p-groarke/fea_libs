@@ -29,6 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #pragma once
+#include "fea/time/time.hpp"
 #include "fea/utils/unused.hpp"
 
 #include <algorithm>
@@ -129,8 +130,7 @@ struct suite {
 
 	// Useful when profiling. Sleeps in between runs of the benchmarks.
 	void sleep_between(std::chrono::seconds seconds) {
-		_sleep_between = std::chrono::duration_cast<std::chrono::milliseconds>(
-				seconds);
+		_sleep_between = std::chrono::milliseconds(seconds);
 	}
 	void sleep_between(std::chrono::milliseconds milli_seconds) {
 		_sleep_between = milli_seconds;
@@ -147,7 +147,7 @@ struct suite {
 	void benchmark(
 			const char* message, Func&& func, InBetweenFunc&& inbetween_func) {
 
-		std::chrono::duration<double> elapsed_time = std::chrono::seconds(0);
+		clock_duration_t elapsed_time = clock_duration_t(0);
 		std::this_thread::sleep_for(_sleep_between);
 
 		for (size_t i = 0; i < _num_average; ++i) {
@@ -163,8 +163,9 @@ struct suite {
 			inbetween_func();
 		}
 
+		fea::dseconds elapsed_d(elapsed_time);
 		_results.push_back(
-				pair{ message, elapsed_time.count() / double(_num_average) });
+				pair{ message, elapsed_d.count() / double(_num_average) });
 	}
 
 	// Run a benchmark on func.
@@ -212,6 +213,8 @@ struct suite {
 	}
 
 private:
+	using clock_duration_t = std::chrono::steady_clock::duration;
+
 	struct pair {
 		pair(const char* msg, double t)
 				: message(msg)
