@@ -49,13 +49,36 @@ TEST(tuple, basics) {
 	}
 
 	{
+
+#if FEA_CPP17
+#define FEA_CEXPR constexpr
+#else
+#define FEA_CEXPR
+#endif
+
 		std::tuple<int, double, float, short> tup{};
 		std::array<std::string, 4> visited;
 		size_t idx = 0;
 
 		fea::tuple_foreach(
 				[&](auto v) {
-					visited[idx++] = std::string{ typeid(v).name() };
+					std::string str{};
+					if FEA_CEXPR (std::is_same<decltype(v), int>::value) {
+						str = "int";
+					} else if FEA_CEXPR (std::is_same<decltype(v),
+												 double>::value) {
+						str = "double";
+					} else if FEA_CEXPR (std::is_same<decltype(v),
+												 float>::value) {
+						str = "float";
+					} else if FEA_CEXPR (std::is_same<decltype(v),
+												 short>::value) {
+						str = "short";
+					} else {
+						EXPECT_TRUE(false);
+					}
+					visited[idx++] = str;
+					// visited[idx++] = std::string{ typeid(v).name() };
 				},
 				tup);
 
