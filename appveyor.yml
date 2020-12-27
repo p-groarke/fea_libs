@@ -8,7 +8,7 @@ platform:
 configuration:
   - Debug
   - Release
-clone_folder: c:\projects\fea
+clone_folder: c:\projects\fea_libs
 install:
   - cmd: set PATH=%PATH%;%PYTHON%/Scripts/
   - cmd: pip.exe install conan
@@ -17,12 +17,12 @@ install:
   - cmd: conan --version
   - cmd: conan remote add bincrafters https://api.bintray.com/conan/conan/conan-center
   - cmd: conan profile new default --detect
-  - cmd: cd c:\projects\fea
+  - cmd: cd c:\projects\fea_libs
 build:
-  project: c:\projects\fea\build\fea.sln
+  project: c:\projects\fea_libs\build\fea_libs.sln
   parallel: true
 test_script:
-  - cmd: c:\projects\fea\build\bin\fea_tests.exe
+  - cmd: c:\projects\fea_libs\build\bin\fea_libs_tests.exe
 for:
   -
     matrix:
@@ -31,7 +31,7 @@ for:
           image: Visual Studio 2015
     before_build:
       - cmd: conan profile update settings.arch="x86_64" default
-      - cmd: cd c:\projects\fea
+      - cmd: cd c:\projects\fea_libs
       - cmd: mkdir build
       - cmd: cd build
       - cmd: cmake .. -A %PLATFORM% -DFEA_CPP14=On
@@ -42,7 +42,7 @@ for:
           image: Visual Studio 2015
     before_build:
       - cmd: conan profile update settings.arch="x86" default
-      - cmd: cd c:\projects\fea
+      - cmd: cd c:\projects\fea_libs
       - cmd: mkdir build
       - cmd: cd build
       - cmd: cmake .. -A %PLATFORM% -DFEA_CPP14=On
@@ -52,7 +52,7 @@ for:
         - platform: x64
     before_build:
       - cmd: conan profile update settings.arch="x86_64" default
-      - cmd: cd c:\projects\fea
+      - cmd: cd c:\projects\fea_libs
       - cmd: mkdir build
       - cmd: cd build
       - cmd: cmake .. -A %PLATFORM%
@@ -62,7 +62,7 @@ for:
         - platform: Win32
     before_build:
       - cmd: conan profile update settings.arch="x86" default
-      - cmd: cd c:\projects\fea
+      - cmd: cd c:\projects\fea_libs
       - cmd: mkdir build
       - cmd: cd build
       - cmd: cmake .. -A %PLATFORM%
