@@ -60,6 +60,23 @@ inline std::filesystem::path executable_dir(const char* argv0) {
 	return c_path.parent_path();
 #endif
 }
+inline std::filesystem::path wexecutable_dir(const wchar_t* argv0) {
+#if defined(FEA_WINDOWS)
+	return std::filesystem::absolute(argv0).remove_filename();
+#else
+	std::filesystem::path c_path = std::filesystem::current_path();
+	std::wstring arg{ argv0 };
+	if (starts_with(arg, L".")) {
+		arg.erase(0, 1);
+	}
+	c_path += std::filesystem::path{ arg };
+	if (c_path.wstring().find(L".") != std::wstring::npos) {
+		return c_path.remove_filename();
+	}
+
+	return c_path.parent_path();
+#endif
+}
 
 
 // Returns the full size of the filestream. Leaves the stream at the beginning.
