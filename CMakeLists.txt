@@ -91,15 +91,16 @@ find_package(date CONFIG REQUIRED)
 
 
 # Main Project
-file(GLOB_RECURSE HEADER_FILES_CPP14 "include_cpp14/${PROJECT_NAME}/*.hpp")
-file(GLOB_RECURSE HEADER_FILES_CPP17 "include_cpp17/${PROJECT_NAME}/*.hpp")
+set(INCLUDE_NAME fea)
+file(GLOB_RECURSE HEADER_FILES_CPP14 "include_cpp14/${INCLUDE_NAME}/*.hpp")
+file(GLOB_RECURSE HEADER_FILES_CPP17 "include_cpp17/${INCLUDE_NAME}/*.hpp")
 add_library(${PROJECT_NAME} INTERFACE)
 set_compile_options(${PROJECT_NAME} INTERFACE)
 target_link_libraries(${PROJECT_NAME} INTERFACE TBB::TBB date::date)
 
 # To see files in IDE
 target_sources(${PROJECT_NAME} INTERFACE
-	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+	# $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 	"$<BUILD_INTERFACE:${HEADER_FILES_CPP14}>"
 	"$<BUILD_INTERFACE:$<$<COMPILE_FEATURES:cxx_std_17>:${HEADER_FILES_CPP17}>>"
 )
@@ -111,8 +112,10 @@ target_include_directories(${PROJECT_NAME} INTERFACE
 	$<BUILD_INTERFACE:$<$<COMPILE_FEATURES:cxx_std_17>:${CMAKE_CURRENT_SOURCE_DIR}/include_cpp17>>
 )
 
-make_pretty_source_folders("include_cpp14/fea" "Header Files" "${HEADER_FILES_CPP14}")
-make_pretty_source_folders("include_cpp17/fea" "Header Files" "${HEADER_FILES_CPP17}")
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include_cpp14 PREFIX "Header Files" FILES ${HEADER_FILES_CPP14})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include_cpp17 PREFIX "Header Files" FILES ${HEADER_FILES_CPP17})
+# make_pretty_source_folders("include_cpp14/fea" "Header Files" "${HEADER_FILES_CPP14}")
+# make_pretty_source_folders("include_cpp17/fea" "Header Files" "${HEADER_FILES_CPP17}")
 
 # Install Package Configuration
 install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}_targets)
@@ -123,9 +126,9 @@ install(EXPORT ${PROJECT_NAME}_targets
 	DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/${PROJECT_NAME}"
 )
 
-install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include_cpp14/${PROJECT_NAME}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include_cpp14/${INCLUDE_NAME}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 if (${CMAKE_CXX_STANDARD} GREATER_EQUAL 17)
-	install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include_cpp17/${PROJECT_NAME}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+	install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include_cpp17/${INCLUDE_NAME}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 endif()
 
 # Tests
@@ -145,12 +148,15 @@ if (${FEA_TESTS})
 	set_compile_options(${TEST_NAME} PRIVATE)
 
 	# g++ 8 needs to link with seperate filesystem library.
-	target_link_libraries(${TEST_NAME} PRIVATE ${PROJECT_NAME} GTest::GTest TBB::TBB
+	target_link_libraries(${TEST_NAME} PUBLIC ${PROJECT_NAME} GTest::GTest TBB::TBB
 		$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:${CMAKE_CXX_COMPILER_VERSION},9.0>>:stdc++fs>
 	)
 
-	make_pretty_source_folders("tests_cpp14" "Source Files" "${TEST_SOURCES_CPP14}")
-	make_pretty_source_folders("tests_cpp17" "Source Files" "${TEST_SOURCES_CPP17}")
+
+	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp14 PREFIX "Source Files" FILES ${TEST_SOURCES_CPP14})
+	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp17 PREFIX "Source Files" FILES ${TEST_SOURCES_CPP17})
+	# make_pretty_source_folders("tests_cpp14" "Source Files" "${TEST_SOURCES_CPP14}")
+	# make_pretty_source_folders("tests_cpp17" "Source Files" "${TEST_SOURCES_CPP17}")
 
 	if (${FEA_BENCHMARKS})
 		target_compile_definitions(${TEST_NAME} PRIVATE FEA_BENCHMARKS)
