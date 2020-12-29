@@ -1,10 +1,11 @@
 ﻿#pragma once
+#include "fea/utils/platform.hpp"
+
 #include <chrono>
 #include <limits>
 #include <random>
 #include <type_traits>
 
-// TODO : move to fea_libs
 namespace fea {
 namespace detail {
 template <size_t Bytes>
@@ -23,12 +24,13 @@ struct platform_mersenne<8> {
 using platform_mt19937 =
 		typename detail::platform_mersenne<sizeof(size_t)>::type;
 
-inline std::random_device rd;
-inline platform_mt19937 gen(
+FEA_INLINE_VAR std::random_device rd;
+FEA_INLINE_VAR platform_mt19937 gen(
 		size_t(std::chrono::system_clock::now().time_since_epoch().count()));
 
 } // namespace detail
 
+// Get a random int, from lowest to highest int value.
 template <class T>
 T random_int() {
 	std::uniform_int_distribution<T> dist(
@@ -36,12 +38,14 @@ T random_int() {
 	return dist(detail::gen);
 }
 
+// Get a random int between [min, max].
 template <class T>
 T random_int(T min, T max) {
 	std::uniform_int_distribution<T> dist(min, max);
 	return dist(detail::gen);
 }
 
+// Get a random index, from 0 to count - 1.
 inline size_t random_idx(size_t count) {
 	std::uniform_int_distribution<size_t> dist(0, count - 1);
 	return dist(detail::gen);
