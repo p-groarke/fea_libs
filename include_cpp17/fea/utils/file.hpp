@@ -442,6 +442,11 @@ inline text_encoding detect_encoding(const std::string& str) {
 }
 
 inline std::u32string open_text_file_with_bom(std::ifstream& src) {
+	if (!src.is_open()) {
+		assert(false);
+		return {};
+	}
+
 	// File BOMs
 	const std::vector<std::string> boms = {
 		std::string("\x00\x00\xFE\xFF", 4), // utf32be

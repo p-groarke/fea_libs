@@ -210,6 +210,15 @@ template <class CharT>
 			str, m_string<CharT>{ search }, m_string<CharT>{ replace });
 }
 
+template <class CharT, class Func>
+void for_each_line(const m_string<CharT>& str, Func&& func) {
+	std::basic_istringstream iss(str);
+	m_string<CharT> line;
+	while (std::getline(iss, line)) {
+		std::forward<Func>(func)(line);
+	}
+}
+
 
 // The standard doesn't provide codecvt equivalents. Use the old
 // functionality until they do.
