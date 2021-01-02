@@ -37,6 +37,7 @@
 
 #include <tuple>
 #include <type_traits>
+#include <utility>
 
 namespace fea {
 // Checks if the all the passed in traits are true.
@@ -211,5 +212,35 @@ struct member_func_ptr<Ret, T*, Rest...>
 
 template <class Ret, class... Args>
 using member_func_ptr_t = typename member_func_ptr<Ret, Args...>::type;
+
+
+namespace detail {
+template <class Enum, class Func, size_t... Idx>
+constexpr auto explode_enum(Func&& func, std::index_sequence<Idx...>) {
+	return std::forward<Func>(func)(
+			std::integral_constant<Enum, Enum(Idx)>{}...);
+}
+} // namespace detail
+
+// Explodes all enum values into a non-type parameter pack and calls your
+// function with it.
+// Enum must be from 0 to N.
+// You must "extract" the non-type enum as it is passed by
+// std::integral_constant, use ::value.
+template <class Enum, size_t N, class Func>
+constexpr auto explode_enum(Func&& func) {
+	return detail::explode_enum<Enum>(
+			std::forward<Func>(func), std::make_index_sequence<N>{});
+}
+
+// Explodes all enum values into a non-type parameter pack and calls your
+// function with it.
+// Enum must be from 0 to N.
+// Overload for enums that contain a 'count' member.
+template <class Enum, class Func>
+constexpr auto explode_enum(Func&& func) {
+	return detail::explode_enum<Enum>(std::forward<Func>(func),
+			std::make_index_sequence<size_t(Enum::count)>{});
+}
 
 } // namespace fea
