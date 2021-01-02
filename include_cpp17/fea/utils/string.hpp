@@ -255,7 +255,7 @@ template <class CharT>
 template <class CharT>
 [[nodiscard]] m_string<CharT> trim_trailing(
 		const m_string<CharT>& str, const CharT* trim_chars) {
-	size_t new_end = str.find_first_not_of(trim_chars);
+	size_t new_end = str.find_last_not_of(trim_chars);
 	if (new_end == m_string<CharT>::npos) {
 		return {};
 	}
