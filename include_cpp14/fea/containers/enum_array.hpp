@@ -2,6 +2,7 @@
 #include "fea/utils/platform.hpp"
 
 #include <array>
+#include <type_traits>
 
 /*
 enum_array is a wrapper on std::array, which allows to access elements with
@@ -39,18 +40,26 @@ struct enum_array : public std::array<T, N> {
 #if FEA_CPP17
 template <auto I, class T, class E, size_t N>
 constexpr T& get(enum_array<T, E, N>& a) noexcept {
+	static_assert(std::is_same_v<decltype(I), E>,
+			"enum_array : passed in wrong enum type");
 	return std::get<size_t(I)>(a);
 }
 template <auto I, class T, class E, size_t N>
 constexpr T&& get(enum_array<T, E, N>&& a) noexcept {
+	static_assert(std::is_same_v<decltype(I), E>,
+			"enum_array : passed in wrong enum type");
 	return std::get<size_t(I)>(std::move(a));
 }
 template <auto I, class T, class E, size_t N>
 constexpr const T& get(const enum_array<T, E, N>& a) noexcept {
+	static_assert(std::is_same_v<decltype(I), E>,
+			"enum_array : passed in wrong enum type");
 	return std::get<size_t(I)>(a);
 }
 template <auto I, class T, class E, size_t N>
 constexpr const T&& get(const enum_array<T, E, N>&& a) noexcept {
+	static_assert(std::is_same_v<decltype(I), E>,
+			"enum_array : passed in wrong enum type");
 	return std::get<size_t(I)>(std::move(a));
 }
 #endif
