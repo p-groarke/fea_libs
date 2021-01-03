@@ -86,19 +86,19 @@ const std::u32string& to_u32string(ename e);
 			= fea::split(ename##_detail::ename##_u32string, U", "); \
 	\
 	template <> \
-	const std::vector<std::string>& enum_strings<ename>() { \
+	inline const std::vector<std::string>& enum_strings<ename>() { \
 		return ename##_strings; \
 	} \
 	template <> \
-	const std::vector<std::wstring>& enum_wstrings<ename>() { \
+	inline const std::vector<std::wstring>& enum_wstrings<ename>() { \
 		return ename##_wstrings; \
 	} \
 	template <> \
-	const std::vector<std::u16string>& enum_u16strings<ename>() { \
+	inline const std::vector<std::u16string>& enum_u16strings<ename>() { \
 		return ename##_u16strings; \
 	} \
 	template <> \
-	const std::vector<std::u32string>& enum_u32strings<ename>() { \
+	inline const std::vector<std::u32string>& enum_u32strings<ename>() { \
 		return ename##_u32strings; \
 	} \
 	\
