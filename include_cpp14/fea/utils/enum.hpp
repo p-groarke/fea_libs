@@ -32,86 +32,133 @@
  **/
 
 #pragma once
+#include "fea/containers/enum_array.hpp"
+#include "fea/meta/macros.hpp"
 #include "fea/utils/platform.hpp"
 #include "fea/utils/string.hpp"
 
+#include <array>
 #include <string>
-#include <vector>
 
 /*
-FEA_STRING_ENUM creates an accompanying vector of enum strings and some
-accessors. It only works on enums that start at 0 to N!
+FEA_STRING_ENUM creates an enum with accompanying fea::enum_arrays of
+strings and useful accessors.
+
+All generated data and functions live in namespace 'enu'.
+
+Call the macro using (enum_name, enum_underlying_type, your, enum, values, ...)
+You must always provide an underlying_type.
+
+Example :
+FEA_STRING_ENUM(my_enum, unsigned, potato, tomato)
 
 Generates :
-enum class ename : type {...};
-const std::vector<std::string> ename_strings;
-const std::vector<std::string>& enum_strings<ename>();
-const std::string& to_string(ename e);
+enum class my_enum : unsigned { potato, tomato };
 
-Plus, it generates all of these for all string types :
+namespace enu {
+constexpr fea::enum_array<const char* const, ...> my_enum_literals;
+const fea::enum_array<std::string, ...> my_enum_strings;
+
+constexpr const fea::enum_array<const char* const>& literals<my_enum>();
+constexpr const fea::enum_array<std::string>& strings<my_enum>();
+
+constexpr const char* const to_literal(my_enum e);
+constexpr const std::string& to_string(my_enum e);
+
+template <my_enum E>
+constexpr const char* const to_literal();
+template <my_enum E>
+constexpr const std::string& to_string();
+
+} // namespace enu
+
+It generates all of these for all string types :
 string, wstring, u16string, u32string.
 
 Prepend "string" with your desired string type. For ex, u32.
-const std::vector<std::u32string> ename_u32strings;
-const std::vector<std::u32string>& enum_u32strings<ename>();
-const std::u32string& to_u32string(ename e);
+constexpr fea::enum_array<const char32_t* const, ...> my_enum_u32literals;
+const fea::enum_array<std::u32string, ...> my_enum_u32strings;
+
+etc...
+
 */
-// clang-format off
-#define FEA_STRING_ENUM(ename, utype, ...) \
-	template <class> \
-	const std::vector<std::string>& enum_strings(); \
-	template <class> \
-	const std::vector<std::wstring>& enum_wstrings(); \
-	template <class> \
-	const std::vector<std::u16string>& enum_u16strings(); \
-	template <class> \
-	const std::vector<std::u32string>& enum_u32strings(); \
-	\
-	enum class ename : utype { __VA_ARGS__ }; \
-	\
-	namespace ename##_detail { \
-		FEA_INLINE_VAR const std::string ename##_string = #__VA_ARGS__; \
-		FEA_INLINE_VAR const std::wstring ename##_wstring = L#__VA_ARGS__; \
-		FEA_INLINE_VAR const std::u16string ename##_u16string = u#__VA_ARGS__; \
-		FEA_INLINE_VAR const std::u32string ename##_u32string = U#__VA_ARGS__; \
-	} \
-	\
-	FEA_INLINE_VAR const std::vector<std::string> ename##_strings \
-			= fea::split(ename##_detail::ename##_string, ", "); \
-	FEA_INLINE_VAR const std::vector<std::wstring> ename##_wstrings \
-			= fea::split(ename##_detail::ename##_wstring, L", "); \
-	FEA_INLINE_VAR const std::vector<std::u16string> ename##_u16strings \
-			= fea::split(ename##_detail::ename##_u16string, u", "); \
-	FEA_INLINE_VAR const std::vector<std::u32string> ename##_u32strings \
-			= fea::split(ename##_detail::ename##_u32string, U", "); \
-	\
-	template <> \
-	inline const std::vector<std::string>& enum_strings<ename>() { \
-		return ename##_strings; \
-	} \
-	template <> \
-	inline const std::vector<std::wstring>& enum_wstrings<ename>() { \
-		return ename##_wstrings; \
-	} \
-	template <> \
-	inline const std::vector<std::u16string>& enum_u16strings<ename>() { \
-		return ename##_u16strings; \
-	} \
-	template <> \
-	inline const std::vector<std::u32string>& enum_u32strings<ename>() { \
-		return ename##_u32strings; \
-	} \
-	\
-	inline const std::string& to_string(ename e) { \
-		return ename##_strings[size_t(e)]; \
-	}\
-	inline const std::wstring& to_wstring(ename e) { \
-		return ename##_wstrings[size_t(e)]; \
-	}\
-	inline const std::u16string& to_u16string(ename e) { \
-		return ename##_u16strings[size_t(e)]; \
-	}\
-	inline const std::u32string& to_u32string(ename e) { \
-		return ename##_u32strings[size_t(e)]; \
+
+// Get the variables' name.
+#define FEA_DETAIL_SE_VARNAME(prefix, ename, suffix) \
+	FEA_PASTE(ename, FEA_PASTE(_, FEA_PASTE(prefix, suffix)))
+
+// Generates an enum_array of const char* const and one of std::string.
+// The arrays are prefixed with the provided string type prefix.
+#define FEA_DETAIL_SE_ARRAYS(stringify_macro, chartype, prefix, ename, ...) \
+	FEA_INLINE_VAR constexpr fea::enum_array<const chartype* const, ename, \
+			FEA_SIZEOF_VAARGS(__VA_ARGS__)> \
+			FEA_DETAIL_SE_VARNAME(prefix, ename, \
+					literals){ FEA_FOR_EACH(stringify_macro, __VA_ARGS__) }; \
+	FEA_INLINE_VAR const fea::enum_array<fea::m_string<chartype>, ename, \
+			FEA_SIZEOF_VAARGS(__VA_ARGS__)> \
+	FEA_DETAIL_SE_VARNAME(prefix, ename, strings) { \
+		FEA_FOR_EACH(stringify_macro, __VA_ARGS__) \
 	}
-// clang-format on
+
+// Declares and implements helper functions.
+// literals<enum>(), to_literal<enum::val>(), to_literal(enum::val) and same for
+// strings.
+#define FEA_DETAIL_SE_FUNCS(chartype, prefix, ename) \
+	/* Forward declares template functions we specialize. */ \
+	template <class> \
+	constexpr const auto& FEA_PASTE(prefix, literals)(); \
+	template <class> \
+	constexpr const auto& FEA_PASTE(prefix, strings)(); \
+	/* Specialize the above function declarations. */ \
+	template <> \
+	constexpr const auto& FEA_PASTE(prefix, literals)<ename>() { \
+		return FEA_DETAIL_SE_VARNAME(prefix, ename, literals); \
+	} \
+	template <> \
+	constexpr const auto& FEA_PASTE(prefix, strings)<ename>() { \
+		return FEA_DETAIL_SE_VARNAME(prefix, ename, strings); \
+	} \
+	/* Non-type compile-time getters. */ \
+	template <ename E> \
+	constexpr const chartype* const FEA_DETAIL_SE_VARNAME( \
+			prefix, to, literal)() { \
+		return fea::get<E>(FEA_DETAIL_SE_VARNAME(prefix, ename, literals)); \
+	} \
+	template <ename E> \
+	constexpr const std::string& FEA_DETAIL_SE_VARNAME(prefix, to, string)() { \
+		return fea::get<E>(FEA_DETAIL_SE_VARNAME(prefix, ename, strings)); \
+	} \
+	/* Non-templated getters, fast O(1). */ \
+	inline constexpr const chartype* const FEA_DETAIL_SE_VARNAME( \
+			prefix, to, literal)(ename e) { \
+		return FEA_DETAIL_SE_VARNAME(prefix, ename, literals)[e]; \
+	} \
+	inline constexpr const fea::m_string<chartype>& FEA_DETAIL_SE_VARNAME( \
+			prefix, to, string)(ename e) { \
+		return FEA_DETAIL_SE_VARNAME(prefix, ename, strings)[e]; \
+	}
+
+
+// Generates both an enum and accompanying arrays of enum strings and functions.
+#define FEA_STRING_ENUM(ename, utype, ...) \
+	/* Declares your enum. */ \
+	enum class ename : utype { __VA_ARGS__ }; \
+	/* All strings and functions are declared in namespace 'enu'. */ \
+	namespace enu { \
+	/* char and std::string */ \
+	FEA_DETAIL_SE_ARRAYS(FEA_STRINGIFY_COMMA, char, , ename, __VA_ARGS__); \
+	FEA_DETAIL_SE_FUNCS(char, , ename) \
+	/* wchar_t and std::wstring */ \
+	FEA_DETAIL_SE_ARRAYS( \
+			FEA_WSTRINGIFY_COMMA, wchar_t, w, ename, __VA_ARGS__); \
+	FEA_DETAIL_SE_FUNCS(wchar_t, w, ename) \
+	/* char16_t and std::u16string */ \
+	FEA_DETAIL_SE_ARRAYS( \
+			FEA_U16STRINGIFY_COMMA, char16_t, u16, ename, __VA_ARGS__); \
+	FEA_DETAIL_SE_FUNCS(char16_t, u16, ename) \
+	/* char32_t and std::u32string */ \
+	FEA_DETAIL_SE_ARRAYS( \
+			FEA_U32STRINGIFY_COMMA, char32_t, u32, ename, __VA_ARGS__); \
+	FEA_DETAIL_SE_FUNCS(char32_t, u32, ename) \
+\
+	} // namespace enu
