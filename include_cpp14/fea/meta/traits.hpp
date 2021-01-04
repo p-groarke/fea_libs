@@ -243,4 +243,43 @@ constexpr auto explode_enum(Func&& func) {
 			std::make_index_sequence<size_t(Enum::count)>{});
 }
 
+
+// Index of element T in paramater pack.
+template <class, class...>
+struct pack_idx;
+template <class T, class... Ts>
+struct pack_idx<T, T, Ts...> : std::integral_constant<size_t, 0> {};
+template <class T, class U, class... Ts>
+struct pack_idx<T, U, Ts...>
+		: std::integral_constant<size_t, 1 + pack_idx<T, Ts...>::value> {};
+
+template <class T, class... Ts>
+FEA_INLINE_VAR constexpr size_t pack_idx_v = pack_idx<T, Ts...>::value;
+
+// Index of element T in non-type paramater pack.
+template <class NT, NT, NT...>
+struct non_type_pack_idx;
+template <class NT, NT T, NT... Ts>
+struct non_type_pack_idx<NT, T, T, Ts...> : std::integral_constant<size_t, 0> {
+};
+template <class NT, NT T, NT U, NT... Ts>
+struct non_type_pack_idx<NT, T, U, Ts...>
+		: std::integral_constant<size_t,
+				  1 + non_type_pack_idx<NT, T, Ts...>::value> {};
+
+template <class NT, NT T, NT... Ts>
+FEA_INLINE_VAR constexpr size_t non_type_pack_idx_v
+		= non_type_pack_idx<NT, T, Ts...>::value;
+
+
+// Is the same non-type parameter.
+template <class T, T T1, T T2>
+struct non_type_is_same : std::false_type {};
+
+template <class T, T T1>
+struct non_type_is_same<T, T1, T1> : std::true_type {};
+
+template <class T, T T1, T T2>
+FEA_INLINE_VAR constexpr bool is_same_nt_v = non_type_is_same<T, T1, T2>::value;
+
 } // namespace fea

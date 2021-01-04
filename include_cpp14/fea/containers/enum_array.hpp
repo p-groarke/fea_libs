@@ -106,4 +106,5 @@ constexpr const T&& get(const enum_array<T, E, N>&& a) noexcept {
 }
 #endif
 
+
 } // namespace fea

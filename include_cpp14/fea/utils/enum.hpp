@@ -162,3 +162,29 @@ etc...
 	FEA_DETAIL_SE_FUNCS(char32_t, u32, ename) \
 \
 	} // namespace enu
+
+// Generates the enum and accompanying helpers, plus,
+// calls your provided macro with ename, __VA_ARGS__
+#define FEA_STRING_ENUM_CUSTOM(user_macro, ename, utype, ...) \
+	/* Declares your enum. */ \
+	enum class ename : utype { __VA_ARGS__ }; \
+	/* All strings and functions are declared in namespace 'enu'. */ \
+	namespace enu { \
+	/* char and std::string */ \
+	FEA_DETAIL_SE_ARRAYS(FEA_STRINGIFY_COMMA, char, , ename, __VA_ARGS__); \
+	FEA_DETAIL_SE_FUNCS(char, , ename) \
+	/* wchar_t and std::wstring */ \
+	FEA_DETAIL_SE_ARRAYS( \
+			FEA_WSTRINGIFY_COMMA, wchar_t, w, ename, __VA_ARGS__); \
+	FEA_DETAIL_SE_FUNCS(wchar_t, w, ename) \
+	/* char16_t and std::u16string */ \
+	FEA_DETAIL_SE_ARRAYS( \
+			FEA_U16STRINGIFY_COMMA, char16_t, u16, ename, __VA_ARGS__); \
+	FEA_DETAIL_SE_FUNCS(char16_t, u16, ename) \
+	/* char32_t and std::u32string */ \
+	FEA_DETAIL_SE_ARRAYS( \
+			FEA_U32STRINGIFY_COMMA, char32_t, u32, ename, __VA_ARGS__); \
+	FEA_DETAIL_SE_FUNCS(char32_t, u32, ename) \
+\
+	} /* namespace enu */ \
+	user_macro(ename, __VA_ARGS__)
