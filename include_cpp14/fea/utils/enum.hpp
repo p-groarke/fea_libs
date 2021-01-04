@@ -122,11 +122,11 @@ etc...
 	template <ename E> \
 	constexpr const chartype* const FEA_DETAIL_SE_VARNAME( \
 			prefix, to, literal)() { \
-		return fea::get<E>(FEA_DETAIL_SE_VARNAME(prefix, ename, literals)); \
+		return FEA_DETAIL_SE_VARNAME(prefix, ename, literals).at<E>(); \
 	} \
 	template <ename E> \
 	constexpr const std::string& FEA_DETAIL_SE_VARNAME(prefix, to, string)() { \
-		return fea::get<E>(FEA_DETAIL_SE_VARNAME(prefix, ename, strings)); \
+		return FEA_DETAIL_SE_VARNAME(prefix, ename, strings).at<E>(); \
 	} \
 	/* Non-templated getters, fast O(1). */ \
 	inline constexpr const chartype* const FEA_DETAIL_SE_VARNAME( \

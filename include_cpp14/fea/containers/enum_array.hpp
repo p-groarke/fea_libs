@@ -55,6 +55,15 @@ struct enum_array : public std::array<T, N> {
 	using reference = typename array_t::reference;
 	using const_reference = typename array_t::const_reference;
 
+	template <Enum E>
+	constexpr reference at() {
+		return std::get<size_t(E)>(*this);
+	}
+	template <Enum E>
+	constexpr const_reference at() const {
+		return std::get<size_t(E)>(*this);
+	}
+
 	constexpr reference at(Enum e) {
 		return array_t::at(size_t(e));
 	}
