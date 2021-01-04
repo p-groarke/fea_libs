@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 namespace {
-TEST(tuple, basics) {
+TEST(type_map, basics) {
 	{
 		constexpr fea::type_pack<int, double> k;
 		constexpr std::tuple<short, size_t> v{ short(0), size_t(42) };
