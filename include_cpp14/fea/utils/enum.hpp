@@ -41,8 +41,8 @@
 #include <string>
 
 /*
-FEA_STRING_ENUM creates an enum with accompanying fea::enum_arrays of
-strings and useful accessors.
+FEA_STRING_ENUM creates an enum class with accompanying fea::enum_arrays of
+literals and strings, plus useful accessors.
 
 All generated data and functions live in namespace 'enu'.
 
