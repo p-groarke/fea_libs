@@ -176,4 +176,27 @@ TEST(traits, member_func_ptr) {
 	static_assert(
 			std::is_same<mem_fun5, void*>::value, "traits.cpp : test failed");
 }
+
+TEST(traits, enums) {
+	enum class e {
+		one,
+		two,
+		three,
+		four,
+		count,
+	};
+
+	fea::non_type_type_pack<e, e::one, e::two, e::three, e::four> p
+			= fea::explode_enum<e>([](auto... cs) {
+				  constexpr size_t idx = fea::non_type_pack_idx_v<e, e::three,
+						  decltype(cs)::value...>;
+				  static_assert(idx == 2, "traits.cpp : test failed");
+				  return fea::non_type_type_pack<e, decltype(cs)::value...>{};
+			  });
+
+	static_assert(!fea::is_same_nt_v<e, e::one, e::two>,
+			"type_map.cpp : test failed");
+	static_assert(
+			fea::is_same_nt_v<e, e::one, e::one>, "type_map.cpp : test failed");
+}
 } // namespace

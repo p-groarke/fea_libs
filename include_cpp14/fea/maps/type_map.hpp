@@ -35,8 +35,6 @@
 #include "fea/meta/traits.hpp"
 #include "fea/meta/tuple.hpp"
 
-#include <vector>
-
 /*
 fea::type_map stores items which can be accessed using types. The types must be
 unique.
@@ -49,14 +47,10 @@ The indexes of keys will reference the object at the same index in your tuple.
 
 namespace fea {
 template <class...>
-struct type_pack {
-	// static constexpr size_t size = sizeof...(Args);
-};
+struct type_pack;
 
 template <class T, T...>
-struct non_type_type_pack {
-	// static constexpr size_t size = sizeof...(Ts...);
-};
+struct non_type_type_pack;
 
 template <class, class>
 struct type_map;

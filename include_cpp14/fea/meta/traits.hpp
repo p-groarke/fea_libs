@@ -282,4 +282,10 @@ struct non_type_is_same<T, T1, T1> : std::true_type {};
 template <class T, T T1, T T2>
 FEA_INLINE_VAR constexpr bool is_same_nt_v = non_type_is_same<T, T1, T2>::value;
 
+
+// Holder for types.
+template <class...>
+struct type_pack {};
+template <class T, T...>
+struct non_type_type_pack {};
 } // namespace fea
