@@ -161,7 +161,7 @@ etc...
 			FEA_U32STRINGIFY_COMMA, char32_t, u32, ename, __VA_ARGS__); \
 	FEA_DETAIL_SE_FUNCS(char32_t, u32, ename) \
 \
-	} // namespace enu
+	} /* namespace enu */
 
 // Generates the enum and accompanying helpers, plus,
 // calls your provided macro with ename, __VA_ARGS__
@@ -187,4 +187,61 @@ etc...
 	FEA_DETAIL_SE_FUNCS(char32_t, u32, ename) \
 \
 	} /* namespace enu */ \
+	/* Call user macro once everything is done. */ \
+	user_macro(ename, __VA_ARGS__)
+
+// Generates both an enum and accompanying arrays of enum strings and functions.
+// This version generates a 'count' enum value for you, and places it at the end
+// of the enum. No strings are generated for 'count', and array sizes == count.
+#define FEA_STRING_ENUM_WITH_COUNT(ename, utype, ...) \
+	/* Declares your enum. Adds 'count' at the end. */ \
+	enum class ename : utype { __VA_ARGS__, count }; \
+	/* All strings and functions are declared in namespace 'enu'. */ \
+	namespace enu { \
+	/* char and std::string */ \
+	FEA_DETAIL_SE_ARRAYS(FEA_STRINGIFY_COMMA, char, , ename, __VA_ARGS__); \
+	FEA_DETAIL_SE_FUNCS(char, , ename) \
+	/* wchar_t and std::wstring */ \
+	FEA_DETAIL_SE_ARRAYS( \
+			FEA_WSTRINGIFY_COMMA, wchar_t, w, ename, __VA_ARGS__); \
+	FEA_DETAIL_SE_FUNCS(wchar_t, w, ename) \
+	/* char16_t and std::u16string */ \
+	FEA_DETAIL_SE_ARRAYS( \
+			FEA_U16STRINGIFY_COMMA, char16_t, u16, ename, __VA_ARGS__); \
+	FEA_DETAIL_SE_FUNCS(char16_t, u16, ename) \
+	/* char32_t and std::u32string */ \
+	FEA_DETAIL_SE_ARRAYS( \
+			FEA_U32STRINGIFY_COMMA, char32_t, u32, ename, __VA_ARGS__); \
+	FEA_DETAIL_SE_FUNCS(char32_t, u32, ename) \
+\
+	} /* namespace enu */
+
+// Generates both an enum and accompanying arrays of enum strings and functions.
+// This version generates a 'count' enum value for you, and places it at the end
+// of the enum. No strings are generated for 'count', and array sizes == count.
+// In addition, you can pass in a macro and it will be called with the
+// __VA_ARGS__ once everything is done.
+#define FEA_STRING_ENUM_WITH_COUNT_CUSTOM(user_macro, ename, utype, ...) \
+	/* Declares your enum. Adds 'count' at the end. */ \
+	enum class ename : utype { __VA_ARGS__, count }; \
+	/* All strings and functions are declared in namespace 'enu'. */ \
+	namespace enu { \
+	/* char and std::string */ \
+	FEA_DETAIL_SE_ARRAYS(FEA_STRINGIFY_COMMA, char, , ename, __VA_ARGS__); \
+	FEA_DETAIL_SE_FUNCS(char, , ename) \
+	/* wchar_t and std::wstring */ \
+	FEA_DETAIL_SE_ARRAYS( \
+			FEA_WSTRINGIFY_COMMA, wchar_t, w, ename, __VA_ARGS__); \
+	FEA_DETAIL_SE_FUNCS(wchar_t, w, ename) \
+	/* char16_t and std::u16string */ \
+	FEA_DETAIL_SE_ARRAYS( \
+			FEA_U16STRINGIFY_COMMA, char16_t, u16, ename, __VA_ARGS__); \
+	FEA_DETAIL_SE_FUNCS(char16_t, u16, ename) \
+	/* char32_t and std::u32string */ \
+	FEA_DETAIL_SE_ARRAYS( \
+			FEA_U32STRINGIFY_COMMA, char32_t, u32, ename, __VA_ARGS__); \
+	FEA_DETAIL_SE_FUNCS(char32_t, u32, ename) \
+\
+	} /* namespace enu */ \
+	/* Call user macro once everything is done. */ \
 	user_macro(ename, __VA_ARGS__)
