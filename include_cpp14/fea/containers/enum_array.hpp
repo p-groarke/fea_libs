@@ -32,10 +32,12 @@
  **/
 
 #pragma once
+#include "fea/meta/static_for.hpp"
 #include "fea/utils/platform.hpp"
 
 #include <array>
 #include <type_traits>
+#include <utility>
 
 /*
 enum_array is a wrapper on std::array, which allows to access elements with
@@ -104,7 +106,60 @@ constexpr const T&& get(const enum_array<T, E, N>&& a) noexcept {
 			"enum_array : passed in wrong enum type");
 	return std::get<size_t(I)>(std::move(a));
 }
-#endif
 
+// A non-type key and value pair.
+template <auto K, class V>
+struct kv_t {
+	static constexpr auto key = K;
+
+	kv_t(V&& v)
+			: _v(std::forward<V>(v)) {
+	}
+
+	const V& value() const {
+		return _v;
+	}
+	V& value() {
+		return _v;
+	}
+
+private:
+	V _v;
+};
+
+// Make kv_t. Deduces the value type for cleaner look.
+template <auto K, class V>
+constexpr auto kv(V&& v) {
+	return kv_t<K, V>{ std::forward<V>(v) };
+}
+
+// Purely non-type key value pair.
+template <auto K, auto V>
+struct kv_nt {
+	static constexpr auto key = K;
+	static constexpr auto value = V;
+};
+
+// Create an enum_array with the specified enums set to a default value.
+// Unspecified values are default initialized.
+// ex:
+// fea::make_enum_array<e>(fea::kv<e::one>(true), fea::kv<e::two>(true));
+template <class Enum, size_t N = size_t(Enum::count), Enum... Es, class T>
+constexpr auto make_enum_array(kv_t<Es, T>&&... kv_pairs) {
+	// some sort of conditional fold, which returns {} for missing enums.
+	apply_indexes<N>([](auto... idx) {
+		(decltype(idx)::value ==); // FIGURE THIS OUT
+	});
+	return enum_array<T, Enum, N>{};
+}
+
+// If you can pass the variables as non-type, it ends up prettier.
+template <class Enum, size_t N = size_t(Enum::count), Enum... Es, auto T>
+constexpr auto make_enum_array(kv_nt<Es, T>&&...) {
+	// some sort of conditional fold, which returns {} for missing enums.
+	return enum_array<T, Enum, N>{};
+}
+
+#endif
 
 } // namespace fea
