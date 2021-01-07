@@ -54,6 +54,18 @@ template <class... Keys, class... Values>
 struct type_map<type_pack<Keys...>, std::tuple<Values...>> {
 	using values_t = std::tuple<Values...>;
 
+	constexpr type_map() = default;
+	constexpr type_map(const std::tuple<Values...>& values)
+			: _values(values) {
+		static_assert(sizeof...(Keys) == sizeof...(Values),
+				"type_map : unequal number of keys and values");
+	}
+	constexpr type_map(std::tuple<Values...>&& values)
+			: _values(std::move(values)) {
+		static_assert(sizeof...(Keys) == sizeof...(Values),
+				"type_map : unequal number of keys and values");
+	}
+
 	constexpr type_map(type_pack<Keys...>, const std::tuple<Values...>& values)
 			: _values(values) {
 		static_assert(sizeof...(Keys) == sizeof...(Values),
@@ -112,6 +124,18 @@ private:
 template <class T, T... Keys, class... Values>
 struct type_map<non_type_type_pack<T, Keys...>, std::tuple<Values...>> {
 	using values_t = std::tuple<Values...>;
+
+	constexpr type_map() = default;
+	constexpr type_map(const std::tuple<Values...>& values)
+			: _values(values) {
+		static_assert(sizeof...(Keys) == sizeof...(Values),
+				"type_map : unequal number of keys and values");
+	}
+	constexpr type_map(std::tuple<Values...>&& values)
+			: _values(std::move(values)) {
+		static_assert(sizeof...(Keys) == sizeof...(Values),
+				"type_map : unequal number of keys and values");
+	}
 
 	constexpr type_map(
 			non_type_type_pack<T, Keys...>, const std::tuple<Values...>& values)

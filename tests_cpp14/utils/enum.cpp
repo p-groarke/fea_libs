@@ -2,6 +2,61 @@
 #include <gtest/gtest.h>
 
 namespace {
+TEST(enum, traits) {
+	enum class e {
+		one,
+		two,
+		three,
+		four,
+		count,
+	};
+
+	fea::non_type_type_pack<e, e::one, e::two, e::three, e::four> p
+			= fea::explode_enum<e>([](auto... cs) {
+				  constexpr size_t idx = fea::non_type_pack_idx_v<e, e::three,
+						  decltype(cs)::value...>;
+				  static_assert(idx == 2, "traits.cpp : test failed");
+				  return fea::non_type_type_pack<e, decltype(cs)::value...>{};
+			  });
+
+	static_assert(!fea::is_same_nt_v<e, e::one, e::two>,
+			"type_map.cpp : test failed");
+	static_assert(
+			fea::is_same_nt_v<e, e::one, e::one>, "type_map.cpp : test failed");
+}
+
+TEST(enum, safe_switch) {
+	enum class e {
+		one,
+		two,
+		three,
+		four,
+		count,
+	};
+
+	int result = 0;
+	constexpr auto switcher = fea::safe_switch<e>()
+									  .case_<e::one>([&]() { result = 1; })
+									  .case_<e::three>([&]() { result = 3; })
+									  .case_<e::two>([&]() { result = 2; })
+									  .case_<e::four>([&]() { result = 4; });
+	switcher(e::one);
+	EXPECT_EQ(result, 1);
+
+	switcher(e::three);
+	EXPECT_EQ(result, 3);
+
+	switcher(e::two);
+	EXPECT_EQ(result, 2);
+
+	switcher(e::four);
+	EXPECT_EQ(result, 4);
+
+#if FEA_DEBUG
+	EXPECT_DEATH(switcher(e::count), "");
+#endif
+}
+
 namespace e {
 FEA_STRING_ENUM(e, unsigned, zero, one, two, three, four, five, count);
 

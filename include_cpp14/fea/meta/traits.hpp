@@ -174,4 +174,21 @@ template <class T, T T1, T T2>
 FEA_INLINE_VAR constexpr bool is_same_nt_v = non_type_is_same<T, T1, T2>::value;
 
 
+namespace detail {
+template <class Func>
+constexpr void if_constexpr(Func&& func, std::true_type) {
+	std::forward<Func>(func)();
+}
+template <class Func>
+constexpr void if_constexpr(Func&&, std::false_type) {
+}
+} // namespace detail
+
+// C++14 if_constexpr equivalent.
+template <bool Cond, class Func>
+constexpr void if_constexpr(Func&& func) {
+	return detail::if_constexpr<Cond>(
+			std::forward<Func>(func), std::bool_constant<Cond>{});
+}
+
 } // namespace fea

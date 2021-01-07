@@ -33,10 +33,12 @@
 
 #pragma once
 #include "fea/containers/enum_array.hpp"
+#include "fea/maps/type_map.hpp"
 #include "fea/meta/macros.hpp"
 #include "fea/meta/traits.hpp"
 #include "fea/meta/type_pack.hpp"
 #include "fea/utils/platform.hpp"
+#include "fea/utils/string.hpp"
 
 #include <array>
 #include <string>
@@ -287,51 +289,64 @@ constexpr auto explode_enum(Func&& func) {
 
 
 namespace detail {
-template <class Enum, size_t N, class Funcs, class Es>
+template <class Enum, size_t N, class Funcs, Enum... Es>
 struct switcher;
 
 template <class Enum, size_t N, class... Funcs, Enum... Es>
-struct switcher<std::tuple<Funcs...>> {
+struct switcher<Enum, N, std::tuple<Funcs...>, Es...> {
 
+	constexpr switcher() = default;
 	constexpr switcher(std::tuple<Funcs...>&& funcs)
 			: _funcs(std::move(funcs)) {
 	}
 
 	template <Enum E, class NewFunc>
-	constexpr auto case_(NewFunc func) && {
-		return switcher<E, N, Funcs..., NewFunc, Es..., E>{ std::tuple_cat(
-				_funcs, std::make_tuple(func)) };
+	constexpr auto case_(NewFunc&& func) const&& {
+		return switcher<Enum, N, std::tuple<Funcs..., NewFunc>, Es..., E>{
+			std::tuple_cat(std::move(_funcs.data()),
+					std::make_tuple(std::forward<NewFunc>(func)))
+		};
 	}
 
 	template <Enum E>
-	constexpr auto empty() && {
-		auto l = (){};
-		return case_<E>(l);
+	constexpr auto empty() const&& {
+		auto l = []() {};
+		return switcher<Enum, N, std::tuple<Funcs..., decltype(l)>, Es..., E>{
+			std::tuple_cat(std::move(_funcs.data()), std::make_tuple(l))
+		};
+	}
+
+	constexpr void operator()(Enum e) const {
+		static_assert(sizeof...(Es) == N,
+				"safe_switch : missing enum case statement");
+
+#if FEA_DEBUG
+		static constexpr std::array<Enum, N> arr{ Es... };
+		auto it = std::find(arr.begin(), arr.end(), e);
+		assert(it != arr.end());
+#endif
+
+		fea::static_for<N>([&, this](auto ic) {
+			constexpr size_t e_idx = decltype(ic)::value;
+			if (e_idx == size_t(e)) {
+				return _funcs.find<Enum(e_idx)>()();
+			}
+		});
 	}
 
 
 private:
-	std::tuple<Funcs...> _funcs;
+	fea::type_map<fea::non_type_type_pack<Enum, Es...>, std::tuple<Funcs...>>
+			_funcs;
 };
 } // namespace detail
 
 
 // Won't compile if missing a case statement.
-// Enum must be from 0 to N.
 // Deduces the size if the enum contains a 'count' member.
 template <class Enum, size_t N = size_t(Enum::count)>
-struct safe_switch {
-	constexpr safe_switch() {
-		// fea::explode_enum<Enum, N>([](auto... vals) {
-		//	static_assert(fea::is_same_nt_v<E, decltype(vals)::value, Es>...,
-		//			"safe_switch : enum values mismatch");
-		//});
-	}
-
-	template <Enum E, class Func>
-	static constexpr auto case_(Func func) && {
-		return switcher<Enum, N, Func, E>{ std::make_tuple(func) };
-	}
+constexpr auto safe_switch() {
+	return detail::switcher<Enum, N, std::tuple<>>{};
 };
 
 
