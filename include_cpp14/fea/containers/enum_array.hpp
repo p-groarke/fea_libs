@@ -144,14 +144,14 @@ struct kv_nt {
 // Unspecified values are default initialized.
 // ex:
 // fea::make_enum_array<e>(fea::kv<e::one>(true), fea::kv<e::two>(true));
-template <class Enum, size_t N = size_t(Enum::count), Enum... Es, class T>
-constexpr auto make_enum_array(kv_t<Es, T>&&... kv_pairs) {
-	// some sort of conditional fold, which returns {} for missing enums.
-	apply_indexes<N>([](auto... idx) {
-		(decltype(idx)::value ==); // FIGURE THIS OUT
-	});
-	return enum_array<T, Enum, N>{};
-}
+// template <class Enum, size_t N = size_t(Enum::count), Enum... Es, class T>
+// constexpr auto make_enum_array(kv_t<Es, T>&&... kv_pairs) {
+//	// some sort of conditional fold, which returns {} for missing enums.
+//	apply_indexes<N>([](auto... idx) {
+//		(decltype(idx)::value ==); // FIGURE THIS OUT
+//	});
+//	return enum_array<T, Enum, N>{};
+//}
 
 // If you can pass the variables as non-type, it ends up prettier.
 template <class Enum, size_t N = size_t(Enum::count), Enum... Es, auto T>

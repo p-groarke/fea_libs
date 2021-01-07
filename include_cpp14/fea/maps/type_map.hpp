@@ -34,6 +34,7 @@
 #pragma once
 #include "fea/meta/traits.hpp"
 #include "fea/meta/tuple.hpp"
+#include "fea/meta/type_pack.hpp"
 
 /*
 fea::type_map stores items which can be accessed using types. The types must be
@@ -46,12 +47,6 @@ The indexes of keys will reference the object at the same index in your tuple.
 */
 
 namespace fea {
-template <class...>
-struct type_pack;
-
-template <class T, T...>
-struct non_type_type_pack;
-
 template <class, class>
 struct type_map;
 

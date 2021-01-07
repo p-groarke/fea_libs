@@ -34,11 +34,13 @@
 #pragma once
 #include "fea/containers/enum_array.hpp"
 #include "fea/meta/macros.hpp"
+#include "fea/meta/traits.hpp"
+#include "fea/meta/type_pack.hpp"
 #include "fea/utils/platform.hpp"
-#include "fea/utils/string.hpp"
 
 #include <array>
 #include <string>
+#include <tuple>
 
 /*
 FEA_STRING_ENUM creates an enum class with accompanying fea::enum_arrays of
@@ -81,6 +83,12 @@ const fea::enum_array<std::u32string, ...> my_enum_u32strings;
 
 etc...
 
+
+fea::explode_enum calls your lambda with a variadic pack of
+std::integral_constant<your_enum, val>...
+
+fea::safe_switch creates a switch-case that will fail (wont compile) if you add
+or remove values to an enum.
 */
 
 // Get the variables' name.
@@ -246,3 +254,85 @@ etc...
 	} /* namespace enu */ \
 	/* Call user macro once everything is done. */ \
 	user_macro(ename, __VA_ARGS__)
+
+namespace fea {
+namespace detail {
+template <class Enum, class Func, size_t... Idx>
+constexpr auto explode_enum(Func&& func, std::index_sequence<Idx...>) {
+	return std::forward<Func>(func)(
+			std::integral_constant<Enum, Enum(Idx)>{}...);
+}
+} // namespace detail
+
+// Explodes all enum values into a non-type parameter pack and calls your
+// function with it.
+// Enum must be from 0 to N.
+// You must "extract" the non-type enum as it is passed by
+// std::integral_constant, use ::value.
+template <class Enum, size_t N, class Func>
+constexpr auto explode_enum(Func&& func) {
+	return detail::explode_enum<Enum>(
+			std::forward<Func>(func), std::make_index_sequence<N>{});
+}
+
+// Explodes all enum values into a non-type parameter pack and calls your
+// function with it.
+// Enum must be from 0 to N.
+// Overload for enums that contain a 'count' member.
+template <class Enum, class Func>
+constexpr auto explode_enum(Func&& func) {
+	return detail::explode_enum<Enum>(std::forward<Func>(func),
+			std::make_index_sequence<size_t(Enum::count)>{});
+}
+
+
+namespace detail {
+template <class Enum, size_t N, class Funcs, class Es>
+struct switcher;
+
+template <class Enum, size_t N, class... Funcs, Enum... Es>
+struct switcher<std::tuple<Funcs...>> {
+
+	constexpr switcher(std::tuple<Funcs...>&& funcs)
+			: _funcs(std::move(funcs)) {
+	}
+
+	template <Enum E, class NewFunc>
+	constexpr auto case_(NewFunc func) && {
+		return switcher<E, N, Funcs..., NewFunc, Es..., E>{ std::tuple_cat(
+				_funcs, std::make_tuple(func)) };
+	}
+
+	template <Enum E>
+	constexpr auto empty() && {
+		auto l = (){};
+		return case_<E>(l);
+	}
+
+
+private:
+	std::tuple<Funcs...> _funcs;
+};
+} // namespace detail
+
+
+// Won't compile if missing a case statement.
+// Enum must be from 0 to N.
+// Deduces the size if the enum contains a 'count' member.
+template <class Enum, size_t N = size_t(Enum::count)>
+struct safe_switch {
+	constexpr safe_switch() {
+		// fea::explode_enum<Enum, N>([](auto... vals) {
+		//	static_assert(fea::is_same_nt_v<E, decltype(vals)::value, Es>...,
+		//			"safe_switch : enum values mismatch");
+		//});
+	}
+
+	template <Enum E, class Func>
+	static constexpr auto case_(Func func) && {
+		return switcher<Enum, N, Func, E>{ std::make_tuple(func) };
+	}
+};
+
+
+} // namespace fea

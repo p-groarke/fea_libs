@@ -130,10 +130,10 @@ TEST(enum_array, make_enum_array) {
 
 	// auto k = fea::kv_t<e::one>{ true };
 
-	auto t2 = fea::make_enum_array<e>(
-			fea::kv<e::one>(true), fea::kv<e::two>(true));
+	// auto t2 = fea::make_enum_array<e>(
+	//		fea::kv<e::one>(true), fea::kv<e::two>(true));
 
-	auto t3 = fea::make_enum_array<e>(
-			fea::kv_nt<e::one, true>{}, fea::kv_nt<e::two, true>{});
+	// auto t3 = fea::make_enum_array<e>(
+	//		fea::kv_nt<e::one, true>{}, fea::kv_nt<e::two, true>{});
 }
 } // namespace
