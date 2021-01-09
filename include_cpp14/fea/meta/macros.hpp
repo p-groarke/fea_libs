@@ -54,6 +54,7 @@ See : https://codecraft.co/2014/11/25/variadic-macros-tricks/
 #define FEA_U16STRINGIFY_COMMA(x) FEA_U16STRINGIFY(x),
 #define FEA_U32STRINGIFY_COMMA(x) FEA_U32STRINGIFY(x),
 
+#define FEA_VA_LIST(...) __VA_ARGS__
 
 // For MSVC, works on other platforms.
 #define FEA_DETAIL_EXPAND(x) x
@@ -332,3 +333,711 @@ See : https://codecraft.co/2014/11/25/variadic-macros-tricks/
 			FEA_DETAIL_FECALL_5, FEA_DETAIL_FECALL_4, FEA_DETAIL_FECALL_3, \
 			FEA_DETAIL_FECALL_2, FEA_DETAIL_FECALL_1, \
 			FEA_DETAIL_FECALL_0)(macro, __VA_ARGS__))
+
+
+// Helper macros for FEA_FOR_EACH_VA
+#define FEA_DETAIL_FECALLVA_0(call, ...)
+#define FEA_DETAIL_FECALLVA_1(call, args, f, ...) call(f, args)
+#define FEA_DETAIL_FECALLVA_2(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_FECALLVA_1(call, FEA_VA_LIST(args), __VA_ARGS__)
+#define FEA_DETAIL_FECALLVA_3(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_2(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_4(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_3(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_5(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_4(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_6(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_5(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_7(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_6(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_8(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_7(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_9(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_8(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_10(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_9(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_11(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_10(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_12(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_11(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_13(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_12(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_14(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_13(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_15(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_14(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_16(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_15(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_17(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_16(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_18(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_17(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_19(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_18(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_20(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_19(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_21(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_20(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_22(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_21(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_23(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_22(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_24(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_23(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_25(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_24(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_26(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_25(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_27(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_26(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_28(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_27(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_29(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_28(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_30(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_29(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_31(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_30(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_32(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_31(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_33(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_32(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_34(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_33(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_35(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_34(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_36(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_35(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_37(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_36(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_38(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_37(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_39(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_38(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_40(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_39(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_41(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_40(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_42(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_41(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_43(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_42(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_44(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_43(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_45(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_44(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_46(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_45(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_47(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_46(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_48(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_47(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_49(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_48(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_50(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_49(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_51(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_50(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_52(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_51(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_53(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_52(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_54(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_53(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_55(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_54(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_56(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_55(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_57(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_56(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_58(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_57(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_59(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_58(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_60(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_59(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_61(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_60(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_62(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_61(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_63(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_62(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_64(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_63(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_65(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_64(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_66(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_65(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_67(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_66(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_68(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_67(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_69(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_68(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_70(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_69(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_71(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_70(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_72(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_71(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_73(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_72(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_74(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_73(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_75(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_74(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_76(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_75(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_77(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_76(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_78(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_77(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_79(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_78(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_80(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_79(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_81(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_80(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_82(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_81(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_83(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_82(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_84(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_83(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_85(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_84(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_86(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_85(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_87(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_86(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_88(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_87(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_89(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_88(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_90(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_89(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_91(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_90(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_92(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_91(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_93(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_92(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_94(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_93(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_95(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_94(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_96(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_95(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_97(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_96(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_98(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_97(call, FEA_VA_LIST(args), __VA_ARGS__))
+#define FEA_DETAIL_FECALLVA_99(call, args, f, ...) \
+	call(f, args) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLVA_98(call, FEA_VA_LIST(args), __VA_ARGS__))
+
+
+// Calls the provided macro on each parameter of the variadic macro.
+// Also provides the original __VA_ARGS__ to the macro "lambda".
+#define FEA_FOR_EACH_VA(macro, ...) \
+	FEA_DETAIL_EXPAND(FEA_GET_NTH_ARG(__VA_ARGS__, FEA_DETAIL_FECALLVA_99, \
+			FEA_DETAIL_FECALLVA_98, FEA_DETAIL_FECALLVA_97, \
+			FEA_DETAIL_FECALLVA_96, FEA_DETAIL_FECALLVA_95, \
+			FEA_DETAIL_FECALLVA_94, FEA_DETAIL_FECALLVA_93, \
+			FEA_DETAIL_FECALLVA_92, FEA_DETAIL_FECALLVA_91, \
+			FEA_DETAIL_FECALLVA_90, FEA_DETAIL_FECALLVA_89, \
+			FEA_DETAIL_FECALLVA_88, FEA_DETAIL_FECALLVA_87, \
+			FEA_DETAIL_FECALLVA_86, FEA_DETAIL_FECALLVA_85, \
+			FEA_DETAIL_FECALLVA_84, FEA_DETAIL_FECALLVA_83, \
+			FEA_DETAIL_FECALLVA_82, FEA_DETAIL_FECALLVA_81, \
+			FEA_DETAIL_FECALLVA_80, FEA_DETAIL_FECALLVA_79, \
+			FEA_DETAIL_FECALLVA_78, FEA_DETAIL_FECALLVA_77, \
+			FEA_DETAIL_FECALLVA_76, FEA_DETAIL_FECALLVA_75, \
+			FEA_DETAIL_FECALLVA_74, FEA_DETAIL_FECALLVA_73, \
+			FEA_DETAIL_FECALLVA_72, FEA_DETAIL_FECALLVA_71, \
+			FEA_DETAIL_FECALLVA_70, FEA_DETAIL_FECALLVA_69, \
+			FEA_DETAIL_FECALLVA_68, FEA_DETAIL_FECALLVA_67, \
+			FEA_DETAIL_FECALLVA_66, FEA_DETAIL_FECALLVA_65, \
+			FEA_DETAIL_FECALLVA_64, FEA_DETAIL_FECALLVA_63, \
+			FEA_DETAIL_FECALLVA_62, FEA_DETAIL_FECALLVA_61, \
+			FEA_DETAIL_FECALLVA_60, FEA_DETAIL_FECALLVA_59, \
+			FEA_DETAIL_FECALLVA_58, FEA_DETAIL_FECALLVA_57, \
+			FEA_DETAIL_FECALLVA_56, FEA_DETAIL_FECALLVA_55, \
+			FEA_DETAIL_FECALLVA_54, FEA_DETAIL_FECALLVA_53, \
+			FEA_DETAIL_FECALLVA_52, FEA_DETAIL_FECALLVA_51, \
+			FEA_DETAIL_FECALLVA_50, FEA_DETAIL_FECALLVA_49, \
+			FEA_DETAIL_FECALLVA_48, FEA_DETAIL_FECALLVA_47, \
+			FEA_DETAIL_FECALLVA_46, FEA_DETAIL_FECALLVA_45, \
+			FEA_DETAIL_FECALLVA_44, FEA_DETAIL_FECALLVA_43, \
+			FEA_DETAIL_FECALLVA_42, FEA_DETAIL_FECALLVA_41, \
+			FEA_DETAIL_FECALLVA_40, FEA_DETAIL_FECALLVA_39, \
+			FEA_DETAIL_FECALLVA_38, FEA_DETAIL_FECALLVA_37, \
+			FEA_DETAIL_FECALLVA_36, FEA_DETAIL_FECALLVA_35, \
+			FEA_DETAIL_FECALLVA_34, FEA_DETAIL_FECALLVA_33, \
+			FEA_DETAIL_FECALLVA_32, FEA_DETAIL_FECALLVA_31, \
+			FEA_DETAIL_FECALLVA_30, FEA_DETAIL_FECALLVA_29, \
+			FEA_DETAIL_FECALLVA_28, FEA_DETAIL_FECALLVA_27, \
+			FEA_DETAIL_FECALLVA_26, FEA_DETAIL_FECALLVA_25, \
+			FEA_DETAIL_FECALLVA_24, FEA_DETAIL_FECALLVA_23, \
+			FEA_DETAIL_FECALLVA_22, FEA_DETAIL_FECALLVA_21, \
+			FEA_DETAIL_FECALLVA_20, FEA_DETAIL_FECALLVA_19, \
+			FEA_DETAIL_FECALLVA_18, FEA_DETAIL_FECALLVA_17, \
+			FEA_DETAIL_FECALLVA_16, FEA_DETAIL_FECALLVA_15, \
+			FEA_DETAIL_FECALLVA_14, FEA_DETAIL_FECALLVA_13, \
+			FEA_DETAIL_FECALLVA_12, FEA_DETAIL_FECALLVA_11, \
+			FEA_DETAIL_FECALLVA_10, FEA_DETAIL_FECALLVA_9, \
+			FEA_DETAIL_FECALLVA_8, FEA_DETAIL_FECALLVA_7, \
+			FEA_DETAIL_FECALLVA_6, FEA_DETAIL_FECALLVA_5, \
+			FEA_DETAIL_FECALLVA_4, FEA_DETAIL_FECALLVA_3, \
+			FEA_DETAIL_FECALLVA_2, FEA_DETAIL_FECALLVA_1, \
+			FEA_DETAIL_FECALLVA_0)( \
+			macro, FEA_VA_LIST(__VA_ARGS__), __VA_ARGS__))
+
+
+#define FEA_DETAIL_FECALLLAST_0(call, ...)
+#define FEA_DETAIL_FECALLLAST_1(call, last_call, f) last_call(f)
+#define FEA_DETAIL_FECALLLAST_2(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_FECALLLAST_1(call, last_call, __VA_ARGS__)
+#define FEA_DETAIL_FECALLLAST_3(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_2(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_4(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_3(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_5(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_4(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_6(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_5(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_7(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_6(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_8(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_7(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_9(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_8(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_10(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_9(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_11(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_10(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_12(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_11(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_13(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_12(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_14(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_13(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_15(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_14(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_16(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_15(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_17(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_16(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_18(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_17(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_19(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_18(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_20(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_19(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_21(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_20(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_22(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_21(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_23(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_22(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_24(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_23(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_25(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_24(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_26(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_25(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_27(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_26(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_28(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_27(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_29(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_28(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_30(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_29(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_31(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_30(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_32(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_31(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_33(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_32(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_34(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_33(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_35(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_34(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_36(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_35(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_37(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_36(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_38(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_37(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_39(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_38(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_40(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_39(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_41(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_40(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_42(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_41(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_43(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_42(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_44(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_43(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_45(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_44(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_46(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_45(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_47(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_46(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_48(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_47(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_49(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_48(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_50(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_49(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_51(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_50(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_52(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_51(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_53(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_52(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_54(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_53(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_55(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_54(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_56(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_55(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_57(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_56(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_58(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_57(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_59(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_58(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_60(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_59(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_61(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_60(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_62(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_61(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_63(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_62(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_64(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_63(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_65(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_64(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_66(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_65(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_67(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_66(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_68(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_67(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_69(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_68(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_70(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_69(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_71(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_70(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_72(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_71(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_73(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_72(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_74(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_73(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_75(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_74(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_76(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_75(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_77(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_76(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_78(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_77(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_79(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_78(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_80(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_79(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_81(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_80(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_82(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_81(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_83(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_82(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_84(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_83(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_85(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_84(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_86(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_85(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_87(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_86(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_88(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_87(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_89(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_88(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_90(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_89(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_91(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_90(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_92(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_91(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_93(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_92(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_94(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_93(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_95(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_94(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_96(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_95(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_97(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_96(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_98(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_97(call, last_call, __VA_ARGS__))
+#define FEA_DETAIL_FECALLLAST_99(call, last_call, f, ...) \
+	call(f) FEA_DETAIL_EXPAND( \
+			FEA_DETAIL_FECALLLAST_98(call, last_call, __VA_ARGS__))
+
+
+// Calls your provided macro on each variadic parameter.
+// Uses a second macro for the last element.
+#define FEA_FOR_EACH_LAST(macro, last_macro, ...) \
+	FEA_DETAIL_EXPAND(FEA_GET_NTH_ARG(__VA_ARGS__, FEA_DETAIL_FECALLLAST_99, \
+			FEA_DETAIL_FECALLLAST_98, FEA_DETAIL_FECALLLAST_97, \
+			FEA_DETAIL_FECALLLAST_96, FEA_DETAIL_FECALLLAST_95, \
+			FEA_DETAIL_FECALLLAST_94, FEA_DETAIL_FECALLLAST_93, \
+			FEA_DETAIL_FECALLLAST_92, FEA_DETAIL_FECALLLAST_91, \
+			FEA_DETAIL_FECALLLAST_90, FEA_DETAIL_FECALLLAST_89, \
+			FEA_DETAIL_FECALLLAST_88, FEA_DETAIL_FECALLLAST_87, \
+			FEA_DETAIL_FECALLLAST_86, FEA_DETAIL_FECALLLAST_85, \
+			FEA_DETAIL_FECALLLAST_84, FEA_DETAIL_FECALLLAST_83, \
+			FEA_DETAIL_FECALLLAST_82, FEA_DETAIL_FECALLLAST_81, \
+			FEA_DETAIL_FECALLLAST_80, FEA_DETAIL_FECALLLAST_79, \
+			FEA_DETAIL_FECALLLAST_78, FEA_DETAIL_FECALLLAST_77, \
+			FEA_DETAIL_FECALLLAST_76, FEA_DETAIL_FECALLLAST_75, \
+			FEA_DETAIL_FECALLLAST_74, FEA_DETAIL_FECALLLAST_73, \
+			FEA_DETAIL_FECALLLAST_72, FEA_DETAIL_FECALLLAST_71, \
+			FEA_DETAIL_FECALLLAST_70, FEA_DETAIL_FECALLLAST_69, \
+			FEA_DETAIL_FECALLLAST_68, FEA_DETAIL_FECALLLAST_67, \
+			FEA_DETAIL_FECALLLAST_66, FEA_DETAIL_FECALLLAST_65, \
+			FEA_DETAIL_FECALLLAST_64, FEA_DETAIL_FECALLLAST_63, \
+			FEA_DETAIL_FECALLLAST_62, FEA_DETAIL_FECALLLAST_61, \
+			FEA_DETAIL_FECALLLAST_60, FEA_DETAIL_FECALLLAST_59, \
+			FEA_DETAIL_FECALLLAST_58, FEA_DETAIL_FECALLLAST_57, \
+			FEA_DETAIL_FECALLLAST_56, FEA_DETAIL_FECALLLAST_55, \
+			FEA_DETAIL_FECALLLAST_54, FEA_DETAIL_FECALLLAST_53, \
+			FEA_DETAIL_FECALLLAST_52, FEA_DETAIL_FECALLLAST_51, \
+			FEA_DETAIL_FECALLLAST_50, FEA_DETAIL_FECALLLAST_49, \
+			FEA_DETAIL_FECALLLAST_48, FEA_DETAIL_FECALLLAST_47, \
+			FEA_DETAIL_FECALLLAST_46, FEA_DETAIL_FECALLLAST_45, \
+			FEA_DETAIL_FECALLLAST_44, FEA_DETAIL_FECALLLAST_43, \
+			FEA_DETAIL_FECALLLAST_42, FEA_DETAIL_FECALLLAST_41, \
+			FEA_DETAIL_FECALLLAST_40, FEA_DETAIL_FECALLLAST_39, \
+			FEA_DETAIL_FECALLLAST_38, FEA_DETAIL_FECALLLAST_37, \
+			FEA_DETAIL_FECALLLAST_36, FEA_DETAIL_FECALLLAST_35, \
+			FEA_DETAIL_FECALLLAST_34, FEA_DETAIL_FECALLLAST_33, \
+			FEA_DETAIL_FECALLLAST_32, FEA_DETAIL_FECALLLAST_31, \
+			FEA_DETAIL_FECALLLAST_30, FEA_DETAIL_FECALLLAST_29, \
+			FEA_DETAIL_FECALLLAST_28, FEA_DETAIL_FECALLLAST_27, \
+			FEA_DETAIL_FECALLLAST_26, FEA_DETAIL_FECALLLAST_25, \
+			FEA_DETAIL_FECALLLAST_24, FEA_DETAIL_FECALLLAST_23, \
+			FEA_DETAIL_FECALLLAST_22, FEA_DETAIL_FECALLLAST_21, \
+			FEA_DETAIL_FECALLLAST_20, FEA_DETAIL_FECALLLAST_19, \
+			FEA_DETAIL_FECALLLAST_18, FEA_DETAIL_FECALLLAST_17, \
+			FEA_DETAIL_FECALLLAST_16, FEA_DETAIL_FECALLLAST_15, \
+			FEA_DETAIL_FECALLLAST_14, FEA_DETAIL_FECALLLAST_13, \
+			FEA_DETAIL_FECALLLAST_12, FEA_DETAIL_FECALLLAST_11, \
+			FEA_DETAIL_FECALLLAST_10, FEA_DETAIL_FECALLLAST_9, \
+			FEA_DETAIL_FECALLLAST_8, FEA_DETAIL_FECALLLAST_7, \
+			FEA_DETAIL_FECALLLAST_6, FEA_DETAIL_FECALLLAST_5, \
+			FEA_DETAIL_FECALLLAST_4, FEA_DETAIL_FECALLLAST_3, \
+			FEA_DETAIL_FECALLLAST_2, FEA_DETAIL_FECALLLAST_1, \
+			FEA_DETAIL_FECALLLAST_0)(macro, last_macro, __VA_ARGS__))

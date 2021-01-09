@@ -230,8 +230,9 @@ or remove values to an enum.
 // Generates both an enum and accompanying arrays of enum strings and functions.
 // This version generates a 'count' enum value for you, and places it at the end
 // of the enum. No strings are generated for 'count', and array sizes == count.
-// In addition, you can pass in a macro and it will be called with the
-// __VA_ARGS__ once everything is done.
+//
+// In addition, this call will call your 'user_macro' once it is done.
+// Your macro must accept : (enum_name, ...)
 #define FEA_STRING_ENUM_WITH_COUNT_CUSTOM(user_macro, ename, utype, ...) \
 	/* Declares your enum. Adds 'count' at the end. */ \
 	enum class ename : utype { __VA_ARGS__, count }; \

@@ -146,4 +146,7 @@ struct non_type_type_pack {
 	}
 };
 
+template <class T, T... Ts>
+using nt_type_pack = non_type_type_pack<T, Ts...>;
+
 } // namespace fea
