@@ -84,7 +84,7 @@ FEA_INLINE_VAR constexpr size_t tuple_idx_v = tuple_idx<T, Tuple>::value;
 
 
 // Does Tuple contain type T?
-template <class T, class Tuple>
+template <class, class>
 struct tuple_contains;
 
 template <class T>

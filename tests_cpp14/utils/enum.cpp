@@ -11,13 +11,13 @@ TEST(enum, traits) {
 		count,
 	};
 
-	fea::non_type_type_pack<e, e::one, e::two, e::three, e::four> p
-			= fea::explode_enum<e>([](auto... cs) {
-				  constexpr size_t idx = fea::non_type_pack_idx_v<e, e::three,
-						  decltype(cs)::value...>;
-				  static_assert(idx == 2, "traits.cpp : test failed");
-				  return fea::non_type_type_pack<e, decltype(cs)::value...>{};
-			  });
+	fea::pack_nt<e, e::one, e::two, e::three, e::four> p = fea::explode_enum<e>(
+			[](auto... cs) {
+				using pack_t = fea::pack_nt<e, decltype(cs)::value...>;
+				constexpr size_t idx = fea::pack_idx_nt_v<e, e::three, pack_t>;
+				static_assert(idx == 2, "traits.cpp : test failed");
+				return fea::pack_nt<e, decltype(cs)::value...>{};
+			});
 
 	static_assert(!fea::is_same_nt_v<e, e::one, e::two>,
 			"type_map.cpp : test failed");

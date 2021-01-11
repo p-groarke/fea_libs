@@ -337,8 +337,7 @@ struct switcher<Enum, N, std::tuple<Funcs...>, Es...> {
 
 
 private:
-	fea::type_map<fea::non_type_type_pack<Enum, Es...>, std::tuple<Funcs...>>
-			_funcs;
+	fea::type_map<fea::pack_nt<Enum, Es...>, Funcs...> _funcs;
 };
 } // namespace detail
 

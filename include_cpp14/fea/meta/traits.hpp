@@ -165,30 +165,23 @@ using member_func_ptr_t = typename member_func_ptr<Ret, Args...>::type;
 
 // Is the same non-type parameter.
 template <class T, T T1, T T2>
-struct non_type_is_same : std::false_type {};
+struct is_same_nt : std::false_type {};
 
 template <class T, T T1>
-struct non_type_is_same<T, T1, T1> : std::true_type {};
+struct is_same_nt<T, T1, T1> : std::true_type {};
 
 template <class T, T T1, T T2>
-FEA_INLINE_VAR constexpr bool is_same_nt_v = non_type_is_same<T, T1, T2>::value;
+FEA_INLINE_VAR constexpr bool is_same_nt_v = is_same_nt<T, T1, T2>::value;
 
 
-namespace detail {
-template <class Func>
-constexpr void if_constexpr(Func&& func, std::true_type) {
-	std::forward<Func>(func)();
-}
-template <class Func>
-constexpr void if_constexpr(Func&&, std::false_type) {
-}
-} // namespace detail
+template <template <class...> class, template <class...> class>
+struct is_same_template : std::false_type {};
 
-// C++14 if_constexpr equivalent.
-template <bool Cond, class Func>
-constexpr void if_constexpr(Func&& func) {
-	return detail::if_constexpr<Cond>(
-			std::forward<Func>(func), std::bool_constant<Cond>{});
-}
+template <template <class...> class T>
+struct is_same_template<T, T> : std::true_type {};
+
+template <template <class...> class T, template <class...> class U>
+FEA_INLINE_VAR constexpr bool is_same_template_v
+		= is_same_template<T, U>::value;
 
 } // namespace fea

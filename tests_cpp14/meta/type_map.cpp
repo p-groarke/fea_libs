@@ -5,7 +5,7 @@
 namespace {
 TEST(type_map, basics) {
 	{
-		constexpr fea::type_pack<int, double> k;
+		constexpr fea::pack<int, double> k;
 		constexpr std::tuple<short, size_t> v{ short(0), size_t(42) };
 		constexpr fea::type_map m = fea::make_type_map(k, v);
 
@@ -27,7 +27,7 @@ TEST(type_map, basics) {
 			count,
 		};
 
-		constexpr fea::non_type_type_pack<e, e::one, e::two> k2;
+		constexpr fea::pack_nt<e, e::one, e::two> k2;
 		constexpr std::tuple<short, size_t> v2{ short(0), size_t(42) };
 		constexpr fea::type_map m = fea::make_type_map(k2, v2);
 

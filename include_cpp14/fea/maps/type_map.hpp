@@ -47,66 +47,27 @@ The indexes of keys will reference the object at the same index in your tuple.
 */
 
 namespace fea {
-template <class, class>
-struct type_map;
-
-template <class... Keys, class... Values>
-struct type_map<type_pack<Keys...>, std::tuple<Values...>> {
+namespace detail {
+template <class... Values>
+struct type_map_shared {
 	using values_t = std::tuple<Values...>;
 
-	constexpr type_map() = default;
-	constexpr type_map(const std::tuple<Values...>& values)
+	constexpr type_map_shared() = default;
+	constexpr type_map_shared(const std::tuple<Values...>& values)
 			: _values(values) {
-		static_assert(sizeof...(Keys) == sizeof...(Values),
-				"type_map : unequal number of keys and values");
-	}
-	constexpr type_map(std::tuple<Values...>&& values)
-			: _values(std::move(values)) {
-		static_assert(sizeof...(Keys) == sizeof...(Values),
-				"type_map : unequal number of keys and values");
 	}
 
-	constexpr type_map(type_pack<Keys...>, const std::tuple<Values...>& values)
-			: _values(values) {
-		static_assert(sizeof...(Keys) == sizeof...(Values),
-				"type_map : unequal number of keys and values");
-	}
-	constexpr type_map(type_pack<Keys...>, std::tuple<Values...>&& values)
+	constexpr type_map_shared(std::tuple<Values...>&& values)
 			: _values(std::move(values)) {
-		static_assert(sizeof...(Keys) == sizeof...(Values),
-				"type_map : unequal number of keys and values");
 	}
 
-	template <class Key>
-	static constexpr bool contains() {
-		// Just to make sure we are in constexpr land.
-		constexpr bool ret = any_of_v<std::is_same<Key, Keys>...>;
-		return ret;
-	}
 	template <class Val>
 	static constexpr bool contains_value() {
 		// Just to make sure we are in constexpr land.
-		constexpr bool ret = any_of_v<std::is_same<Val, Values>...>;
+		constexpr bool ret = fea::any_of_v<std::is_same<Val, Values>...>;
 		return ret;
 	}
 
-	// Search by non-type template.
-	template <class Key>
-	constexpr const auto& find() const {
-		static_assert(
-				contains<Key>(), "type_map : doesn't contain requested key");
-
-		constexpr size_t idx = pack_idx_v<Key, Keys...>;
-		return std::get<idx>(_values);
-	}
-	template <class Key>
-	constexpr auto& find() {
-		static_assert(
-				contains<Key>(), "type_map : doesn't contain requested key");
-
-		constexpr size_t idx = pack_idx_v<Key, Keys...>;
-		return std::get<idx>(_values);
-	}
 
 	// The data, a tuple of your values.
 	constexpr const auto& data() const {
@@ -120,46 +81,67 @@ private:
 	// Your values.
 	values_t _values;
 };
+} // namespace detail
 
+template <class, class...>
+struct type_map;
+
+// Typed version.
+template <class... Keys, class... Values>
+struct type_map<fea::pack<Keys...>, Values...>
+		: detail::type_map_shared<Values...> {
+	static_assert(sizeof...(Keys) == sizeof...(Values),
+			"type_map : unequal number of keys and values");
+
+	using pack_t = fea::pack<Keys...>;
+
+	// Inherit ctors.
+	using base_t = detail::type_map_shared<Values...>;
+	using base_t::type_map_shared;
+
+	template <class Key>
+	static constexpr bool contains() {
+		// Just to make sure we are in constexpr land.
+		constexpr bool ret = pack_contains_v<Key, pack_t>;
+		return ret;
+	}
+
+	// Search by non-type template.
+	template <class Key>
+	constexpr const auto& find() const {
+		static_assert(
+				contains<Key>(), "type_map : doesn't contain requested key");
+
+		constexpr size_t idx = pack_idx_v<Key, pack_t>;
+		return std::get<idx>(base_t::data());
+	}
+	template <class Key>
+	constexpr auto& find() {
+		static_assert(
+				contains<Key>(), "type_map : doesn't contain requested key");
+
+		constexpr size_t idx = pack_idx_v<Key, pack_t>;
+		return std::get<idx>(base_t::data());
+	}
+};
+
+// Non-type version.
 template <class T, T... Keys, class... Values>
-struct type_map<non_type_type_pack<T, Keys...>, std::tuple<Values...>> {
-	using values_t = std::tuple<Values...>;
+struct type_map<fea::pack_nt<T, Keys...>, Values...>
+		: detail::type_map_shared<Values...> {
+	static_assert(sizeof...(Keys) == sizeof...(Values),
+			"type_map : unequal number of keys and values");
 
-	constexpr type_map() = default;
-	constexpr type_map(const std::tuple<Values...>& values)
-			: _values(values) {
-		static_assert(sizeof...(Keys) == sizeof...(Values),
-				"type_map : unequal number of keys and values");
-	}
-	constexpr type_map(std::tuple<Values...>&& values)
-			: _values(std::move(values)) {
-		static_assert(sizeof...(Keys) == sizeof...(Values),
-				"type_map : unequal number of keys and values");
-	}
+	using pack_t = fea::pack_nt<T, Keys...>;
 
-	constexpr type_map(
-			non_type_type_pack<T, Keys...>, const std::tuple<Values...>& values)
-			: _values(values) {
-		static_assert(sizeof...(Keys) == sizeof...(Values),
-				"type_map : unequal number of keys and values");
-	}
-	constexpr type_map(
-			non_type_type_pack<T, Keys...>, std::tuple<Values...>&& values)
-			: _values(std::move(values)) {
-		static_assert(sizeof...(Keys) == sizeof...(Values),
-				"type_map : unequal number of keys and values");
-	}
+	// Inherit ctors.
+	using base_t = detail::type_map_shared<Values...>;
+	using base_t::type_map_shared;
 
 	template <T Key>
 	static constexpr bool contains() {
 		// Just to make sure we are in constexpr land.
-		constexpr bool ret = any_of_v<fea::non_type_is_same<T, Key, Keys>...>;
-		return ret;
-	}
-	template <class Val>
-	static constexpr bool contains_value() {
-		// Just to make sure we are in constexpr land.
-		constexpr bool ret = any_of_v<std::is_same<Val, Values>...>;
+		constexpr bool ret = pack_contains_nt_v<T, Key, pack_t>;
 		return ret;
 	}
 
@@ -169,41 +151,33 @@ struct type_map<non_type_type_pack<T, Keys...>, std::tuple<Values...>> {
 		static_assert(
 				contains<Key>(), "type_map : doesn't contain requested key");
 
-		constexpr size_t idx = non_type_pack_idx_v<T, Key, Keys...>;
-		return std::get<idx>(_values);
+		constexpr size_t idx = pack_idx_nt_v<T, Key, pack_t>;
+		return std::get<idx>(base_t::data());
 	}
 	template <T Key>
 	constexpr auto& find() {
 		static_assert(
 				contains<Key>(), "type_map : doesn't contain requested key");
 
-		constexpr size_t idx = non_type_pack_idx_v<T, Key, Keys...>;
-		return std::get<idx>(_values);
+		constexpr size_t idx = pack_idx_nt_v<T, Key, pack_t>;
+		return std::get<idx>(base_t::data());
 	}
-
-	// The data, a tuple of your values.
-	constexpr const auto& data() const {
-		return _values;
-	}
-	constexpr auto& data() {
-		return _values;
-	}
-
-private:
-	// Your values.
-	values_t _values;
 };
 
 template <class... Keys, class... Values>
 constexpr auto make_type_map(
-		type_pack<Keys...> keys, const std::tuple<Values...>& values) {
-	return type_map<type_pack<Keys...>, std::tuple<Values...>>(keys, values);
+		pack<Keys...>, const std::tuple<Values...>& values) {
+	return type_map<pack<Keys...>, Values...>(values);
 }
 
 template <class K, K... Keys, class... Values>
-constexpr auto make_type_map(non_type_type_pack<K, Keys...> keys,
-		const std::tuple<Values...>& values) {
-	return type_map<non_type_type_pack<K, Keys...>, std::tuple<Values...>>(
-			keys, values);
+constexpr auto make_type_map(
+		pack_nt<K, Keys...>, const std::tuple<Values...>& values) {
+	return type_map<pack_nt<K, Keys...>, Values...>(values);
 }
+
+// TODO :
+// make with tuple<type_kv<key, val>>
+// where first is only a type, and second is a value.
+// aka, key has no storage.
 } // namespace fea
