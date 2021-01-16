@@ -32,9 +32,9 @@
  **/
 
 #pragma once
+#include "fea/meta/pack.hpp"
 #include "fea/meta/traits.hpp"
 #include "fea/meta/tuple.hpp"
-#include "fea/meta/type_pack.hpp"
 
 /*
 fea::type_map stores items which can be accessed using types. The types must be

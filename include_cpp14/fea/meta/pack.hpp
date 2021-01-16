@@ -35,55 +35,19 @@
 #include "fea/meta/traits.hpp"
 #include "fea/meta/tuple.hpp"
 
+/*
+fea::pack and fea::pack_nt are like std::tuple without storage. You can use the
+provided traits and helpers to query things about the pack.
+*/
+
 namespace fea {
 // Holder for types.
 template <class... Args>
-struct pack {
-	//// Size of paramter pack.
-	// static constexpr size_t size() {
-	//	return sizeof...(Args);
-	//}
-
-	//// Get the index of the first encountered type T.
-	// template <class T>
-	// static constexpr size_t find_idx() {
-	//	return pack_idx_v<T, Args...>;
-	//}
-
-	// template <class T>
-	// static constexpr bool contains() {
-	//	return fea::any_of_v<std::is_same<T, Args>...>;
-	//}
-
-	// using front_t = fea::first_t<Args...>;
-	// using back_t = fea::last_t<Args...>;
-};
+struct pack {};
 
 template <class T, T... Ts>
 struct pack_nt {
 	using non_type = T;
-	//// Size of paramter pack.
-	// static constexpr size_t size() {
-	//	return sizeof...(Ts);
-	//}
-
-	//// Get the index of the first encountered type T.
-	// template <T S>
-	// static constexpr size_t find_idx() {
-	//	return pack_idx_nt_v<T, S, Ts...>;
-	//}
-
-	// template <T V>
-	// static constexpr bool contains() {
-	//	return fea::any_of_v<fea::is_same_nt<T, V, Ts>...>;
-	//}
-
-	// static constexpr T front() {
-	//	return first_nt<T, Ts...>;
-	//}
-
-	//// using front_t = first_nt<T, Ts...>;
-	//// using back = typename last_t<Ts...>;
 };
 
 /**
@@ -322,9 +286,9 @@ using idx_splice_t = typename idx_splice<Idx, Args...>::type;
 
 // Get the elements before Idx in parameter pack, stored as a tuple type.
 template <size_t Idx, class... Args>
-using idx_splice_before_t = typename idx_splice<Idx, Args...>::before_tuple;
+using idx_splice_before_t = typename idx_splice<Idx, Args...>::before_pack;
 
 // Get the elements after Idx in parameter pack, stored as a tuple type.
 template <size_t Idx, class... Args>
-using idx_splice_after_t = typename idx_splice<Idx, Args...>::after_tuple;
+using idx_splice_after_t = typename idx_splice<Idx, Args...>::after_pack;
 } // namespace fea

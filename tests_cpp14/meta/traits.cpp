@@ -1,6 +1,4 @@
 ﻿#include <fea/meta/traits.hpp>
-#include <fea/meta/tuple.hpp>
-#include <fea/meta/type_pack.hpp>
 #include <functional>
 #include <gtest/gtest.h>
 #include <string>
@@ -96,56 +94,6 @@ TEST(traits, is_detected) {
 
 	static_assert(!fea::is_detected_v<has_args_func, tomato>,
 			"traits.cpp : failed test");
-}
-
-TEST(traits, splice) {
-	static_assert(std::is_same<fea::idx_splice_t<0, int, double, float, short>,
-						  int>::value,
-			"traits.cpp : test failed");
-	static_assert(
-			std::is_same<fea::idx_splice_before_t<0, int, double, float, short>,
-					std::tuple<>>::value,
-			"traits.cpp : test failed");
-	static_assert(
-			std::is_same<fea::idx_splice_after_t<0, int, double, float, short>,
-					std::tuple<double, float, short>>::value,
-			"traits.cpp : test failed");
-
-	static_assert(std::is_same<fea::idx_splice_t<1, int, double, float, short>,
-						  double>::value,
-			"traits.cpp : test failed");
-	static_assert(
-			std::is_same<fea::idx_splice_before_t<1, int, double, float, short>,
-					std::tuple<int>>::value,
-			"traits.cpp : test failed");
-	static_assert(
-			std::is_same<fea::idx_splice_after_t<1, int, double, float, short>,
-					std::tuple<float, short>>::value,
-			"traits.cpp : test failed");
-
-	static_assert(std::is_same<fea::idx_splice_t<2, int, double, float, short>,
-						  float>::value,
-			"traits.cpp : test failed");
-	static_assert(
-			std::is_same<fea::idx_splice_before_t<2, int, double, float, short>,
-					std::tuple<int, double>>::value,
-			"traits.cpp : test failed");
-	static_assert(
-			std::is_same<fea::idx_splice_after_t<2, int, double, float, short>,
-					std::tuple<short>>::value,
-			"traits.cpp : test failed");
-
-	static_assert(std::is_same<fea::idx_splice_t<3, int, double, float, short>,
-						  short>::value,
-			"traits.cpp : test failed");
-	static_assert(
-			std::is_same<fea::idx_splice_before_t<3, int, double, float, short>,
-					std::tuple<int, double, float>>::value,
-			"traits.cpp : test failed");
-	static_assert(
-			std::is_same<fea::idx_splice_after_t<3, int, double, float, short>,
-					std::tuple<>>::value,
-			"traits.cpp : test failed");
 }
 
 struct obj {
