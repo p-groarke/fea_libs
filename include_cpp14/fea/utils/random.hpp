@@ -51,4 +51,16 @@ inline size_t random_idx(size_t count) {
 	return dist(detail::gen);
 }
 
+inline std::vector<uint8_t> random_bytes(size_t num_bytes) {
+	std::vector<uint8_t> ret;
+	ret.reserve(num_bytes);
+	std::uniform_int_distribution<uint8_t> dist(
+			0, std::numeric_limits<uint8_t>::max());
+
+	for (size_t i = 0; i < num_bytes; ++i) {
+		ret.push_back(dist(detail::gen));
+	}
+	return ret;
+}
+
 } // namespace fea
