@@ -38,7 +38,6 @@
 #include "fea/meta/pack.hpp"
 #include "fea/meta/traits.hpp"
 #include "fea/utils/platform.hpp"
-#include "fea/utils/string.hpp"
 
 #include <array>
 #include <string>

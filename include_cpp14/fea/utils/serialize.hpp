@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "fea/utils/memory.hpp"
+#include "fea/utils/platform.hpp"
 
 #include <cassert>
 #include <fstream>
@@ -15,7 +16,30 @@ Container serialization has sanity checks.
 
 namespace fea {
 template <class T>
-struct nested_serialize : std::false_type {};
+struct serializer {
+	static constexpr size_t depth = 0;
+};
+
+// Single serialized arg container.
+template <class T, template <class> class Container>
+struct serializer<Container<T>> {
+	static constexpr size_t depth = 1 + serializer<T>::depth;
+};
+
+template <class T>
+struct serialize_depth : std::integral_constant<size_t, 0> {};
+
+template <class T, class... Args>
+struct serialize_depth<std::vector<T, Args...>> {
+	static constexpr size_t value = 1 + serialize_depth<T>::value;
+};
+
+// template <class... Args, class Test = serialize_more<std::vector<Args...>>>
+// struct serialize_more<std::vector<Args...>> : std::false_type {};
+
+template <class T>
+FEA_INLINE_VAR constexpr bool serialize_more_v = serialize_depth<T>::value > 1;
+
 
 // Serialize anything.
 template <class T>

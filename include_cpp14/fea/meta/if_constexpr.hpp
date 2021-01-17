@@ -127,7 +127,8 @@ constexpr void if_constexpr(TrueFunc&&, FalseFunc&& func, std::false_type) {
 template <bool Cond, class TrueFunc, class FalseFunc>
 constexpr auto if_constexpr(TrueFunc&& true_func, FalseFunc&& false_func) {
 	return detail::if_constexpr(std::forward<TrueFunc>(true_func),
-			std::forward<FalseFunc>(false_func), std::bool_constant<Cond>{});
+			std::forward<FalseFunc>(false_func),
+			std::integral_constant<bool, Cond>{});
 }
 
 } // namespace fea

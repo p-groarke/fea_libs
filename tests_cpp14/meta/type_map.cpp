@@ -7,7 +7,7 @@ TEST(type_map, basics) {
 	{
 		constexpr fea::pack<int, double> k;
 		constexpr std::tuple<short, size_t> v{ short(0), size_t(42) };
-		constexpr fea::type_map m = fea::make_type_map(k, v);
+		constexpr auto m = fea::make_type_map(k, v);
 
 		static_assert(m.contains<int>(), "type_map.cpp : test failed");
 		static_assert(!m.contains<short>(), "type_map.cpp : test failed");
@@ -29,7 +29,7 @@ TEST(type_map, basics) {
 
 		constexpr fea::pack_nt<e, e::one, e::two> k2;
 		constexpr std::tuple<short, size_t> v2{ short(0), size_t(42) };
-		constexpr fea::type_map m = fea::make_type_map(k2, v2);
+		constexpr auto m = fea::make_type_map(k2, v2);
 
 		static_assert(m.contains<e::one>(), "type_map.cpp : test failed");
 		static_assert(!m.contains<e::three>(), "type_map.cpp : test failed");

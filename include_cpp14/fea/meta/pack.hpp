@@ -132,7 +132,7 @@ struct pack_element<0, fea::pack<Head, Tail...>> {
 };
 
 template <size_t I, class Pack>
-class pack_element<I, const Pack> {
+struct pack_element<I, const Pack> {
 	using type = typename std::add_const<
 			typename fea::pack_element<I, Pack>::type>::type;
 };
@@ -155,7 +155,7 @@ struct pack_element_nt<0, fea::pack_nt<NT, Head, Tail...>> {
 };
 
 template <size_t I, class Pack>
-class pack_element_nt<I, const Pack> {
+struct pack_element_nt<I, const Pack> {
 	static constexpr const auto value = fea::pack_element_nt<I, Pack>::value;
 };
 
