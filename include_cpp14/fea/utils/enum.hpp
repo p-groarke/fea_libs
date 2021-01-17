@@ -104,7 +104,7 @@ or remove values to an enum.
 			FEA_SIZEOF_VAARGS(__VA_ARGS__)> \
 			FEA_DETAIL_SE_VARNAME(prefix, ename, \
 					literals){ FEA_FOR_EACH(stringify_macro, __VA_ARGS__) }; \
-	FEA_INLINE_VAR const fea::enum_array<fea::m_string<chartype>, ename, \
+	FEA_INLINE_VAR const fea::enum_array<fea::string_t<chartype>, ename, \
 			FEA_SIZEOF_VAARGS(__VA_ARGS__)> \
 	FEA_DETAIL_SE_VARNAME(prefix, ename, strings) { \
 		FEA_FOR_EACH(stringify_macro, __VA_ARGS__) \
@@ -135,7 +135,7 @@ or remove values to an enum.
 		return FEA_DETAIL_SE_VARNAME(prefix, ename, literals).at<E>(); \
 	} \
 	template <ename E> \
-	constexpr const fea::m_string<chartype>& FEA_DETAIL_SE_VARNAME( \
+	constexpr const fea::string_t<chartype>& FEA_DETAIL_SE_VARNAME( \
 			prefix, to, string)() { \
 		return FEA_DETAIL_SE_VARNAME(prefix, ename, strings).at<E>(); \
 	} \
@@ -144,7 +144,7 @@ or remove values to an enum.
 			prefix, to, literal)(ename e) { \
 		return FEA_DETAIL_SE_VARNAME(prefix, ename, literals)[e]; \
 	} \
-	inline constexpr const fea::m_string<chartype>& FEA_DETAIL_SE_VARNAME( \
+	inline constexpr const fea::string_t<chartype>& FEA_DETAIL_SE_VARNAME( \
 			prefix, to, string)(ename e) { \
 		return FEA_DETAIL_SE_VARNAME(prefix, ename, strings)[e]; \
 	}
