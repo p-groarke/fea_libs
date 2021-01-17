@@ -43,11 +43,9 @@ See : https://codecraft.co/2014/11/25/variadic-macros-tricks/
 #define FEA_PASTE(x, y) FEA_DETAIL_PASTE(x, y)
 
 #define FEA_STRINGIFY(x) #x
-#define FEA_WSTRINGIFY(x) L#x
-// clang-format off
-#define FEA_U16STRINGIFY(x) u#x
-#define FEA_U32STRINGIFY(x) U#x
-// clang-format on
+#define FEA_WSTRINGIFY(x) FEA_PASTE(L, #x)
+#define FEA_U16STRINGIFY(x) FEA_PASTE(u, #x)
+#define FEA_U32STRINGIFY(x) FEA_PASTE(U, #x)
 
 #define FEA_STRINGIFY_COMMA(x) FEA_STRINGIFY(x),
 #define FEA_WSTRINGIFY_COMMA(x) FEA_WSTRINGIFY(x),
