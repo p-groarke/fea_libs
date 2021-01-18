@@ -354,36 +354,43 @@ TEST(serialize, map) {
 	}
 
 
-	//{
-	//	std::map<potato, std::map<int, std::map<potato, int>>> c{};
+	auto make_big_map = []() {
+		std::map<potato, std::map<int, std::map<potato, int>>> ret{};
+		std::map<potato, int> a3;
+		for (int i = 0; i < 4; ++i) {
+			potato k;
+			k.val = i;
+			std::fill(k.vec.begin(), k.vec.end(), i);
+			a3.insert({ k, i });
+		}
+		std::map<int, std::map<potato, int>> a2;
+		for (int i = 0; i < 4; ++i) {
+			a2.insert({ i, a3 });
+		}
+		for (int i = 0; i < 4; ++i) {
+			potato k;
+			k.val = i;
+			std::fill(k.vec.begin(), k.vec.end(), i);
+			ret.insert({ k, a2 });
+		}
+		return ret;
+	};
 
-	//	std::map<>;
+	{
+		std::map<potato, std::map<int, std::map<potato, int>>> c
+				= make_big_map();
+		std::ofstream ofs{ filepath(), std::ios::binary };
+		serialize(c, ofs);
+	}
 
-	//	for (int i = 0; i < 4; ++i) {
-	//		potato k;
-	//		k.val = i;
-	//		std::fill(k.vec.begin(), k.vec.end(), i);
+	{
+		std::map<potato, std::map<int, std::map<potato, int>>> c{};
+		std::ifstream ifs{ filepath(), std::ios::binary };
+		deserialize(c, ifs);
 
-	//		c.insert({ k, i });
-	//	}
-	//	std::ofstream ofs{ filepath(), std::ios::binary };
-	//	serialize(c, ofs);
-	//}
-
-	//{
-	//	std::map<potato, int> c;
-	//	std::ifstream ifs{ filepath(), std::ios::binary };
-	//	deserialize(c, ifs);
-
-	//	std::map<potato, int> c_comp{};
-	//	for (int i = 0; i < 4; ++i) {
-	//		potato k;
-	//		k.val = i;
-	//		std::fill(k.vec.begin(), k.vec.end(), i);
-
-	//		c_comp.insert({ k, i });
-	//	}
-	//	EXPECT_EQ(c, c_comp);
-	//}
+		std::map<potato, std::map<int, std::map<potato, int>>> c_comp
+				= make_big_map();
+		EXPECT_EQ(c, c_comp);
+	}
 }
 } // namespace
