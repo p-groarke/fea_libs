@@ -65,6 +65,9 @@ By default, uses the current platform size_t size.
 Use this if you expect different platforms to load your data. Though it is
 up to you to make sure your serialized data-structures are cross-platform
 compatible.
+
+TODO : string, pair, tuple, fea containers, queue, deque
+Q : pointers and refs? should expand or write as-is or write nullptr?
 */
 
 #if !defined(FEA_SERIALIZE_SIZE_T)
@@ -359,7 +362,7 @@ void serialize_map(const Map<K, V, Args...>& map, std::ofstream& ofs) {
 		keys.reserve(size);
 
 		for (const kv_pair& p : map) {
-			keys.push_back(p.second);
+			keys.push_back(p.first);
 			serialize(p.second, ofs);
 		}
 		assert(keys.size() == size);
@@ -388,8 +391,6 @@ void deserialize_map(Map<K, V, Args...>& map, std::ifstream& ifs) {
 		map.insert(kvs.begin(), kvs.end());
 
 	} else if constexpr (FEA_NEEDS_NESTING(K) && FEA_NEEDS_NESTING(V)) {
-		map.reserve(size);
-
 		for (cerial_size_t i = 0; i < size; ++i) {
 			K k;
 			V v;
@@ -399,8 +400,6 @@ void deserialize_map(Map<K, V, Args...>& map, std::ifstream& ifs) {
 		}
 
 	} else if constexpr (FEA_NEEDS_NESTING(K)) {
-		map.reserve(size);
-
 		std::vector<K> keys(size);
 		std::vector<V> values(size);
 
@@ -417,8 +416,6 @@ void deserialize_map(Map<K, V, Args...>& map, std::ifstream& ifs) {
 		}
 
 	} else if constexpr (FEA_NEEDS_NESTING(V)) {
-		map.reserve(size);
-
 		std::vector<K> keys(size);
 		std::vector<V> values(size);
 

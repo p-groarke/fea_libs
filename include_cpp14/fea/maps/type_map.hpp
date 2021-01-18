@@ -96,8 +96,8 @@ struct type_map<fea::pack<Keys...>, Values...>
 	using pack_t = fea::pack<Keys...>;
 
 	// Inherit ctors.
-	using base_t = detail::type_map_shared<Values...>;
-	using base_t::type_map_shared;
+	using base_t = typename detail::type_map_shared<Values...>;
+	using base_t::base_t;
 
 	template <class Key>
 	static constexpr bool contains() {
