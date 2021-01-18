@@ -9,9 +9,11 @@ TEST(type_map, basics) {
 		constexpr std::tuple<short, size_t> v{ short(0), size_t(42) };
 		constexpr auto m = fea::make_type_map(k, v);
 
-		static_assert(m.contains<int>(), "type_map.cpp : test failed");
-		static_assert(!m.contains<short>(), "type_map.cpp : test failed");
-		static_assert(m.find<double>() == 42, "type_map.cpp : test failed");
+		static_assert(m.template contains<int>(), "type_map.cpp : test failed");
+		static_assert(
+				!m.template contains<short>(), "type_map.cpp : test failed");
+		static_assert(
+				m.template find<double>() == 42, "type_map.cpp : test failed");
 
 		using find_t = std::decay_t<decltype(m.find<double>())>;
 		static_assert(std::is_same<find_t, size_t>::value,
@@ -31,9 +33,12 @@ TEST(type_map, basics) {
 		constexpr std::tuple<short, size_t> v2{ short(0), size_t(42) };
 		constexpr auto m = fea::make_type_map(k2, v2);
 
-		static_assert(m.contains<e::one>(), "type_map.cpp : test failed");
-		static_assert(!m.contains<e::three>(), "type_map.cpp : test failed");
-		static_assert(m.find<e::two>() == 42, "type_map.cpp : test failed");
+		static_assert(
+				m.template contains<e::one>(), "type_map.cpp : test failed");
+		static_assert(
+				!m.template contains<e::three>(), "type_map.cpp : test failed");
+		static_assert(
+				m.template find<e::two>() == 42, "type_map.cpp : test failed");
 
 		using find_t = std::decay_t<decltype(m.find<e::two>())>;
 		static_assert(std::is_same<find_t, size_t>::value,

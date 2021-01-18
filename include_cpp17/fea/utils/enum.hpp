@@ -330,7 +330,7 @@ struct switcher<Enum, N, std::tuple<Funcs...>, Es...> {
 		fea::static_for<N>([&, this](auto ic) {
 			constexpr size_t e_idx = decltype(ic)::value;
 			if (e_idx == size_t(e)) {
-				return _funcs.find<Enum(e_idx)>()();
+				return _funcs.template find<Enum(e_idx)>()();
 			}
 		});
 	}
@@ -347,7 +347,7 @@ private:
 template <class Enum, size_t N = size_t(Enum::count)>
 constexpr auto safe_switch() {
 	return detail::switcher<Enum, N, std::tuple<>>{};
-};
+}
 
 
 } // namespace fea
