@@ -12,16 +12,27 @@ namespace {
 // Remember to call 'using fea::serialize' so the appropriate overload is
 // chosen. You could be serializing other user types internally.
 struct potato {
+	potato() = default;
+	potato(int i)
+			: val(i)
+			, vec({ i, i, i, i }) {
+	}
+	potato(char i)
+			: potato(int(i)) {
+	}
+
 	friend std::true_type serialize(const potato& p, std::ofstream& ofs) {
 		using fea::serialize;
 		serialize(p.val, ofs);
 		serialize(p.vec, ofs);
 		return {};
 	}
-	friend void deserialize(potato& p, std::ifstream& ifs) {
+	friend bool deserialize(potato& p, std::ifstream& ifs) {
 		using fea::deserialize;
-		deserialize(p.val, ifs);
-		deserialize(p.vec, ifs);
+		if (!deserialize(p.val, ifs)) {
+			return false;
+		}
+		return deserialize(p.vec, ifs);
 	}
 
 	friend bool operator==(const potato& lhs, const potato& rhs) {
@@ -37,7 +48,18 @@ struct potato {
 	int val = 42;
 	std::vector<int> vec{ 42, -42, 0, 1 };
 };
+} // namespace
 
+namespace std {
+template <>
+struct hash<potato> {
+	size_t operator()(const potato& p) const noexcept {
+		return std::hash<int>{}(p.val);
+	}
+};
+} // namespace std
+
+namespace {
 std::filesystem::path filepath() {
 	const std::filesystem::path dir = fea::executable_dir(argv0) / "tests_data";
 	const std::filesystem::path filepath = dir / "pertatoes.bin";
@@ -77,7 +99,7 @@ TEST(serialize, basics) {
 
 	{
 		std::ifstream ifs{ filepath(), std::ios::binary };
-		deserialize(potatoes, ifs);
+		EXPECT_TRUE(deserialize(potatoes, ifs));
 	}
 
 	EXPECT_EQ(potatoes.size(), 4);
@@ -100,297 +122,365 @@ TEST(serialize, basics) {
 	// Deserialize.
 	{
 		std::ifstream ifs{ filepath(), std::ios::binary };
-		deserialize(a_potato, ifs);
+		EXPECT_TRUE(deserialize(a_potato, ifs));
 	}
 
 	EXPECT_EQ(a_potato.val, potato{}.val);
 	EXPECT_EQ(a_potato.vec, potato{}.vec);
+
+
+	// Should not compile
+	//{
+	//	int* ptr = nullptr;
+	//	std::ofstream ofs{ filepath(), std::ios::binary };
+	//	serialize(ptr, ofs);
+	//}
 }
 
 TEST(serialize, array) {
-	{
-		std::array<int, 4> arr{ 1, 2, 3, 4 };
-		std::ofstream ofs{ filepath(), std::ios::binary };
-		serialize(arr, ofs);
-	}
+	auto test_arr1 = [](auto a_type) {
+		using arr_t = std::decay_t<decltype(a_type)>;
+		arr_t c_comp{ { { 1 }, { 2 }, { 3 }, { 4 } } };
 
-	{
-		std::array<int, 4> arr{};
-		std::ifstream ifs{ filepath(), std::ios::binary };
-		deserialize(arr, ifs);
-
-		std::array<int, 4> arr_comp{ 1, 2, 3, 4 };
-		EXPECT_EQ(arr, arr_comp);
-	}
-
-	{
-		std::array<potato, 4> arr{};
-		std::ofstream ofs{ filepath(), std::ios::binary };
-		serialize(arr, ofs);
-	}
-
-	{
-		potato p;
-		p.val = -42;
-		p.vec = { 1111 };
-
-		std::array<potato, 4> arr{ p, p, p, p };
-		std::ifstream ifs{ filepath(), std::ios::binary };
-		deserialize(arr, ifs);
-
-		std::array<potato, 4> arr_comp{};
-		EXPECT_EQ(arr, arr_comp);
-	}
-
-	{
-		std::array<std::array<std::array<potato, 4>, 4>, 4> arr{};
-		std::ofstream ofs{ filepath(), std::ios::binary };
-		serialize(arr, ofs);
-	}
-
-	{
-		potato p;
-		p.val = -42;
-		p.vec = { 1111 };
-
-		std::array<std::array<std::array<potato, 4>, 4>, 4> arr{};
-		for (auto& a1 : arr) {
-			for (auto& a2 : a1) {
-				for (auto& a3 : a2) {
-					a3 = p;
-				}
-			}
+		{
+			std::ofstream ofs{ filepath(), std::ios::binary };
+			serialize(c_comp, ofs);
 		}
 
-		std::ifstream ifs{ filepath(), std::ios::binary };
-		deserialize(arr, ifs);
+		{
+			arr_t c{};
+			std::ifstream ifs{ filepath(), std::ios::binary };
+			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_EQ(c, c_comp);
+		}
+	};
+	test_arr1(std::array<int, 4>{});
+	test_arr1(std::array<potato, 4>{});
 
-		std::array<std::array<std::array<potato, 4>, 4>, 4> arr_comp{};
-		EXPECT_EQ(arr, arr_comp);
-	}
+	auto test_arr2 = [](auto m_type) {
+		using arr_t = std::decay_t<decltype(m_type)>;
+		arr_t c_comp{};
+		// std::array<std::array<std::array<potato, 4>, 4>, 4> arr{};
+
+		arr_t::value_type::value_type a3{ { { 't' }, { 'e' }, { 's' },
+				{ 't' } } };
+		arr_t::value_type a2{};
+		for (int i = 0; i < 4; ++i) {
+			a2[i] = a3;
+		}
+		for (int i = 0; i < 4; ++i) {
+			c_comp[i] = a2;
+		}
+
+		{
+			std::ofstream ofs{ filepath(), std::ios::binary };
+			serialize(c_comp, ofs);
+		}
+
+		{
+			arr_t c{};
+			std::ifstream ifs{ filepath(), std::ios::binary };
+			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_EQ(c, c_comp);
+		}
+	};
+	test_arr2(std::array<std::array<std::array<int, 4>, 4>, 4>{});
+	test_arr2(std::array<std::array<std::array<potato, 4>, 4>, 4>{});
 }
 
-TEST(serialize, vector) {
-	{
-		std::vector<int> c{ 1, 2, 3, 4 };
-		std::ofstream ofs{ filepath(), std::ios::binary };
-		serialize(c, ofs);
-	}
+TEST(serialize, vector_string) {
+	auto test_buf1 = [](auto v_type) {
+		using vec_t = std::decay_t<decltype(v_type)>;
+		vec_t c_comp{ { 't' }, { 'e' }, { 's' }, { 't' } };
 
-	{
-		std::vector<int> arr{};
-		std::ifstream ifs{ filepath(), std::ios::binary };
-		deserialize(arr, ifs);
-
-		std::vector<int> c_comp{ 1, 2, 3, 4 };
-		EXPECT_EQ(arr, c_comp);
-	}
-
-	{
-		std::vector<potato> c(4);
-		std::ofstream ofs{ filepath(), std::ios::binary };
-		serialize(c, ofs);
-	}
-
-	{
-		potato p;
-		p.val = -42;
-		p.vec = { 1111 };
-
-		std::vector<potato> c{ p, p, p, p };
-		std::ifstream ifs{ filepath(), std::ios::binary };
-		deserialize(c, ifs);
-
-		std::vector<potato> c_comp(4);
-		EXPECT_EQ(c, c_comp);
-	}
-
-	{
-		std::vector<std::vector<std::vector<potato>>> c(
-				4, std::vector<std::vector<potato>>(4, std::vector<potato>(4)));
-		std::ofstream ofs{ filepath(), std::ios::binary };
-		serialize(c, ofs);
-	}
-
-	{
-		potato p;
-		p.val = -42;
-		p.vec = { 1111 };
-
-		std::vector<std::vector<std::vector<potato>>> c(
-				4, std::vector<std::vector<potato>>(4, std::vector<potato>(4)));
-
-		for (auto& a1 : c) {
-			for (auto& a2 : a1) {
-				for (auto& a3 : a2) {
-					a3 = p;
-				}
-			}
+		{
+			std::ofstream ofs{ filepath(), std::ios::binary };
+			serialize(c_comp, ofs);
 		}
 
-		std::ifstream ifs{ filepath(), std::ios::binary };
-		deserialize(c, ifs);
+		{
+			vec_t c{};
+			std::ifstream ifs{ filepath(), std::ios::binary };
+			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_EQ(c, c_comp);
+		}
+	};
+	test_buf1(std::vector<int>{});
+	test_buf1(std::vector<potato>{});
+	test_buf1(std::string{});
+	test_buf1(std::wstring{});
+	test_buf1(std::u16string{});
+	test_buf1(std::u32string{});
 
-		std::vector<std::vector<std::vector<potato>>> c_comp(
-				4, std::vector<std::vector<potato>>(4, std::vector<potato>(4)));
-		EXPECT_EQ(c, c_comp);
-	}
+	auto test_buf2 = [](auto m_type) {
+		using buf_t = std::decay_t<decltype(m_type)>;
+		buf_t c_comp{};
+
+		buf_t::value_type::value_type a3{ { 't' }, { 'e' }, { 's' }, { 't' } };
+		buf_t::value_type a2;
+		for (int i = 0; i < 4; ++i) {
+			a2.push_back(a3);
+		}
+		for (int i = 0; i < 4; ++i) {
+			c_comp.push_back(a2);
+		}
+
+		{
+			std::ofstream ofs{ filepath(), std::ios::binary };
+			serialize(c_comp, ofs);
+		}
+
+		{
+			buf_t c{};
+			std::ifstream ifs{ filepath(), std::ios::binary };
+			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_EQ(c, c_comp);
+		}
+	};
+
+	test_buf2(std::vector<std::vector<std::vector<potato>>>{});
+	test_buf2(std::vector<std::vector<std::vector<int>>>{});
+
+	test_buf2(std::vector<std::vector<std::string>>{});
+	test_buf2(std::vector<std::vector<std::wstring>>{});
+	test_buf2(std::vector<std::vector<std::u16string>>{});
+	test_buf2(std::vector<std::vector<std::u32string>>{});
 }
 
 TEST(serialize, map) {
-	// plain
-	{
-		std::map<int, int> c{ { 1, 1 }, { 2, 2 }, { 3, 3 }, { 4, 4 } };
-		std::ofstream ofs{ filepath(), std::ios::binary };
-		serialize(c, ofs);
-	}
+	auto test_map1 = [](auto m_type) {
+		using map_t = std::decay_t<decltype(m_type)>;
+		map_t c_comp{};
 
-	{
-		std::map<int, int> c{};
-		std::ifstream ifs{ filepath(), std::ios::binary };
-		deserialize(c, ifs);
-
-		std::map<int, int> c_comp{ { 1, 1 }, { 2, 2 }, { 3, 3 }, { 4, 4 } };
-		EXPECT_EQ(c, c_comp);
-	}
-
-	// map<nested,nested>
-	{
-		std::map<potato, potato> c{};
-
-		for (int i = 0; i < 4; ++i) {
-			potato k;
-			k.val = i;
-
-			potato v;
-			v.val = i;
-			std::fill(v.vec.begin(), v.vec.end(), i);
-
-			c.insert({ k, v });
+		{
+			for (int i = 0; i < 4; ++i) {
+				c_comp.insert({ { i }, { i } });
+			}
+			std::ofstream ofs{ filepath(), std::ios::binary };
+			serialize(c_comp, ofs);
 		}
-		std::ofstream ofs{ filepath(), std::ios::binary };
-		serialize(c, ofs);
-	}
 
-	{
-		std::map<potato, potato> c;
-		std::ifstream ifs{ filepath(), std::ios::binary };
-		deserialize(c, ifs);
-
-		std::map<potato, potato> c_comp{};
-		for (int i = 0; i < 4; ++i) {
-			potato k;
-			k.val = i;
-
-			potato v;
-			v.val = i;
-			std::fill(v.vec.begin(), v.vec.end(), i);
-
-			c_comp.insert({ k, v });
+		{
+			map_t c{};
+			std::ifstream ifs{ filepath(), std::ios::binary };
+			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_EQ(c, c_comp);
 		}
-		EXPECT_EQ(c, c_comp);
-	}
+	};
 
-	// map<plain, nested>
-	{
-		std::map<int, potato> c{};
+	test_map1(std::map<int, int>{});
+	test_map1(std::map<potato, potato>{});
+	test_map1(std::map<potato, int>{});
+	test_map1(std::map<int, potato>{});
 
+	test_map1(std::unordered_map<int, int>{});
+	test_map1(std::unordered_map<potato, potato>{});
+	test_map1(std::unordered_map<potato, int>{});
+	test_map1(std::unordered_map<int, potato>{});
+
+	auto test_map2 = [](auto m_type) {
+		using map_t = std::decay_t<decltype(m_type)>;
+		map_t c_comp{};
+
+		// std::map<potato, std::map<int, std::map<potato, int>>> c_comp;
+
+		map_t::mapped_type::mapped_type a3;
 		for (int i = 0; i < 4; ++i) {
-			potato v;
-			v.val = i;
-			std::fill(v.vec.begin(), v.vec.end(), i);
-
-			c.insert({ i, v });
+			a3.insert({ { i }, { i } });
 		}
-		std::ofstream ofs{ filepath(), std::ios::binary };
-		serialize(c, ofs);
-	}
-
-	{
-		std::map<int, potato> c;
-		std::ifstream ifs{ filepath(), std::ios::binary };
-		deserialize(c, ifs);
-
-		std::map<int, potato> c_comp{};
-		for (int i = 0; i < 4; ++i) {
-			potato v;
-			v.val = i;
-			std::fill(v.vec.begin(), v.vec.end(), i);
-
-			c_comp.insert({ i, v });
-		}
-		EXPECT_EQ(c, c_comp);
-	}
-
-	// map<nested, plain>
-	{
-		std::map<potato, int> c{};
-
-		for (int i = 0; i < 4; ++i) {
-			potato k;
-			k.val = i;
-			std::fill(k.vec.begin(), k.vec.end(), i);
-
-			c.insert({ k, i });
-		}
-		std::ofstream ofs{ filepath(), std::ios::binary };
-		serialize(c, ofs);
-	}
-
-	{
-		std::map<potato, int> c;
-		std::ifstream ifs{ filepath(), std::ios::binary };
-		deserialize(c, ifs);
-
-		std::map<potato, int> c_comp{};
-		for (int i = 0; i < 4; ++i) {
-			potato k;
-			k.val = i;
-			std::fill(k.vec.begin(), k.vec.end(), i);
-
-			c_comp.insert({ k, i });
-		}
-		EXPECT_EQ(c, c_comp);
-	}
-
-
-	auto make_big_map = []() {
-		std::map<potato, std::map<int, std::map<potato, int>>> ret{};
-		std::map<potato, int> a3;
-		for (int i = 0; i < 4; ++i) {
-			potato k;
-			k.val = i;
-			std::fill(k.vec.begin(), k.vec.end(), i);
-			a3.insert({ k, i });
-		}
-		std::map<int, std::map<potato, int>> a2;
+		map_t::mapped_type a2;
 		for (int i = 0; i < 4; ++i) {
 			a2.insert({ i, a3 });
 		}
 		for (int i = 0; i < 4; ++i) {
-			potato k;
-			k.val = i;
-			std::fill(k.vec.begin(), k.vec.end(), i);
-			ret.insert({ k, a2 });
+			c_comp.insert({ { i }, a2 });
 		}
-		return ret;
+
+		{
+			std::ofstream ofs{ filepath(), std::ios::binary };
+			serialize(c_comp, ofs);
+		}
+
+		{
+			map_t c{};
+			std::ifstream ifs{ filepath(), std::ios::binary };
+			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_EQ(c, c_comp);
+		}
 	};
 
-	{
-		std::map<potato, std::map<int, std::map<potato, int>>> c
-				= make_big_map();
-		std::ofstream ofs{ filepath(), std::ios::binary };
-		serialize(c, ofs);
-	}
+	test_map2(std::map<potato, std::map<int, std::map<potato, int>>>{});
+	test_map2(std::unordered_map<potato,
+			std::unordered_map<int, std::unordered_map<potato, int>>>{});
 
-	{
-		std::map<potato, std::map<int, std::map<potato, int>>> c{};
-		std::ifstream ifs{ filepath(), std::ios::binary };
-		deserialize(c, ifs);
+	test_map2(
+			std::map<potato, std::unordered_map<int, std::map<potato, int>>>{});
+	test_map2(std::unordered_map<potato,
+			std::map<int, std::unordered_map<potato, int>>>{});
 
-		std::map<potato, std::map<int, std::map<potato, int>>> c_comp
-				= make_big_map();
-		EXPECT_EQ(c, c_comp);
-	}
+	test_map2(std::map<int, std::map<potato, std::map<potato, int>>>{});
+	test_map2(std::unordered_map<int,
+			std::unordered_map<potato, std::unordered_map<potato, int>>>{});
+}
+
+TEST(serialize, set) {
+	auto test_set1 = [](auto m_type) {
+		using set_t = std::decay_t<decltype(m_type)>;
+		set_t c_comp{};
+
+		{
+			for (int i = 0; i < 4; ++i) {
+				c_comp.insert({ i });
+			}
+			std::ofstream ofs{ filepath(), std::ios::binary };
+			serialize(c_comp, ofs);
+		}
+
+		{
+			set_t c{};
+			std::ifstream ifs{ filepath(), std::ios::binary };
+			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_EQ(c, c_comp);
+		}
+	};
+
+	test_set1(std::set<int>{});
+	test_set1(std::set<potato>{});
+	test_set1(std::unordered_set<int>{});
+	test_set1(std::unordered_set<potato>{});
+
+	auto test_set2 = [](auto m_type) {
+		using set_t = std::decay_t<decltype(m_type)>;
+		set_t c_comp{};
+
+		// std::set<std::set<std::set<potato>>> c_comp;
+
+		set_t::value_type::value_type a3;
+		for (int i = 0; i < 4; ++i) {
+			a3.insert({ i });
+		}
+		set_t::value_type a2;
+		for (int i = 0; i < 4; ++i) {
+			a2.insert(a3);
+		}
+		for (int i = 0; i < 4; ++i) {
+			c_comp.insert(a2);
+		}
+
+		{
+			std::ofstream ofs{ filepath(), std::ios::binary };
+			serialize(c_comp, ofs);
+		}
+
+		{
+			set_t c{};
+			std::ifstream ifs{ filepath(), std::ios::binary };
+			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_EQ(c, c_comp);
+		}
+	};
+
+	test_set2(std::set<std::set<std::set<potato>>>{});
+	test_set2(std::set<std::set<std::set<int>>>{});
+
+	// no can do
+	// test_set2(std::unordered_set<
+	//		std::unordered_set<std::unordered_set<potato>>>{});
+	// test_set2(
+	//		std::unordered_set<std::unordered_set<std::unordered_set<int>>>{});
+}
+
+TEST(serialize, pair_tuple) {
+	std::tuple<int, int, int, int> tup;
+
+	auto test_tup1 = [](auto m_type) {
+		using tup_t = std::decay_t<decltype(m_type)>;
+		tup_t c_comp{};
+
+		{
+			std::get<0>(c_comp) = { 0 };
+			std::get<1>(c_comp) = { 1 };
+			if constexpr (std::tuple_size_v<tup_t> > 2) {
+				std::get<2>(c_comp) = { 2 };
+				std::get<3>(c_comp) = { 3 };
+			}
+
+			std::ofstream ofs{ filepath(), std::ios::binary };
+			serialize(c_comp, ofs);
+		}
+
+		{
+			tup_t c{};
+			std::ifstream ifs{ filepath(), std::ios::binary };
+			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_EQ(c, c_comp);
+		}
+	};
+	test_tup1(std::pair<int, int>{});
+	test_tup1(std::pair<potato, int>{});
+	test_tup1(std::pair<int, potato>{});
+	test_tup1(std::pair<potato, potato>{});
+
+	test_tup1(std::tuple<int, int>{});
+	test_tup1(std::tuple<potato, int>{});
+	test_tup1(std::tuple<int, potato>{});
+	test_tup1(std::tuple<potato, potato>{});
+
+	test_tup1(std::tuple<int, int, int, int>{});
+	test_tup1(std::tuple<potato, int, potato, int>{});
+	test_tup1(std::tuple<int, potato, int, potato>{});
+	test_tup1(std::tuple<potato, potato, potato, potato>{});
+
+	auto test_tup2 = [](auto m_type) {
+		using tup_t = std::decay_t<decltype(m_type)>;
+		tup_t c_comp{};
+
+		// std::set<std::set<std::set<potato>>> c_comp;
+
+		std::tuple_element_t<1, std::tuple_element_t<1, tup_t>> a3{};
+		std::get<0>(a3) = { 0 };
+		std::get<1>(a3) = { 1 };
+
+		std::tuple_element_t<1, tup_t> a2{};
+		std::get<0>(a2) = { 10 };
+		std::get<1>(a2) = a3;
+
+		std::get<0>(c_comp) = { 20 };
+		std::get<1>(c_comp) = a2;
+
+		{
+			std::ofstream ofs{ filepath(), std::ios::binary };
+			serialize(c_comp, ofs);
+		}
+
+		{
+			tup_t c{};
+			std::ifstream ifs{ filepath(), std::ios::binary };
+			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_EQ(c, c_comp);
+		}
+	};
+
+	test_tup2(std::pair<potato, std::pair<int, std::pair<potato, potato>>>{});
+	test_tup2(std::pair<int, std::pair<potato, std::pair<int, int>>>{});
+	test_tup2(std::pair<potato, std::pair<potato, std::pair<potato, int>>>{});
+	test_tup2(std::pair<potato, std::pair<int, std::pair<int, potato>>>{});
+
+	test_tup2(std::tuple<potato, std::pair<int, std::pair<potato, potato>>>{});
+	test_tup2(std::tuple<int, std::pair<potato, std::pair<int, int>>>{});
+	test_tup2(std::tuple<potato, std::pair<potato, std::pair<potato, int>>>{});
+	test_tup2(std::tuple<potato, std::pair<int, std::pair<int, potato>>>{});
+
+	test_tup2(std::tuple<potato, std::tuple<int, std::pair<potato, potato>>>{});
+	test_tup2(std::tuple<int, std::tuple<potato, std::pair<int, int>>>{});
+	test_tup2(std::tuple<potato, std::tuple<potato, std::pair<potato, int>>>{});
+	test_tup2(std::tuple<potato, std::tuple<int, std::pair<int, potato>>>{});
+
+	test_tup2(
+			std::tuple<potato, std::tuple<int, std::tuple<potato, potato>>>{});
+	test_tup2(std::tuple<int, std::tuple<potato, std::tuple<int, int>>>{});
+	test_tup2(
+			std::tuple<potato, std::tuple<potato, std::tuple<potato, int>>>{});
+	test_tup2(std::tuple<potato, std::tuple<int, std::tuple<int, potato>>>{});
 }
 } // namespace

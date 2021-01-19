@@ -229,7 +229,7 @@ public:
 		}
 
 		bool ret = true;
-		tuple_foreach([&](const auto& stack) { ret &= stack.empty(); },
+		tuple_for_each([&](const auto& stack) { ret &= stack.empty(); },
 				_channel_stacks);
 		return ret;
 	}
@@ -245,7 +245,7 @@ public:
 		}
 
 		bool ret = true;
-		tuple_foreach(
+		tuple_for_each(
 				[&](const auto& stack) { ret &= stack.template empty<e>(); },
 				_channel_stacks);
 		return ret;
@@ -280,7 +280,7 @@ public:
 			ret += stack_pair.second.size();
 		}
 
-		tuple_foreach([&](const auto& stack) { ret += stack.size(); },
+		tuple_for_each([&](const auto& stack) { ret += stack.size(); },
 				_channel_stacks);
 
 		return ret;
@@ -295,7 +295,7 @@ public:
 			ret += stack_pair.second.template size<e>();
 		}
 
-		tuple_foreach(
+		tuple_for_each(
 				[&](const auto& stack) { ret += stack.template size<e>(); },
 				_channel_stacks);
 
@@ -362,7 +362,7 @@ public:
 	// Clear everything (all notifiers, callbacks, channel callbacks, etc).
 	void clear() {
 		_notifier_stacks.clear();
-		tuple_foreach([](auto& stack) { stack.clear(); }, _channel_stacks);
+		tuple_for_each([](auto& stack) { stack.clear(); }, _channel_stacks);
 	}
 
 	// Clear all callbacks from notifiers and channels (but keeps notifiers).
@@ -371,7 +371,7 @@ public:
 		for (auto& stack_pair : _notifier_stacks) {
 			stack_pair.second.clear();
 		}
-		tuple_foreach([](auto& stack) { stack.clear(); }, _channel_stacks);
+		tuple_for_each([](auto& stack) { stack.clear(); }, _channel_stacks);
 	}
 
 	// Clear event subscribers from both notifiers and channels.
@@ -381,7 +381,7 @@ public:
 		for (auto& stack_pair : _notifier_stacks) {
 			stack_pair.second.template clear<e>();
 		}
-		tuple_foreach([](auto& stack) { stack.template clear<e>(); },
+		tuple_for_each([](auto& stack) { stack.template clear<e>(); },
 				_channel_stacks);
 	}
 
