@@ -1,4 +1,5 @@
 ﻿#include <fea/utils/random.hpp>
+#include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
 
 namespace {
@@ -24,7 +25,7 @@ TEST(random, basics) {
 
 	{
 		std::array<uint8_t, 4> bytes = fea::random_bytes<4>();
-		bytes; // how to test?
+		fea::unused(bytes); // how to test?
 		std::vector<uint8_t> vbytes = fea::random_bytes(4);
 		EXPECT_EQ(vbytes.size(), 4);
 	}

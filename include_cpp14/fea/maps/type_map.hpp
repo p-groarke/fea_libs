@@ -35,9 +35,8 @@
 #include "fea/meta/pack.hpp"
 #include "fea/meta/traits.hpp"
 #include "fea/meta/tuple.hpp"
+#include "fea/utils/memory.hpp"
 
-#include <initializer_list>
-#include <utility>
 
 /*
 fea::type_map stores items which can be accessed using types. The types must be
@@ -47,6 +46,8 @@ Create it using a fea::type_pack and a tuple.
 The former is for your keys and the later for your values.
 The indexes of keys will reference the object at the same index in your tuple.
 
+You can use kv_t and make_type_map to construct a type_map as you would c++
+maps.
 */
 
 namespace fea {
@@ -89,7 +90,7 @@ private:
 template <class, class...>
 struct type_map;
 
-// Typed version.
+// Typed type_map.
 template <class... Keys, class... Values>
 struct type_map<fea::pack<Keys...>, Values...>
 		: detail::type_map_shared<Values...> {
@@ -102,6 +103,7 @@ struct type_map<fea::pack<Keys...>, Values...>
 	using base_t = typename detail::type_map_shared<Values...>;
 	using base_t::base_t;
 
+	// Does map contain Key?
 	template <class Key>
 	static constexpr bool contains() {
 		// Just to make sure we are in constexpr land.
@@ -109,7 +111,7 @@ struct type_map<fea::pack<Keys...>, Values...>
 		return ret;
 	}
 
-	// Search by non-type template.
+	// Search for value associated with key.
 	template <class Key>
 	constexpr const auto& find() const {
 		static_assert(
@@ -128,7 +130,7 @@ struct type_map<fea::pack<Keys...>, Values...>
 	}
 };
 
-// Non-type version.
+// Non-type type_map.
 template <class T, T... Keys, class... Values>
 struct type_map<fea::pack_nt<T, Keys...>, Values...>
 		: detail::type_map_shared<Values...> {
@@ -141,6 +143,7 @@ struct type_map<fea::pack_nt<T, Keys...>, Values...>
 	using base_t = typename detail::type_map_shared<Values...>;
 	using base_t::base_t;
 
+	// Does map contain non-type Key?
 	template <T Key>
 	static constexpr bool contains() {
 		// Just to make sure we are in constexpr land.
@@ -148,7 +151,7 @@ struct type_map<fea::pack_nt<T, Keys...>, Values...>
 		return ret;
 	}
 
-	// Search by non-type template.
+	// Search for value associated with non-type key.
 	template <T Key>
 	constexpr const auto& find() const {
 		static_assert(
@@ -167,63 +170,85 @@ struct type_map<fea::pack_nt<T, Keys...>, Values...>
 	}
 };
 
+// Construct a type_map using a fea::pack and a std::tuple.
 template <class... Keys, class... Values>
 constexpr auto make_type_map(
 		pack<Keys...>, const std::tuple<Values...>& values) {
 	return type_map<pack<Keys...>, Values...>(values);
 }
 
+// Construct a non-type type_map using a fea::pack and a std::tuple.
 template <class K, K... Keys, class... Values>
 constexpr auto make_type_map(
 		pack_nt<K, Keys...>, const std::tuple<Values...>& values) {
 	return type_map<pack_nt<K, Keys...>, Values...>(values);
 }
 
-// TODO :
-// make with tuple<type_kv<key, val>>
-// where first is only a type, and second is a value.
-// aka, key has no storage.
-
-template <class K, class V>
+// kv_t is a holder for a type Key and Value v.
+// The key has no storage.
+// You can use it to construct a type_map as you would a std::map.
+// See make_type_map.
+template <class Key, class Value>
 struct kv_t {
-	using key_t = K;
-	using value_t = V;
+	using key_t = Key;
+	using value_t = Value;
 
-	kv_t(V&& v)
-			: v(std::forward<V>(v)) {
+	kv_t(Value&& v)
+			: v(std::forward<Value>(v)) {
 	}
 
 	// Deduce the type K.
-	kv_t(K&&, V&& v)
-			: v(std::forward<V>(v)) {
+	kv_t(Key&&, Value&& v)
+			: v(std::forward<Value>(v)) {
 	}
 
-	V v;
+	Value v;
 };
 
-//#if FEA_CPP17
-//
-// template <class K, class V, template <class, class> class P>
-// kv_t(std::initializer_list<P<K, V>>) -> kv_t<K, V>;
-//
-// template <class... Keys, class... Values>
-// constexpr auto make_type_map_kv(kv_t<Keys, Values>&&... kvs) {
-//	return type_map<pack<Keys...>, Values...>(std::make_tuple((kvs.v)...));
-//}
-//
-// template <class... K, class... V>
-// constexpr auto make_type_map_kv(std::pair<K, V>&&... kvs) {
-//	return type_map<pack<K...>, V...>(std::make_tuple((kvs.v)...));
-//}
-//
-// template <class K, class V, template <class, class> class P>
-// make_type_map_kv(std::initializer_list<P<K, V>>) -> make_type_map_kv<K, V>;
-//
-//// template <class... Keys, class... Values>
-//// constexpr auto make_type_map_kv(
-////		std::initializer_list<kv_t<Keys, Values>>... kvs) {
-////	return type_map<pack<Keys...>, Values...>(std::make_tuple((kvs.v)...));
-////}
-//
-//#endif
+// Helper to deduce kv_t in c++ < 17.
+template <class Key, class Value>
+kv_t<Key, Value> make_kv_t(Key&&, Value&& v) {
+	return kv_t<Key, Value>{ std::forward<Value>(v) };
+}
+
+// kv_t for non-types.
+template <class K, K Key, class Value>
+struct kv_nt {
+	using key_t = K;
+	using value_t = Value;
+
+	kv_nt(Value&& v)
+			: v(std::forward<Value>(v)) {
+	}
+
+	Value v;
+};
+
+// Helper to deduce kv_nt in c++ < 17
+template <class K, K Key, class Value>
+kv_nt<K, Key, Value> make_kv_nt(Value&& v) {
+	return kv_nt<K, Key, Value>{ std::forward<Value>(v) };
+}
+
+#if FEA_CPP17
+// Helper which makes it a little cleaner.
+template <auto Key, class Value>
+kv_nt<decltype(Key), Key, Value> make_kv_nt(Value&& v) {
+	return kv_nt<decltype(Key), Key, Value>{ std::forward<Value>(v) };
+}
+#endif
+
+// Construct a type_map using a list of key-value pairs.
+template <class... Keys, class... Values>
+constexpr auto make_type_map(kv_t<Keys, Values>&&... kvs) {
+	return type_map<pack<Keys...>, Values...>(
+			std::make_tuple(fea::maybe_move(kvs.v)...));
+}
+
+// Construct a non-type type_map using a list of key-value pairs.
+template <class K, K... Keys, class... Values>
+constexpr auto make_type_map(kv_nt<K, Keys, Values>&&... kvs) {
+	return type_map<pack_nt<K, Keys...>, Values...>(
+			std::make_tuple(fea::maybe_move(kvs.v)...));
+}
 } // namespace fea
