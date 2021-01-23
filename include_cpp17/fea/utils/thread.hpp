@@ -34,6 +34,7 @@
 #pragma once
 #include "fea/utils/memory.hpp"
 
+#include <algorithm>
 #include <functional>
 #include <mutex>
 #include <shared_mutex>

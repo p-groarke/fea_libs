@@ -633,6 +633,9 @@ See : https://codecraft.co/2014/11/25/variadic-macros-tricks/
 
 // Calls the provided macro on each parameter of the variadic macro.
 // Also provides the original __VA_ARGS__ to the macro "lambda".
+// ex.
+// #define my_macro(val, ...)
+// FEA_FOR_EACH_VA(my_macro, ...)
 #define FEA_FOR_EACH_VA(macro, ...) \
 	FEA_DETAIL_EXPAND(FEA_GET_NTH_ARG(__VA_ARGS__, FEA_DETAIL_FECALLVA_99, \
 			FEA_DETAIL_FECALLVA_98, FEA_DETAIL_FECALLVA_97, \
@@ -1042,6 +1045,10 @@ See : https://codecraft.co/2014/11/25/variadic-macros-tricks/
 
 // Calls your provided macro on each variadic parameter.
 // Uses a second macro for the last element.
+// ex.
+// #define add_comma(x) x,
+// #define last(x) x
+// FEA_FOR_EACH_LAST(add_comma, last, ...)
 #define FEA_FOR_EACH_LAST(macro, last_macro, ...) \
 	FEA_DETAIL_EXPAND(FEA_GET_NTH_ARG(__VA_ARGS__, FEA_DETAIL_FECALLLAST_99, \
 			FEA_DETAIL_FECALLLAST_98, FEA_DETAIL_FECALLLAST_97, \

@@ -82,23 +82,4 @@ TEST(enum_array, basics) {
 #endif
 	}
 }
-template <class T>
-struct t {};
-
-// struct t2;
-
-auto func() {
-	struct t2 {
-		int v;
-	};
-	return t2{};
-}
-
-TEST(enum_array, make_enum_array) {
-	enum class e { zero, one, two, three, four, five, count };
-
-	// fea::make_enum_array<bool, e>().set<e::one>(true).set<e::two>(true);
-	auto test = func();
-	test = func();
-}
 } // namespace

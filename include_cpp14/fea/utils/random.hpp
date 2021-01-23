@@ -38,12 +38,28 @@ T random_int() {
 			std::numeric_limits<T>::lowest(), std::numeric_limits<T>::max());
 	return dist(detail::gen);
 }
+template <>
+int8_t random_int<int8_t>() {
+	return int8_t(random_int<short>());
+}
+template <>
+uint8_t random_int<uint8_t>() {
+	return uint8_t(random_int<uint16_t>());
+}
 
 // Get a random int between [min, max].
 template <class T>
 T random_int(T min, T max) {
 	std::uniform_int_distribution<T> dist(min, max);
 	return dist(detail::gen);
+}
+template <>
+int8_t random_int(int8_t min, int8_t max) {
+	return int8_t(random_int(int16_t(min), int16_t(max)));
+}
+template <>
+uint8_t random_int(uint8_t min, uint8_t max) {
+	return uint8_t(random_int(uint16_t(min), uint16_t(max)));
 }
 
 // Get a random index, from 0 to count - 1.

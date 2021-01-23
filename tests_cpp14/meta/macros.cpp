@@ -9,6 +9,11 @@
 	std::array<std::string, 6> arr \
 			= { FEA_FOR_EACH(FEA_STRINGIFY_COMMA, __VA_ARGS__) }
 
+#define num(x) x,
+#define num_last(x) x
+
+#define nums_va(x, ...) std::array<int, 4> FEA_PASTE(arr, x){ __VA_ARGS__ };
+
 namespace {
 TEST(macros, basics) {
 
@@ -29,10 +34,38 @@ TEST(macros, basics) {
 	EXPECT_EQ(FEA_SIZEOF_VAARGS(test, test, test), 3);
 	EXPECT_EQ(FEA_SIZEOF_VAARGS(test, test, test, test, test, test), 6);
 
-	testme(0, 1, 2, 3, 4, 5);
+	{
+		testme(0, 1, 2, 3, 4, 5);
 
-	for (size_t i = 0; i < arr.size(); ++i) {
-		EXPECT_EQ(arr[i], std::to_string(i));
+		for (size_t i = 0; i < arr.size(); ++i) {
+			EXPECT_EQ(arr[i], std::to_string(i));
+		}
+	}
+
+	{
+		std::array<int, 4> arr{ FEA_FOR_EACH(num, 0, 1, 2, 3) };
+		for (int i = 0; i < int(arr.size()); ++i) {
+			EXPECT_EQ(arr[i], i);
+		}
+	}
+
+	{
+		FEA_FOR_EACH_VA(nums_va, 0, 1, 2, 3)
+
+		for (int i = 0; i < 4; ++i) {
+			EXPECT_EQ(arr0[i], i);
+			EXPECT_EQ(arr1[i], i);
+			EXPECT_EQ(arr2[i], i);
+			EXPECT_EQ(arr3[i], i);
+		}
+	}
+
+	{
+		int FEA_FOR_EACH_LAST(num, num_last, i0, i1, i2, i3);
+		i0 = 0;
+		i1 = 0;
+		i2 = 0;
+		i3 = 0;
 	}
 }
 } // namespace
