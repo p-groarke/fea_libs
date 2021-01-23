@@ -8,13 +8,13 @@ TEST(type_map, basics) {
 	{
 		constexpr fea::pack<int, double> k;
 		constexpr std::tuple<short, size_t> v{ short(0), size_t(42) };
-		constexpr auto m = fea::make_type_map(k, v);
+		auto m = fea::make_type_map(k, v);
 
 		static_assert(m.template contains<int>(), "type_map.cpp : test failed");
 		static_assert(
 				!m.template contains<short>(), "type_map.cpp : test failed");
-		static_assert(
-				m.template find<double>() == 42, "type_map.cpp : test failed");
+
+		EXPECT_EQ(m.template find<double>(), 42u);
 
 		using find_t = std::decay_t<decltype(m.find<double>())>;
 		static_assert(std::is_same<find_t, size_t>::value,
@@ -32,14 +32,14 @@ TEST(type_map, basics) {
 
 		constexpr fea::pack_nt<e, e::one, e::two> k2;
 		constexpr std::tuple<short, size_t> v2{ short(0), size_t(42) };
-		constexpr auto m = fea::make_type_map(k2, v2);
+		auto m = fea::make_type_map(k2, v2);
 
 		static_assert(
 				m.template contains<e::one>(), "type_map.cpp : test failed");
 		static_assert(
 				!m.template contains<e::three>(), "type_map.cpp : test failed");
-		static_assert(
-				m.template find<e::two>() == 42, "type_map.cpp : test failed");
+
+		EXPECT_EQ(m.template find<e::two>(), 42u);
 
 		using find_t = std::decay_t<decltype(m.find<e::two>())>;
 		static_assert(std::is_same<find_t, size_t>::value,
@@ -89,9 +89,9 @@ TEST(type_map, basics) {
 		auto tmap2 = fea::make_type_map(fea::make_kv_nt<e, e::one>(42.f),
 				fea::make_kv_nt<e, e::two>(42.0));
 
-		static_assert(std::is_same_v<decltype(tmap2),
+		static_assert(std::is_same<decltype(tmap2),
 							  fea::type_map<fea::pack_nt<e, e::one, e::two>,
-									  float, double>>,
+									  float, double>>::value,
 				"type_map.cpp : test failed");
 	}
 }
