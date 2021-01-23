@@ -39,8 +39,10 @@
 // Q : Split into a few headers so we don't include the full stl?
 #include <array>
 #include <cassert>
+#include <deque>
 #include <fstream>
 #include <map>
+#include <queue>
 #include <set>
 #include <string>
 #include <tuple>
@@ -60,7 +62,7 @@ written as flat data chunks.
 
 To achieve this, the serialize functions return std::false_type or
 std::true_type. When implementing your own serialize overloads, return
-std::true_type.
+std::true_type unless your type may be directly serialized.
 
 Container serialization has corrupted data checks. It returns false if
 deserialization fails. It clears or default initializes the passed in
@@ -85,7 +87,11 @@ themselved. As such, it will serialize the references in place. When
 deserializing, the original reference will be filled with the data.
 Not ideal, but good enough.
 
-TODO : pair, tuple, queue, deque, fea containers
+fea::serialize_scope and fea::deserialize_enter/deserialize_exit helpers are
+available to you. You may use them to simplify and harden your custom class
+serialization.
+
+TODO : queue, deque, fea containers
 */
 
 #if !defined(FEA_SERIALIZE_SIZE_T)
@@ -102,32 +108,17 @@ namespace fea {
 using cerial_size_t = FEA_SERIALIZE_SIZE_T;
 
 namespace detail {
+// Detects if a type has reserve()
 template <class T>
 using has_reserve = decltype(std::declval<T>().reserve(std::declval<size_t>()));
 
+// Detects if a type has clear()
 template <class T>
 using has_clear = decltype(std::declval<T>().clear());
 
+// Detects if a type has size()
 template <class T>
 using has_size = decltype(std::declval<T>().size());
-
-// Deserializes a size and checks if it is valid.
-// If not, calls clear() on t.
-template <class T>
-[[nodiscard]] bool sanity_check(
-		T& t, std::ifstream& ifs, cerial_size_t expected_size);
-
-[[nodiscard]] inline bool read(std::ifstream& ifs, char* ptr, size_t size) {
-	assert(ifs.is_open());
-	ifs.read(ptr, size);
-	assert(ifs.good());
-	return ifs.good();
-}
-inline void write(std::ofstream& ofs, const char* ptr, size_t size) {
-	assert(ofs.is_open());
-	ofs.write(ptr, size);
-	assert(ofs.good());
-}
 
 // Helper to generalize plain (non-nested) serialization.
 template <class T>
@@ -136,6 +127,14 @@ void serialize_plain(const T& data, std::ofstream& ofs);
 // Helper to generalize plain (non-nested) deserialization.
 template <class T>
 [[nodiscard]] bool deserialize_plain(T& data, std::ifstream& ifs);
+
+// Helper to generalize contiguous array serialization.
+template <class T, size_t N, template <class, size_t> class Arr>
+[[nodiscard]] auto serialize_array(const Arr<T, N>& arr, std::ofstream& ofs);
+
+// Helper to generalize contiguous array deserialization.
+template <class T, size_t N, template <class, size_t> class Arr>
+[[nodiscard]] bool deserialize_array(Arr<T, N>& arr, std::ifstream& ifs);
 
 // Helper to generalize contiguous buffer serialization.
 template <class T, class... Args, template <class, class...> class Buf>
@@ -165,13 +164,14 @@ template <class T, class... Args, template <class, class...> class Set>
 
 // Helper to generalize tuple-like serialization.
 template <class... Args, template <class...> class Tup>
-void serialize_tuple(const Tup<Args...>& tup, std::ofstream& ofs);
+[[nodiscard]] auto serialize_tuple(const Tup<Args...>& tup, std::ofstream& ofs);
 
 // Helper to generalize tuple-like deserialization.
 template <class... Args, template <class...> class Tup>
 [[nodiscard]] bool deserialize_tuple(Tup<Args...>& tup, std::ifstream& ifs);
 
 } // namespace detail
+
 
 // Serialize anything.
 template <class T>
@@ -184,33 +184,20 @@ std::false_type serialize(const T& t, std::ofstream& ofs) {
 
 // Serialize std::pair.
 template <class K, class V>
-std::true_type serialize(const std::pair<K, V>& pair, std::ofstream& ofs) {
-	detail::serialize_tuple(pair, ofs);
-	return {};
+auto serialize(const std::pair<K, V>& pair, std::ofstream& ofs) {
+	return detail::serialize_tuple(pair, ofs);
 }
 
 // Serialize std::tuple.
 template <class... Args>
-std::true_type serialize(const std::tuple<Args...>& tup, std::ofstream& ofs) {
-	detail::serialize_tuple(tup, ofs);
-	return {};
+auto serialize(const std::tuple<Args...>& tup, std::ofstream& ofs) {
+	return detail::serialize_tuple(tup, ofs);
 }
 
 // Serialize std::array.
 template <class T, size_t N>
-std::true_type serialize(const std::array<T, N>& arr, std::ofstream& ofs) {
-	if constexpr (FEA_NEEDS_NESTING(T)) {
-		cerial_size_t size(arr.size());
-		serialize(size, ofs);
-		for (const T& t : arr) {
-			serialize(t, ofs);
-		}
-		serialize(size, ofs);
-	} else {
-		detail::serialize_plain(arr, ofs);
-	}
-
-	return {};
+auto serialize(const std::array<T, N>& arr, std::ofstream& ofs) {
+	return detail::serialize_array(arr, ofs);
 }
 
 // Serialize std::vector.
@@ -260,6 +247,29 @@ std::true_type serialize(
 	return {};
 }
 
+// Serialize std::deque.
+template <class T, class... Args>
+std::true_type serialize(
+		const std::deque<T, Args...>& deq, std::ofstream& ofs) {
+	std::vector<T, Args...> v(deq.begin(), deq.end());
+	detail::serialize_buffer(v, ofs);
+	return {};
+}
+
+// Serialize std::queue.
+template <class T, class... Args>
+std::true_type serialize(const std::queue<T, Args...>& q, std::ofstream& ofs) {
+	std::queue<T, Args...> cpy = q;
+	std::vector<T> v;
+	v.reserve(cpy.size());
+	while (!cpy.empty()) {
+		v.push_back(fea::maybe_move(cpy.front()));
+		cpy.pop();
+	}
+	detail::serialize_buffer(v, ofs);
+	return {};
+}
+
 
 // Deserialize anything.
 template <class T>
@@ -285,28 +295,7 @@ template <class... Args>
 // If sanity check fails, array will be defaulted and returns false.
 template <class T, size_t N>
 [[nodiscard]] bool deserialize(std::array<T, N>& arr, std::ifstream& ifs) {
-
-	if constexpr (FEA_NEEDS_NESTING(T)) {
-		cerial_size_t size = 0;
-		if (!deserialize(size, ifs)) {
-			return false;
-		}
-
-		if (arr.size() != size) {
-			assert(false);
-			return false;
-		}
-
-		for (cerial_size_t i = 0; i < size; ++i) {
-			if (!deserialize(arr[i], ifs)) {
-				return false;
-			}
-		}
-
-		return detail::sanity_check(arr, ifs, size);
-	} else {
-		return detail::deserialize_plain(arr, ifs);
-	}
+	return detail::deserialize_array(arr, ifs);
 }
 
 // Deserialize std::vector.
@@ -356,15 +345,93 @@ template <class T, class... Args>
 	return detail::deserialize_buffer(string, ifs);
 }
 
+// Deserialize std::deque.
+// If sanity check fails, container will be empty.
+template <class T, class... Args>
+[[nodiscard]] bool deserialize(
+		std::deque<T, Args...>& deq, std::ifstream& ifs) {
+	std::vector<T, Args...> v;
+	if (!detail::deserialize_buffer(v, ifs)) {
+		return false;
+	}
+	deq.clear();
+	deq.insert(deq.begin(), fea::maybe_make_move_iterator(v.begin()),
+			fea::maybe_make_move_iterator(v.end()));
+	return deq.size() == v.size();
+}
 
-// Helpers
-namespace detail {
+// Deserialize std::queue.
+// If sanity check fails, container will be empty.
+template <class T, class... Args>
+[[nodiscard]] bool deserialize(std::queue<T, Args...>& q, std::ifstream& ifs) {
+	assert(q.empty());
+
+	std::vector<T> v;
+	if (!detail::deserialize_buffer(v, ifs)) {
+		return false;
+	}
+
+	for (auto& val : v) {
+		q.push(fea::maybe_move(val));
+	}
+	return q.size() == v.size();
+}
+
+
+// User helpers.
+// Serializes the container size and T size.
+// On destruction, serializes the container size again (sentinel).
 template <class T>
-bool sanity_check(T& t, std::ifstream& ifs, cerial_size_t expected_size) {
+struct serialize_scope {
+	serialize_scope(size_t size, std::ofstream& ofs)
+			: _size(size)
+			, _ofs(ofs) {
+		serialize(_size, _ofs);
+		cerial_size_t t_size(sizeof(T));
+		serialize(t_size, _ofs);
+	}
+	~serialize_scope() {
+		serialize(_size, _ofs);
+	}
+	cerial_size_t size() const {
+		return _size;
+	}
+
+private:
+	cerial_size_t _size = 0;
+	std::ofstream& _ofs;
+};
+
+// Deserializes container size, then type size.
+// Checks to make sure sizeof(T) is ok.
+template <class T>
+bool deserialize_enter(cerial_size_t& size, std::ifstream& ifs) {
+	size = 0;
+	if (!deserialize(size, ifs)) {
+		return false;
+	}
+
+	cerial_size_t t_size = 0;
+	if (!deserialize(t_size, ifs)) {
+		return false;
+	}
+
+	if (t_size != sizeof(T)) {
+		assert(false);
+		return false;
+	}
+	return true;
+}
+
+// Checks that size sentinel is equal to expected_size.
+// Also checks your container is of correct size.
+// Resets passed in object on failure.
+template <class T>
+bool deserialize_exit(T& t, std::ifstream& ifs, cerial_size_t expected_size) {
 	// Also check the container contains the right amount of things.
-	if constexpr (fea::is_detected_v<has_size, T>) {
-		assert(t.size() == expected_size);
+	if constexpr (fea::is_detected_v<detail::has_size, T>) {
 		if (t.size() != expected_size) {
+			assert(false);
 			return false;
 		}
 	}
@@ -377,7 +444,7 @@ bool sanity_check(T& t, std::ifstream& ifs, cerial_size_t expected_size) {
 
 	if (expected_size != sanity) {
 		assert(false);
-		if constexpr (fea::is_detected_v<has_clear, T>) {
+		if constexpr (fea::is_detected_v<detail::has_clear, T>) {
 			t.clear();
 		} else {
 			t = {};
@@ -387,63 +454,94 @@ bool sanity_check(T& t, std::ifstream& ifs, cerial_size_t expected_size) {
 	return true;
 }
 
+
+// Helpers
+namespace detail {
+[[nodiscard]] inline bool read(std::ifstream& ifs, char* ptr, size_t size) {
+	assert(ifs.is_open());
+	ifs.read(ptr, size);
+	assert(ifs.good());
+	return ifs.good();
+}
+inline void write(std::ofstream& ofs, const char* ptr, size_t size) {
+	assert(ofs.is_open());
+	ofs.write(ptr, size);
+	assert(ofs.good());
+}
+
 // Helper to generalize plain (non-nested) serialization.
 template <class T>
 void serialize_plain(const T& data, std::ofstream& ofs) {
-	constexpr cerial_size_t size(sizeof(T));
-	write(ofs, reinterpret_cast<const char*>(&size), sizeof(size));
 	write(ofs, reinterpret_cast<const char*>(&data), sizeof(T));
 }
 
 // Helper to generalize plain (non-nested) deserialization.
 template <class T>
 bool deserialize_plain(T& data, std::ifstream& ifs) {
-	cerial_size_t size = 0;
-	if (!read(ifs, reinterpret_cast<char*>(&size), sizeof(size))) {
-		return false;
-	}
-
-	if (size != sizeof(T)) {
-		assert(false);
-		return false;
-	}
-
 	return read(ifs, reinterpret_cast<char*>(&data), sizeof(T));
+}
+
+// Helper to generalize contiguous array serialization.
+template <class T, size_t N, template <class, size_t> class Arr>
+[[nodiscard]] auto serialize_array(const Arr<T, N>& arr, std::ofstream& ofs) {
+	serialize_scope<Arr<T, N>> s(arr.size(), ofs);
+
+	if constexpr (FEA_NEEDS_NESTING(T)) {
+		for (const T& t : arr) {
+			serialize(t, ofs);
+		}
+		return std::true_type{};
+	} else {
+		serialize_plain(arr, ofs);
+		return std::false_type{};
+	}
+}
+
+// Helper to generalize contiguous array deserialization.
+template <class T, size_t N, template <class, size_t> class Arr>
+[[nodiscard]] bool deserialize_array(Arr<T, N>& arr, std::ifstream& ifs) {
+	cerial_size_t size = 0;
+	deserialize_enter<Arr<T, N>>(size, ifs);
+
+	if constexpr (FEA_NEEDS_NESTING(T)) {
+		for (cerial_size_t i = 0; i < size; ++i) {
+			if (!deserialize(arr[i], ifs)) {
+				return false;
+			}
+		}
+	} else {
+		if (!deserialize_plain(arr, ifs)) {
+			return false;
+		}
+	}
+
+	return deserialize_exit(arr, ifs, size);
 }
 
 // Helper to generalize contiguous buffer serialization.
 template <class T, class... Args, template <class, class...> class Buf>
 void serialize_buffer(const Buf<T, Args...>& buf, std::ofstream& ofs) {
-	cerial_size_t buf_size(buf.size());
-	serialize(buf_size, ofs);
+	serialize_scope<T> s(buf.size(), ofs);
 
 	if constexpr (FEA_NEEDS_NESTING(T)) {
 		for (const T& t : buf) {
 			serialize(t, ofs);
 		}
 	} else {
-		cerial_size_t t_size(sizeof(T));
-		serialize(t_size, ofs);
-
 		write(ofs, reinterpret_cast<const char*>(buf.data()),
-				sizeof(T) * buf_size);
+				sizeof(T) * s.size());
 	}
-
-	serialize(buf_size, ofs);
 }
 
 // Helper to generalize contiguous buffer deserialization.
 template <class T, class... Args, template <class, class...> class Buf>
 bool deserialize_buffer(Buf<T, Args...>& buf, std::ifstream& ifs) {
-	buf.clear();
-
 	cerial_size_t size = 0;
-	if (!deserialize(size, ifs)) {
+	if (!deserialize_enter<T>(size, ifs)) {
 		return false;
 	}
 
 	buf.resize(size);
-
 	if constexpr (FEA_NEEDS_NESTING(T)) {
 		for (cerial_size_t i = 0; i < size; ++i) {
 			if (!deserialize(buf[i], ifs)) {
@@ -451,80 +549,62 @@ bool deserialize_buffer(Buf<T, Args...>& buf, std::ifstream& ifs) {
 			}
 		}
 	} else {
-		cerial_size_t t_size = 0;
-		if (!deserialize(t_size, ifs)) {
-			return false;
-		}
-
-		if (t_size != sizeof(T)) {
-			assert(false);
-			return false;
-		}
-
 		if (!read(ifs, reinterpret_cast<char*>(buf.data()), sizeof(T) * size)) {
 			return false;
 		}
 	}
 
-	return detail::sanity_check(buf, ifs, size);
+	return deserialize_exit(buf, ifs, size);
 }
 
 template <class K, class V, class... Args,
 		template <class, class, class...> class Map>
 void serialize_map(const Map<K, V, Args...>& map, std::ofstream& ofs) {
 	using kv_pair = std::pair<const K, V>;
-
-	cerial_size_t size(map.size());
+	serialize_scope<kv_pair> s(map.size(), ofs);
 
 	if constexpr (!FEA_NEEDS_NESTING(K) && !FEA_NEEDS_NESTING(V)) {
 		// Check if nothing needs nesting.
 		// If that is the case, just write everything.
 
 		std::vector<kv_pair> kvs(map.begin(), map.end());
-		assert(kvs.size() == size);
+		assert(kvs.size() == map.size());
 		serialize(kvs, ofs);
 
 	} else if constexpr (FEA_NEEDS_NESTING(K) && FEA_NEEDS_NESTING(V)) {
 		// Both keys and values need nested serialization.
-
-		serialize(size, ofs);
 		for (const kv_pair& p : map) {
 			serialize(p.first, ofs);
 			serialize(p.second, ofs);
 		}
-		serialize(size, ofs);
 
 	} else if constexpr (FEA_NEEDS_NESTING(K)) {
 		// Keys need nesting, values do not.
 		// We output all keys first, then a flat buffer of the values.
 		std::vector<V> values;
-		values.reserve(size);
+		values.reserve(s.size());
 
-		serialize(size, ofs);
 		for (const kv_pair& p : map) {
 			serialize(p.first, ofs);
 			values.push_back(p.second);
 		}
-		serialize(size, ofs);
 
-		assert(values.size() == size);
+		assert(values.size() == map.size());
 		serialize(values, ofs);
 
 	} else if constexpr (FEA_NEEDS_NESTING(V)) {
-		// Same idea as keys but in this case, values come first and keys after.
-		// We do this to limit the number of loops on umap.
+		// Same idea as keys but in this case, values come first and keys
+		// after. We do this to limit the number of loops on umap.
 
 		std::vector<K> keys;
-		keys.reserve(size);
+		keys.reserve(s.size());
 
-		serialize(size, ofs);
 		for (const kv_pair& p : map) {
 			keys.push_back(p.first);
 			serialize(p.second, ofs);
 		}
-		serialize(size, ofs);
 
-		assert(keys.size() == size);
+		assert(keys.size() == map.size());
 		serialize(keys, ofs);
 	}
 }
@@ -533,23 +613,22 @@ template <class K, class V, class... Args,
 		template <class, class, class...> class Map>
 bool deserialize_map(Map<K, V, Args...>& map, std::ifstream& ifs) {
 	using kv_pair = std::pair<const K, V>;
-	map.clear();
 
+	cerial_size_t size = 0;
+	if (!deserialize_enter<kv_pair>(size, ifs)) {
+		return false;
+	}
+
+	map.clear();
 	if constexpr (!FEA_NEEDS_NESTING(K) && !FEA_NEEDS_NESTING(V)) {
 		std::vector<kv_pair> kvs;
 		if (!deserialize(kvs, ifs)) {
 			return false;
 		}
+		// Don't need to move, non-nested types are self-contained.
 		map.insert(kvs.begin(), kvs.end());
-		assert(map.size() == kvs.size());
-		return true;
 
 	} else if constexpr (FEA_NEEDS_NESTING(K) && FEA_NEEDS_NESTING(V)) {
-		cerial_size_t size = 0;
-		if (!deserialize(size, ifs)) {
-			return false;
-		}
-
 		if constexpr (fea::is_detected_v<has_reserve, Map<K, V, Args...>>) {
 			map.reserve(size);
 		}
@@ -566,14 +645,8 @@ bool deserialize_map(Map<K, V, Args...>& map, std::ifstream& ifs) {
 			map.insert({ fea::maybe_move(k), fea::maybe_move(v) });
 		}
 
-		return detail::sanity_check(map, ifs, size);
 
 	} else if constexpr (FEA_NEEDS_NESTING(K)) {
-		cerial_size_t size = 0;
-		if (!deserialize(size, ifs)) {
-			return false;
-		}
-
 		std::vector<K> keys(size);
 		assert(keys.size() == size);
 
@@ -581,10 +654,6 @@ bool deserialize_map(Map<K, V, Args...>& map, std::ifstream& ifs) {
 			if (!deserialize(keys[i], ifs)) {
 				return false;
 			}
-		}
-
-		if (!detail::sanity_check(keys, ifs, size)) {
-			return false;
 		}
 
 		std::vector<V> values;
@@ -600,25 +669,14 @@ bool deserialize_map(Map<K, V, Args...>& map, std::ifstream& ifs) {
 			map.insert({ fea::maybe_move(keys[i]), values[i] });
 		}
 
-		assert(map.size() == size);
-		return true;
-
 	} else if constexpr (FEA_NEEDS_NESTING(V)) {
-		cerial_size_t size = 0;
-		if (!deserialize(size, ifs)) {
-			return false;
-		}
-
 		std::vector<V> values(size);
 		assert(values.size() == size);
+
 		for (cerial_size_t i = 0; i < size; ++i) {
 			if (!deserialize(values[i], ifs)) {
 				return false;
 			}
-		}
-
-		if (!detail::sanity_check(values, ifs, size)) {
-			return false;
 		}
 
 		std::vector<K> keys;
@@ -633,20 +691,19 @@ bool deserialize_map(Map<K, V, Args...>& map, std::ifstream& ifs) {
 		for (cerial_size_t i = 0; i < size; ++i) {
 			map.insert({ keys[i], fea::maybe_move(values[i]) });
 		}
-		assert(map.size() == size);
-		return true;
 	}
+
+	return deserialize_exit(map, ifs, size);
 }
 
 template <class T, class... Args, template <class, class...> class Set>
 void serialize_set(const Set<T, Args...>& set, std::ofstream& ofs) {
+	serialize_scope<T> s(set.size(), ofs);
+
 	if constexpr (FEA_NEEDS_NESTING(T)) {
-		cerial_size_t size(set.size());
-		serialize(size, ofs);
 		for (const T& t : set) {
 			serialize(t, ofs);
 		}
-		serialize(size, ofs);
 	} else {
 		std::vector data(set.begin(), set.end());
 		serialize(data, ofs);
@@ -655,14 +712,11 @@ void serialize_set(const Set<T, Args...>& set, std::ofstream& ofs) {
 
 template <class T, class... Args, template <class, class...> class Set>
 bool deserialize_set(Set<T, Args...>& set, std::ifstream& ifs) {
+	cerial_size_t size = 0;
+	deserialize_enter<T>(size, ifs);
+
 	set.clear();
-
 	if constexpr (FEA_NEEDS_NESTING(T)) {
-		cerial_size_t size = 0;
-		if (!deserialize(size, ifs)) {
-			return false;
-		}
-
 		if constexpr (fea::is_detected_v<has_reserve, Set<T, Args...>>) {
 			set.reserve(size);
 		}
@@ -674,45 +728,47 @@ bool deserialize_set(Set<T, Args...>& set, std::ifstream& ifs) {
 			}
 			set.insert(fea::maybe_move(t));
 		}
-		return detail::sanity_check(set, ifs, size);
+
 	} else {
 		std::vector<T> data;
 		if (!deserialize(data, ifs)) {
 			return false;
 		}
 
+		// Don't need to move, non-nested data.
 		set.insert(data.begin(), data.end());
-		assert(set.size() == data.size());
-		return true;
 	}
+
+	return deserialize_exit(set, ifs, size);
 }
 
 // Helper to generalize tuple-like serialization.
 template <class... Args, template <class...> class Tup>
-void serialize_tuple(const Tup<Args...>& tup, std::ofstream& ofs) {
+auto serialize_tuple(const Tup<Args...>& tup, std::ofstream& ofs) {
+	serialize_scope<Tup<Args...>> s(std::tuple_size_v<Tup<Args...>>, ofs);
+
 	constexpr bool do_write = (!FEA_NEEDS_NESTING(Args) && ...);
 	if constexpr (do_write) {
 		serialize_plain(tup, ofs);
+		return std::false_type{};
 	} else {
-		cerial_size_t size(std::tuple_size_v<Tup<Args...>>);
-		serialize(size, ofs);
 		fea::tuple_for_each([&](const auto& val) { serialize(val, ofs); }, tup);
-		serialize(size, ofs);
+		return std::true_type{};
 	}
 }
 
 // Helper to generalize tuple-like deserialization.
 template <class... Args, template <class...> class Tup>
 bool deserialize_tuple(Tup<Args...>& tup, std::ifstream& ifs) {
+	cerial_size_t size = 0;
+	deserialize_enter<Tup<Args...>>(size, ifs);
+
 	constexpr bool do_read = (!FEA_NEEDS_NESTING(Args) && ...);
 	if constexpr (do_read) {
-		return deserialize_plain(tup, ifs);
-	} else {
-		cerial_size_t size = 0;
-		if (!deserialize(size, ifs)) {
+		if (!deserialize_plain(tup, ifs)) {
 			return false;
 		}
-
+	} else {
 		bool ok = true;
 		fea::tuple_for_each(
 				[&](auto& val) {
@@ -727,8 +783,8 @@ bool deserialize_tuple(Tup<Args...>& tup, std::ifstream& ifs) {
 		if (!ok) {
 			return false;
 		}
-		return detail::sanity_check(tup, ifs, size);
 	}
+	return deserialize_exit(tup, ifs, size);
 }
 
 } // namespace detail

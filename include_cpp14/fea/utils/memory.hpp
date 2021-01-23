@@ -32,16 +32,34 @@
  **/
 
 #pragma once
+#include <iterator>
 #include <type_traits>
 
 namespace fea {
 
 template <class T>
-[[nodiscard]] constexpr std::conditional_t<!std::is_move_constructible<T>::value
+std::conditional_t<!std::is_move_constructible<T>::value
 				&& std::is_copy_constructible<T>::value,
 		const T&, T&&>
-maybe_move(T& _Arg) noexcept {
-	return std::move(_Arg);
+maybe_move(T& t) noexcept {
+	return std::move(t);
+}
+
+namespace detail {
+template <class Iter>
+constexpr auto maybe_make_move_iterator(Iter it, std::true_type) noexcept {
+	return std::make_move_iterator(it);
+}
+template <class Iter>
+constexpr auto maybe_make_move_iterator(Iter it, std::false_type) noexcept {
+	return it;
+}
+} // namespace detail
+
+template <class Iter>
+constexpr auto maybe_make_move_iterator(Iter it) noexcept {
+	return detail::maybe_make_move_iterator(
+			it, std::is_move_constructible<Iter::value_type>{});
 }
 
 } // namespace fea

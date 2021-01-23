@@ -147,6 +147,11 @@ if (${FEA_TESTS})
 	)
 	set_compile_options(${TEST_NAME} PRIVATE)
 
+	# For the extreme serialization test.
+	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+		target_compile_options(${TEST_NAME} PRIVATE /bigobj)
+	)
+
 	# g++ 8 needs to link with seperate filesystem library.
 	target_link_libraries(${TEST_NAME} PUBLIC ${PROJECT_NAME} GTest::GTest TBB::TBB
 		$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:${CMAKE_CXX_COMPILER_VERSION},9.0>>:stdc++fs>

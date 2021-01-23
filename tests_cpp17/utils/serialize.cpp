@@ -69,6 +69,17 @@ std::filesystem::path filepath() {
 using fea::deserialize;
 using fea::serialize;
 
+template <class T>
+constexpr auto test(T) {
+	if constexpr (sizeof(T) <= 4) {
+		return std::true_type{};
+	} else {
+		return std::false_type{};
+	}
+}
+
+constexpr auto doit = test(int{});
+
 TEST(serialize, basics) {
 	// Internal stuff, you never need to bother with this unless you are working
 	// with templates youself.
@@ -91,7 +102,7 @@ TEST(serialize, basics) {
 		serialize(potatoes, ofs);
 	}
 
-	std::vector<potato> potatoes(4);
+	std::vector<potato> potatoes(4u);
 	for (potato& p : potatoes) {
 		p.val = 5243;
 		p.vec = {};
@@ -102,10 +113,10 @@ TEST(serialize, basics) {
 		EXPECT_TRUE(deserialize(potatoes, ifs));
 	}
 
-	EXPECT_EQ(potatoes.size(), 4);
+	EXPECT_EQ(potatoes.size(), 4u);
 	for (const potato& p : potatoes) {
 		EXPECT_EQ(p.val, 42);
-		EXPECT_EQ(p.vec.size(), 4);
+		EXPECT_EQ(p.vec.size(), 4u);
 		EXPECT_EQ(p.vec, potato{}.vec);
 	}
 
@@ -207,6 +218,8 @@ TEST(serialize, vector_string) {
 	};
 	test_buf1(std::vector<int>{});
 	test_buf1(std::vector<potato>{});
+	test_buf1(std::vector<std::array<int, 4>>{});
+	test_buf1(std::vector<std::array<potato, 4>>{});
 	test_buf1(std::string{});
 	test_buf1(std::wstring{});
 	test_buf1(std::u16string{});
@@ -482,5 +495,175 @@ TEST(serialize, pair_tuple) {
 	test_tup2(
 			std::tuple<potato, std::tuple<potato, std::tuple<potato, int>>>{});
 	test_tup2(std::tuple<potato, std::tuple<int, std::tuple<int, potato>>>{});
+}
+
+TEST(serialize, deque) {
+	auto test_q1 = [](auto m_type) {
+		using q_t = std::decay_t<decltype(m_type)>;
+		q_t c_comp{};
+
+		{
+			for (int i = 0; i < 4; ++i) {
+				c_comp.push_back({ i });
+			}
+			std::ofstream ofs{ filepath(), std::ios::binary };
+			serialize(c_comp, ofs);
+		}
+
+		{
+			q_t c{};
+			std::ifstream ifs{ filepath(), std::ios::binary };
+			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_EQ(c, c_comp);
+		}
+	};
+
+	test_q1(std::deque<int>{});
+	test_q1(std::deque<potato>{});
+
+	auto test_q2 = [](auto m_type) {
+		using q_t = std::decay_t<decltype(m_type)>;
+		q_t c_comp{};
+
+		q_t::value_type::value_type a3;
+		for (int i = 0; i < 4; ++i) {
+			a3.push_back({ i });
+		}
+		q_t::value_type a2;
+		for (int i = 0; i < 4; ++i) {
+			a2.push_back(a3);
+		}
+		for (int i = 0; i < 4; ++i) {
+			c_comp.push_back(a2);
+		}
+
+		{
+			std::ofstream ofs{ filepath(), std::ios::binary };
+			serialize(c_comp, ofs);
+		}
+
+		{
+			q_t c{};
+			std::ifstream ifs{ filepath(), std::ios::binary };
+			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_EQ(c, c_comp);
+		}
+	};
+
+	test_q2(std::deque<std::deque<std::deque<potato>>>{});
+	test_q2(std::deque<std::deque<std::deque<int>>>{});
+	test_q2(std::deque<std::vector<std::deque<potato>>>{});
+	test_q2(std::deque<std::vector<std::deque<int>>>{});
+}
+
+TEST(serialize, queue) {
+	auto test_q1 = [](auto m_type) {
+		using q_t = std::decay_t<decltype(m_type)>;
+		q_t c_comp{};
+
+		{
+			for (int i = 0; i < 4; ++i) {
+				c_comp.push({ i });
+			}
+			std::ofstream ofs{ filepath(), std::ios::binary };
+			serialize(c_comp, ofs);
+		}
+
+		{
+			q_t c{};
+			std::ifstream ifs{ filepath(), std::ios::binary };
+			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_EQ(c, c_comp);
+		}
+	};
+
+	test_q1(std::queue<int>{});
+	test_q1(std::queue<potato>{});
+
+	auto test_q2 = [](auto m_type) {
+		using q_t = std::decay_t<decltype(m_type)>;
+		q_t c_comp{};
+
+		q_t::value_type::value_type a3;
+		for (int i = 0; i < 4; ++i) {
+			a3.push({ i });
+		}
+		q_t::value_type a2;
+		for (int i = 0; i < 4; ++i) {
+			a2.push(a3);
+		}
+		for (int i = 0; i < 4; ++i) {
+			c_comp.push(a2);
+		}
+
+		{
+			std::ofstream ofs{ filepath(), std::ios::binary };
+			serialize(c_comp, ofs);
+		}
+
+		{
+			q_t c{};
+			std::ifstream ifs{ filepath(), std::ios::binary };
+			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_EQ(c, c_comp);
+		}
+	};
+
+	test_q2(std::queue<std::queue<std::queue<potato>>>{});
+	test_q2(std::queue<std::queue<std::queue<int>>>{});
+}
+
+TEST(serialize, evewything) {
+	std::map<int,
+			std::unordered_map<potato,
+					std::vector<std::deque<
+							std::queue<std::set<std::array<std::string, 4>>>>>>>
+			megadoodoo;
+
+	std::array<std::string, 4> arr = { "test1", "test2", "test3", "test4" };
+	std::set<std::array<std::string, 4>> set;
+	for (int i = 0; i < 4; ++i) {
+		set.insert(arr);
+	}
+
+	std::queue<std::set<std::array<std::string, 4>>> q;
+	for (int i = 0; i < 4; ++i) {
+		q.push(set);
+	}
+
+	std::deque<std::queue<std::set<std::array<std::string, 4>>>> deq;
+	for (int i = 0; i < 4; ++i) {
+		deq.push_back(q);
+	}
+
+	std::vector<std::deque<std::queue<std::set<std::array<std::string, 4>>>>>
+			vec;
+	for (int i = 0; i < 4; ++i) {
+		vec.push_back(deq);
+	}
+
+	std::unordered_map<potato,
+			std::vector<std::deque<
+					std::queue<std::set<std::array<std::string, 4>>>>>>
+			umap;
+	for (int i = 0; i < 4; ++i) {
+		umap.insert({ { i }, vec });
+	}
+
+	for (int i = 0; i < 4; ++i) {
+		megadoodoo.insert({ { i }, umap });
+	}
+
+	{
+		std::ofstream ofs{ filepath(), std::ios::binary };
+		serialize(megadoodoo, ofs);
+	}
+
+	{
+		decltype(megadoodoo) c{};
+		std::ifstream ifs{ filepath(), std::ios::binary };
+		EXPECT_TRUE(deserialize(c, ifs));
+		EXPECT_EQ(c, megadoodoo);
+	}
 }
 } // namespace
