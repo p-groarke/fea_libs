@@ -37,11 +37,11 @@ TEST(enum, safe_switch) {
 	};
 
 	int result = 0;
-	constexpr auto switcher = fea::safe_switch<e>()
-									  .case_<e::one>([&]() { result = 1; })
-									  .case_<e::three>([&]() { result = 3; })
-									  .case_<e::two>([&]() { result = 2; })
-									  .case_<e::four>([&]() { result = 4; });
+	auto switcher = fea::safe_switch<e>()
+							.case_<e::one>([&]() { result = 1; })
+							.case_<e::three>([&]() { result = 3; })
+							.case_<e::two>([&]() { result = 2; })
+							.case_<e::four>([&]() { result = 4; });
 	switcher(e::one);
 	EXPECT_EQ(result, 1);
 
