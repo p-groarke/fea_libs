@@ -45,4 +45,9 @@ TEST(type_map, basics) {
 				"type_map.cpp : test failed");
 	}
 }
+
+// TEST(type_map, make_type_map) {
+//
+//	auto tmap = fea::make_type_map_kv({ int(), 42.f }, { short(), 42.0 });
+//}
 } // namespace

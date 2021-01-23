@@ -36,6 +36,9 @@
 #include "fea/meta/traits.hpp"
 #include "fea/meta/tuple.hpp"
 
+#include <initializer_list>
+#include <utility>
+
 /*
 fea::type_map stores items which can be accessed using types. The types must be
 unique.
@@ -180,4 +183,47 @@ constexpr auto make_type_map(
 // make with tuple<type_kv<key, val>>
 // where first is only a type, and second is a value.
 // aka, key has no storage.
+
+template <class K, class V>
+struct kv_t {
+	using key_t = K;
+	using value_t = V;
+
+	kv_t(V&& v)
+			: v(std::forward<V>(v)) {
+	}
+
+	// Deduce the type K.
+	kv_t(K&&, V&& v)
+			: v(std::forward<V>(v)) {
+	}
+
+	V v;
+};
+
+//#if FEA_CPP17
+//
+// template <class K, class V, template <class, class> class P>
+// kv_t(std::initializer_list<P<K, V>>) -> kv_t<K, V>;
+//
+// template <class... Keys, class... Values>
+// constexpr auto make_type_map_kv(kv_t<Keys, Values>&&... kvs) {
+//	return type_map<pack<Keys...>, Values...>(std::make_tuple((kvs.v)...));
+//}
+//
+// template <class... K, class... V>
+// constexpr auto make_type_map_kv(std::pair<K, V>&&... kvs) {
+//	return type_map<pack<K...>, V...>(std::make_tuple((kvs.v)...));
+//}
+//
+// template <class K, class V, template <class, class> class P>
+// make_type_map_kv(std::initializer_list<P<K, V>>) -> make_type_map_kv<K, V>;
+//
+//// template <class... Keys, class... Values>
+//// constexpr auto make_type_map_kv(
+////		std::initializer_list<kv_t<Keys, Values>>... kvs) {
+////	return type_map<pack<Keys...>, Values...>(std::make_tuple((kvs.v)...));
+////}
+//
+//#endif
 } // namespace fea

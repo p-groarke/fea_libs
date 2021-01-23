@@ -59,7 +59,7 @@ constexpr auto maybe_make_move_iterator(Iter it, std::false_type) noexcept {
 template <class Iter>
 constexpr auto maybe_make_move_iterator(Iter it) noexcept {
 	return detail::maybe_make_move_iterator(
-			it, std::is_move_constructible<Iter::value_type>{});
+			it, std::is_move_constructible<typename Iter::value_type>{});
 }
 
 } // namespace fea
