@@ -93,6 +93,7 @@ fea::safe_switch creates a switch-case that will fail (wont compile) if you add
 or remove values to an enum.
 */
 
+
 // Get the variables' name.
 #define FEA_DETAIL_SE_VARNAME(prefix, ename, suffix) \
 	FEA_PASTE(ename, FEA_PASTE(_, FEA_PASTE(prefix, suffix)))
@@ -100,12 +101,12 @@ or remove values to an enum.
 // Generates an enum_array of const char* const and one of std::string.
 // The arrays are prefixed with the provided string type prefix.
 #define FEA_DETAIL_SE_ARRAYS(stringify_macro, chartype, prefix, ename, ...) \
-	FEA_INLINE_VAR constexpr fea::enum_array<const chartype* const, ename, \
-			FEA_SIZEOF_VAARGS(__VA_ARGS__)> \
+	[[maybe_unused]] FEA_INLINE_VAR constexpr fea::enum_array< \
+			const chartype* const, ename, FEA_SIZEOF_VAARGS(__VA_ARGS__)> \
 			FEA_DETAIL_SE_VARNAME(prefix, ename, literals){ { FEA_FOR_EACH( \
 					stringify_macro, __VA_ARGS__) } }; \
-	FEA_INLINE_VAR const fea::enum_array<fea::string_t<chartype>, ename, \
-			FEA_SIZEOF_VAARGS(__VA_ARGS__)> \
+	[[maybe_unused]] FEA_INLINE_VAR const fea::enum_array< \
+			fea::string_t<chartype>, ename, FEA_SIZEOF_VAARGS(__VA_ARGS__)> \
 	FEA_DETAIL_SE_VARNAME(prefix, ename, strings) { \
 		{ FEA_FOR_EACH(stringify_macro, __VA_ARGS__) } \
 	}
@@ -116,35 +117,38 @@ or remove values to an enum.
 #define FEA_DETAIL_SE_FUNCS(chartype, prefix, ename) \
 	/* Forward declares template functions we specialize. */ \
 	template <class> \
-	constexpr const auto& FEA_PASTE(prefix, literals)(); \
+	[[maybe_unused]] constexpr const auto& FEA_PASTE(prefix, literals)(); \
 	template <class> \
-	constexpr const auto& FEA_PASTE(prefix, strings)(); \
+	[[maybe_unused]] constexpr const auto& FEA_PASTE(prefix, strings)(); \
 	/* Specialize the above function declarations. */ \
 	template <> \
-	constexpr const auto& FEA_PASTE(prefix, literals)<ename>() { \
+	[[maybe_unused]] constexpr const auto& FEA_PASTE( \
+			prefix, literals)<ename>() { \
 		return FEA_DETAIL_SE_VARNAME(prefix, ename, literals); \
 	} \
 	template <> \
-	constexpr const auto& FEA_PASTE(prefix, strings)<ename>() { \
+	[[maybe_unused]] constexpr const auto& FEA_PASTE( \
+			prefix, strings)<ename>() { \
 		return FEA_DETAIL_SE_VARNAME(prefix, ename, strings); \
 	} \
 	/* Non-type compile-time getters. */ \
 	template <ename E> \
-	constexpr const chartype* FEA_DETAIL_SE_VARNAME(prefix, to, literal)() { \
+	[[maybe_unused]] constexpr const chartype* FEA_DETAIL_SE_VARNAME( \
+			prefix, to, literal)() { \
 		return FEA_DETAIL_SE_VARNAME(prefix, ename, literals).at<E>(); \
 	} \
 	template <ename E> \
-	constexpr const fea::string_t<chartype>& FEA_DETAIL_SE_VARNAME( \
-			prefix, to, string)() { \
+	[[maybe_unused]] constexpr const fea::string_t<chartype>& \
+	FEA_DETAIL_SE_VARNAME(prefix, to, string)() { \
 		return FEA_DETAIL_SE_VARNAME(prefix, ename, strings).at<E>(); \
 	} \
 	/* Non-templated getters, fast O(1). */ \
-	inline constexpr const chartype* FEA_DETAIL_SE_VARNAME( \
+	[[maybe_unused]] inline constexpr const chartype* FEA_DETAIL_SE_VARNAME( \
 			prefix, to, literal)(ename e) { \
 		return FEA_DETAIL_SE_VARNAME(prefix, ename, literals)[e]; \
 	} \
-	inline constexpr const fea::string_t<chartype>& FEA_DETAIL_SE_VARNAME( \
-			prefix, to, string)(ename e) { \
+	[[maybe_unused]] inline constexpr const fea::string_t<chartype>& \
+	FEA_DETAIL_SE_VARNAME(prefix, to, string)(ename e) { \
 		return FEA_DETAIL_SE_VARNAME(prefix, ename, strings)[e]; \
 	}
 
@@ -256,6 +260,7 @@ or remove values to an enum.
 	} /* namespace enu */ \
 	/* Call user macro once everything is done. */ \
 	user_macro(ename, __VA_ARGS__)
+
 
 namespace fea {
 namespace detail {

@@ -35,6 +35,6 @@
 
 namespace fea {
 template <class... Args>
-void unused(Args&&...) {
+constexpr void unused(Args&&...) {
 }
 } // namespace fea

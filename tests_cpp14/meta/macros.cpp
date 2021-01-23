@@ -1,5 +1,6 @@
 ﻿#include <array>
 #include <fea/meta/macros.hpp>
+#include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
 #include <string>
 #include <utility>
@@ -66,6 +67,7 @@ TEST(macros, basics) {
 		i1 = 0;
 		i2 = 0;
 		i3 = 0;
+		fea::unused(i0, i1, i2, i3);
 	}
 }
 } // namespace

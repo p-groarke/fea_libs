@@ -68,10 +68,12 @@ TEST(enum, safe_switch) {
 	EXPECT_EQ(result, 3);
 }
 
-namespace e {
+namespace espace_all {
+
 FEA_STRING_ENUM(e, unsigned, zero, one, two, three, four, five, count);
 
 TEST(enum_macros, basics) {
+
 	EXPECT_EQ(size_t(e::zero), 0u);
 	EXPECT_EQ(size_t(e::one), 1u);
 	EXPECT_EQ(size_t(e::two), 2u);
@@ -79,6 +81,17 @@ TEST(enum_macros, basics) {
 	EXPECT_EQ(size_t(e::four), 4u);
 	EXPECT_EQ(size_t(e::five), 5u);
 	EXPECT_EQ(size_t(e::count), 6u);
+
+	// temp test clang
+	// EXPECT_EQ(enu::literals<e>(), enu::e_literals);
+	// EXPECT_EQ(enu::wliterals<e>(), enu::e_wliterals);
+	// EXPECT_EQ(enu::u16literals<e>(), enu::e_u16literals);
+	// EXPECT_EQ(enu::u32literals<e>(), enu::e_u32literals);
+
+	// EXPECT_EQ(enu::strings<e>(), enu::e_strings);
+	// EXPECT_EQ(enu::wstrings<e>(), enu::e_wstrings);
+	// EXPECT_EQ(enu::u16strings<e>(), enu::e_u16strings);
+	// EXPECT_EQ(enu::u32strings<e>(), enu::e_u32strings);
 
 	EXPECT_EQ(enu::e_literals.size(), size_t(e::count) + 1);
 	EXPECT_EQ(enu::e_wliterals.size(), size_t(e::count) + 1);
@@ -287,9 +300,9 @@ TEST(enum_macros, basics) {
 	EXPECT_EQ(enu::to_u32string<e::five>(), std::u32string{ U"five" });
 	EXPECT_EQ(enu::to_u32string<e::count>(), std::u32string{ U"count" });
 }
-} // namespace e
+} // namespace espace_all
 
-namespace e2 {
+namespace espace2 {
 FEA_STRING_ENUM_WITH_COUNT(e, unsigned, zero, one, two, three, four, five);
 TEST(enum_macros, basics) {
 	EXPECT_EQ(size_t(e::zero), 0u);
@@ -299,6 +312,17 @@ TEST(enum_macros, basics) {
 	EXPECT_EQ(size_t(e::four), 4u);
 	EXPECT_EQ(size_t(e::five), 5u);
 	EXPECT_EQ(size_t(e::count), 6u);
+
+	// temp test clang
+	// EXPECT_EQ(enu::literals<e>(), enu::e_literals);
+	// EXPECT_EQ(enu::wliterals<e>(), enu::e_wliterals);
+	// EXPECT_EQ(enu::u16literals<e>(), enu::e_u16literals);
+	// EXPECT_EQ(enu::u32literals<e>(), enu::e_u32literals);
+
+	// EXPECT_EQ(enu::strings<e>(), enu::e_strings);
+	// EXPECT_EQ(enu::wstrings<e>(), enu::e_wstrings);
+	// EXPECT_EQ(enu::u16strings<e>(), enu::e_u16strings);
+	// EXPECT_EQ(enu::u32strings<e>(), enu::e_u32strings);
 
 	EXPECT_EQ(enu::e_literals.size(), size_t(e::count));
 	EXPECT_EQ(enu::e_wliterals.size(), size_t(e::count));
@@ -482,5 +506,5 @@ TEST(enum_macros, basics) {
 	EXPECT_EQ(enu::to_u32string<e::four>(), std::u32string{ U"four" });
 	EXPECT_EQ(enu::to_u32string<e::five>(), std::u32string{ U"five" });
 }
-} // namespace e2
+} // namespace espace2
 } // namespace
