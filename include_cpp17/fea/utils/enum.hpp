@@ -102,12 +102,12 @@ or remove values to an enum.
 #define FEA_DETAIL_SE_ARRAYS(stringify_macro, chartype, prefix, ename, ...) \
 	FEA_INLINE_VAR constexpr fea::enum_array<const chartype* const, ename, \
 			FEA_SIZEOF_VAARGS(__VA_ARGS__)> \
-			FEA_DETAIL_SE_VARNAME(prefix, ename, \
-					literals){ FEA_FOR_EACH(stringify_macro, __VA_ARGS__) }; \
+			FEA_DETAIL_SE_VARNAME(prefix, ename, literals){ { FEA_FOR_EACH( \
+					stringify_macro, __VA_ARGS__) } }; \
 	FEA_INLINE_VAR const fea::enum_array<fea::string_t<chartype>, ename, \
 			FEA_SIZEOF_VAARGS(__VA_ARGS__)> \
 	FEA_DETAIL_SE_VARNAME(prefix, ename, strings) { \
-		FEA_FOR_EACH(stringify_macro, __VA_ARGS__) \
+		{ FEA_FOR_EACH(stringify_macro, __VA_ARGS__) } \
 	}
 
 // Declares and implements helper functions.
@@ -130,8 +130,7 @@ or remove values to an enum.
 	} \
 	/* Non-type compile-time getters. */ \
 	template <ename E> \
-	constexpr const chartype* const FEA_DETAIL_SE_VARNAME( \
-			prefix, to, literal)() { \
+	constexpr const chartype* FEA_DETAIL_SE_VARNAME(prefix, to, literal)() { \
 		return FEA_DETAIL_SE_VARNAME(prefix, ename, literals).at<E>(); \
 	} \
 	template <ename E> \
@@ -140,7 +139,7 @@ or remove values to an enum.
 		return FEA_DETAIL_SE_VARNAME(prefix, ename, strings).at<E>(); \
 	} \
 	/* Non-templated getters, fast O(1). */ \
-	inline constexpr const chartype* const FEA_DETAIL_SE_VARNAME( \
+	inline constexpr const chartype* FEA_DETAIL_SE_VARNAME( \
 			prefix, to, literal)(ename e) { \
 		return FEA_DETAIL_SE_VARNAME(prefix, ename, literals)[e]; \
 	} \
@@ -322,7 +321,7 @@ struct switcher<Enum, N, std::tuple<Funcs...>, Es...> {
 				"safe_switch : missing enum case statement");
 
 #if FEA_DEBUG
-		static constexpr std::array<Enum, N> arr{ Es... };
+		constexpr std::array<Enum, N> arr{ Es... };
 		auto it = std::find(arr.begin(), arr.end(), e);
 		assert(it != arr.end());
 #endif

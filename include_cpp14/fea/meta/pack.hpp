@@ -34,6 +34,7 @@
 #pragma once
 #include "fea/meta/traits.hpp"
 #include "fea/meta/tuple.hpp"
+#include "fea/utils/platform.hpp"
 
 /*
 fea::pack and fea::pack_nt are like std::tuple without storage. You can use the
@@ -58,6 +59,8 @@ template <class... Args>
 constexpr fea::pack<Args...> make_pack(Args&&...) {
 	return fea::pack<Args...>{};
 }
+
+// make_pack_nt doesn't make sense, since you can't deduce non-type parameters.
 
 
 template <class...>
@@ -116,7 +119,7 @@ struct pack_size<const Pack>
 		: std::integral_constant<size_t, pack_size<Pack>::value> {};
 
 template <class Pack>
-FEA_INLINE_VAR constexpr size_t pack_size_t = pack_size<Pack>::value;
+FEA_INLINE_VAR constexpr size_t pack_size_v = pack_size<Pack>::value;
 
 
 template <size_t, class>
@@ -161,7 +164,7 @@ struct pack_element_nt<I, const Pack> {
 
 // Non-type element at index I.
 template <size_t I, class Pack>
-FEA_INLINE_VAR constexpr auto pack_element_nt_t
+FEA_INLINE_VAR constexpr auto pack_element_nt_v
 		= pack_element_nt<I, Pack>::value;
 
 
@@ -207,7 +210,90 @@ struct pack_idx_nt<NT, T, const Pack>
 template <class NT, NT T, class Pack>
 FEA_INLINE_VAR constexpr size_t pack_idx_nt_v = pack_idx_nt<NT, T, Pack>::value;
 
+#if FEA_CPP17
+// Index of element T in non-type paramater pack.
+template <auto T, class Pack>
+inline constexpr size_t pack_idx_nt_v2
+		= pack_idx_nt<decltype(T), T, Pack>::value;
+#endif
 
+// Indexes of all elements T in pack.
+// Returns a fea::pack_nt<size_t, found_indexes...>;
+template <class, class Pack, size_t Count = fea::pack_size_v<Pack>>
+struct pack_idxes;
+
+template <class T, size_t Count>
+struct pack_idxes<T, fea::pack<>, Count> {
+	using idxes = fea::pack_nt<size_t>;
+};
+
+template <class T, class... Ts, size_t Count>
+struct pack_idxes<T, fea::pack<T, Ts...>, Count>
+		: pack_idxes<T, fea::pack<Ts...>, Count> {
+	using idxes
+			= fea::pack_cat_t<fea::pack_nt<size_t, Count - (sizeof...(Ts) + 1)>,
+					typename pack_idxes<T, fea::pack<Ts...>, Count>::idxes>;
+};
+
+template <class T, class U, class... Ts, size_t Count>
+struct pack_idxes<T, fea::pack<U, Ts...>, Count>
+		: pack_idxes<T, fea::pack<Ts...>, Count> {
+	using idxes = typename pack_idxes<T, fea::pack<Ts...>, Count>::idxes;
+};
+
+template <class T, class Pack, size_t Count>
+struct pack_idxes<T, const Pack, Count> : pack_idxes<T, Pack, Count> {};
+
+// Indexes of all elements T in pack.
+// Returns a fea::pack_nt<size_t, found_indexes...>;
+template <class T, class Pack>
+using pack_idxes_t = typename pack_idxes<T, Pack>::idxes;
+
+
+// Indexes of all non-type T in pack.
+// Returns a fea::pack_nt<size_t, found_indexes...>;
+template <class NT, NT, class Pack, size_t Count = fea::pack_size_v<Pack>>
+struct pack_idxes_nt;
+
+template <class NT, NT T, size_t Count>
+struct pack_idxes_nt<NT, T, fea::pack_nt<NT>, Count> {
+	using idxes = fea::pack_nt<size_t>;
+};
+
+template <class NT, NT T, NT... Ts, size_t Count>
+struct pack_idxes_nt<NT, T, fea::pack_nt<NT, T, Ts...>, Count>
+		: pack_idxes_nt<NT, T, fea::pack_nt<NT, Ts...>, Count> {
+	using idxes
+			= fea::pack_cat_t<fea::pack_nt<size_t, Count - (sizeof...(Ts) + 1)>,
+					typename pack_idxes_nt<NT, T, fea::pack_nt<NT, Ts...>,
+							Count>::idxes>;
+};
+
+template <class NT, NT T, NT U, NT... Ts, size_t Count>
+struct pack_idxes_nt<NT, T, fea::pack_nt<NT, U, Ts...>, Count>
+		: pack_idxes_nt<NT, T, fea::pack_nt<NT, Ts...>, Count> {
+	using idxes = typename pack_idxes_nt<NT, T, fea::pack_nt<NT, Ts...>,
+			Count>::idxes;
+};
+
+template <class NT, NT T, class Pack, size_t Count>
+struct pack_idxes_nt<NT, T, const Pack, Count>
+		: pack_idxes_nt<NT, T, Pack, Count> {};
+
+// Indexes of all elements T in pack.
+// Returns a fea::pack_nt<size_t, found_indexes...>;
+template <class NT, NT T, class Pack>
+using pack_idxes_nt_t = typename pack_idxes_nt<NT, T, Pack>::idxes;
+
+#if FEA_CPP17
+// Indexes of all elements T in pack.
+// Returns a fea::pack_nt<size_t, found_indexes...>;
+template <auto T, class Pack>
+using pack_idxes_nt_t2 = typename pack_idxes_nt<decltype(T), T, Pack>::idxes;
+#endif
+
+
+// Does pack contain type?
 template <class, class>
 struct pack_contains;
 
@@ -249,6 +335,13 @@ struct pack_contains_nt<NT, T, const Pack> : pack_contains_nt<NT, T, Pack> {};
 template <class NT, NT T, class Pack>
 FEA_INLINE_VAR constexpr bool pack_contains_nt_v
 		= pack_contains_nt<NT, T, Pack>::value;
+
+#if FEA_CPP17
+// Does pack contain type T?
+template <auto T, class Pack>
+FEA_INLINE_VAR constexpr bool pack_contains_nt_v2
+		= pack_contains_nt<decltype(T), T, Pack>::value;
+#endif
 
 
 namespace detail {

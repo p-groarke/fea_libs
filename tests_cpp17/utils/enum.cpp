@@ -1,4 +1,5 @@
 ﻿#include <fea/utils/enum.hpp>
+#include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
 
 namespace {
@@ -18,6 +19,7 @@ TEST(enum, traits) {
 				static_assert(idx == 2, "traits.cpp : test failed");
 				return fea::pack_nt<e, decltype(cs)::value...>{};
 			});
+	fea::unused(p);
 
 	static_assert(!fea::is_same_nt_v<e, e::one, e::two>,
 			"type_map.cpp : test failed");

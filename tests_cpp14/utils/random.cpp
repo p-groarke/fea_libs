@@ -27,7 +27,7 @@ TEST(random, basics) {
 		std::array<uint8_t, 4> bytes = fea::random_bytes<4>();
 		fea::unused(bytes); // how to test?
 		std::vector<uint8_t> vbytes = fea::random_bytes(4);
-		EXPECT_EQ(vbytes.size(), 4);
+		EXPECT_EQ(vbytes.size(), 4u);
 	}
 }
 } // namespace
