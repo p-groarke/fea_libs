@@ -150,7 +150,7 @@ if (${FEA_TESTS})
 	# For the extreme serialization test.
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 		target_compile_options(${TEST_NAME} PRIVATE /bigobj)
-	)
+	endif()
 
 	# g++ 8 needs to link with seperate filesystem library.
 	target_link_libraries(${TEST_NAME} PUBLIC ${PROJECT_NAME} GTest::GTest TBB::TBB
