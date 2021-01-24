@@ -322,6 +322,32 @@ inline constexpr bool pack_contains_nt_v
 		= pack_contains_nt<decltype(T), T, Pack>::value;
 
 
+//// Foreach
+// namespace detail {
+// template <class Func, class Tuple, size_t... I>
+// constexpr void pack_for_each(
+//		Func&& func, Tuple&& tup, std::index_sequence<I...>) {
+//#if FEA_CPP17
+//	// TODO : test it.
+//	(func(std::get<I>(tup)), ...);
+//#else
+//	char dummy[] = { (void(func(std::get<I>(tup))), '0')... };
+//	unused(dummy);
+//#endif
+//}
+//} // namespace detail
+//
+//// Tuple foreach.
+//// Your lambda will be called with each tuple's elements.
+//// Provid lambda which accepts auto& or const auto&.
+// template <class Func, class Pack>
+// constexpr void pack_for_each(Func&& func, Pack p) {
+//	detail::pack_for_each(std::forward<Func>(func), p,
+//			std::make_index_sequence<fea::pack_size_v<Pack>>{});
+//}
+
+
+// Splice
 namespace detail {
 template <size_t, size_t, class, class...>
 struct idx_splice_impl;

@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
-#include "fea/meta/pack.hpp"
+#include <type_traits>
 
 /*
 C++14 if constexpr equivalent.
