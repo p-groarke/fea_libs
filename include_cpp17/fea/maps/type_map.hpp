@@ -148,7 +148,7 @@ struct type_map<fea::pack_nt<T, Keys...>, Values...>
 	template <T Key>
 	static constexpr bool contains() {
 		// Just to make sure we are in constexpr land.
-		constexpr bool ret = pack_contains_nt_v<T, Key, pack_t>;
+		constexpr bool ret = pack_contains_nt_v<Key, pack_t>;
 		return ret;
 	}
 
@@ -158,7 +158,7 @@ struct type_map<fea::pack_nt<T, Keys...>, Values...>
 		static_assert(
 				contains<Key>(), "type_map : doesn't contain requested key");
 
-		constexpr size_t idx = pack_idx_nt_v<T, Key, pack_t>;
+		constexpr size_t idx = pack_idx_nt_v<Key, pack_t>;
 		return std::get<idx>(base_t::data());
 	}
 	template <T Key>
@@ -166,7 +166,7 @@ struct type_map<fea::pack_nt<T, Keys...>, Values...>
 		static_assert(
 				contains<Key>(), "type_map : doesn't contain requested key");
 
-		constexpr size_t idx = pack_idx_nt_v<T, Key, pack_t>;
+		constexpr size_t idx = pack_idx_nt_v<Key, pack_t>;
 		return std::get<idx>(base_t::data());
 	}
 };
@@ -225,19 +225,17 @@ struct kv_nt {
 	Value v;
 };
 
-// Helper to deduce kv_nt in c++ < 17
-template <class K, K Key, class Value>
-kv_nt<K, Key, Value> make_kv_nt(Value&& v) {
-	return kv_nt<K, Key, Value>{ std::forward<Value>(v) };
-}
+//// Helper to deduce kv_nt in c++ < 17
+// template <class K, K Key, class Value>
+// kv_nt<K, Key, Value> make_kv_nt(Value&& v) {
+//	return kv_nt<K, Key, Value>{ std::forward<Value>(v) };
+//}
 
-#if FEA_CPP17
 // Helper which makes it a little cleaner.
 template <auto Key, class Value>
 kv_nt<decltype(Key), Key, Value> make_kv_nt(Value&& v) {
 	return kv_nt<decltype(Key), Key, Value>{ std::forward<Value>(v) };
 }
-#endif
 
 // Construct a type_map using a list of key-value pairs.
 template <class... Keys, class... Values>

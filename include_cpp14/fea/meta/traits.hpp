@@ -173,6 +173,12 @@ struct is_same_nt<T, T1, T1> : std::true_type {};
 template <class T, T T1, T T2>
 FEA_INLINE_VAR constexpr bool is_same_nt_v = is_same_nt<T, T1, T2>::value;
 
+#if FEA_CPP17
+template <auto T1, auto T2>
+FEA_INLINE_VAR constexpr bool is_same_nt_v2
+		= is_same_nt<decltype(T1), T1, T2>::value;
+#endif
+
 
 template <template <class...> class, template <class...> class>
 struct is_same_template : std::false_type {};

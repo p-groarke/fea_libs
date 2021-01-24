@@ -47,23 +47,12 @@ TEST(type_map, basics) {
 	}
 
 	{
-#if FEA_CPP17
 		auto tmap = fea::make_type_map(
 				fea::kv_t{ int(), 42.f }, fea::kv_t{ short(), 42.0 });
 
 		static_assert(
 				std::is_same_v<decltype(tmap),
 						fea::type_map<fea::pack<int, short>, float, double>>,
-				"type_map.cpp : test failed");
-#endif
-
-
-		auto tmap2 = fea::make_type_map(
-				fea::make_kv_t(int(), 42.f), fea::make_kv_t(short(), 42.0));
-
-		static_assert(std::is_same<decltype(tmap2),
-							  fea::type_map<fea::pack<int, short>, float,
-									  double>>::value,
 				"type_map.cpp : test failed");
 	}
 
@@ -76,22 +65,12 @@ TEST(type_map, basics) {
 			count,
 		};
 
-#if FEA_CPP17
 		auto tmap = fea::make_type_map(
 				fea::make_kv_nt<e::one>(42.f), fea::make_kv_nt<e::two>(42.0));
 
 		static_assert(std::is_same_v<decltype(tmap),
 							  fea::type_map<fea::pack_nt<e, e::one, e::two>,
 									  float, double>>,
-				"type_map.cpp : test failed");
-#endif
-
-		auto tmap2 = fea::make_type_map(fea::make_kv_nt<e, e::one>(42.f),
-				fea::make_kv_nt<e, e::two>(42.0));
-
-		static_assert(std::is_same<decltype(tmap2),
-							  fea::type_map<fea::pack_nt<e, e::one, e::two>,
-									  float, double>>::value,
 				"type_map.cpp : test failed");
 	}
 }

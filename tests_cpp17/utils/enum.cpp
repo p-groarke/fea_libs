@@ -12,19 +12,23 @@ TEST(enum, traits) {
 		count,
 	};
 
-	fea::pack_nt<e, e::one, e::two, e::three, e::four> p = fea::explode_enum<e>(
-			[](auto... cs) {
-				using pack_t = fea::pack_nt<e, decltype(cs)::value...>;
-				constexpr size_t idx = fea::pack_idx_nt_v<e, e::three, pack_t>;
-				static_assert(idx == 2, "traits.cpp : test failed");
-				return fea::pack_nt<e, decltype(cs)::value...>{};
-			});
+	fea::pack_nt<e, e::one, e::two, e::three, e::four> p
+			= fea::explode_enum<e>([](auto... cs) {
+				  using pack_t = fea::pack_nt<e, decltype(cs)::value...>;
+				  constexpr size_t idx = fea::pack_idx_nt_v<e::three, pack_t>;
+				  static_assert(idx == 2, "traits.cpp : test failed");
+				  return fea::pack_nt<e, decltype(cs)::value...>{};
+			  });
 	fea::unused(p);
 
 	static_assert(!fea::is_same_nt_v<e, e::one, e::two>,
 			"type_map.cpp : test failed");
 	static_assert(
+			!fea::is_same_nt_v2<e::one, e::two>, "type_map.cpp : test failed");
+	static_assert(
 			fea::is_same_nt_v<e, e::one, e::one>, "type_map.cpp : test failed");
+	static_assert(
+			fea::is_same_nt_v2<e::one, e::one>, "type_map.cpp : test failed");
 }
 
 TEST(enum, safe_switch) {
@@ -70,7 +74,7 @@ TEST(enum, safe_switch) {
 
 namespace espace_all {
 
-FEA_STRING_ENUM(e, unsigned, zero, one, two, three, four, five, count);
+FEA_STRING_ENUM(e, unsigned, zero, one, two, three, four, five, count)
 
 TEST(enum_macros, basics) {
 
@@ -302,7 +306,7 @@ TEST(enum_macros, basics) {
 } // namespace espace_all
 
 namespace espace2 {
-FEA_STRING_ENUM_WITH_COUNT(e, unsigned, zero, one, two, three, four, five);
+FEA_STRING_ENUM_WITH_COUNT(e, unsigned, zero, one, two, three, four, five)
 TEST(enum_macros, basics) {
 	EXPECT_EQ(size_t(e::zero), 0u);
 	EXPECT_EQ(size_t(e::one), 1u);

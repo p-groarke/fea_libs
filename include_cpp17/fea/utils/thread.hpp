@@ -40,6 +40,8 @@
 #include <shared_mutex>
 #include <thread>
 #include <type_traits>
+#include <utility>
+#include <vector>
 
 // If you don't feel like linking to tbb.
 namespace fea {

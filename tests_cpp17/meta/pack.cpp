@@ -109,76 +109,39 @@ TEST(pack, basics) {
 		static_assert(fea::pack_element_nt_v<5, p_cat_t> == e::two,
 				"pack.cpp : test failed");
 
-#if FEA_CPP17
-		static_assert(fea::pack_idx_nt_v2<e::one, p_cat_t> == 0,
+		static_assert(fea::pack_idx_nt_v<e::one, p_cat_t> == 0,
 				"pack.cpp : test failed");
-		static_assert(fea::pack_idx_nt_v2<e::three, p_cat_t> == 1,
+		static_assert(fea::pack_idx_nt_v<e::three, p_cat_t> == 1,
 				"pack.cpp : test failed");
-		static_assert(fea::pack_idx_nt_v2<e::two, p_cat_t> == 2,
-				"pack.cpp : test failed");
-#endif
-
-		static_assert(fea::pack_idx_nt_v<e, e::one, p_cat_t> == 0,
-				"pack.cpp : test failed");
-		static_assert(fea::pack_idx_nt_v<e, e::three, p_cat_t> == 1,
-				"pack.cpp : test failed");
-		static_assert(fea::pack_idx_nt_v<e, e::two, p_cat_t> == 2,
+		static_assert(fea::pack_idx_nt_v<e::two, p_cat_t> == 2,
 				"pack.cpp : test failed");
 
-#if FEA_CPP17
-		using one_indexes = fea::pack_idxes_nt_t2<e::one, p_cat_t>;
+
+		using one_indexes = fea::pack_idxes_nt_t<e::one, p_cat_t>;
 		static_assert(
 				std::is_same<one_indexes, fea::pack_nt<size_t, 0, 3>>::value,
 				"pack.cpp : test failed");
 
-		using three_idxes = fea::pack_idxes_nt_t2<e::three, p_cat_t>;
+		using three_idxes = fea::pack_idxes_nt_t<e::three, p_cat_t>;
 		static_assert(
 				std::is_same<three_idxes, fea::pack_nt<size_t, 1, 4>>::value,
 				"pack.cpp : test failed");
 
-		using two_idxes = fea::pack_idxes_nt_t2<e::two, p_cat_t>;
-		static_assert(
-				std::is_same<two_idxes, fea::pack_nt<size_t, 2, 5>>::value,
-				"pack.cpp : test failed");
-#endif
-
-		using one_indexes = fea::pack_idxes_nt_t<e, e::one, p_cat_t>;
-		static_assert(
-				std::is_same<one_indexes, fea::pack_nt<size_t, 0, 3>>::value,
-				"pack.cpp : test failed");
-
-		using three_idxes = fea::pack_idxes_nt_t<e, e::three, p_cat_t>;
-		static_assert(
-				std::is_same<three_idxes, fea::pack_nt<size_t, 1, 4>>::value,
-				"pack.cpp : test failed");
-
-		using two_idxes = fea::pack_idxes_nt_t<e, e::two, p_cat_t>;
+		using two_idxes = fea::pack_idxes_nt_t<e::two, p_cat_t>;
 		static_assert(
 				std::is_same<two_idxes, fea::pack_nt<size_t, 2, 5>>::value,
 				"pack.cpp : test failed");
 
-#if FEA_CPP17
-		static_assert(fea::pack_contains_nt_v2<e::one, p_cat_t>,
-				"pack.cpp : test failed");
-		static_assert(fea::pack_contains_nt_v2<e::three, p_cat_t>,
-				"pack.cpp : test failed");
-		static_assert(fea::pack_contains_nt_v2<e::two, p_cat_t>,
-				"pack.cpp : test failed");
-		static_assert(!fea::pack_contains_nt_v2<e::four, p_cat_t>,
-				"pack.cpp : test failed");
-		static_assert(!fea::pack_contains_nt_v2<e::count, p_cat_t>,
-				"pack.cpp : test failed");
-#endif
 
-		static_assert(fea::pack_contains_nt_v<e, e::one, p_cat_t>,
+		static_assert(fea::pack_contains_nt_v<e::one, p_cat_t>,
 				"pack.cpp : test failed");
-		static_assert(fea::pack_contains_nt_v<e, e::three, p_cat_t>,
+		static_assert(fea::pack_contains_nt_v<e::three, p_cat_t>,
 				"pack.cpp : test failed");
-		static_assert(fea::pack_contains_nt_v<e, e::two, p_cat_t>,
+		static_assert(fea::pack_contains_nt_v<e::two, p_cat_t>,
 				"pack.cpp : test failed");
-		static_assert(!fea::pack_contains_nt_v<e, e::four, p_cat_t>,
+		static_assert(!fea::pack_contains_nt_v<e::four, p_cat_t>,
 				"pack.cpp : test failed");
-		static_assert(!fea::pack_contains_nt_v<e, e::count, p_cat_t>,
+		static_assert(!fea::pack_contains_nt_v<e::count, p_cat_t>,
 				"pack.cpp : test failed");
 	}
 }
