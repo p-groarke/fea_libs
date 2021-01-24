@@ -38,7 +38,8 @@ struct potato {
 	friend bool operator==(const potato& lhs, const potato& rhs) {
 		return lhs.val == rhs.val && lhs.vec == rhs.vec;
 	}
-	friend bool operator!=(const potato& lhs, const potato& rhs) {
+	[[maybe_unused]] friend bool operator!=(
+			const potato& lhs, const potato& rhs) {
 		return !(lhs == rhs);
 	}
 	friend bool operator<(const potato& lhs, const potato& rhs) {
@@ -68,17 +69,6 @@ std::filesystem::path filepath() {
 
 using fea::deserialize;
 using fea::serialize;
-
-template <class T>
-constexpr auto test(T) {
-	if constexpr (sizeof(T) <= 4) {
-		return std::true_type{};
-	} else {
-		return std::false_type{};
-	}
-}
-
-constexpr auto doit = test(int{});
 
 TEST(serialize, basics) {
 	// Internal stuff, you never need to bother with this unless you are working

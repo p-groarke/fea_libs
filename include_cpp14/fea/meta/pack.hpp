@@ -125,14 +125,14 @@ FEA_INLINE_VAR constexpr size_t pack_size_v = pack_size<Pack>::value;
 template <size_t, class>
 struct pack_element;
 
-template <size_t I, class Head, class... Tail>
-struct pack_element<I, fea::pack<Head, Tail...>>
-		: fea::pack_element<I - 1, fea::pack<Tail...>> {};
-
 template <class Head, class... Tail>
 struct pack_element<0, fea::pack<Head, Tail...>> {
 	using type = Head;
 };
+
+template <size_t I, class Head, class... Tail>
+struct pack_element<I, fea::pack<Head, Tail...>>
+		: fea::pack_element<I - 1, fea::pack<Tail...>> {};
 
 template <size_t I, class Pack>
 struct pack_element<I, const Pack> {
@@ -148,19 +148,17 @@ using pack_element_t = typename pack_element<I, Pack>::type;
 template <size_t, class>
 struct pack_element_nt;
 
-template <size_t I, class NT, NT Head, NT... Tail>
-struct pack_element_nt<I, fea::pack_nt<NT, Head, Tail...>>
-		: fea::pack_element_nt<I - 1, fea::pack_nt<NT, Tail...>> {};
-
 template <class NT, NT Head, NT... Tail>
 struct pack_element_nt<0, fea::pack_nt<NT, Head, Tail...>> {
 	static constexpr NT value = Head;
 };
 
+template <size_t I, class NT, NT Head, NT... Tail>
+struct pack_element_nt<I, fea::pack_nt<NT, Head, Tail...>>
+		: fea::pack_element_nt<I - 1, fea::pack_nt<NT, Tail...>> {};
+
 template <size_t I, class Pack>
-struct pack_element_nt<I, const Pack> {
-	static constexpr const auto value = fea::pack_element_nt<I, Pack>::value;
-};
+struct pack_element_nt<I, const Pack> : pack_element_nt<I, Pack> {};
 
 // Non-type element at index I.
 template <size_t I, class Pack>
