@@ -173,9 +173,9 @@ TEST(serialize, array) {
 		arr_t c_comp{};
 		// std::array<std::array<std::array<potato, 4>, 4>, 4> arr{};
 
-		arr_t::value_type::value_type a3{ { { 't' }, { 'e' }, { 's' },
+		typename arr_t::value_type::value_type a3{ { { 't' }, { 'e' }, { 's' },
 				{ 't' } } };
-		arr_t::value_type a2{};
+		typename arr_t::value_type a2{};
 		for (int i = 0; i < 4; ++i) {
 			a2[i] = a3;
 		}
@@ -229,8 +229,9 @@ TEST(serialize, vector_string) {
 		using buf_t = std::decay_t<decltype(m_type)>;
 		buf_t c_comp{};
 
-		buf_t::value_type::value_type a3{ { 't' }, { 'e' }, { 's' }, { 't' } };
-		buf_t::value_type a2;
+		typename buf_t::value_type::value_type a3{ { 't' }, { 'e' }, { 's' },
+			{ 't' } };
+		typename buf_t::value_type a2;
 		for (int i = 0; i < 4; ++i) {
 			a2.push_back(a3);
 		}
@@ -297,11 +298,11 @@ TEST(serialize, map) {
 
 		// std::map<potato, std::map<int, std::map<potato, int>>> c_comp;
 
-		map_t::mapped_type::mapped_type a3;
+		typename map_t::mapped_type::mapped_type a3;
 		for (int i = 0; i < 4; ++i) {
 			a3.insert({ { i }, { i } });
 		}
-		map_t::mapped_type a2;
+		typename map_t::mapped_type a2;
 		for (int i = 0; i < 4; ++i) {
 			a2.insert({ i, a3 });
 		}
@@ -368,11 +369,11 @@ TEST(serialize, set) {
 
 		// std::set<std::set<std::set<potato>>> c_comp;
 
-		set_t::value_type::value_type a3;
+		typename set_t::value_type::value_type a3;
 		for (int i = 0; i < 4; ++i) {
 			a3.insert({ i });
 		}
-		set_t::value_type a2;
+		typename set_t::value_type a2;
 		for (int i = 0; i < 4; ++i) {
 			a2.insert(a3);
 		}
@@ -525,11 +526,11 @@ TEST(serialize, deque) {
 		using q_t = std::decay_t<decltype(m_type)>;
 		q_t c_comp{};
 
-		q_t::value_type::value_type a3;
+		typename q_t::value_type::value_type a3;
 		for (int i = 0; i < 4; ++i) {
 			a3.push_back({ i });
 		}
-		q_t::value_type a2;
+		typename q_t::value_type a2;
 		for (int i = 0; i < 4; ++i) {
 			a2.push_back(a3);
 		}
@@ -584,11 +585,11 @@ TEST(serialize, queue) {
 		using q_t = std::decay_t<decltype(m_type)>;
 		q_t c_comp{};
 
-		q_t::value_type::value_type a3;
+		typename q_t::value_type::value_type a3;
 		for (int i = 0; i < 4; ++i) {
 			a3.push({ i });
 		}
-		q_t::value_type a2;
+		typename q_t::value_type a2;
 		for (int i = 0; i < 4; ++i) {
 			a2.push(a3);
 		}
