@@ -51,7 +51,7 @@ TEST(macros, basics) {
 	}
 
 	{
-		FEA_FOR_EACH_VA(nums_va, 0, 1, 2, 3);
+		FEA_FOR_EACH_VA(nums_va, 0, 1, 2, 3)
 		for (int i = 0; i < 4; ++i) {
 			EXPECT_EQ(arr0[i], i);
 			EXPECT_EQ(arr1[i], i);
@@ -61,7 +61,7 @@ TEST(macros, basics) {
 	}
 
 	{
-		FEA_FOR_EACH_PARAM(nums_va, FEA_VA_LIST(0, 1, 2, 3), 0, 1, 2, 3);
+		FEA_FOR_EACH_PARAM(nums_va, FEA_VA_LIST(0, 1, 2, 3), 0, 1, 2, 3)
 		for (int i = 0; i < 4; ++i) {
 			EXPECT_EQ(arr0[i], i);
 			EXPECT_EQ(arr1[i], i);

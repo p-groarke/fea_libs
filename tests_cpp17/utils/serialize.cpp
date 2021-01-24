@@ -405,8 +405,6 @@ TEST(serialize, set) {
 }
 
 TEST(serialize, pair_tuple) {
-	std::tuple<int, int, int, int> tup;
-
 	auto test_tup1 = [](auto m_type) {
 		using tup_t = std::decay_t<decltype(m_type)>;
 		tup_t c_comp{};

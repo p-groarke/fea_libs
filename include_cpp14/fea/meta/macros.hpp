@@ -79,7 +79,7 @@ See : https://codecraft.co/2014/11/25/variadic-macros-tricks/
 
 // Define some macros to help us create overrides based on the
 // arity of a for-each-style macro.
-#define FEA_DETAIL_FECALL_0(call, ...)
+#define FEA_DETAIL_FECALL_0(call)
 #define FEA_DETAIL_FECALL_1(call, f) call(f)
 #define FEA_DETAIL_FECALL_2(call, f, ...) \
 	call(f) FEA_DETAIL_FECALL_1(call, __VA_ARGS__)
@@ -334,8 +334,8 @@ See : https://codecraft.co/2014/11/25/variadic-macros-tricks/
 
 
 // Helper macros for FEA_FOR_EACH_VA
-#define FEA_DETAIL_FECALLVA_0(call, ...)
-#define FEA_DETAIL_FECALLVA_1(call, args, f, ...) call(f, args)
+#define FEA_DETAIL_FECALLVA_0(call)
+#define FEA_DETAIL_FECALLVA_1(call, args, f) call(f, args)
 #define FEA_DETAIL_FECALLVA_2(call, args, f, ...) \
 	call(f, args) FEA_DETAIL_FECALLVA_1(call, FEA_VA_LIST(args), __VA_ARGS__)
 #define FEA_DETAIL_FECALLVA_3(call, args, f, ...) \
@@ -746,7 +746,7 @@ See : https://codecraft.co/2014/11/25/variadic-macros-tricks/
 			FEA_DETAIL_FECALLVA_0)( \
 			macro, FEA_VA_LIST(macro_args), __VA_ARGS__))
 
-#define FEA_DETAIL_FECALLLAST_0(call, ...)
+#define FEA_DETAIL_FECALLLAST_0(call)
 #define FEA_DETAIL_FECALLLAST_1(call, last_call, f) last_call(f)
 #define FEA_DETAIL_FECALLLAST_2(call, last_call, f, ...) \
 	call(f) FEA_DETAIL_FECALLLAST_1(call, last_call, __VA_ARGS__)
