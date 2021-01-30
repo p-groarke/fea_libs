@@ -141,7 +141,8 @@ TEST(serialize, basics) {
 TEST(serialize, array) {
 	auto test_arr1 = [](auto a_type) {
 		using arr_t = std::decay_t<decltype(a_type)>;
-		arr_t c_comp{ { { 1 }, { 2 }, { 3 }, { 4 } } };
+		using T = typename arr_t::value_type;
+		arr_t c_comp{ { T{ 1 }, T{ 2 }, T{ 3 }, T{ 4 } } };
 
 		{
 			std::ofstream ofs{ filepath(), std::ios::binary };
@@ -163,8 +164,9 @@ TEST(serialize, array) {
 		arr_t c_comp{};
 		// std::array<std::array<std::array<potato, 4>, 4>, 4> arr{};
 
-		typename arr_t::value_type::value_type a3{ { { 't' }, { 'e' }, { 's' },
-				{ 't' } } };
+		using T = typename arr_t::value_type::value_type::value_type;
+		typename arr_t::value_type::value_type a3{ { T{ 't' }, T{ 'e' },
+				T{ 's' }, T{ 't' } } };
 		typename arr_t::value_type a2{};
 		for (int i = 0; i < 4; ++i) {
 			a2[i] = a3;
