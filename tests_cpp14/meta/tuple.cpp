@@ -60,7 +60,7 @@ TEST(tuple, basics) {
 		std::array<std::string, 4> visited;
 		size_t idx = 0;
 
-		fea::tuple_foreach(
+		fea::tuple_for_each(
 				[&](auto v) {
 					std::string str{};
 					if FEA_CEXPR (std::is_same<decltype(v), int>::value) {

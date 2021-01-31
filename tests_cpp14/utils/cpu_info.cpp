@@ -10,7 +10,7 @@ const cpu_info_t cpu_info;
 #endif
 
 #if FEA_MACOS
-#include "cpu_info_macos_tests.hpp"
+#include "cpu_info_macos.hpp"
 #else
 #endif
 

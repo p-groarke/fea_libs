@@ -30,6 +30,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/meta/macros.hpp"
 #include "fea/meta/tuple.hpp"
 
 #include <algorithm>
@@ -85,11 +86,8 @@ TODO :
 	- Yield transitions (aka history state).
 */
 
-#define FEA_TOKENPASTE(x, y) x##y
-#define FEA_TOKENPASTE2(x, y) FEA_TOKENPASTE(x, y)
 #define fea_event(name, f) \
-	struct FEA_TOKENPASTE2( \
-			FEA_TOKENPASTE2(fea_event_builder_, name), __LINE__) { \
+	struct FEA_PASTE(FEA_PASTE(fea_event_builder_, name), __LINE__) { \
 		using is_event_builder [[maybe_unused]] = int; \
 		static constexpr auto unpack() { \
 			return f; \

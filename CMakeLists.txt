@@ -18,7 +18,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR} ${CMAKE_MODULE_PATH})
 set(CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR} ${CMAKE_PREFIX_PATH})
 
 # Output binary to predictable location (fixes cyclic dependency issues).
-set(BINARY_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/bin)
+set(BINARY_OUT_DIR ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BINARY_OUT_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BINARY_OUT_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BINARY_OUT_DIR})
@@ -146,6 +146,11 @@ if (${FEA_TESTS})
 		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_SOURCES_CPP17}>"
 	)
 	set_compile_options(${TEST_NAME} PRIVATE)
+
+	# For the extreme serialization test.
+	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+		target_compile_options(${TEST_NAME} PRIVATE /bigobj)
+	endif()
 
 	# g++ 8 needs to link with seperate filesystem library.
 	target_link_libraries(${TEST_NAME} PUBLIC ${PROJECT_NAME} GTest::GTest TBB::TBB

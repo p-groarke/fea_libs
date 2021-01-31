@@ -74,4 +74,18 @@ constexpr void static_for(Func&& func) {
 }
 
 
+// "std::apply index_sequence"
+namespace detail {
+template <class Func, size_t... Idx>
+constexpr auto apply_indexes(Func&& f, std::index_sequence<Idx...>) {
+	return std::forward<Func>(f)(std::integral_constant<size_t, Idx>{}...);
+}
+} // namespace detail
+
+template <size_t N, class Func>
+constexpr auto apply_indexes(Func&& f) {
+	return detail::apply_indexes(
+			std::forward<Func>(f), std::make_index_sequence<N>{});
+}
+
 } // namespace fea

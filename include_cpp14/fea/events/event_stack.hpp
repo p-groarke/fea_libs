@@ -166,7 +166,7 @@ public:
 	// Checks if the event_stack is empty.
 	bool empty() const noexcept {
 		bool ret = true;
-		tuple_foreach([&](const auto& map) { ret &= map.empty(); }, _stacks);
+		tuple_for_each([&](const auto& map) { ret &= map.empty(); }, _stacks);
 		return ret;
 	}
 
@@ -179,7 +179,7 @@ public:
 	// Returns total size of subscribers.
 	size_t size() const noexcept {
 		size_t ret = 0;
-		tuple_foreach([&](const auto& map) { ret += map.size(); }, _stacks);
+		tuple_for_each([&](const auto& map) { ret += map.size(); }, _stacks);
 		return ret;
 	}
 
@@ -191,7 +191,7 @@ public:
 
 	// Reserve same storage for all event subscribers.
 	void reserve(size_t new_cap) {
-		tuple_foreach([&](auto& map) { map.reserve(new_cap); }, _stacks);
+		tuple_for_each([&](auto& map) { map.reserve(new_cap); }, _stacks);
 	}
 
 	// Reserve storage for event subscribers.
@@ -211,7 +211,7 @@ public:
 
 	// Clear all event subscribers.
 	void clear() {
-		tuple_foreach([](auto& map) { map.clear(); }, _stacks);
+		tuple_for_each([](auto& map) { map.clear(); }, _stacks);
 	}
 
 	// Clear event subscribers.

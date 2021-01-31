@@ -84,7 +84,7 @@ FEA_INLINE_VAR constexpr size_t tuple_idx_v = tuple_idx<T, Tuple>::value;
 
 
 // Does Tuple contain type T?
-template <class T, class Tuple>
+template <class, class>
 struct tuple_contains;
 
 template <class T>
@@ -121,7 +121,7 @@ constexpr void tuple_foreach(
 // Your lambda will be called with each tuple's elements.
 // Provid lambda which accepts auto& or const auto&.
 template <class Func, class Tuple>
-constexpr void tuple_foreach(Func&& func, Tuple&& tup) {
+constexpr void tuple_for_each(Func&& func, Tuple&& tup) {
 	detail::tuple_foreach(std::forward<Func>(func), std::forward<Tuple>(tup),
 			std::make_index_sequence<
 					std::tuple_size<std::decay_t<Tuple>>::value>{});

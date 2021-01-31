@@ -1,5 +1,4 @@
 ﻿#include <fea/meta/traits.hpp>
-#include <fea/meta/tuple.hpp>
 #include <functional>
 #include <gtest/gtest.h>
 #include <string>
@@ -97,56 +96,6 @@ TEST(traits, is_detected) {
 			"traits.cpp : failed test");
 }
 
-TEST(traits, splice) {
-	static_assert(std::is_same<fea::idx_splice_t<0, int, double, float, short>,
-						  int>::value,
-			"traits.cpp : test failed");
-	static_assert(
-			std::is_same<fea::idx_splice_before_t<0, int, double, float, short>,
-					std::tuple<>>::value,
-			"traits.cpp : test failed");
-	static_assert(
-			std::is_same<fea::idx_splice_after_t<0, int, double, float, short>,
-					std::tuple<double, float, short>>::value,
-			"traits.cpp : test failed");
-
-	static_assert(std::is_same<fea::idx_splice_t<1, int, double, float, short>,
-						  double>::value,
-			"traits.cpp : test failed");
-	static_assert(
-			std::is_same<fea::idx_splice_before_t<1, int, double, float, short>,
-					std::tuple<int>>::value,
-			"traits.cpp : test failed");
-	static_assert(
-			std::is_same<fea::idx_splice_after_t<1, int, double, float, short>,
-					std::tuple<float, short>>::value,
-			"traits.cpp : test failed");
-
-	static_assert(std::is_same<fea::idx_splice_t<2, int, double, float, short>,
-						  float>::value,
-			"traits.cpp : test failed");
-	static_assert(
-			std::is_same<fea::idx_splice_before_t<2, int, double, float, short>,
-					std::tuple<int, double>>::value,
-			"traits.cpp : test failed");
-	static_assert(
-			std::is_same<fea::idx_splice_after_t<2, int, double, float, short>,
-					std::tuple<short>>::value,
-			"traits.cpp : test failed");
-
-	static_assert(std::is_same<fea::idx_splice_t<3, int, double, float, short>,
-						  short>::value,
-			"traits.cpp : test failed");
-	static_assert(
-			std::is_same<fea::idx_splice_before_t<3, int, double, float, short>,
-					std::tuple<int, double, float>>::value,
-			"traits.cpp : test failed");
-	static_assert(
-			std::is_same<fea::idx_splice_after_t<3, int, double, float, short>,
-					std::tuple<>>::value,
-			"traits.cpp : test failed");
-}
-
 struct obj {
 	void func(int) {
 	}
@@ -176,4 +125,5 @@ TEST(traits, member_func_ptr) {
 	static_assert(
 			std::is_same<mem_fun5, void*>::value, "traits.cpp : test failed");
 }
+
 } // namespace

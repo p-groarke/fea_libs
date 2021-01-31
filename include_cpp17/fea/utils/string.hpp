@@ -35,6 +35,7 @@
 #include "fea/utils/platform.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <codecvt>
 #include <locale>
@@ -87,44 +88,42 @@
 
 namespace fea {
 template <class CharT>
-using m_string = std::basic_string<CharT, std::char_traits<CharT>,
+using string_t = std::basic_string<CharT, std::char_traits<CharT>,
 		std::allocator<CharT>>;
 
 template <class CharT>
-[[nodiscard]] inline bool contains(
-		const m_string<CharT>& str, const m_string<CharT>& search) {
-	return str.find(search) != m_string<CharT>::npos;
+[[nodiscard]] bool contains(
+		const string_t<CharT>& str, const string_t<CharT>& search) {
+	return str.find(search) != string_t<CharT>::npos;
 }
 template <class CharT>
-[[nodiscard]] inline bool contains(
-		const m_string<CharT>& str, const CharT* search) {
-	return str.find(search) != m_string<CharT>::npos;
-}
-
-template <class CharT>
-[[nodiscard]] inline bool starts_with(
-		const m_string<CharT>& str, const m_string<CharT>& search) {
-	return str.find(search) == 0;
-}
-template <class CharT>
-[[nodiscard]] inline bool starts_with(
-		const m_string<CharT>& str, const CharT* search) {
-	return str.find(search) == 0;
+[[nodiscard]] bool contains(const string_t<CharT>& str, const CharT* search) {
+	return str.find(search) != string_t<CharT>::npos;
 }
 
 template <class CharT>
-[[nodiscard]] inline bool ends_with(
-		const m_string<CharT>& str, const m_string<CharT>& search) {
+[[nodiscard]] bool starts_with(
+		const string_t<CharT>& str, const string_t<CharT>& search) {
+	return str.find(search) == 0;
+}
+template <class CharT>
+[[nodiscard]] bool starts_with(
+		const string_t<CharT>& str, const CharT* search) {
+	return str.find(search) == 0;
+}
+
+template <class CharT>
+[[nodiscard]] bool ends_with(
+		const string_t<CharT>& str, const string_t<CharT>& search) {
 	return str.find_last_of(search) == str.size() - search.size();
 }
 template <class CharT>
-[[nodiscard]] inline bool ends_with(
-		const m_string<CharT>& str, const CharT* search) {
-	return ends_with(str, m_string<CharT>{ search });
+[[nodiscard]] bool ends_with(const string_t<CharT>& str, const CharT* search) {
+	return ends_with(str, string_t<CharT>{ search });
 }
 
 template <class CharT>
-[[nodiscard]] inline m_string<CharT> to_lower(const m_string<CharT>& str) {
+[[nodiscard]] string_t<CharT> to_lower(const string_t<CharT>& str) {
 	auto ret = str;
 	std::transform(ret.begin(), ret.end(), ret.begin(),
 			[](auto c) { return static_cast<CharT>(::tolower(c)); });
@@ -132,7 +131,7 @@ template <class CharT>
 }
 
 template <class CharT>
-inline void to_lower(m_string<CharT>& out, bool /*inplace*/) {
+void to_lower(string_t<CharT>& out, bool /*inplace*/) {
 	std::transform(out.begin(), out.end(), out.begin(),
 			[](auto c) { return static_cast<CharT>(::tolower(c)); });
 }
@@ -151,63 +150,153 @@ inline void to_lower(std::vector<uint8_t>& out, bool /*inplace*/) {
 }
 
 template <class CharT>
-[[nodiscard]] inline std::vector<m_string<CharT>> split(
-		const m_string<CharT>& str, const CharT* delimiters) {
-	std::vector<m_string<CharT>> tokens;
+[[nodiscard]] std::vector<string_t<CharT>> split(
+		const string_t<CharT>& str, const CharT* delimiters) {
+	std::vector<string_t<CharT>> tokens;
 	size_t prev = 0;
 	size_t pos;
 
 	while ((pos = str.find_first_of(delimiters, prev))
-			!= m_string<CharT>::npos) {
+			!= string_t<CharT>::npos) {
 		if (pos > prev) {
 			tokens.push_back(str.substr(prev, pos - prev));
 		}
 		prev = pos + 1;
 	}
 	if (prev < str.length()) {
-		tokens.push_back(str.substr(prev, m_string<CharT>::npos));
+		tokens.push_back(str.substr(prev, string_t<CharT>::npos));
 	}
 	return tokens;
 }
 
 template <class CharT>
-[[nodiscard]] inline std::vector<m_string<CharT>> split(
-		const m_string<CharT>& str, CharT delimiter) {
-	m_string<CharT> delim{ delimiter };
+[[nodiscard]] std::vector<string_t<CharT>> split(
+		const string_t<CharT>& str, CharT delimiter) {
+	string_t<CharT> delim{ delimiter };
+	return split(str, delim.c_str());
+}
+
+
+template <size_t N, class CharT>
+[[nodiscard]] std::array<string_t<CharT>, N> split(
+		const string_t<CharT>& str, const CharT* delimiters) {
+	static_assert(N != 0, "split : array must be bigger than 0");
+
+	std::array<string_t<CharT>, N> tokens;
+	size_t idx = 0;
+	size_t prev = 0;
+	size_t pos;
+
+	while ((pos = str.find_first_of(delimiters, prev))
+			!= string_t<CharT>::npos) {
+		if (pos > prev) {
+			tokens[idx++] = str.substr(prev, pos - prev);
+
+			if (idx >= N) {
+				break;
+			}
+		}
+		prev = pos + 1;
+	}
+
+	if (prev < str.length() && idx < N) {
+		tokens[idx++] = str.substr(prev, string_t<CharT>::npos);
+	}
+	return tokens;
+}
+
+template <size_t N, class CharT>
+[[nodiscard]] std::array<string_t<CharT>, N> split(
+		const string_t<CharT>& str, CharT delimiter) {
+	string_t<CharT> delim{ delimiter };
 	return split(str, delim.c_str());
 }
 
 
 template <class CharT>
-inline void replace_all(m_string<CharT>& out, const m_string<CharT>& search,
-		const m_string<CharT>& replace, bool /*inplace*/) {
+void replace_all(string_t<CharT>& out, const string_t<CharT>& search,
+		const string_t<CharT>& replace, bool /*inplace*/) {
 
 	size_t pos = out.find(search);
-	while (pos != m_string<CharT>::npos) {
+	while (pos != string_t<CharT>::npos) {
 		out.replace(pos, search.size(), replace);
 		--pos;
 		pos = out.find(search, pos + search.size());
 	}
 }
 template <class CharT>
-inline void replace_all(m_string<CharT>& out, const CharT* search,
+void replace_all(string_t<CharT>& out, const CharT* search,
 		const CharT* replace, bool /*inplace*/) {
 	replace_all(
-			out, m_string<CharT>{ search }, m_string<CharT>{ replace }, true);
+			out, string_t<CharT>{ search }, string_t<CharT>{ replace }, true);
 }
 
 template <class CharT>
-[[nodiscard]] inline m_string<CharT> replace_all(const m_string<CharT>& str,
-		const m_string<CharT>& search, const m_string<CharT>& replace) {
-	m_string<CharT> ret = str;
+[[nodiscard]] string_t<CharT> replace_all(const string_t<CharT>& str,
+		const string_t<CharT>& search, const string_t<CharT>& replace) {
+	string_t<CharT> ret = str;
 	replace_all(ret, search, replace, true);
 	return ret;
 }
 template <class CharT>
-[[nodiscard]] inline m_string<CharT> replace_all(
-		const m_string<CharT>& str, const CharT* search, const CharT* replace) {
+[[nodiscard]] string_t<CharT> replace_all(
+		const string_t<CharT>& str, const CharT* search, const CharT* replace) {
 	return replace_all(
-			str, m_string<CharT>{ search }, m_string<CharT>{ replace });
+			str, string_t<CharT>{ search }, string_t<CharT>{ replace });
+}
+
+// Iterates input string line by line and calls your function with each line.
+template <class CharT, class Func>
+void for_each_line(const string_t<CharT>& str, Func&& func) {
+	std::basic_istringstream iss(str);
+	string_t<CharT> line;
+	while (std::getline(iss, line)) {
+		std::forward<Func>(func)(line);
+	}
+}
+
+// Removes all leading trim_char.
+template <class CharT>
+[[nodiscard]] string_t<CharT> trim_leading(
+		const string_t<CharT>& str, CharT trim_char) {
+	size_t new_begin = str.find_first_not_of(trim_char);
+	if (new_begin == string_t<CharT>::npos) {
+		return {};
+	}
+	return str.substr(new_begin);
+}
+
+// Removes all leading trim_chars.
+template <class CharT>
+[[nodiscard]] string_t<CharT> trim_leading(
+		const string_t<CharT>& str, const CharT* trim_chars) {
+	size_t new_begin = str.find_first_not_of(trim_chars);
+	if (new_begin == string_t<CharT>::npos) {
+		return {};
+	}
+	return str.substr(new_begin);
+}
+
+// Removes all leading trim_char.
+template <class CharT>
+[[nodiscard]] string_t<CharT> trim_trailing(
+		const string_t<CharT>& str, CharT trim_char) {
+	size_t new_end = str.find_last_not_of(trim_char);
+	if (new_end == string_t<CharT>::npos) {
+		return {};
+	}
+	return str.substr(0, new_end + 1);
+}
+
+// Removes all leading trim_chars.
+template <class CharT>
+[[nodiscard]] string_t<CharT> trim_trailing(
+		const string_t<CharT>& str, const CharT* trim_chars) {
+	size_t new_end = str.find_last_not_of(trim_chars);
+	if (new_end == string_t<CharT>::npos) {
+		return {};
+	}
+	return str.substr(0, new_end + 1);
 }
 
 
@@ -480,7 +569,7 @@ inline std::wstring utf32_to_ucs2_w(const std::u32string& s) {
 // Useful generalized conversions
 
 template <class CharT>
-std::string any_to_utf8(const m_string<CharT>& str) {
+std::string any_to_utf8(const string_t<CharT>& str) {
 	if constexpr (std::is_same_v<CharT, char>) {
 		return str;
 	} else if constexpr (std::is_same_v<CharT, wchar_t>) {
@@ -496,7 +585,7 @@ std::string any_to_utf8(const m_string<CharT>& str) {
 }
 
 template <class CharT>
-m_string<CharT> utf8_to_any(const std::string& str) {
+string_t<CharT> utf8_to_any(const std::string& str) {
 	if constexpr (std::is_same_v<CharT, char>) {
 		return str;
 	} else if constexpr (std::is_same_v<CharT, wchar_t>) {
@@ -512,7 +601,7 @@ m_string<CharT> utf8_to_any(const std::string& str) {
 }
 
 template <class CharT>
-std::u32string any_to_utf32(const m_string<CharT>& str) {
+std::u32string any_to_utf32(const string_t<CharT>& str) {
 	if constexpr (std::is_same_v<CharT, char>) {
 		return utf8_to_utf32(str);
 	} else if constexpr (std::is_same_v<CharT, wchar_t>) {
@@ -528,7 +617,7 @@ std::u32string any_to_utf32(const m_string<CharT>& str) {
 }
 
 template <class CharT>
-m_string<CharT> utf32_to_any(const std::u32string& str) {
+string_t<CharT> utf32_to_any(const std::u32string& str) {
 	if constexpr (std::is_same_v<CharT, char>) {
 		return utf32_to_utf8(str);
 	} else if constexpr (std::is_same_v<CharT, wchar_t>) {

@@ -241,4 +241,12 @@ FEA_INLINE_VAR constexpr platform_group_t platform_group
 #endif
 
 
+//// Cross-platform compiler warning.
+//// Note MSVC isn't a true warning, just a message.
+//#if FEA_WINDOWS
+//#define FEA_WARNING(x) __pragma(message("warning : "##x))
+//#else
+//#define FEA_WARNING(x) #warning x
+//#endif
+
 } // namespace fea

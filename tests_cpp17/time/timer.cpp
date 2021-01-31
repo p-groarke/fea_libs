@@ -145,7 +145,10 @@ TEST(timer, three_minutes) {
 	// 1 second == 1 minute.
 	fea::timer<void()> timer(fea::dseconds{ fea::dminutes{ 1 } });
 
+	size_t seconds_passed = 0;
 	size_t minutes_passed = 0;
+	timer.events().subscribe<fea::timer_event::seconds>(
+			[&]() { ++seconds_passed; });
 	timer.events().subscribe<fea::timer_event::minutes>(
 			[&]() { ++minutes_passed; });
 
@@ -161,7 +164,36 @@ TEST(timer, three_minutes) {
 	seconds elapsed = date::round<seconds>(e);
 	EXPECT_EQ(elapsed.count(), 3);
 
+	EXPECT_LE(seconds_passed, 180u);
 	EXPECT_EQ(minutes_passed, 3u);
+}
+
+TEST(timer, three_hours) {
+	using namespace std::chrono;
+	// 1 second == 1 hour.
+	fea::timer<void()> timer(fea::dseconds{ fea::dhours{ 1 } });
+
+	size_t minutes_passed = 0;
+	size_t hours_passed = 0;
+	timer.events().subscribe<fea::timer_event::minutes>(
+			[&]() { ++minutes_passed; });
+	timer.events().subscribe<fea::timer_event::hours>(
+			[&]() { ++hours_passed; });
+
+	const fea::uhours stop_time{ 3 };
+
+	auto start_time = steady_clock::now();
+	while (timer.elapsed_precise().seconds() < stop_time) {
+		timer.update();
+	}
+	auto end_time = steady_clock::now();
+
+	auto e = end_time - start_time;
+	seconds elapsed = date::round<seconds>(e);
+	EXPECT_EQ(elapsed.count(), 3);
+
+	EXPECT_LE(minutes_passed, 180u);
+	EXPECT_EQ(hours_passed, 3u);
 }
 
 TEST(timer, three_days) {
@@ -187,7 +219,7 @@ TEST(timer, three_days) {
 	seconds elapsed = date::round<seconds>(e);
 	EXPECT_EQ(elapsed.count(), 3);
 
-	EXPECT_EQ(hours_passed, 72u);
+	EXPECT_LE(hours_passed, 72u); // imprecise
 	EXPECT_EQ(days_passed, 3u);
 }
 
@@ -196,7 +228,9 @@ TEST(timer, three_weeks) {
 	// 1 second == 1 week.
 	fea::timer<void()> timer{ fea::dweeks{ 1 } };
 
+	size_t days_passed = 0;
 	size_t weeks_passed = 0;
+	timer.events().subscribe<fea::timer_event::days>([&]() { ++days_passed; });
 	timer.events().subscribe<fea::timer_event::weeks>(
 			[&]() { ++weeks_passed; });
 
@@ -213,6 +247,7 @@ TEST(timer, three_weeks) {
 	seconds elapsed = date::round<seconds>(e);
 	EXPECT_EQ(elapsed.count(), 3);
 
+	EXPECT_LE(days_passed, 21u);
 	EXPECT_EQ(weeks_passed, 3u);
 }
 
@@ -241,7 +276,7 @@ TEST(timer, three_years) {
 	seconds elapsed = date::round<seconds>(e);
 	EXPECT_EQ(elapsed.count(), 3);
 
-	EXPECT_EQ(months_passed, 36u);
+	EXPECT_LE(months_passed, 36u);
 	EXPECT_EQ(years_passed, 3u);
 }
 
