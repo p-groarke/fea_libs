@@ -35,8 +35,8 @@
 #include "fea/utils/platform.hpp"
 #include "fea/utils/string.hpp"
 
+#include <cstdio>
 #include <filesystem>
-
 #include <fstream>
 #include <functional>
 #include <string>
@@ -78,6 +78,15 @@ inline std::filesystem::path wexecutable_dir(const wchar_t* argv0) {
 #endif
 }
 
+inline size_t file_size(std::FILE* ifs) {
+	if (ifs == nullptr) {
+		return 0;
+	}
+	std::fseek(ifs, 0, SEEK_END);
+	size_t ret = size_t(std::ftell(ifs));
+	std::rewind(ifs);
+	return ret;
+}
 
 // Returns the full size of the filestream. Leaves the stream at the beginning.
 template <class IFStream>
@@ -88,6 +97,7 @@ size_t file_size(IFStream& ifs) {
 
 	ifs.seekg(0, ifs.end);
 	auto ret = ifs.tellg();
+	ifs.clear();
 	ifs.seekg(0, ifs.beg);
 	return size_t(ret);
 }
@@ -101,7 +111,7 @@ bool basic_read_text_file(const std::filesystem::path& fpath, Func&& func) {
 		return false;
 	}
 
-	String line;
+	String line{};
 	while (std::getline(ifs, line)) {
 		if (line.size() > 0 && line.back() == '\r') {
 			line.pop_back();
@@ -139,7 +149,7 @@ bool basic_open_text_file(
 	out = {};
 	out.reserve(file_size(ifs));
 
-	String line;
+	String line{};
 	while (std::getline(ifs, line)) {
 		if (line.size() > 0 && line.back() == '\r') {
 			line.pop_back();

@@ -1,8 +1,22 @@
 ﻿#include <fea/meta/pack.hpp>
+#include <fea/serialize/serialize.hpp>
 #include <fea/utils/file.hpp>
-#include <fea/utils/serialize.hpp>
 #include <filesystem>
 #include <gtest/gtest.h>
+
+#include <array>
+#include <cassert>
+#include <deque>
+#include <fstream>
+#include <map>
+#include <queue>
+#include <set>
+#include <string>
+#include <tuple>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
 
 extern const char* argv0;
 
@@ -21,13 +35,12 @@ struct potato {
 			: potato(int(i)) {
 	}
 
-	friend std::true_type serialize(const potato& p, std::ofstream& ofs) {
+	friend void serialize(const potato& p, fea::serializer& ofs) {
 		using fea::serialize;
 		serialize(p.val, ofs);
 		serialize(p.vec, ofs);
-		return {};
 	}
-	friend bool deserialize(potato& p, std::ifstream& ifs) {
+	friend bool deserialize(potato& p, fea::deserializer& ifs) {
 		using fea::deserialize;
 		if (!deserialize(p.val, ifs)) {
 			return false;
@@ -73,22 +86,21 @@ using fea::serialize;
 TEST(serialize, basics) {
 	// Internal stuff, you never need to bother with this unless you are working
 	// with templates youself.
-	static_assert(FEA_NEEDS_NESTING(std::vector<std::vector<int>>),
-			"serialize.cpp : test failed");
-	static_assert(
-			FEA_NEEDS_NESTING(std::vector<int>), "serialize.cpp : test failed");
-	static_assert(!FEA_NEEDS_NESTING(int), "serialize.cpp : test failed");
+	// static_assert(FEA_NEEDS_NESTING(std::vector<std::vector<int>>),
+	//		"serialize.cpp : test failed");
+	// static_assert(
+	//		FEA_NEEDS_NESTING(std::vector<int>), "serialize.cpp : test failed");
+	// static_assert(!FEA_NEEDS_NESTING(int), "serialize.cpp : test failed");
 
-	static_assert(FEA_NEEDS_NESTING(std::vector<std::vector<potato>>),
-			"serialize.cpp : test failed");
+	// static_assert(FEA_NEEDS_NESTING(std::vector<std::vector<potato>>),
+	//		"serialize.cpp : test failed");
 
-	static_assert(FEA_NEEDS_NESTING(potato), "serialize.cpp : test failed");
-
+	// static_assert(FEA_NEEDS_NESTING(potato), "serialize.cpp : test failed");
 
 	// Test a simple vector.
 	{
 		std::vector<potato> potatoes(4);
-		std::ofstream ofs{ filepath(), std::ios::binary };
+		fea::serializer ofs{ filepath() };
 		serialize(potatoes, ofs);
 	}
 
@@ -99,7 +111,7 @@ TEST(serialize, basics) {
 	}
 
 	{
-		std::ifstream ifs{ filepath(), std::ios::binary };
+		fea::deserializer ifs{ filepath() };
 		EXPECT_TRUE(deserialize(potatoes, ifs));
 	}
 
@@ -113,7 +125,7 @@ TEST(serialize, basics) {
 	// Test if it takes the correct overload.
 	{
 		potato a_potato;
-		std::ofstream ofs{ filepath(), std::ios::binary };
+		fea::serializer ofs{ filepath() };
 		serialize(a_potato, ofs);
 	}
 
@@ -122,7 +134,7 @@ TEST(serialize, basics) {
 	a_potato.vec = {};
 	// Deserialize.
 	{
-		std::ifstream ifs{ filepath(), std::ios::binary };
+		fea::deserializer ifs{ filepath() };
 		EXPECT_TRUE(deserialize(a_potato, ifs));
 	}
 
@@ -144,14 +156,19 @@ TEST(serialize, array) {
 		using T = typename arr_t::value_type;
 		arr_t c_comp{ { T{ 1 }, T{ 2 }, T{ 3 }, T{ 4 } } };
 
+		static_assert(fea::detail::is_container_v<arr_t>,
+				"serialize.cpp : test failed");
+		static_assert(fea::detail::is_contiguous_v<arr_t>,
+				"serialize.cpp : test failed");
+
 		{
-			std::ofstream ofs{ filepath(), std::ios::binary };
+			fea::serializer ofs{ filepath() };
 			serialize(c_comp, ofs);
 		}
 
 		{
 			arr_t c{};
-			std::ifstream ifs{ filepath(), std::ios::binary };
+			fea::deserializer ifs{ filepath() };
 			EXPECT_TRUE(deserialize(c, ifs));
 			EXPECT_EQ(c, c_comp);
 		}
@@ -176,13 +193,13 @@ TEST(serialize, array) {
 		}
 
 		{
-			std::ofstream ofs{ filepath(), std::ios::binary };
+			fea::serializer ofs{ filepath() };
 			serialize(c_comp, ofs);
 		}
 
 		{
 			arr_t c{};
-			std::ifstream ifs{ filepath(), std::ios::binary };
+			fea::deserializer ifs{ filepath() };
 			EXPECT_TRUE(deserialize(c, ifs));
 			EXPECT_EQ(c, c_comp);
 		}
@@ -196,18 +213,24 @@ TEST(serialize, vector_string) {
 		using vec_t = std::decay_t<decltype(v_type)>;
 		vec_t c_comp{ { 't' }, { 'e' }, { 's' }, { 't' } };
 
+		static_assert(fea::detail::is_container_v<vec_t>,
+				"serialize.cpp : test failed");
+		static_assert(fea::detail::is_contiguous_v<vec_t>,
+				"serialize.cpp : test failed");
+
 		{
-			std::ofstream ofs{ filepath(), std::ios::binary };
+			fea::serializer ofs{ filepath() };
 			serialize(c_comp, ofs);
 		}
 
 		{
 			vec_t c{};
-			std::ifstream ifs{ filepath(), std::ios::binary };
+			fea::deserializer ifs{ filepath() };
 			EXPECT_TRUE(deserialize(c, ifs));
 			EXPECT_EQ(c, c_comp);
 		}
 	};
+
 	test_buf1(std::vector<int>{});
 	test_buf1(std::vector<potato>{});
 	test_buf1(std::vector<std::array<int, 4>>{});
@@ -223,7 +246,7 @@ TEST(serialize, vector_string) {
 
 		typename buf_t::value_type::value_type a3{ { 't' }, { 'e' }, { 's' },
 			{ 't' } };
-		typename buf_t::value_type a2;
+		typename buf_t::value_type a2{};
 		for (int i = 0; i < 4; ++i) {
 			a2.push_back(a3);
 		}
@@ -232,13 +255,13 @@ TEST(serialize, vector_string) {
 		}
 
 		{
-			std::ofstream ofs{ filepath(), std::ios::binary };
+			fea::serializer ofs{ filepath() };
 			serialize(c_comp, ofs);
 		}
 
 		{
 			buf_t c{};
-			std::ifstream ifs{ filepath(), std::ios::binary };
+			fea::deserializer ifs{ filepath() };
 			EXPECT_TRUE(deserialize(c, ifs));
 			EXPECT_EQ(c, c_comp);
 		}
@@ -254,21 +277,27 @@ TEST(serialize, vector_string) {
 }
 
 TEST(serialize, map) {
+
 	auto test_map1 = [](auto m_type) {
 		using map_t = std::decay_t<decltype(m_type)>;
 		map_t c_comp{};
+
+		static_assert(fea::detail::is_container_v<map_t>,
+				"serialize.cpp : test failed");
+		static_assert(!fea::detail::is_contiguous_v<map_t>,
+				"serialize.cpp : test failed");
 
 		{
 			for (int i = 0; i < 4; ++i) {
 				c_comp.insert({ { i }, { i } });
 			}
-			std::ofstream ofs{ filepath(), std::ios::binary };
+			fea::serializer ofs{ filepath() };
 			serialize(c_comp, ofs);
 		}
 
 		{
 			map_t c{};
-			std::ifstream ifs{ filepath(), std::ios::binary };
+			fea::deserializer ifs{ filepath() };
 			EXPECT_TRUE(deserialize(c, ifs));
 			EXPECT_EQ(c, c_comp);
 		}
@@ -290,11 +319,11 @@ TEST(serialize, map) {
 
 		// std::map<potato, std::map<int, std::map<potato, int>>> c_comp;
 
-		typename map_t::mapped_type::mapped_type a3;
+		typename map_t::mapped_type::mapped_type a3{};
 		for (int i = 0; i < 4; ++i) {
 			a3.insert({ { i }, { i } });
 		}
-		typename map_t::mapped_type a2;
+		typename map_t::mapped_type a2{};
 		for (int i = 0; i < 4; ++i) {
 			a2.insert({ i, a3 });
 		}
@@ -303,13 +332,13 @@ TEST(serialize, map) {
 		}
 
 		{
-			std::ofstream ofs{ filepath(), std::ios::binary };
+			fea::serializer ofs{ filepath() };
 			serialize(c_comp, ofs);
 		}
 
 		{
 			map_t c{};
-			std::ifstream ifs{ filepath(), std::ios::binary };
+			fea::deserializer ifs{ filepath() };
 			EXPECT_TRUE(deserialize(c, ifs));
 			EXPECT_EQ(c, c_comp);
 		}
@@ -334,17 +363,22 @@ TEST(serialize, set) {
 		using set_t = std::decay_t<decltype(m_type)>;
 		set_t c_comp{};
 
+		static_assert(fea::detail::is_container_v<set_t>,
+				"serialize.cpp : test failed");
+		static_assert(!fea::detail::is_contiguous_v<set_t>,
+				"serialize.cpp : test failed");
+
 		{
 			for (int i = 0; i < 4; ++i) {
 				c_comp.insert({ i });
 			}
-			std::ofstream ofs{ filepath(), std::ios::binary };
+			fea::serializer ofs{ filepath() };
 			serialize(c_comp, ofs);
 		}
 
 		{
 			set_t c{};
-			std::ifstream ifs{ filepath(), std::ios::binary };
+			fea::deserializer ifs{ filepath() };
 			EXPECT_TRUE(deserialize(c, ifs));
 			EXPECT_EQ(c, c_comp);
 		}
@@ -361,11 +395,11 @@ TEST(serialize, set) {
 
 		// std::set<std::set<std::set<potato>>> c_comp;
 
-		typename set_t::value_type::value_type a3;
+		typename set_t::value_type::value_type a3{};
 		for (int i = 0; i < 4; ++i) {
 			a3.insert({ i });
 		}
-		typename set_t::value_type a2;
+		typename set_t::value_type a2{};
 		for (int i = 0; i < 4; ++i) {
 			a2.insert(a3);
 		}
@@ -374,13 +408,13 @@ TEST(serialize, set) {
 		}
 
 		{
-			std::ofstream ofs{ filepath(), std::ios::binary };
+			fea::serializer ofs{ filepath() };
 			serialize(c_comp, ofs);
 		}
 
 		{
 			set_t c{};
-			std::ifstream ifs{ filepath(), std::ios::binary };
+			fea::deserializer ifs{ filepath() };
 			EXPECT_TRUE(deserialize(c, ifs));
 			EXPECT_EQ(c, c_comp);
 		}
@@ -401,6 +435,13 @@ TEST(serialize, pair_tuple) {
 		using tup_t = std::decay_t<decltype(m_type)>;
 		tup_t c_comp{};
 
+		static_assert(!fea::detail::is_container_v<tup_t>,
+				"serialize.cpp : test failed");
+		static_assert(!fea::detail::is_contiguous_v<tup_t>,
+				"serialize.cpp : test failed");
+		static_assert(
+				fea::detail::is_tuple_v<tup_t>, "serialize.cpp : test failed");
+
 		{
 			std::get<0>(c_comp) = { 0 };
 			std::get<1>(c_comp) = { 1 };
@@ -409,21 +450,23 @@ TEST(serialize, pair_tuple) {
 				std::get<3>(c_comp) = { 3 };
 			}
 
-			std::ofstream ofs{ filepath(), std::ios::binary };
+			fea::serializer ofs{ filepath() };
 			serialize(c_comp, ofs);
 		}
 
 		{
 			tup_t c{};
-			std::ifstream ifs{ filepath(), std::ios::binary };
+			fea::deserializer ifs{ filepath() };
 			EXPECT_TRUE(deserialize(c, ifs));
 			EXPECT_EQ(c, c_comp);
 		}
 	};
+
 	test_tup1(std::pair<int, int>{});
 	test_tup1(std::pair<potato, int>{});
 	test_tup1(std::pair<int, potato>{});
 	test_tup1(std::pair<potato, potato>{});
+
 
 	test_tup1(std::tuple<int, int>{});
 	test_tup1(std::tuple<potato, int>{});
@@ -453,13 +496,13 @@ TEST(serialize, pair_tuple) {
 		std::get<1>(c_comp) = a2;
 
 		{
-			std::ofstream ofs{ filepath(), std::ios::binary };
+			fea::serializer ofs{ filepath() };
 			serialize(c_comp, ofs);
 		}
 
 		{
 			tup_t c{};
-			std::ifstream ifs{ filepath(), std::ios::binary };
+			fea::deserializer ifs{ filepath() };
 			EXPECT_TRUE(deserialize(c, ifs));
 			EXPECT_EQ(c, c_comp);
 		}
@@ -493,17 +536,22 @@ TEST(serialize, deque) {
 		using q_t = std::decay_t<decltype(m_type)>;
 		q_t c_comp{};
 
+		static_assert(fea::detail::is_container_v<q_t>,
+				"serialize.cpp : test failed");
+		static_assert(!fea::detail::is_contiguous_v<q_t>,
+				"serialize.cpp : test failed");
+
 		{
 			for (int i = 0; i < 4; ++i) {
 				c_comp.push_back({ i });
 			}
-			std::ofstream ofs{ filepath(), std::ios::binary };
+			fea::serializer ofs{ filepath() };
 			serialize(c_comp, ofs);
 		}
 
 		{
 			q_t c{};
-			std::ifstream ifs{ filepath(), std::ios::binary };
+			fea::deserializer ifs{ filepath() };
 			EXPECT_TRUE(deserialize(c, ifs));
 			EXPECT_EQ(c, c_comp);
 		}
@@ -516,11 +564,11 @@ TEST(serialize, deque) {
 		using q_t = std::decay_t<decltype(m_type)>;
 		q_t c_comp{};
 
-		typename q_t::value_type::value_type a3;
+		typename q_t::value_type::value_type a3{};
 		for (int i = 0; i < 4; ++i) {
 			a3.push_back({ i });
 		}
-		typename q_t::value_type a2;
+		typename q_t::value_type a2{};
 		for (int i = 0; i < 4; ++i) {
 			a2.push_back(a3);
 		}
@@ -529,13 +577,13 @@ TEST(serialize, deque) {
 		}
 
 		{
-			std::ofstream ofs{ filepath(), std::ios::binary };
+			fea::serializer ofs{ filepath() };
 			serialize(c_comp, ofs);
 		}
 
 		{
 			q_t c{};
-			std::ifstream ifs{ filepath(), std::ios::binary };
+			fea::deserializer ifs{ filepath() };
 			EXPECT_TRUE(deserialize(c, ifs));
 			EXPECT_EQ(c, c_comp);
 		}
@@ -552,17 +600,22 @@ TEST(serialize, queue) {
 		using q_t = std::decay_t<decltype(m_type)>;
 		q_t c_comp{};
 
+		static_assert(!fea::detail::is_container_v<q_t>,
+				"serialize.cpp : test failed");
+		static_assert(!fea::detail::is_contiguous_v<q_t>,
+				"serialize.cpp : test failed");
+
 		{
 			for (int i = 0; i < 4; ++i) {
 				c_comp.push({ i });
 			}
-			std::ofstream ofs{ filepath(), std::ios::binary };
+			fea::serializer ofs{ filepath() };
 			serialize(c_comp, ofs);
 		}
 
 		{
 			q_t c{};
-			std::ifstream ifs{ filepath(), std::ios::binary };
+			fea::deserializer ifs{ filepath() };
 			EXPECT_TRUE(deserialize(c, ifs));
 			EXPECT_EQ(c, c_comp);
 		}
@@ -575,11 +628,11 @@ TEST(serialize, queue) {
 		using q_t = std::decay_t<decltype(m_type)>;
 		q_t c_comp{};
 
-		typename q_t::value_type::value_type a3;
+		typename q_t::value_type::value_type a3{};
 		for (int i = 0; i < 4; ++i) {
 			a3.push({ i });
 		}
-		typename q_t::value_type a2;
+		typename q_t::value_type a2{};
 		for (int i = 0; i < 4; ++i) {
 			a2.push(a3);
 		}
@@ -588,13 +641,13 @@ TEST(serialize, queue) {
 		}
 
 		{
-			std::ofstream ofs{ filepath(), std::ios::binary };
+			fea::serializer ofs{ filepath() };
 			serialize(c_comp, ofs);
 		}
 
 		{
 			q_t c{};
-			std::ifstream ifs{ filepath(), std::ios::binary };
+			fea::deserializer ifs{ filepath() };
 			EXPECT_TRUE(deserialize(c, ifs));
 			EXPECT_EQ(c, c_comp);
 		}
@@ -646,13 +699,13 @@ TEST(serialize, evewything) {
 	}
 
 	{
-		std::ofstream ofs{ filepath(), std::ios::binary };
+		fea::serializer ofs{ filepath() };
 		serialize(megadoodoo, ofs);
 	}
 
 	{
 		decltype(megadoodoo) c{};
-		std::ifstream ifs{ filepath(), std::ios::binary };
+		fea::deserializer ifs{ filepath() };
 		EXPECT_TRUE(deserialize(c, ifs));
 		EXPECT_EQ(c, megadoodoo);
 	}
