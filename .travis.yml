@@ -142,6 +142,7 @@ script:
   - cmake .. -DCMAKE_BUILD_TYPE=$CONFIG $CPP14
   - cmake --build . --config $CONFIG
   - ./bin/fea_libs_tests
+  - ./bin/fea_libs_nothrow_tests
 
 notifications:
   email:

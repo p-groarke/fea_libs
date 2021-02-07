@@ -119,9 +119,9 @@ struct serializer {
 		}
 	}
 
-	// Overload for single objects.
+	// Doesn't write type size. Used for sentinels.
 	template <class T>
-	void write(const T& t) {
+	void write_unvalidated(const T& t) {
 		static_assert(std::is_trivially_copyable_v<T>,
 				"fea::serializer : Cannot serialize non-trivially copyable "
 				"type. "
@@ -130,8 +130,14 @@ struct serializer {
 
 		// No count sentinel for single objects.
 		push_back(&t, 1, &_data);
-		// But keep track of binary compat.
+	}
+
+	// Overload for single objects.
+	template <class T>
+	void write(const T& t) {
+		// Keep track of binary compat.
 		push_size_token(sizeof(T));
+		write_unvalidated(t);
 	}
 
 	// Overload for buffers.
@@ -143,14 +149,7 @@ struct serializer {
 				"You must implement 'friend void serialize(const T&, "
 				"fea::serializer&);'");
 
-		// For buffers, outputs count before and after data to use as corruption
-		// sentinels.
-		msize_t count_sentinel = msize_t(count);
-		push_back(&count_sentinel, 1, &_data);
 		push_back(ts, count, &_data);
-		push_back(&count_sentinel, 1, &_data);
-
-		// Now write size info.
 		push_size_token(sizeof(T));
 	}
 
@@ -171,7 +170,8 @@ struct serializer {
 		size_t table_byte_size = sizeof(detail::size_token) * _size_table.size()
 				+ sizeof(msize_t) * 2;
 
-		std::vector<std::byte> ret(table_byte_size + _data.size());
+		std::vector<std::byte> ret;
+		ret.reserve(table_byte_size + _data.size());
 
 		// Write size_table to beginning of data stream.
 
@@ -210,7 +210,7 @@ private:
 	void push_size_token(size_t obj_size) {
 		assert(obj_size != 0);
 
-		if (_size_table.back().size == obj_size) {
+		if (!_size_table.empty() && _size_table.back().size == obj_size) {
 			// Previous objects were same size, increment count.
 			++_size_table.back().count;
 			return;
@@ -302,6 +302,17 @@ struct deserializer {
 		_data_idx = 0;
 	}
 
+	// Doesn't register type sizes. Used for sentinels.
+	template <class T>
+	[[nodiscard]] bool read_unvalidated(T& t) {
+		static_assert(std::is_trivially_copyable_v<T>,
+				"fea::deserializer : Cannot deserialize non-trivially copyable "
+				"type. "
+				"You must implement 'friend bool deserialize(T&, "
+				"fea::deserializer&);'");
+		return pop_front(&t, 1);
+	}
+
 	// Overload for single object.
 	template <class T>
 	[[nodiscard]] bool read(T& t) {
@@ -310,14 +321,19 @@ struct deserializer {
 		if (!validate_size<T>()) {
 			return false;
 		}
-
 		// Size matches, deserialize.
-		return pop_front(&t, 1);
+		return read_unvalidated(t);
 	}
 
 	// Overload for object buffers.
 	template <class T>
 	[[nodiscard]] bool read(T* t, size_t count) {
+		static_assert(std::is_trivially_copyable_v<T>,
+				"fea::deserializer : Cannot deserialize non-trivially copyable "
+				"type. "
+				"You must implement 'friend bool deserialize(T&, "
+				"fea::deserializer&);'");
+
 		// First, check if the provided size matches the expect size.
 		// AKA, did you break your binary compatibility?
 		if (!validate_size<T>()) {
@@ -325,23 +341,7 @@ struct deserializer {
 		}
 
 		// Size matches, deserialize.
-		msize_t size = 0;
-		msize_t size_sentinel = 0;
-		if (!pop_front(&size, 1)) {
-			return false;
-		}
-		if (!pop_front(&t, count)) {
-			return false;
-		}
-		if (!pop_front(&size_sentinel, 1)) {
-			return false;
-		}
-
-		if (size != size_sentinel) {
-			// Corrupted data.
-			assert(false);
-			return false;
-		}
+		return pop_front(t, count);
 	}
 
 
@@ -370,6 +370,17 @@ private:
 			return false;
 		}
 
+		// Special check for first one.
+		if (_size_table[_size_table_idx].size == 0) {
+			assert(false);
+			return false;
+		}
+
+		if (_size_table[_size_table_idx].count == 0) {
+			assert(false);
+			return false;
+		}
+
 		_deserialized_counts.resize(_size_table.size(), 0);
 		return true;
 	}
@@ -393,6 +404,7 @@ private:
 				== _deserialized_counts[_size_table_idx]) {
 			++_size_table_idx;
 
+			// _size_table_idx 0 checks are done in ctor.
 			if (_size_table[_size_table_idx].size == 0) {
 				assert(false);
 				return false;
@@ -409,6 +421,7 @@ private:
 			return false;
 		}
 		++_deserialized_counts[_size_table_idx];
+		return true;
 	}
 
 	// The file to read.
@@ -417,7 +430,7 @@ private:
 	// This is a rolling vector of type sizes, in order of written data.
 	// A new size_info is added when a new type size is encountered.
 	// When reading, the deserializer will return failure if their is a mismatch
-	// between your provided type sizes and read data.
+	// between your provided type sizes and read in data.
 	std::vector<detail::size_token> _size_table;
 	std::vector<msize_t> _deserialized_counts;
 

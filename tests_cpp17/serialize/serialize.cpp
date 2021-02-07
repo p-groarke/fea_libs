@@ -84,19 +84,6 @@ using fea::deserialize;
 using fea::serialize;
 
 TEST(serialize, basics) {
-	// Internal stuff, you never need to bother with this unless you are working
-	// with templates youself.
-	// static_assert(FEA_NEEDS_NESTING(std::vector<std::vector<int>>),
-	//		"serialize.cpp : test failed");
-	// static_assert(
-	//		FEA_NEEDS_NESTING(std::vector<int>), "serialize.cpp : test failed");
-	// static_assert(!FEA_NEEDS_NESTING(int), "serialize.cpp : test failed");
-
-	// static_assert(FEA_NEEDS_NESTING(std::vector<std::vector<potato>>),
-	//		"serialize.cpp : test failed");
-
-	// static_assert(FEA_NEEDS_NESTING(potato), "serialize.cpp : test failed");
-
 	// Test a simple vector.
 	{
 		std::vector<potato> potatoes(4);
@@ -156,10 +143,10 @@ TEST(serialize, array) {
 		using T = typename arr_t::value_type;
 		arr_t c_comp{ { T{ 1 }, T{ 2 }, T{ 3 }, T{ 4 } } };
 
-		static_assert(fea::detail::is_container_v<arr_t>,
-				"serialize.cpp : test failed");
-		static_assert(fea::detail::is_contiguous_v<arr_t>,
-				"serialize.cpp : test failed");
+		static_assert(
+				fea::is_container_v<arr_t>, "serialize.cpp : test failed");
+		static_assert(
+				fea::is_contiguous_v<arr_t>, "serialize.cpp : test failed");
 
 		{
 			fea::serializer ofs{ filepath() };
@@ -213,10 +200,10 @@ TEST(serialize, vector_string) {
 		using vec_t = std::decay_t<decltype(v_type)>;
 		vec_t c_comp{ { 't' }, { 'e' }, { 's' }, { 't' } };
 
-		static_assert(fea::detail::is_container_v<vec_t>,
-				"serialize.cpp : test failed");
-		static_assert(fea::detail::is_contiguous_v<vec_t>,
-				"serialize.cpp : test failed");
+		static_assert(
+				fea::is_container_v<vec_t>, "serialize.cpp : test failed");
+		static_assert(
+				fea::is_contiguous_v<vec_t>, "serialize.cpp : test failed");
 
 		{
 			fea::serializer ofs{ filepath() };
@@ -277,15 +264,14 @@ TEST(serialize, vector_string) {
 }
 
 TEST(serialize, map) {
-
 	auto test_map1 = [](auto m_type) {
 		using map_t = std::decay_t<decltype(m_type)>;
 		map_t c_comp{};
 
-		static_assert(fea::detail::is_container_v<map_t>,
-				"serialize.cpp : test failed");
-		static_assert(!fea::detail::is_contiguous_v<map_t>,
-				"serialize.cpp : test failed");
+		static_assert(
+				fea::is_container_v<map_t>, "serialize.cpp : test failed");
+		static_assert(
+				!fea::is_contiguous_v<map_t>, "serialize.cpp : test failed");
 
 		{
 			for (int i = 0; i < 4; ++i) {
@@ -363,10 +349,10 @@ TEST(serialize, set) {
 		using set_t = std::decay_t<decltype(m_type)>;
 		set_t c_comp{};
 
-		static_assert(fea::detail::is_container_v<set_t>,
-				"serialize.cpp : test failed");
-		static_assert(!fea::detail::is_contiguous_v<set_t>,
-				"serialize.cpp : test failed");
+		static_assert(
+				fea::is_container_v<set_t>, "serialize.cpp : test failed");
+		static_assert(
+				!fea::is_contiguous_v<set_t>, "serialize.cpp : test failed");
 
 		{
 			for (int i = 0; i < 4; ++i) {
@@ -435,12 +421,12 @@ TEST(serialize, pair_tuple) {
 		using tup_t = std::decay_t<decltype(m_type)>;
 		tup_t c_comp{};
 
-		static_assert(!fea::detail::is_container_v<tup_t>,
-				"serialize.cpp : test failed");
-		static_assert(!fea::detail::is_contiguous_v<tup_t>,
-				"serialize.cpp : test failed");
 		static_assert(
-				fea::detail::is_tuple_v<tup_t>, "serialize.cpp : test failed");
+				!fea::is_container_v<tup_t>, "serialize.cpp : test failed");
+		static_assert(
+				!fea::is_contiguous_v<tup_t>, "serialize.cpp : test failed");
+		static_assert(
+				fea::is_tuple_like_v<tup_t>, "serialize.cpp : test failed");
 
 		{
 			std::get<0>(c_comp) = { 0 };
@@ -536,10 +522,9 @@ TEST(serialize, deque) {
 		using q_t = std::decay_t<decltype(m_type)>;
 		q_t c_comp{};
 
-		static_assert(fea::detail::is_container_v<q_t>,
-				"serialize.cpp : test failed");
-		static_assert(!fea::detail::is_contiguous_v<q_t>,
-				"serialize.cpp : test failed");
+		static_assert(fea::is_container_v<q_t>, "serialize.cpp : test failed");
+		static_assert(
+				!fea::is_contiguous_v<q_t>, "serialize.cpp : test failed");
 
 		{
 			for (int i = 0; i < 4; ++i) {
@@ -600,10 +585,9 @@ TEST(serialize, queue) {
 		using q_t = std::decay_t<decltype(m_type)>;
 		q_t c_comp{};
 
-		static_assert(!fea::detail::is_container_v<q_t>,
-				"serialize.cpp : test failed");
-		static_assert(!fea::detail::is_contiguous_v<q_t>,
-				"serialize.cpp : test failed");
+		static_assert(!fea::is_container_v<q_t>, "serialize.cpp : test failed");
+		static_assert(
+				!fea::is_contiguous_v<q_t>, "serialize.cpp : test failed");
 
 		{
 			for (int i = 0; i < 4; ++i) {

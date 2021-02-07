@@ -35,6 +35,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdlib>
 #include <string>
 
+namespace std {
+// Most popular ones.
+class runtime_error;
+class invalid_argument;
+class out_of_range;
+} // namespace std
+
 #if !defined(FEA_NOTHROW)
 #include <stdexcept>
 #endif
@@ -42,12 +49,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace fea {
 // Throws if FEA_NOTHROW is not defined, else prints the error message and
 // exits with error code.
+template <class Ex = std::runtime_error>
 inline void maybe_throw(const char* func_name, const std::string& message) {
 	// Always assert.
 	assert(false);
 
 #if !defined(FEA_NOTHROW)
-	throw std::runtime_error{ std::string{ func_name } + " : " + message };
+	throw Ex{ std::string{ func_name } + " : " + message };
 #else
 	fprintf(stderr, "%s : %s\n", func_name, message.c_str());
 	std::exit(EXIT_FAILURE);

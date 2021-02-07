@@ -105,6 +105,8 @@ TEST(fsm, example) {
 	// Currently doesn't handle walk to jump transition.
 #if FEA_DEBUG
 	EXPECT_DEATH(machine.trigger<transition::do_jump>(mtest_data), "");
+#elif defined(FEA_NOTHROW)
+	EXPECT_DEATH(machine.trigger<transition::do_jump>(mtest_data), "");
 #else
 	EXPECT_THROW(machine.trigger<transition::do_jump>(mtest_data),
 			std::invalid_argument);

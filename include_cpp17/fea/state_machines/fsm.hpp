@@ -30,16 +30,14 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/utils/throw.hpp"
+
 #include <algorithm>
 #include <array>
 #include <bitset>
 #include <cassert>
 #include <cstdint>
 #include <functional>
-
-#if !defined(FEA_NOTHROW)
-#include <stdexcept>
-#endif
 
 namespace fea {
 /*
@@ -183,14 +181,9 @@ struct fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 	// transition.
 	template <TransitionEnum Transition>
 	StateEnum transition_target() const {
-		assert(std::get<size_t(Transition)>(_transitions) != StateEnum::count
-				&& "fsm_state : unhandled transition");
-
-#if !defined(FEA_NOTHROW)
 		if (std::get<size_t(Transition)>(_transitions) == StateEnum::count) {
-			throw std::invalid_argument{ "fsm_state : unhandled transition" };
+			fea::maybe_throw(__FUNCTION__, "Unhandled transition.");
 		}
-#endif
 
 		return std::get<size_t(Transition)>(_transitions);
 	}
@@ -411,24 +404,14 @@ private:
 	}
 
 	const state_t& get_state(StateEnum s) const {
-		assert(s != StateEnum::count && "fsm : Accessing invalid state.");
-#if !defined(FEA_NOTHROW)
 		if (s == StateEnum::count) {
-			throw std::runtime_error{ "fsm : Accessing invalid state." };
+			fea::maybe_throw(__FUNCTION__, "Accessing invalid state.");
 		}
-#endif
 
-		assert(_state_valid[size_t(s)]
-				&& "fsm : Accessing invalid state, did you forget to add a "
-				   "state?");
-
-#if !defined(FEA_NOTHROW)
 		if (!_state_valid[size_t(s)]) {
-			throw std::runtime_error{
-				"fsm : Accessing invalid state, did you forget to add a state?"
-			};
+			fea::maybe_throw(__FUNCTION__,
+					"Accessing invalid state, did you forget to add a state?");
 		}
-#endif
 
 		return _states[size_t(s)];
 	}

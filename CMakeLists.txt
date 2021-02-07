@@ -133,27 +133,39 @@ endif()
 
 # Tests
 if (${FEA_TESTS})
-	enable_testing()
+	# enable_testing()
 
 	# Tests external dependencies.
 	find_package(GTest CONFIG REQUIRED)
 
 	# Test Project
 	set(TEST_NAME ${PROJECT_NAME}_tests)
+	set(TEST_NAME_NOTHROW ${PROJECT_NAME}_nothrow_tests)
 	file(GLOB_RECURSE TEST_SOURCES_CPP14 "tests_cpp14/*.cpp" "tests_cpp14/*.hpp" "tests_cpp14/*.tpp")
 	file(GLOB_RECURSE TEST_SOURCES_CPP17 "tests_cpp17/*.cpp" "tests_cpp17/*.hpp" "tests_cpp17/*.tpp")
+
 	add_executable(${TEST_NAME} ${TEST_SOURCES_CPP14}
 		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_SOURCES_CPP17}>"
 	)
 	set_compile_options(${TEST_NAME} PRIVATE)
 
+	add_executable(${TEST_NAME_NOTHROW} ${TEST_SOURCES_CPP14}
+		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_SOURCES_CPP17}>"
+	)
+	set_compile_options(${TEST_NAME_NOTHROW} PRIVATE)
+	target_compile_definitions(${TEST_NAME_NOTHROW} PRIVATE FEA_NOTHROW)
+
 	# For the extreme serialization test.
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 		target_compile_options(${TEST_NAME} PRIVATE /bigobj)
+		target_compile_options(${TEST_NAME_NOTHROW} PRIVATE /bigobj)
 	endif()
 
 	# g++ 8 needs to link with seperate filesystem library.
 	target_link_libraries(${TEST_NAME} PUBLIC ${PROJECT_NAME} GTest::GTest TBB::TBB
+		$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:${CMAKE_CXX_COMPILER_VERSION},9.0>>:stdc++fs>
+	)
+	target_link_libraries(${TEST_NAME_NOTHROW} PUBLIC ${PROJECT_NAME} GTest::GTest TBB::TBB
 		$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:${CMAKE_CXX_COMPILER_VERSION},9.0>>:stdc++fs>
 	)
 
@@ -165,9 +177,10 @@ if (${FEA_TESTS})
 
 	if (${FEA_BENCHMARKS})
 		target_compile_definitions(${TEST_NAME} PRIVATE FEA_BENCHMARKS)
+		target_compile_definitions(${TEST_NAME_NOTHROW} PRIVATE FEA_BENCHMARKS)
 	endif()
 
-	gtest_discover_tests(${TEST_NAME})
+	# gtest_discover_tests(${TEST_NAME})
 	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${TEST_NAME})
 
 	# Copy test data on build.

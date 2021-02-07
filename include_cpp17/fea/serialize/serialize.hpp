@@ -34,6 +34,7 @@
 #include "fea/meta/traits.hpp"
 #include "fea/meta/tuple.hpp"
 #include "fea/serialize/serializer.hpp"
+#include "fea/utils/memory.hpp"
 
 #include <iterator>
 #include <type_traits>
@@ -84,28 +85,13 @@ void serialize(const T&, fea::serializer&);
 template <class T, class... Args>
 void serialize(const std::queue<T, Args...>&, fea::serializer&);
 
+template <class T>
+[[nodiscard]] bool deserialize(T&, fea::deserializer&);
+
+template <class T, class... Args>
+[[nodiscard]] bool deserialize(std::queue<T, Args...>&, fea::deserializer&);
+
 namespace detail {
-template <class T>
-using has_begin = decltype(std::begin(std::declval<T>()));
-template <class T>
-using has_end = decltype(std::end(std::declval<T>()));
-template <class T>
-using has_data = decltype(std::data(std::declval<T>()));
-template <class T>
-using has_size = decltype(std::size(std::declval<T>()));
-template <class T>
-using has_get = decltype(std::get<0>(std::declval<T>()));
-
-template <class T>
-inline constexpr bool is_container_v
-		= fea::is_detected_v<has_begin, T>&& fea::is_detected_v<has_end, T>;
-
-template <class T>
-inline constexpr bool is_contiguous_v
-		= fea::is_detected_v<has_data, T>&& fea::is_detected_v<has_size, T>;
-
-template <class T>
-inline constexpr bool is_tuple_v = fea::is_detected_v<has_get, T>;
 
 // c++20 has contiguous_iterator_tag
 #if !FEA_CPP20
@@ -121,19 +107,82 @@ void serialize(
 	using traits_t = std::iterator_traits<Iter>;
 	using val_t = typename traits_t::value_type;
 
-	if constexpr (std::is_trivially_copyable_v<val_t>) {
-		// Limits vector resizing...
-		// os.reserve<val_t>(std::distance(begin, end));
-		for (Iter it = begin; it != end; ++it) {
-			os.write(*it);
+	using msize_t = FEA_SERIALIZE_SIZE_T;
+	msize_t size = msize_t(std::distance(begin, end));
+
+	os.write_unvalidated(size);
+	using fea::serialize;
+	for (Iter it = begin; it != end; ++it) {
+		serialize(*it, os);
+	}
+	os.write_unvalidated(size);
+}
+
+template <class T>
+auto get_pair_type() {
+	if constexpr (is_pair_v<T>) {
+		if constexpr (fea::is_first_const_v<T>) {
+			return fea::remove_nested_const_t<T>{};
+		} else {
+			return T{};
 		}
 	} else {
-		using fea::serialize;
-		for (Iter it = begin; it != end; ++it) {
-			serialize(*it, os);
-		}
+		return T{};
 	}
 }
+
+template <class T>
+[[nodiscard]] bool deserialize(
+		T& t, fea::deserializer& is, std::input_iterator_tag) {
+
+	using Iter = typename T::iterator;
+	using traits_t = std::iterator_traits<Iter>;
+	using val_t = typename traits_t::value_type;
+	using msize_t = FEA_SERIALIZE_SIZE_T;
+
+	msize_t size = 0;
+	if (!is.read_unvalidated(size)) {
+		return false;
+	}
+
+	if constexpr (fea::is_detected_v<has_reserve, T>) {
+		t.reserve(size_t(size));
+	}
+
+	auto doit = [](auto& t, auto& is, auto& v) {
+		using fea::deserialize;
+		if (!deserialize(v, is)) {
+			return false;
+		}
+		std::inserter(t, std::end(t)) = fea::maybe_move(v);
+		return true;
+	};
+
+	for (size_t i = 0; i < size_t(size); ++i) {
+		// if (!deserialize(std::inserter(t, std::end(t)), is)) {
+		//	return false;
+		//}
+
+		decltype(get_pair_type<val_t>()) v;
+		using fea::deserialize;
+		if (!deserialize(v, is)) {
+			return false;
+		}
+		std::inserter(t, std::end(t)) = fea::maybe_move(v);
+	}
+
+	msize_t size2 = 0;
+	if (!is.read_unvalidated(size2)) {
+		return false;
+	}
+
+	if (size != size2) {
+		assert(false);
+		return false;
+	}
+	return true;
+}
+
 
 template <class Iter>
 void serialize(
@@ -142,20 +191,92 @@ void serialize(
 	using traits_t = std::iterator_traits<Iter>;
 	using val_t = typename traits_t::value_type;
 
+	using msize_t = FEA_SERIALIZE_SIZE_T;
+	msize_t size = msize_t(std::distance(begin, end));
+
+	os.write_unvalidated(size);
 	if constexpr (std::is_trivially_copyable_v<val_t>) {
 		os.write(std::addressof(*begin), std::distance(begin, end));
 	} else {
 		using fea::serialize;
-		for (Iter it = begin; it != end; ++it) {
+		for (auto it = begin; it != end; ++it) {
 			serialize(*it, os);
 		}
 	}
+	os.write_unvalidated(size);
+}
+
+template <class T>
+[[nodiscard]] bool deserialize(
+		T& t, fea::deserializer& is, contiguous_iterator_tag) {
+
+	using Iter = typename T::iterator;
+	using traits_t = std::iterator_traits<Iter>;
+	using val_t = typename traits_t::value_type;
+	using msize_t = FEA_SERIALIZE_SIZE_T;
+
+	msize_t size = 0;
+	if (!is.read_unvalidated(size)) {
+		return false;
+	}
+
+	if constexpr (fea::is_detected_v<has_resize, T>) {
+		t.resize(size_t(size));
+	} else {
+		if (size_t(std::distance(std::begin(t), std::end(t))) != size_t(size)) {
+			assert(false);
+			return false;
+		}
+	}
+
+	if constexpr (std::is_trivially_copyable_v<val_t>) {
+		if (!is.read(std::addressof(*std::begin(t)), size_t(size))) {
+			return false;
+		}
+	} else {
+		using fea::deserialize;
+		for (size_t i = 0; i < size_t(size); ++i) {
+			if (!deserialize(t[i], is)) {
+				return false;
+			}
+		}
+	}
+
+	msize_t size2 = 0;
+	if (!is.read_unvalidated(size2)) {
+		return false;
+	}
+
+	if (size != size2) {
+		assert(false);
+		return false;
+	}
+	return true;
 }
 
 template <class... Args, template <class...> class Tup>
 void serialize_tup(const Tup<Args...>& t, fea::serializer& os) {
-	using fea::serialize;
-	fea::tuple_for_each([&](const auto& v) { serialize(v, os); }, t);
+	fea::tuple_for_each(
+			[&](const auto& v) {
+				using fea::serialize;
+				serialize(v, os);
+			},
+			t);
+}
+
+template <class... Args, template <class...> class Tup>
+[[nodiscard]] bool deserialize_tup(Tup<Args...>& t, fea::deserializer& is) {
+	bool ok = true;
+	fea::tuple_for_each(
+			[&](auto& v) {
+				using fea::deserialize;
+				if (!ok) {
+					return;
+				}
+				ok &= deserialize(v, is);
+			},
+			t);
+	return ok;
 }
 } // namespace detail
 
@@ -176,23 +297,20 @@ void serialize(const T*, fea::serializer&) {
 // for custom non-trivially-copyable types.
 template <class T>
 void serialize(const T& t, fea::serializer& os) {
-	if constexpr (detail::is_container_v<T>) {
+	if constexpr (fea::is_container_v<T>) {
 		// Is container, call iterator overload.
 		using it_t = decltype(std::begin(t));
 		using traits_t = std::iterator_traits<it_t>;
 		using category_t = typename traits_t::iterator_category;
 
-#if FEA_CPP20
-		serialize(std::begin(t), std::end(t), os, category_t{});
-#else
-		if constexpr (detail::is_contiguous_v<T>) {
+		if constexpr (fea::is_contiguous_v<T>) {
 			detail::serialize(std::begin(t), std::end(t), os,
 					detail::contiguous_iterator_tag{});
 		} else {
 			detail::serialize(std::begin(t), std::end(t), os, category_t{});
 		}
-#endif
-	} else if constexpr (detail::is_tuple_v<T>) {
+
+	} else if constexpr (fea::is_tuple_like_v<T>) {
 		// Is a tuple-like thing (has std::get).
 		detail::serialize_tup(t, os);
 	} else {
@@ -203,8 +321,28 @@ void serialize(const T& t, fea::serializer& os) {
 }
 
 template <class T>
-[[nodiscard]] bool deserialize(T&, fea::deserializer&) {
-	return false;
+[[nodiscard]] bool deserialize(T& t, fea::deserializer& is) {
+	if constexpr (fea::is_container_v<T>) {
+		// Is container, call iterator overload.
+		using it_t = decltype(std::begin(t));
+		using traits_t = std::iterator_traits<it_t>;
+		using category_t = typename traits_t::iterator_category;
+
+		if constexpr (fea::is_contiguous_v<T>) {
+			return detail::deserialize(
+					t, is, detail::contiguous_iterator_tag{});
+		} else {
+			return detail::deserialize(t, is, category_t{});
+		}
+
+	} else if constexpr (fea::is_tuple_like_v<T>) {
+		// Is a tuple-like thing (has std::get).
+		return detail::deserialize_tup(t, is);
+	} else {
+		// Is not container or snow-flake, try to write as-is.
+		// static_asserts is_trivially_copyable.
+		return is.read(t);
+	}
 }
 
 // Helpers for snow-flake library types.
@@ -212,10 +350,41 @@ template <class T, class... Args>
 void serialize(const std::queue<T, Args...>& t, fea::serializer& os) {
 	using fea::serialize;
 	auto cpy = t;
+	FEA_SERIALIZE_SIZE_T size = cpy.size();
+	os.write_unvalidated(size);
 	while (!cpy.empty()) {
 		serialize(cpy.front(), os);
 		cpy.pop();
 	}
+	os.write_unvalidated(size);
+}
+
+template <class T, class... Args>
+[[nodiscard]] bool deserialize(
+		std::queue<T, Args...>& t, fea::deserializer& is) {
+	using fea::deserialize;
+	FEA_SERIALIZE_SIZE_T size = 0;
+	if (!is.read_unvalidated(size)) {
+		return false;
+	}
+	for (size_t i = 0; i < size_t(size); ++i) {
+		T v{};
+		if (!deserialize(v, is)) {
+			return false;
+		}
+		t.push(fea::maybe_move(v));
+	}
+
+	FEA_SERIALIZE_SIZE_T size2 = 0;
+	if (!is.read_unvalidated(size2)) {
+		return false;
+	}
+
+	if (size != size2) {
+		assert(false);
+		return false;
+	}
+	return true;
 }
 
 } // namespace fea

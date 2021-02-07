@@ -23,6 +23,7 @@ build:
   parallel: true
 test_script:
   - cmd: c:\projects\fea_libs\build\bin\fea_libs_tests.exe
+  - cmd: c:\projects\fea_libs\build\bin\fea_libs_nothrow_tests.exe
 for:
   -
     matrix:

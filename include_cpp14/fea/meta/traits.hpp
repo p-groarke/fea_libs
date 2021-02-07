@@ -190,4 +190,69 @@ template <template <class...> class T, template <class...> class U>
 FEA_INLINE_VAR constexpr bool is_same_template_v
 		= is_same_template<T, U>::value;
 
+// Removes the internal consts of a template template (like a tuple for ex).
+template <class T>
+struct remove_nested_const;
+
+template <class... Args, template <class...> class T>
+struct remove_nested_const<T<Args...>> {
+	using type = T<typename std::remove_const<Args>::type...>;
+};
+
+template <class T>
+using remove_nested_const_t = typename remove_nested_const<T>::type;
+
+// Checks if first type of template template is const.
+template <class T>
+struct is_first_const;
+
+template <class First, class... Args, template <class, class...> class T>
+struct is_first_const<T<First, Args...>> {
+	static constexpr bool value = std::is_const<First>::value;
+};
+
+template <class T>
+FEA_INLINE_VAR constexpr bool is_first_const_v = is_first_const<T>::value;
+
+
+// useful is_detected checkers.
+template <class T>
+using has_begin = decltype(std::begin(std::declval<T>()));
+template <class T>
+using has_end = decltype(std::end(std::declval<T>()));
+template <class T>
+using has_data = decltype(std::data(std::declval<T>()));
+template <class T>
+using has_size = decltype(std::size(std::declval<T>()));
+template <class T>
+using has_get = decltype(std::get<0>(std::declval<T>()));
+template <class T>
+using has_resize = decltype(std::declval<T>().resize(std::declval<size_t>()));
+template <class T>
+using has_reserve = decltype(std::declval<T>().reserve(std::declval<size_t>()));
+
+// Checks if a type is a pair.
+template <class T>
+struct is_pair : std::false_type {};
+
+template <class U1, class U2>
+struct is_pair<std::pair<U1, U2>> : std::true_type {};
+
+template <class T>
+inline constexpr bool is_pair_v = is_pair<T>::value;
+
+// Checks if a type has std::begin and std::end.
+template <class T>
+inline constexpr bool is_container_v
+		= fea::is_detected_v<has_begin, T>&& fea::is_detected_v<has_end, T>;
+
+// Checks if a type has std::data and std::size.
+template <class T>
+inline constexpr bool is_contiguous_v
+		= fea::is_detected_v<has_data, T>&& fea::is_detected_v<has_size, T>;
+
+// Checks if a type has std::get.
+template <class T>
+inline constexpr bool is_tuple_like_v = fea::is_detected_v<has_get, T>;
+
 } // namespace fea
