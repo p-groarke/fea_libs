@@ -1,8 +1,10 @@
 ﻿#include <fea/meta/traits.hpp>
 #include <functional>
 #include <gtest/gtest.h>
+#include <set>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -127,11 +129,25 @@ TEST(traits, member_func_ptr) {
 }
 
 TEST(traits, misc) {
-	static_assert(std::is_same_v<
-						  fea::remove_nested_const_t<std::pair<const int, int>>,
-						  std::pair<int, int>>,
+	static_assert(
+			std::is_same<fea::remove_nested_const_t<std::pair<const int, int>>,
+					std::pair<int, int>>::value,
 			"serialize.cpp : test failed");
 	static_assert(fea::is_first_const_v<std::pair<const int, int>>,
+			"serialize.cpp : test failed");
+	static_assert(fea::is_container_v<std::vector<int>>,
+			"serialize.cpp : test failed");
+	static_assert(!fea::is_container_v<std::tuple<int>>,
+			"serialize.cpp : test failed");
+	static_assert(fea::is_tuple_like_v<std::tuple<int>>,
+			"serialize.cpp : test failed");
+	static_assert(fea::is_tuple_like_v<std::pair<int, int>>,
+			"serialize.cpp : test failed");
+	static_assert(!fea::is_tuple_like_v<std::vector<int>>,
+			"serialize.cpp : test failed");
+	static_assert(fea::is_contiguous_v<std::vector<int>>,
+			"serialize.cpp : test failed");
+	static_assert(!fea::is_contiguous_v<std::set<int>>,
 			"serialize.cpp : test failed");
 }
 } // namespace

@@ -32,6 +32,7 @@
  **/
 #pragma once
 #include "fea/utils/file.hpp"
+#include "fea/utils/platform.hpp"
 #include "fea/utils/scope.hpp"
 #include "fea/utils/throw.hpp"
 
@@ -96,6 +97,7 @@ struct serializer {
 		}
 
 		FILE* ofs = nullptr;
+#if FEA_WINDOWS
 		errno_t err = fopen_s(&ofs, _filepath.string().c_str(), "wb");
 
 		if (err != 0) {
@@ -106,8 +108,11 @@ struct serializer {
 					"Couldn't open file '" + _filepath.string() + "'.");
 			return;
 		}
+#else
+		ofs = std::fopen(_filepath.string().c_str(), "wb");
+#endif
 
-		fea::on_exit e{ [&ofs, this]() { std::fclose(ofs); } };
+		fea::on_exit e{ [&ofs]() { std::fclose(ofs); } };
 
 		std::vector<std::byte> data = extract();
 		size_t written = std::fwrite(
@@ -261,6 +266,7 @@ struct deserializer {
 			: _filepath(filepath) {
 
 		std::FILE* ifs = nullptr;
+#if FEA_WINDOWS
 		errno_t err = fopen_s(&ifs, _filepath.string().c_str(), "rb");
 
 		if (err != 0) {
@@ -268,8 +274,11 @@ struct deserializer {
 					"Couldn't open file '" + _filepath.string() + "'.");
 			return;
 		}
+#else
+		ifs = std::fopen(_filepath.string().c_str(), "rb");
+#endif
 
-		fea::on_exit e{ [&ifs, this]() { std::fclose(ifs); } };
+		fea::on_exit e{ [&ifs]() { std::fclose(ifs); } };
 
 		size_t total_size = fea::file_size(ifs);
 		_data.resize(total_size);
