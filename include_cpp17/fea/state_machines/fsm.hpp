@@ -182,7 +182,8 @@ struct fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 	template <TransitionEnum Transition>
 	StateEnum transition_target() const {
 		if (std::get<size_t(Transition)>(_transitions) == StateEnum::count) {
-			fea::maybe_throw(__FUNCTION__, "Unhandled transition.");
+			fea::maybe_throw<std::invalid_argument>(
+					__FUNCTION__, "Unhandled transition.");
 		}
 
 		return std::get<size_t(Transition)>(_transitions);

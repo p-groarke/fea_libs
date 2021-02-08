@@ -693,5 +693,7 @@ TEST(serialize, evewything) {
 		EXPECT_TRUE(deserialize(c, ifs));
 		EXPECT_EQ(c, megadoodoo);
 	}
+
+	printf("TODO : test release vs. debug serialized data.\n");
 }
 } // namespace
