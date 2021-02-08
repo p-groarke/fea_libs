@@ -82,6 +82,7 @@ else()
 	message("\nEnabling C++14 libraries.\n")
 endif()
 
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
