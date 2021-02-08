@@ -214,23 +214,6 @@ struct is_first_const<T<First, Args...>> {
 template <class T>
 FEA_INLINE_VAR constexpr bool is_first_const_v = is_first_const<T>::value;
 
-
-// useful is_detected checkers.
-template <class T>
-using has_begin = decltype(std::begin(std::declval<T>()));
-template <class T>
-using has_end = decltype(std::end(std::declval<T>()));
-template <class T>
-using has_data = decltype(std::data(std::declval<T>()));
-template <class T>
-using has_size = decltype(std::size(std::declval<T>()));
-template <class T>
-using has_get = decltype(std::get<0>(std::declval<T>()));
-template <class T>
-using has_resize = decltype(std::declval<T>().resize(std::declval<size_t>()));
-template <class T>
-using has_reserve = decltype(std::declval<T>().reserve(std::declval<size_t>()));
-
 // Checks if a type is a pair.
 template <class T>
 struct is_pair : std::false_type {};
@@ -241,18 +224,38 @@ struct is_pair<std::pair<U1, U2>> : std::true_type {};
 template <class T>
 inline constexpr bool is_pair_v = is_pair<T>::value;
 
+// useful is_detected checkers.
+template <class T>
+using has_begin = decltype(std::begin(std::declval<T>()));
+template <class T>
+using has_end = decltype(std::end(std::declval<T>()));
+template <class T>
+using has_get = decltype(std::get<0>(std::declval<T>()));
+template <class T>
+using has_resize = decltype(std::declval<T>().resize(std::declval<size_t>()));
+template <class T>
+using has_reserve = decltype(std::declval<T>().reserve(std::declval<size_t>()));
+
 // Checks if a type has std::begin and std::end.
 template <class T>
 inline constexpr bool is_container_v
 		= fea::is_detected_v<has_begin, T>&& fea::is_detected_v<has_end, T>;
+
+// Checks if a type has std::get.
+template <class T>
+inline constexpr bool is_tuple_like_v = fea::is_detected_v<has_get, T>;
+
+#if FEA_CPP17
+template <class T>
+using has_data = decltype(std::data(std::declval<T>()));
+template <class T>
+using has_size = decltype(std::size(std::declval<T>()));
 
 // Checks if a type has std::data and std::size.
 template <class T>
 inline constexpr bool is_contiguous_v
 		= fea::is_detected_v<has_data, T>&& fea::is_detected_v<has_size, T>;
 
-// Checks if a type has std::get.
-template <class T>
-inline constexpr bool is_tuple_like_v = fea::is_detected_v<has_get, T>;
+#endif
 
 } // namespace fea
