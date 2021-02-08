@@ -31,7 +31,7 @@ TEST(utility_ai, basics) {
 			[]() { return 1.f; }, []() { return 1.f; });
 
 	// Should throw or assert, missing 1 utility function.
-#if FEA_DEBUG
+#if FEA_DEBUG || defined(FEA_NOTHROW)
 	EXPECT_DEATH(ai.validate(), "");
 	EXPECT_DEATH(ai.trigger(), "");
 	EXPECT_DEATH(ai.trigger_mt(), "");

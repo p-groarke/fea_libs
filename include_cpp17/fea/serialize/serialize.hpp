@@ -100,12 +100,15 @@ struct contiguous_iterator_tag : public std::random_access_iterator_tag {};
 using contiguous_iterator_tag = std::contiguous_iterator_tag;
 #endif
 
+// Can't expose this because of contiguous_iterator_tag detection.
+// template <class Iter>
+// void serialize(Iter begin, Iter end, fea::serializer& os);
+
 template <class Iter>
 void serialize(
 		Iter begin, Iter end, fea::serializer& os, std::input_iterator_tag) {
 
 	using traits_t = std::iterator_traits<Iter>;
-	using val_t = typename traits_t::value_type;
 
 	using msize_t = FEA_SERIALIZE_SIZE_T;
 	msize_t size = msize_t(std::distance(begin, end));
@@ -280,16 +283,13 @@ template <class... Args, template <class...> class Tup>
 }
 } // namespace detail
 
-// Can't expose this because of contiguous_iterator_tag detection.
-// template <class Iter>
-// void serialize(Iter begin, Iter end, fea::serializer& os);
-
 // Not implemented, fea::serialize doesn't support serializing pointers.
 template <class T>
-void serialize(const T*, fea::serializer&) {
-	static_assert(
-			false, "fea::serialize : doesn't support pointer serialization");
-}
+void serialize(const T*, fea::serializer&);
+
+// Not implemented, fea::deserialize doesn't support serializing pointers.
+template <class T>
+[[nodiscard]] bool deserialize(T*, fea::deserializer&);
 
 // Serialize object t.
 // Recurses appropriately.
