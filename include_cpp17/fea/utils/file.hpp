@@ -34,8 +34,10 @@
 #pragma once
 #include "fea/utils/platform.hpp"
 #include "fea/utils/string.hpp"
+#include "fea/utils/throw.hpp"
 
 #include <cstdio>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -80,14 +82,6 @@ inline std::filesystem::path wexecutable_dir(const wchar_t* argv0) {
 
 // Cross-platform "safe" fopen.
 inline std::FILE* fopen(const std::filesystem::path& path, const char* mode) {
-	if (!std::filesystem::exists(path)) {
-		return nullptr;
-	}
-
-	if (std::filesystem::is_directory(path)) {
-		return nullptr;
-	}
-
 	std::FILE* ret = nullptr;
 
 #if FEA_WINDOWS
@@ -113,6 +107,14 @@ inline size_t file_size(std::FILE* ifs) {
 	return ret;
 }
 
+// Analog to std::rewind for fstreams.
+// Clears error state and returns to filestream beginning.
+template <class IFStream>
+inline void rewind(IFStream& fs) {
+	fs.clear();
+	fs.seekg(0, fs.beg);
+}
+
 // Returns the full size of the filestream. Leaves the stream at the beginning.
 template <class IFStream>
 size_t file_size(IFStream& ifs) {
@@ -122,8 +124,7 @@ size_t file_size(IFStream& ifs) {
 
 	ifs.seekg(0, ifs.end);
 	size_t ret = size_t(ifs.tellg());
-	ifs.clear();
-	ifs.seekg(0, ifs.beg);
+	fea::rewind(ifs);
 	return ret;
 }
 
@@ -537,10 +538,8 @@ inline std::u32string open_text_file_with_bom(std::ifstream& src) {
 	}
 
 	// Evewything failed.
-	throw std::runtime_error{
-		"open_text_file_with_bom : Unsupported file encoding. Please use "
-		"utf8, utf16 or utf32."
-	};
+	fea::maybe_throw<std::runtime_error>(__FUNCTION__,
+			"Unsupported file encoding. Please use utf8, utf16 or utf32.");
 
 	// return ret;
 }

@@ -33,6 +33,7 @@
 
 #pragma once
 #include "fea/utils/platform.hpp"
+#include "fea/utils/throw.hpp"
 
 #include <algorithm>
 #include <array>
@@ -579,8 +580,8 @@ std::string any_to_utf8(const string_t<CharT>& str) {
 	} else if constexpr (std::is_same_v<CharT, char32_t>) {
 		return utf32_to_utf8(str);
 	} else {
-		assert(false);
-		throw std::runtime_error{ "any_to_utf8 : unsupported string type" };
+		fea::maybe_throw<std::runtime_error>(
+				__FUNCTION__, "unsupported string type");
 	}
 }
 
@@ -595,8 +596,8 @@ string_t<CharT> utf8_to_any(const std::string& str) {
 	} else if constexpr (std::is_same_v<CharT, char32_t>) {
 		return utf8_to_utf32(str);
 	} else {
-		assert(false);
-		throw std::runtime_error{ "utf8_to_any : unsupported string type" };
+		fea::maybe_throw<std::runtime_error>(
+				__FUNCTION__, "unsupported string type");
 	}
 }
 
@@ -611,8 +612,8 @@ std::u32string any_to_utf32(const string_t<CharT>& str) {
 	} else if constexpr (std::is_same_v<CharT, char32_t>) {
 		return str;
 	} else {
-		assert(false);
-		throw std::runtime_error{ "any_to_utf32 : unsupported string type" };
+		fea::maybe_throw<std::runtime_error>(
+				__FUNCTION__, "unsupported string type");
 	}
 }
 
@@ -627,8 +628,8 @@ string_t<CharT> utf32_to_any(const std::u32string& str) {
 	} else if constexpr (std::is_same_v<CharT, char32_t>) {
 		return str;
 	} else {
-		assert(false);
-		throw std::runtime_error{ "utf32_to_any : unsupported string type" };
+		fea::maybe_throw<std::runtime_error>(
+				__FUNCTION__, "unsupported string type");
 	}
 }
 

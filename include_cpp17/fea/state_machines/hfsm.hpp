@@ -31,13 +31,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 #include "fea/utils/platform.hpp"
+#include "fea/utils/throw.hpp"
 
 #include <algorithm>
 #include <array>
 #include <cassert>
 #include <functional>
 #include <initializer_list>
-#include <stdexcept>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
@@ -200,9 +200,8 @@ struct hfsm_state {
 
 			// Want this?
 			if (std::get<size_t(State)>(_enter_from_exists)) {
-				throw std::invalid_argument{
-					"state : on_enter_from already exists for selected state"
-				};
+				fea::maybe_throw<std::invalid_argument>(__FUNCTION__,
+						"on_enter_from already exists for selected state");
 			}
 
 			std::get<size_t(State)>(_enter_from_events) = std::move(func);
@@ -216,9 +215,8 @@ struct hfsm_state {
 					"event");
 
 			if (std::get<size_t(State)>(_exit_to_exists)) {
-				throw std::invalid_argument{
-					"state : on_exit_to already exists for selected state"
-				};
+				fea::maybe_throw<std::invalid_argument>(__FUNCTION__,
+						"on_exit_to already exists for selected state");
 			}
 
 			std::get<size_t(State)>(_exit_to_events) = std::move(func);
@@ -235,7 +233,8 @@ struct hfsm_state {
 					"state : no need to provide state for on_enter, on_update "
 					"and on_exit events");
 			if (std::get<size_t(Event)>(_simple_event_exists)) {
-				throw std::invalid_argument{ "state : event already exists" };
+				fea::maybe_throw<std::invalid_argument>(
+						__FUNCTION__, "event already exists");
 			}
 
 			std::get<size_t(Event)>(_simple_events) = std::move(func);
@@ -250,15 +249,13 @@ struct hfsm_state {
 
 		// Want this?
 		if (std::get<size_t(Transition)>(_transition_exists)) {
-			throw std::invalid_argument{
-				"state : transition already exists for selected state"
-			};
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__,
+					"transition already exists for selected state");
 		}
 
 		if (std::get<size_t(Transition)>(_is_yield_transition)) {
-			throw std::invalid_argument{
-				"state : transition predefined as yield transition"
-			};
+			fea::maybe_throw<std::invalid_argument>(
+					__FUNCTION__, "transition predefined as yield transition");
 		}
 
 		std::get<size_t(Transition)>(_transitions) = State;
@@ -288,7 +285,8 @@ struct hfsm_state {
 				"state : invalid transition");
 
 		if (!std::get<size_t(Transition)>(_transition_exists)) {
-			throw std::invalid_argument{ "state : transition doesn't exist" };
+			fea::maybe_throw<std::invalid_argument>(
+					__FUNCTION__, "transition doesn't exist");
 		}
 
 		std::get<size_t(Transition)>(_auto_transition_guards)
@@ -303,15 +301,13 @@ struct hfsm_state {
 				"state : invalid transition");
 
 		if (std::get<size_t(Transition)>(_is_yield_transition)) {
-			throw std::invalid_argument{
-				"state : transition is already set to yield"
-			};
+			fea::maybe_throw<std::invalid_argument>(
+					__FUNCTION__, "transition is already set to yield");
 		}
 
 		if (std::get<size_t(Transition)>(_transition_exists)) {
-			throw std::invalid_argument{
-				"state : transition already exists as non yield transition"
-			};
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__,
+					"transition already exists as non yield transition");
 		}
 
 		std::get<size_t(Transition)>(_is_yield_transition) = true;
@@ -567,9 +563,8 @@ struct hfsm_state {
 	const hfsm_state* substate(StateEnum s) const {
 		if (_substate_indexes[size_t(s)]
 				== std::numeric_limits<size_t>::max()) {
-			throw std::invalid_argument{
-				"state : trying to access invalid state"
-			};
+			fea::maybe_throw<std::invalid_argument>(
+					__FUNCTION__, "trying to access invalid state");
 		}
 		return &_substates[_substate_indexes[size_t(s)]];
 	}
@@ -581,9 +576,8 @@ struct hfsm_state {
 	void current_substate(StateEnum s) {
 		if (_substate_indexes[size_t(s)]
 				== std::numeric_limits<size_t>::max()) {
-			throw std::invalid_argument{
-				"state : trying to access invalid state"
-			};
+			fea::maybe_throw<std::invalid_argument>(
+					__FUNCTION__, "trying to access invalid state");
 		}
 		_current_substate = s;
 	}
@@ -673,13 +667,13 @@ struct hfsm {
 	void add_state(state_t&& state) {
 		if (std::get<size_t(State)>(_state_indexes)
 				!= std::numeric_limits<size_t>::max()) {
-			throw std::invalid_argument{ "hfsm : state already exists" };
+			fea::maybe_throw<std::invalid_argument>(
+					__FUNCTION__, "state already exists");
 		}
 
 		if (State != state.state()) {
-			throw std::invalid_argument{
-				"hfsm : misconfigured state, state enum mismatch"
-			};
+			fea::maybe_throw<std::invalid_argument>(
+					__FUNCTION__, "misconfigured state, state enum mismatch");
 		}
 
 		std::get<size_t(State)>(_state_indexes) = _states.size();
@@ -729,9 +723,8 @@ struct hfsm {
 
 		if (_current_tranny_info.to == StateEnum::count
 				&& !_current_tranny_info.yield) {
-			throw std::invalid_argument{
-				"hfsm : current state doesn't handle transition"
-			};
+			fea::maybe_throw<std::invalid_argument>(
+					__FUNCTION__, "current state doesn't handle transition");
 		}
 
 		if (_print) {
@@ -1008,7 +1001,8 @@ private:
 
 				for (const auto& name : names) {
 					if (name == "") {
-						throw std::invalid_argument{ "hfsm : missing states" };
+						fea::maybe_throw<std::invalid_argument>(
+								__FUNCTION__, "missing states");
 					}
 
 					size_t num_name = 0;

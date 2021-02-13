@@ -31,12 +31,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #pragma once
+#include "fea/state_machines/fsm.hpp"
+#include "fea/utils/string.hpp"
+#include "fea/utils/throw.hpp"
+
 #include <cassert>
 #include <cstdarg>
 #include <cstdio>
 #include <deque>
-#include <fea/state_machines/fsm.hpp>
-#include <fea/utils/string.hpp>
 #include <functional>
 #include <map>
 #include <string>
@@ -349,9 +351,8 @@ void get_opt<CharT, PrintfT>::add_raw_option(
 			[&](const user_option<CharT>& r) { return r.long_name == name; });
 
 	if (it != _raw_opts.end()) {
-		throw std::invalid_argument{
-			"get_opt::add_raw_option : Raw option already exists."
-		};
+		fea::maybe_throw<std::invalid_argument>(
+				__FUNCTION__, "Raw option already exists.");
 	}
 
 	_raw_opts.push_back(user_option<CharT>{
@@ -446,17 +447,15 @@ void get_opt<CharT, PrintfT>::add_option(detail::user_option<CharT>&& o) {
 
 	if (o.short_name != FEA_CH('\0')) {
 		if (_short_opt_to_long_opt.count(o.short_name) > 0) {
-			throw std::invalid_argument{
-				"get_opt::add_option : Short option already exists."
-			};
+			fea::maybe_throw<std::invalid_argument>(
+					__FUNCTION__, "Short option already exists.");
 		}
 		_short_opt_to_long_opt.insert({ o.short_name, o.long_name });
 	}
 
 	if (_long_opt_to_user_opt.count(o.long_name) > 0) {
-		throw std::invalid_argument{
-			"get_opt::add_option : Long option already exists."
-		};
+		fea::maybe_throw<std::invalid_argument>(
+				__FUNCTION__, "Long option already exists.");
 	}
 
 	string name = o.long_name;

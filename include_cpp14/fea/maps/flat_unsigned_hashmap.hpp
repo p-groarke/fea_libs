@@ -30,10 +30,11 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/utils/throw.hpp"
+
 #include <algorithm>
 #include <cassert>
 #include <numeric>
-#include <stdexcept>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -499,7 +500,8 @@ struct flat_unsigned_hashmap {
 	const mapped_type& at(key_type k) const {
 		const_iterator it = find(k);
 		if (it == end()) {
-			throw std::out_of_range{ "unsigned_map : value doesn't exist" };
+			fea::maybe_throw<std::out_of_range>(
+					__FUNCTION__, "value doesn't exist");
 		}
 
 		return *it;
