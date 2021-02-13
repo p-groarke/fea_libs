@@ -108,8 +108,6 @@ template <class Iter>
 void serialize(
 		Iter begin, Iter end, fea::serializer& os, std::input_iterator_tag) {
 
-	using traits_t = std::iterator_traits<Iter>;
-
 	using msize_t = FEA_SERIALIZE_SIZE_T;
 	msize_t size = msize_t(std::distance(begin, end));
 
@@ -152,20 +150,7 @@ template <class T>
 		t.reserve(size_t(size));
 	}
 
-	auto doit = [](auto& t, auto& is, auto& v) {
-		using fea::deserialize;
-		if (!deserialize(v, is)) {
-			return false;
-		}
-		std::inserter(t, std::end(t)) = fea::maybe_move(v);
-		return true;
-	};
-
 	for (size_t i = 0; i < size_t(size); ++i) {
-		// if (!deserialize(std::inserter(t, std::end(t)), is)) {
-		//	return false;
-		//}
-
 		decltype(get_pair_type<val_t>()) v;
 		using fea::deserialize;
 		if (!deserialize(v, is)) {

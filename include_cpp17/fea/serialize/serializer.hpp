@@ -402,7 +402,8 @@ private:
 			return false;
 		}
 
-		std::memcpy(t, _data.data() + _data_idx, sizeof(T) * count);
+		std::memcpy(static_cast<void*>(t), _data.data() + _data_idx,
+				sizeof(T) * count);
 		_data_idx += sizeof(T) * count;
 		return true;
 	}

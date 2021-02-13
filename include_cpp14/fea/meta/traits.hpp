@@ -35,6 +35,7 @@
 #include "fea/meta/tuple.hpp"
 #include "fea/utils/platform.hpp"
 
+#include <array> // for std::begin, std::end
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -235,10 +236,14 @@ template <class T>
 using has_resize = decltype(std::declval<T>().resize(std::declval<size_t>()));
 template <class T>
 using has_reserve = decltype(std::declval<T>().reserve(std::declval<size_t>()));
+// template <class T>
+// using has_data = decltype(std::declval<T>().data());
+// template <class T>
+// using has_size = decltype(std::declval<T>().size());
 template <class T>
-using has_data = decltype(std::declval<T>().data());
+using has_data = decltype(std::data(std::declval<T>()));
 template <class T>
-using has_size = decltype(std::declval<T>().size());
+using has_size = decltype(std::size(std::declval<T>()));
 
 // Checks if a type has std::begin and std::end.
 template <class T>
