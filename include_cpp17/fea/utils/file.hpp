@@ -78,6 +78,31 @@ inline std::filesystem::path wexecutable_dir(const wchar_t* argv0) {
 #endif
 }
 
+// Cross-platform "safe" fopen.
+inline std::FILE* fopen(const std::filesystem::path& path, const char* mode) {
+	if (!std::filesystem::exists(path)) {
+		return nullptr;
+	}
+
+	if (std::filesystem::is_directory(path)) {
+		return nullptr;
+	}
+
+	std::FILE* ret = nullptr;
+
+#if FEA_WINDOWS
+	if (fopen_s(&ret, path.string().c_str(), mode) != 0) {
+		return nullptr;
+	}
+#else
+	// nullptr if failed
+	ret = std::fopen(path.string().c_str(), mode);
+#endif
+
+	return ret;
+}
+
+// Returns the full size of the c filestream. Rewinds the stream.
 inline size_t file_size(std::FILE* ifs) {
 	if (ifs == nullptr) {
 		return 0;
@@ -96,10 +121,10 @@ size_t file_size(IFStream& ifs) {
 	}
 
 	ifs.seekg(0, ifs.end);
-	auto ret = ifs.tellg();
+	size_t ret = size_t(ifs.tellg());
 	ifs.clear();
 	ifs.seekg(0, ifs.beg);
-	return size_t(ret);
+	return ret;
 }
 
 

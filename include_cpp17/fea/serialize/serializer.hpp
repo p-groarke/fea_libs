@@ -96,21 +96,12 @@ struct serializer {
 			return;
 		}
 
-		FILE* ofs = nullptr;
-#if FEA_WINDOWS
-		errno_t err = fopen_s(&ofs, _filepath.string().c_str(), "wb");
-
-		if (err != 0) {
-			assert(false);
-
-			// Can't throw from dtor.
-			fea::error_exit(__FUNCTION__,
+		std::FILE* ofs = fea::fopen(_filepath, "wb");
+		if (ofs == nullptr) {
+			fea::error_message(__FUNCTION__,
 					"Couldn't open file '" + _filepath.string() + "'.");
 			return;
 		}
-#else
-		ofs = std::fopen(_filepath.string().c_str(), "wb");
-#endif
 
 		fea::on_exit e{ [&ofs]() { std::fclose(ofs); } };
 
@@ -119,8 +110,7 @@ struct serializer {
 				data.data(), sizeof(data.front()), data.size(), ofs);
 
 		if (written != data.size()) {
-			assert(false);
-			fea::error_exit(__FUNCTION__,
+			fea::maybe_throw(__FUNCTION__,
 					"Couldn't write to file '" + _filepath.string() + "'.");
 		}
 	}
@@ -265,18 +255,13 @@ struct deserializer {
 	deserializer(const std::filesystem::path& filepath)
 			: _filepath(filepath) {
 
-		std::FILE* ifs = nullptr;
-#if FEA_WINDOWS
-		errno_t err = fopen_s(&ifs, _filepath.string().c_str(), "rb");
-
-		if (err != 0) {
-			fea::maybe_throw(__FUNCTION__,
+		std::FILE* ifs = fea::fopen(_filepath, "rb");
+		if (ifs == nullptr) {
+			fea::error_message(__FUNCTION__,
 					"Couldn't open file '" + _filepath.string() + "'.");
+			_is_gucci = false;
 			return;
 		}
-#else
-		ifs = std::fopen(_filepath.string().c_str(), "rb");
-#endif
 
 		fea::on_exit e{ [&ifs]() { std::fclose(ifs); } };
 

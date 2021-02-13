@@ -236,14 +236,18 @@ template <class T>
 using has_resize = decltype(std::declval<T>().resize(std::declval<size_t>()));
 template <class T>
 using has_reserve = decltype(std::declval<T>().reserve(std::declval<size_t>()));
-// template <class T>
-// using has_data = decltype(std::declval<T>().data());
-// template <class T>
-// using has_size = decltype(std::declval<T>().size());
+
+#if FEA_CPP17
 template <class T>
 using has_data = decltype(std::data(std::declval<T>()));
 template <class T>
 using has_size = decltype(std::size(std::declval<T>()));
+#else
+template <class T>
+using has_data = decltype(std::declval<T>().data());
+template <class T>
+using has_size = decltype(std::declval<T>().size());
+#endif
 
 // Checks if a type has std::begin and std::end.
 template <class T>

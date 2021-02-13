@@ -70,4 +70,10 @@ inline void error_exit(const char* func_name, const std::string& message) {
 	fprintf(stderr, "%s : %s\n", func_name, message.c_str());
 	std::exit(EXIT_FAILURE);
 }
+
+// Prints message and asserts.
+inline void error_message(const char* func_name, const std::string& message) {
+	assert(false);
+	fprintf(stderr, "%s : %s\n", func_name, message.c_str());
+}
 } // namespace fea
