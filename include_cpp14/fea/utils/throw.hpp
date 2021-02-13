@@ -35,6 +35,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdlib>
 #include <string>
 
+/*
+Helpers to throw on builds where FEA_NOTHROW isn't defined, and terminate if it
+is.
+
+Always asserts (for better multi-threaded breaking).
+Always prints the error message to help with ci or other environments
+where getting the error message may not be trivial.
+
+TODO ?
+You may pass in __FILE__, __FUNCTION__, __LINE__ with the 'FEA_ERR_INFO' macro.
+ex : fea::maybe_throw(FEA_ERR_INFO, "my message");
+*/
+
+//#define FEA_ERR_INFO __FILE__, __FUNCTION__, __LINE__
+
 namespace std {
 // Most popular ones.
 class runtime_error;
@@ -49,30 +64,36 @@ class out_of_range;
 namespace fea {
 // Throws if FEA_NOTHROW is not defined, else prints the error message and
 // exits with error code.
+// Provide __FUNCTION__, __LINE__, "your message".
 template <class Ex = std::runtime_error>
-inline void maybe_throw(const char* func_name, const std::string& message) {
-#if !defined(FEA_NOTHROW)
+inline void maybe_throw(
+		const char* func_name, size_t line, const std::string& message) {
+
+	fprintf(stderr, "%s(%zu) : %s\n", func_name, line, message.c_str());
 	assert(false);
+
+#if !defined(FEA_NOTHROW)
 	throw Ex{ std::string{ func_name } + " : " + message };
 #else
-	fprintf(stderr, "%s : %s\n", func_name, message.c_str());
-	assert(false);
 	std::exit(EXIT_FAILURE);
 #endif
 }
 
 // Prints message and exits with error code.
 // Use this when you absolutely can't throw (from destructors for example).
-inline void error_exit(const char* func_name, const std::string& message) {
-	// Always assert.
-	fprintf(stderr, "%s : %s\n", func_name, message.c_str());
+// Provide __FUNCTION__, __LINE__, "your message".
+inline void error_exit(
+		const char* func_name, size_t line, const std::string& message) {
+	fprintf(stderr, "%s(%zu) : %s\n", func_name, line, message.c_str());
 	assert(false);
 	std::exit(EXIT_FAILURE);
 }
 
 // Prints message and asserts.
-inline void error_message(const char* func_name, const std::string& message) {
-	fprintf(stderr, "%s : %s\n", func_name, message.c_str());
+// Provide __FUNCTION__, __LINE__, "your message".
+inline void error_message(
+		const char* func_name, size_t line, const std::string& message) {
+	fprintf(stderr, "%s(%zu) : %s\n", func_name, line, message.c_str());
 	assert(false);
 }
 } // namespace fea

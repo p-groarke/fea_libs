@@ -95,7 +95,7 @@ struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
 	void add_predicates(PredFuncs&&... predicate_functions) {
 		utility_function& u_func = std::get<size_t(F)>(_utility_functions);
 		if (u_func.id != F) {
-			fea::maybe_throw<std::invalid_argument>(__FUNCTION__,
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
 					" : Adding predicate to non-initialized utility function."
 					" Remember to call create_function before adding extra "
 					"predicates.");
@@ -125,15 +125,15 @@ struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
 
 		for (const utility_function& u_func : _utility_functions) {
 			if (u_func.id == FunctionEnum::count) {
-				fea::maybe_throw(__FUNCTION__,
+				fea::maybe_throw(__FUNCTION__, __LINE__,
 						" : One or more utility functions are uninitialized.");
 			}
 			if (u_func.predicates.empty()) {
-				fea::maybe_throw(__FUNCTION__,
+				fea::maybe_throw(__FUNCTION__, __LINE__,
 						" : One or more utility function has no predicates.");
 			}
 			if (!u_func.action) {
-				fea::maybe_throw(__FUNCTION__,
+				fea::maybe_throw(__FUNCTION__, __LINE__,
 						" : One or more utility function has no action.");
 			}
 		}

@@ -352,7 +352,7 @@ void get_opt<CharT, PrintfT>::add_raw_option(
 
 	if (it != _raw_opts.end()) {
 		fea::maybe_throw<std::invalid_argument>(
-				__FUNCTION__, "Raw option already exists.");
+				__FUNCTION__, __LINE__, "Raw option already exists.");
 	}
 
 	_raw_opts.push_back(user_option<CharT>{
@@ -448,14 +448,14 @@ void get_opt<CharT, PrintfT>::add_option(detail::user_option<CharT>&& o) {
 	if (o.short_name != FEA_CH('\0')) {
 		if (_short_opt_to_long_opt.count(o.short_name) > 0) {
 			fea::maybe_throw<std::invalid_argument>(
-					__FUNCTION__, "Short option already exists.");
+					__FUNCTION__, __LINE__, "Short option already exists.");
 		}
 		_short_opt_to_long_opt.insert({ o.short_name, o.long_name });
 	}
 
 	if (_long_opt_to_user_opt.count(o.long_name) > 0) {
 		fea::maybe_throw<std::invalid_argument>(
-				__FUNCTION__, "Long option already exists.");
+				__FUNCTION__, __LINE__, "Long option already exists.");
 	}
 
 	string name = o.long_name;

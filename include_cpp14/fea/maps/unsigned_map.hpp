@@ -337,7 +337,7 @@ struct unsigned_map {
 		const_iterator it = find(k);
 		if (it == end()) {
 			fea::maybe_throw<std::out_of_range>(
-					__FUNCTION__, "value doesn't exist");
+					__FUNCTION__, __LINE__, "value doesn't exist");
 		}
 
 		return it->second;
@@ -442,7 +442,7 @@ private:
 
 		if (k == pos_sentinel()) {
 			fea::maybe_throw<std::out_of_range>(
-					__FUNCTION__, "maximum size reached");
+					__FUNCTION__, __LINE__, "maximum size reached");
 		}
 
 		_value_indexes.resize(size_t(k) + 1u, pos_sentinel());

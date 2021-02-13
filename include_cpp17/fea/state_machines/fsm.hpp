@@ -183,7 +183,7 @@ struct fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 	StateEnum transition_target() const {
 		if (std::get<size_t(Transition)>(_transitions) == StateEnum::count) {
 			fea::maybe_throw<std::invalid_argument>(
-					__FUNCTION__, "Unhandled transition.");
+					__FUNCTION__, __LINE__, "Unhandled transition.");
 		}
 
 		return std::get<size_t(Transition)>(_transitions);
@@ -406,11 +406,12 @@ private:
 
 	const state_t& get_state(StateEnum s) const {
 		if (s == StateEnum::count) {
-			fea::maybe_throw(__FUNCTION__, "Accessing invalid state.");
+			fea::maybe_throw(
+					__FUNCTION__, __LINE__, "Accessing invalid state.");
 		}
 
 		if (!_state_valid[size_t(s)]) {
-			fea::maybe_throw(__FUNCTION__,
+			fea::maybe_throw(__FUNCTION__, __LINE__,
 					"Accessing invalid state, did you forget to add a state?");
 		}
 

@@ -538,7 +538,7 @@ inline std::u32string open_text_file_with_bom(std::ifstream& src) {
 	}
 
 	// Evewything failed.
-	fea::maybe_throw<std::runtime_error>(__FUNCTION__,
+	fea::maybe_throw<std::runtime_error>(__FUNCTION__, __LINE__,
 			"Unsupported file encoding. Please use utf8, utf16 or utf32.");
 
 	// return ret;

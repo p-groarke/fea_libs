@@ -1,4 +1,5 @@
 ﻿#include <fea/maps/flat_unsigned_hashmap.hpp>
+#include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 #include <memory>
 #include <random>

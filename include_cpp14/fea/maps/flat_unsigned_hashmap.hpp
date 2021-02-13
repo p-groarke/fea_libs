@@ -501,7 +501,7 @@ struct flat_unsigned_hashmap {
 		const_iterator it = find(k);
 		if (it == end()) {
 			fea::maybe_throw<std::out_of_range>(
-					__FUNCTION__, "value doesn't exist");
+					__FUNCTION__, __LINE__, "value doesn't exist");
 		}
 
 		return *it;

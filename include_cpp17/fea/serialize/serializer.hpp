@@ -98,7 +98,7 @@ struct serializer {
 
 		std::FILE* ofs = fea::fopen(_filepath, "wb");
 		if (ofs == nullptr) {
-			fea::error_message(__FUNCTION__,
+			fea::error_message(__FUNCTION__, __LINE__,
 					"Couldn't open file '" + _filepath.string() + "'.");
 			return;
 		}
@@ -110,7 +110,7 @@ struct serializer {
 				data.data(), sizeof(data.front()), data.size(), ofs);
 
 		if (written != data.size()) {
-			fea::maybe_throw(__FUNCTION__,
+			fea::maybe_throw(__FUNCTION__, __LINE__,
 					"Couldn't write to file '" + _filepath.string() + "'.");
 		}
 	}
@@ -257,7 +257,7 @@ struct deserializer {
 
 		std::FILE* ifs = fea::fopen(_filepath, "rb");
 		if (ifs == nullptr) {
-			fea::error_message(__FUNCTION__,
+			fea::error_message(__FUNCTION__, __LINE__,
 					"Couldn't open file '" + _filepath.string() + "'.");
 			_is_gucci = false;
 			return;
@@ -273,7 +273,7 @@ struct deserializer {
 				_data.data(), sizeof(_data.front()), total_size, ifs);
 
 		if (read_count != total_size) {
-			fea::maybe_throw(__FUNCTION__,
+			fea::maybe_throw(__FUNCTION__, __LINE__,
 					"Problem reading file '" + _filepath.string() + "'.");
 		}
 

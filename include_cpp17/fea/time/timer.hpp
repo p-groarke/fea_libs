@@ -300,7 +300,7 @@ public:
 			dseconds e, const std::function<void(EventArgs...)>& func) {
 		assert(e > elapsed()); // asserts nice when threading.
 		if (e <= elapsed()) {
-			fea::maybe_throw<std::invalid_argument>(__FUNCTION__,
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
 					"subscribing callback that will never be called");
 		}
 
@@ -313,7 +313,7 @@ public:
 			const std::function<void(EventArgs...)>& func) {
 		assert(t > time());
 		if (t <= time()) {
-			fea::maybe_throw<std::invalid_argument>(__FUNCTION__,
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
 					"subscribing callback that will never be called");
 		}
 

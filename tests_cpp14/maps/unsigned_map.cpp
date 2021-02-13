@@ -1,4 +1,5 @@
 ﻿#include <fea/maps/unsigned_map.hpp>
+#include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 #include <memory>
 #include <unordered_map>
