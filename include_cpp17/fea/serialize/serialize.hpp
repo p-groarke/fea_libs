@@ -333,9 +333,11 @@ template <class T>
 // Helpers for snow-flake library types.
 template <class T, class... Args>
 void serialize(const std::queue<T, Args...>& t, fea::serializer& os) {
+	using msize_t = FEA_SERIALIZE_SIZE_T;
 	using fea::serialize;
+
 	auto cpy = t;
-	FEA_SERIALIZE_SIZE_T size = cpy.size();
+	msize_t size = msize_t(cpy.size());
 	os.write_unvalidated(size);
 	while (!cpy.empty()) {
 		serialize(cpy.front(), os);
@@ -347,8 +349,10 @@ void serialize(const std::queue<T, Args...>& t, fea::serializer& os) {
 template <class T, class... Args>
 [[nodiscard]] bool deserialize(
 		std::queue<T, Args...>& t, fea::deserializer& is) {
+	using msize_t = FEA_SERIALIZE_SIZE_T;
 	using fea::deserialize;
-	FEA_SERIALIZE_SIZE_T size = 0;
+
+	msize_t size = 0;
 	if (!is.read_unvalidated(size)) {
 		return false;
 	}
@@ -360,7 +364,7 @@ template <class T, class... Args>
 		t.push(fea::maybe_move(v));
 	}
 
-	FEA_SERIALIZE_SIZE_T size2 = 0;
+	msize_t size2 = 0;
 	if (!is.read_unvalidated(size2)) {
 		return false;
 	}

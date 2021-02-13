@@ -142,19 +142,22 @@ if (${FEA_TESTS})
 	# Test Project
 	set(TEST_NAME ${PROJECT_NAME}_tests)
 	set(TEST_NAME_NOTHROW ${PROJECT_NAME}_nothrow_tests)
+
 	file(GLOB_RECURSE TEST_SOURCES_CPP14 "tests_cpp14/*.cpp" "tests_cpp14/*.hpp" "tests_cpp14/*.tpp")
 	file(GLOB_RECURSE TEST_SOURCES_CPP17 "tests_cpp17/*.cpp" "tests_cpp17/*.hpp" "tests_cpp17/*.tpp")
 
 	add_executable(${TEST_NAME} ${TEST_SOURCES_CPP14}
 		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_SOURCES_CPP17}>"
 	)
-	set_compile_options(${TEST_NAME} PRIVATE)
-
 	add_executable(${TEST_NAME_NOTHROW} ${TEST_SOURCES_CPP14}
 		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_SOURCES_CPP17}>"
 	)
+
+	set_compile_options(${TEST_NAME} PRIVATE)
 	set_compile_options(${TEST_NAME_NOTHROW} PRIVATE)
-	target_compile_definitions(${TEST_NAME_NOTHROW} PRIVATE FEA_NOTHROW)
+
+	# Set NOTHROW and other global defines that could impact tests.
+	target_compile_definitions(${TEST_NAME_NOTHROW} PRIVATE FEA_NOTHROW -DFEA_SERIALIZE_SIZE_T=uint16_t)
 
 	# For the extreme serialization test.
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")

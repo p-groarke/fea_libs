@@ -76,6 +76,7 @@ struct hash<potato> {
 namespace {
 std::filesystem::path filepath() {
 	const std::filesystem::path dir = fea::executable_dir(argv0) / "tests_data";
+	std::filesystem::create_directory(dir);
 	const std::filesystem::path filepath = dir / "pertatoes.bin";
 	return filepath;
 }

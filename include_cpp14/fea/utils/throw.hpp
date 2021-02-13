@@ -51,13 +51,12 @@ namespace fea {
 // exits with error code.
 template <class Ex = std::runtime_error>
 inline void maybe_throw(const char* func_name, const std::string& message) {
-	// Always assert.
-	assert(false);
-
 #if !defined(FEA_NOTHROW)
+	assert(false);
 	throw Ex{ std::string{ func_name } + " : " + message };
 #else
 	fprintf(stderr, "%s : %s\n", func_name, message.c_str());
+	assert(false);
 	std::exit(EXIT_FAILURE);
 #endif
 }
@@ -66,14 +65,14 @@ inline void maybe_throw(const char* func_name, const std::string& message) {
 // Use this when you absolutely can't throw (from destructors for example).
 inline void error_exit(const char* func_name, const std::string& message) {
 	// Always assert.
-	assert(false);
 	fprintf(stderr, "%s : %s\n", func_name, message.c_str());
+	assert(false);
 	std::exit(EXIT_FAILURE);
 }
 
 // Prints message and asserts.
 inline void error_message(const char* func_name, const std::string& message) {
-	assert(false);
 	fprintf(stderr, "%s : %s\n", func_name, message.c_str());
+	assert(false);
 }
 } // namespace fea
