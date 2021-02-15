@@ -43,30 +43,23 @@
 #include <intrin.h>
 #endif
 
-#if BENCH_SHUTUP
-#define BENCH_PRINT_STREAM(...)
-#else
-#define BENCH_PRINT_STREAM(stream, format, ...) \
-	fprintf(stream, "" format "", ##__VA_ARGS__)
-#endif
-
 namespace fea {
 namespace bench {
 static std::chrono::time_point<std::chrono::steady_clock> start_time, end_time;
 
 static inline void title(const char* message, FILE* stream = stdout) {
 	fea::unused(message);
-	BENCH_PRINT_STREAM(stream, "%.*s\n", (int)strlen(message),
+	fprintf(stream, "%.*s\n", int(strlen(message)),
 			"############################################################");
-	BENCH_PRINT_STREAM(stream, "%s\n", message);
-	BENCH_PRINT_STREAM(stream, "%.*s\n", (int)strlen(message),
+	fprintf(stream, "%s\n", message);
+	fprintf(stream, "%.*s\n", int(strlen(message)),
 			"############################################################");
 }
 
 static inline void start(const char* message = "", FILE* stream = stdout) {
 	if (strlen(message) != 0) {
-		BENCH_PRINT_STREAM(stream, "\n%s\n", message);
-		BENCH_PRINT_STREAM(stream, "%.*s\n", (int)strlen(message),
+		fprintf(stream, "\n%s\n", message);
+		fprintf(stream, "%.*s\n", int(strlen(message)),
 				"--------------------------------------------------------");
 	}
 
@@ -78,7 +71,7 @@ static inline double stop(const char* message = "", FILE* stream = stdout) {
 	end_time = std::chrono::steady_clock::now();
 	const std::chrono::duration<double> elapsed_time = end_time - start_time;
 
-	BENCH_PRINT_STREAM(stream, "%s%*fs\n", message, 70 - (int)strlen(message),
+	fprintf(stream, "%s%*fs\n", message, 70 - int(strlen(message)),
 			elapsed_time.count());
 	return elapsed_time.count();
 }
@@ -183,11 +176,11 @@ struct suite {
 		std::this_thread::sleep_for(_sleep_between);
 
 		if (_title != nullptr) {
-			BENCH_PRINT_STREAM(stream, "%.*s\n", (int)strlen(_title),
+			fprintf(stream, "%.*s\n", int(strlen(_title)),
 					"##########################################################"
 					"##");
-			BENCH_PRINT_STREAM(stream, "%s\n", _title);
-			BENCH_PRINT_STREAM(stream, "%.*s\n", (int)strlen(_title),
+			fprintf(stream, "%s\n", _title);
+			fprintf(stream, "%.*s\n", int(strlen(_title)),
 					"##########################################################"
 					"##");
 		}
@@ -204,10 +197,10 @@ struct suite {
 
 		for (const pair& p : _results) {
 			double ratio = _results.back().time / p.time;
-			BENCH_PRINT_STREAM(stream, "%s%*fs        %fx\n", p.message,
+			fprintf(stream, "%s%*fs        %fx\n", p.message,
 					70 - int(strlen(p.message)), p.time, ratio);
 		}
-		BENCH_PRINT_STREAM(stream, "%s", "\n");
+		fprintf(stream, "%s", "\n");
 
 		_results.clear();
 	}

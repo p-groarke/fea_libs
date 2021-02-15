@@ -34,9 +34,11 @@
 #pragma once
 #include "fea/utils/platform.hpp"
 #include "fea/utils/string.hpp"
+#include "fea/utils/throw.hpp"
 
+#include <cstdio>
+#include <cstring>
 #include <filesystem>
-
 #include <fstream>
 #include <functional>
 #include <string>
@@ -78,6 +80,40 @@ inline std::filesystem::path wexecutable_dir(const wchar_t* argv0) {
 #endif
 }
 
+// Cross-platform "safe" fopen.
+inline std::FILE* fopen(const std::filesystem::path& path, const char* mode) {
+	std::FILE* ret = nullptr;
+
+#if FEA_WINDOWS
+	if (fopen_s(&ret, path.string().c_str(), mode) != 0) {
+		return nullptr;
+	}
+#else
+	// nullptr if failed
+	ret = std::fopen(path.string().c_str(), mode);
+#endif
+
+	return ret;
+}
+
+// Returns the full size of the c filestream. Rewinds the stream.
+inline size_t file_size(std::FILE* ifs) {
+	if (ifs == nullptr) {
+		return 0;
+	}
+	std::fseek(ifs, 0, SEEK_END);
+	size_t ret = size_t(std::ftell(ifs));
+	std::rewind(ifs);
+	return ret;
+}
+
+// Analog to std::rewind for fstreams.
+// Clears error state and returns to filestream beginning.
+template <class IFStream>
+inline void rewind(IFStream& fs) {
+	fs.clear();
+	fs.seekg(0, fs.beg);
+}
 
 // Returns the full size of the filestream. Leaves the stream at the beginning.
 template <class IFStream>
@@ -87,9 +123,9 @@ size_t file_size(IFStream& ifs) {
 	}
 
 	ifs.seekg(0, ifs.end);
-	auto ret = ifs.tellg();
-	ifs.seekg(0, ifs.beg);
-	return size_t(ret);
+	size_t ret = size_t(ifs.tellg());
+	fea::rewind(ifs);
+	return ret;
 }
 
 
@@ -101,7 +137,7 @@ bool basic_read_text_file(const std::filesystem::path& fpath, Func&& func) {
 		return false;
 	}
 
-	String line;
+	String line{};
 	while (std::getline(ifs, line)) {
 		if (line.size() > 0 && line.back() == '\r') {
 			line.pop_back();
@@ -139,7 +175,7 @@ bool basic_open_text_file(
 	out = {};
 	out.reserve(file_size(ifs));
 
-	String line;
+	String line{};
 	while (std::getline(ifs, line)) {
 		if (line.size() > 0 && line.back() == '\r') {
 			line.pop_back();
@@ -502,11 +538,9 @@ inline std::u32string open_text_file_with_bom(std::ifstream& src) {
 	}
 
 	// Evewything failed.
-	throw std::runtime_error{
-		"open_text_file_with_bom : Unsupported file encoding. Please use "
-		"utf8, utf16 or utf32."
-	};
+	fea::maybe_throw<std::runtime_error>(__FUNCTION__, __LINE__,
+			"Unsupported file encoding. Please use utf8, utf16 or utf32.");
 
-	// return ret;
+	return ret;
 }
 } // namespace fea

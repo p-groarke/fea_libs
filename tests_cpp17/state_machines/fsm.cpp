@@ -103,7 +103,7 @@ TEST(fsm, example) {
 	EXPECT_EQ(mtest_data.num_onexitto_calls, 0u);
 
 	// Currently doesn't handle walk to jump transition.
-#if FEA_DEBUG
+#if FEA_DEBUG || defined(FEA_NOTHROW)
 	EXPECT_DEATH(machine.trigger<transition::do_jump>(mtest_data), "");
 #else
 	EXPECT_THROW(machine.trigger<transition::do_jump>(mtest_data),

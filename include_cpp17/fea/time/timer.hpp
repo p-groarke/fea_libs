@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fea/state_machines/fsm.hpp"
 #include "fea/time/high_range_duration.hpp"
 #include "fea/time/time.hpp"
+#include "fea/utils/throw.hpp"
 
 #include <cassert>
 
@@ -299,8 +300,8 @@ public:
 			dseconds e, const std::function<void(EventArgs...)>& func) {
 		assert(e > elapsed()); // asserts nice when threading.
 		if (e <= elapsed()) {
-			throw std::invalid_argument{ std::string{ __FUNCTION__ }
-				+ " : subscribing callback that will never be called" };
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"subscribing callback that will never be called");
 		}
 
 		_elapsed_callbacks.push_back({ e, func });
@@ -312,8 +313,8 @@ public:
 			const std::function<void(EventArgs...)>& func) {
 		assert(t > time());
 		if (t <= time()) {
-			throw std::invalid_argument{ std::string{ __FUNCTION__ }
-				+ " : subscribing callback that will never be called" };
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"subscribing callback that will never be called");
 		}
 
 		// TODO : high_range_timepoint

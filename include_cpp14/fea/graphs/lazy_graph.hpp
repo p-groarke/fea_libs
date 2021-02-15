@@ -30,11 +30,12 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/utils/throw.hpp"
+
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
 #include <functional>
-#include <stdexcept>
 #include <tbb/task_group.h>
 #include <type_traits>
 #include <unordered_map>
@@ -116,8 +117,8 @@ struct node {
 	// A left to right graph of parents needed to update this node.
 	const std::vector<Id>& evaluation_graph() const {
 		if (_dirty_evaluation_graph) {
-			throw std::runtime_error{ std::string{ __FUNCTION__ }
-				+ " : reading dirty evaluation graph" };
+			fea::maybe_throw<std::runtime_error>(
+					__FUNCTION__, "reading dirty evaluation graph");
 		}
 		return _evaluation_graph;
 	}

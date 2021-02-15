@@ -41,10 +41,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <limits>
 #include <tuple>
 
-#if !defined(FEA_NOTHROW)
-#include <stdexcept>
-#endif
-
 /*
 A compile-time executable very simple fsm.
 	https://philippegroarke.com/posts/2020/constexpr_fsm/

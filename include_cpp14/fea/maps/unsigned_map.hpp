@@ -30,12 +30,13 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/utils/throw.hpp"
+
 #include <cassert>
 #include <functional>
 #include <initializer_list>
 #include <iterator>
 #include <limits>
-#include <stdexcept>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -335,7 +336,8 @@ struct unsigned_map {
 	const mapped_type& at(key_type k) const {
 		const_iterator it = find(k);
 		if (it == end()) {
-			throw std::out_of_range{ "unsigned_map : value doesn't exist" };
+			fea::maybe_throw<std::out_of_range>(
+					__FUNCTION__, __LINE__, "value doesn't exist");
 		}
 
 		return it->second;
@@ -439,7 +441,8 @@ private:
 		}
 
 		if (k == pos_sentinel()) {
-			throw std::out_of_range{ "unsigned_map : maximum size reached\n" };
+			fea::maybe_throw<std::out_of_range>(
+					__FUNCTION__, __LINE__, "maximum size reached");
 		}
 
 		_value_indexes.resize(size_t(k) + 1u, pos_sentinel());

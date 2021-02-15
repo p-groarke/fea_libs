@@ -2,6 +2,7 @@
 #include "fea/functional/function.hpp"
 #include "fea/meta/static_for.hpp"
 #include "fea/utils/platform.hpp"
+#include "fea/utils/throw.hpp"
 
 #include <algorithm>
 #include <array>
@@ -9,10 +10,6 @@
 #include <functional>
 #include <tbb/parallel_for.h>
 #include <vector>
-
-#if !defined(FEA_NOTHROW)
-#include <stdexcept>
-#endif
 
 /*
 utility_ai stores predicates and actions as "functions" and executes the highest
@@ -97,16 +94,12 @@ struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
 	template <FunctionEnum F, class... PredFuncs>
 	void add_predicates(PredFuncs&&... predicate_functions) {
 		utility_function& u_func = std::get<size_t(F)>(_utility_functions);
-		assert(u_func.id == F);
-
-#if !defined(FEA_NOTHROW)
 		if (u_func.id != F) {
-			throw std::invalid_argument{ std::string{ __FUNCTION__ }
-				+ " : Adding predicate to non-initialized utility function."
-				  " Remember to call create_function before adding extra "
-				  "predicates." };
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					" : Adding predicate to non-initialized utility function."
+					" Remember to call create_function before adding extra "
+					"predicates.");
 		}
-#endif
 
 		fold(
 				[&](auto&& f) {
@@ -131,24 +124,18 @@ struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
 		}
 
 		for (const utility_function& u_func : _utility_functions) {
-			assert(u_func.id != FunctionEnum::count);
-			assert(!u_func.predicates.empty());
-			assert(bool(u_func.action));
-
-#if !defined(FEA_NOTHROW)
 			if (u_func.id == FunctionEnum::count) {
-				throw std::runtime_error{ std::string{ __FUNCTION__ }
-					+ " : One or more utility functions are uninitialized." };
+				fea::maybe_throw(__FUNCTION__, __LINE__,
+						" : One or more utility functions are uninitialized.");
 			}
 			if (u_func.predicates.empty()) {
-				throw std::runtime_error{ std::string{ __FUNCTION__ }
-					+ " : One or more utility function has no predicates." };
+				fea::maybe_throw(__FUNCTION__, __LINE__,
+						" : One or more utility function has no predicates.");
 			}
 			if (!u_func.action) {
-				throw std::runtime_error{ std::string{ __FUNCTION__ }
-					+ " : One or more utility function has no action." };
+				fea::maybe_throw(__FUNCTION__, __LINE__,
+						" : One or more utility function has no action.");
 			}
-#endif
 		}
 
 		_validated = true;
@@ -159,10 +146,7 @@ struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
 	ActionReturn trigger(
 			ActionArgs... action_args, PredArgs... predicate_args) {
 
-#if defined(FEA_NOTHROW) && FEA_RELEASE
-#else
 		validate();
-#endif
 
 		// Don't use std::max_element, it would compute score twice for each
 		// utility func.
@@ -194,10 +178,8 @@ struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
 	// The action is executed on the caller thread.
 	ActionReturn trigger_mt(
 			ActionArgs... action_args, PredArgs... predicate_args) {
-#if defined(FEA_NOTHROW) && FEA_RELEASE
-#else
+
 		validate();
-#endif
 
 		std::array<float, size_t(FunctionEnum::count)> scores;
 		tbb::parallel_for(
