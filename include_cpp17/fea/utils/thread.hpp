@@ -32,7 +32,7 @@
  **/
 
 #pragma once
-#include "fea/utils/memory.hpp"
+#include "fea/memory/memory.hpp"
 
 #include <algorithm>
 #include <functional>

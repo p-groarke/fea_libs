@@ -31,10 +31,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
+#include "fea/memory/memory.hpp"
 #include "fea/meta/pack.hpp"
 #include "fea/meta/traits.hpp"
 #include "fea/meta/tuple.hpp"
-#include "fea/utils/memory.hpp"
 #include "fea/utils/platform.hpp"
 
 

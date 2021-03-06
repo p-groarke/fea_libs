@@ -69,6 +69,8 @@ struct node {
 
 	void add_child(Id child_id) {
 		_children.push_back(child_id);
+		_children_versions.push_back(dirty_sentinel());
+		assert(_children.size() == _children_versions.size());
 	}
 
 	void remove_child(Id child_id) {
@@ -79,13 +81,19 @@ struct node {
 
 		if (it != std::prev(_children.end())) {
 			*it = _children.back();
+
+			size_t i = std::distance(_children.begin(), it);
+			_children_versions[i] = _children_versions.back();
 		}
 
 		_children.pop_back();
+		_children_versions.pop_back();
+		assert(_children.size() == _children_versions.size());
 	}
 
 	bool has_parent(Id parent_id) const {
-		return _parents.count(parent_id) != 0;
+		return std::find(_parents.begin(), _parents.end(), parent_id)
+				!= _parents.end();
 	}
 
 	void add_parent(Id parent_id) {
@@ -93,7 +101,8 @@ struct node {
 	}
 
 	void remove_parent(Id parent_id) {
-		_parents.erase(parent_id);
+		auto it = std::find(_parents.begin(), _parents.end(), parent_id);
+		_parents.erase(it);
 		_dirty_evaluation_graph = true;
 	}
 
@@ -101,13 +110,20 @@ struct node {
 		return _children;
 	}
 
-	const std::unordered_map<Id, DirtyVersion>& parents() const {
+	const std::vector<DirtyVersion>& children_versions() const {
+		return _children_versions;
+	}
+	std::vector<DirtyVersion>& children_versions() {
+		return _children_versions;
+	}
+
+	const std::vector<Id>& parents() const {
 		return _parents;
 	}
-	// Only use this to change dirty version, not add or remove parents.
-	std::unordered_map<Id, DirtyVersion>& parents() {
-		return _parents;
-	}
+	//// Only use this to change dirty version, not add or remove parents.
+	// std::vector<Id>& parents() {
+	//	return _parents;
+	//}
 
 	bool is_evaluation_graph_dirty() const {
 		return _dirty_evaluation_graph;
@@ -146,11 +162,17 @@ struct node {
 		return _dirty_version;
 	}
 
-	DirtyVersion parent_version(Id parent_id) const {
-		return _parents.at(parent_id);
+	const DirtyVersion& child_version(Id child_id) const {
+		auto it = std::find(_children.begin(), _children.end(), child_id);
+		assert(it != _children.end());
+
+		size_t idx = std::distance(_children.begin(), it);
+		assert(idx < _children_versions.size());
+		return _children_versions[idx];
 	}
-	DirtyVersion& parent_version(Id parent_id) {
-		return _parents.at(parent_id);
+	DirtyVersion& child_version(Id child_id) {
+		return const_cast<DirtyVersion&>(
+				static_cast<const node*>(this)->child_version(child_id));
 	}
 
 
@@ -185,7 +207,7 @@ private:
 	}
 	template <>
 	void add_parent<0>(Id parent_id) {
-		_parents.insert({ parent_id, dirty_sentinel() });
+		_parents.push_back(parent_id);
 		_dirty_evaluation_graph = true;
 	}
 
@@ -198,9 +220,16 @@ private:
 	// Your children.
 	std::vector<Id> _children;
 
-	// TODO : investigate storing the versions inside the parent, to minimize
-	// map lookups.
-	std::unordered_map<Id, DirtyVersion> _parents;
+	// Children versions, synced with _children.
+	std::vector<DirtyVersion> _children_versions;
+
+	// Parents.
+	std::vector<Id> _parents;
+
+
+	//// TODO : investigate storing the versions inside the parent, to minimize
+	//// map lookups.
+	// std::unordered_map<Id, DirtyVersion> _parents;
 
 
 	// This is an optimization, we tradeoff memory and insert time for faster
@@ -358,9 +387,9 @@ struct lazy_graph {
 
 		node_t& n = it->second;
 
-		const std::unordered_map<Id, DirtyVersion>& parents = n.parents();
-		for (const std::pair<const Id, DirtyVersion>& parent : parents) {
-			_nodes.at(parent.first).remove_child(id);
+		const std::vector<Id>& parents = n.parents();
+		for (Id parent_id : parents) {
+			_nodes.at(parent_id).remove_child(id);
 		}
 
 		const std::vector<Id>& children = n.children();
@@ -472,7 +501,7 @@ struct lazy_graph {
 
 	// Get a nodes parent.
 	// Note this is in a map with dirtyness.
-	const std::unordered_map<Id, DirtyVersion>& parents(Id id) const {
+	const std::vector<Id>& parents(Id id) const {
 		return _nodes.at(id).parents();
 	}
 
@@ -491,10 +520,10 @@ struct lazy_graph {
 		if (n.version() == (std::numeric_limits<DirtyVersion>::max)()) {
 			n.version() = node_t::init_sentinel();
 
-			const std::vector<Id>& children = n.children();
-			for (Id child_id : children) {
-				_nodes.at(child_id).parent_version(id)
-						= node_t::dirty_sentinel();
+			std::vector<DirtyVersion>& children_versions
+					= n.children_versions();
+			for (DirtyVersion& child_ver : children_versions) {
+				child_ver = node_t::dirty_sentinel();
 			}
 
 			return;
@@ -505,7 +534,7 @@ struct lazy_graph {
 
 	// Mark a node as written to, but only if it's not dirty.
 	// This helps increase the version space if you call write many times.
-	// Has significant overhead.
+	// Has loop overhead.
 	void make_dirty_if_not(Id id) {
 		node_t& n = _nodes.at(id);
 
@@ -513,28 +542,24 @@ struct lazy_graph {
 			return;
 		}
 
-		bool dirty_it = false;
-		const std::vector<Id>& children = n.children();
-		for (Id child_id : children) {
-			if (_nodes.at(child_id).parent_version(id) == n.version()) {
-				dirty_it = true;
-				break;
+		DirtyVersion parent_ver = n.version();
+		const std::vector<DirtyVersion>& children_versions
+				= n.children_versions();
+
+		for (DirtyVersion child_ver : children_versions) {
+			if (child_ver == parent_ver) {
+				return make_dirty(id);
 			}
 		}
-
-		if (!dirty_it) {
-			return;
-		}
-
-		make_dirty(id);
 	}
 
 	// Can you read a node? Does a node need an update?
 	bool is_dirty(Id id) const {
-		return recurse_up(id, [&, this](Id, const node_t& n) {
-			const std::unordered_map<Id, DirtyVersion>& parents = n.parents();
-			for (const std::pair<const Id, DirtyVersion>& parent : parents) {
-				if (parent.second != _nodes.at(parent.first).version()) {
+		return recurse_up(id, [this](Id id, const node_t& n) {
+			const std::vector<Id>& parents = n.parents();
+			for (Id pid : parents) {
+				const node_t& p_node = _nodes.at(pid);
+				if (p_node.version() != p_node.child_version(id)) {
 					return true;
 				}
 			}
@@ -542,7 +567,7 @@ struct lazy_graph {
 		});
 	}
 
-	// Get the nodes version.
+	// Get a node's version.
 	DirtyVersion version(Id id) const {
 		return _nodes.at(id).version();
 	}
@@ -586,20 +611,21 @@ struct lazy_graph {
 			// Check all my parents to see if I am really dirty.
 			// Also reset my version while we are looping.
 			bool dirty = false;
-			std::unordered_map<Id, DirtyVersion>& parents = n.parents();
+			const std::vector<Id>& parents = n.parents();
 
-			for (std::pair<const Id, DirtyVersion>& parent : parents) {
-				const node_t& parent_node = _nodes.at(parent.first);
+			for (Id parent_id : parents) {
+				node_t& parent_node = _nodes.at(parent_id);
 
 				parent_statuses.push_back(
-						{ parent.first, &parent_node.node_data(), false });
+						{ parent_id, &parent_node.node_data(), false });
 
 				DirtyVersion parent_version = parent_node.version();
-				if (parent.second != parent_version) {
+				DirtyVersion& child_version = parent_node.child_version(nid);
+				if (child_version != parent_version) {
 					parent_statuses.back().was_dirty = true;
 
 					// clean my parent tracking version
-					parent.second = parent_version;
+					child_version = parent_version;
 					dirty = true;
 
 					// Can't break here, all children must be cleaned.
@@ -694,25 +720,26 @@ struct lazy_graph {
 			// Check all my parents to see if I am really dirty.
 			// Also reset my version while we are looping.
 			bool dirty = false;
-			std::unordered_map<Id, DirtyVersion>& parents = n.parents();
+			const std::vector<Id>& parents = n.parents();
 
 			clean_container_t parent_statuses;
 			parent_statuses.reserve(parents.size());
 
 			// eh, not great. better way to pass on parents to user funcion?
-			for (std::pair<const Id, DirtyVersion>& parent : parents) {
-				const node_t& parent_node = _nodes.at(parent.first);
+			for (Id parent_id : parents) {
+				node_t& parent_node = _nodes.at(parent_id);
 
 				parent_statuses.push_back(
-						{ parent.first, &parent_node.node_data(), false });
+						{ parent_id, &parent_node.node_data(), false });
 
 				DirtyVersion parent_version = parent_node.version();
-				if (parent.second != parent_version) {
+				DirtyVersion& child_version = parent_node.child_version(nid);
+				if (child_version != parent_version) {
 					// set the callback bool to dirty
 					parent_statuses.back().was_dirty = true;
 
 					// clean the parent
-					parent.second = parent_version;
+					child_version = parent_version;
 					dirty = true;
 
 					// Can't break here, all versions must be cleaned.
@@ -1008,9 +1035,9 @@ private:
 			return true;
 		}
 
-		const std::unordered_map<Id, DirtyVersion>& parents = n.parents();
-		for (const std::pair<const Id, DirtyVersion>& parent_pair : parents) {
-			if (recurse_up(parent_pair.first, func)) {
+		const std::vector<Id>& parents = n.parents();
+		for (Id parent_id : parents) {
+			if (recurse_up(parent_id, func)) {
 				return true;
 			}
 		}
@@ -1038,10 +1065,9 @@ private:
 				return true;
 			}
 
-			const std::unordered_map<Id, DirtyVersion>& parents = n.parents();
-			for (const std::pair<const Id, DirtyVersion>& parent_pair :
-					parents) {
-				graph.push_back(parent_pair.first);
+			const std::vector<Id>& parents = n.parents();
+			for (Id parent_id : parents) {
+				graph.push_back(parent_id);
 			}
 		}
 

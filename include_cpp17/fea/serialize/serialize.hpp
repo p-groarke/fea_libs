@@ -31,10 +31,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
+#include "fea/memory/memory.hpp"
 #include "fea/meta/traits.hpp"
 #include "fea/meta/tuple.hpp"
 #include "fea/serialize/serializer.hpp"
-#include "fea/utils/memory.hpp"
 
 #include <iterator>
 #include <type_traits>
