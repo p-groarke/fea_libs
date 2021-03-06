@@ -15,12 +15,12 @@ TEST(stack_vector, basics) {
 
 	EXPECT_EQ(*v.begin(), 0u);
 	EXPECT_EQ(*v.cbegin(), 0u);
-	EXPECT_EQ(*(v.end()--), 2u);
-	EXPECT_EQ(*(v.cend()--), 2u);
+	EXPECT_EQ(*(v.end() - 1), 2u);
+	EXPECT_EQ(*(v.cend() - 1), 2u);
 	EXPECT_EQ(*v.rbegin(), 2u);
-	EXPECT_EQ(*(v.rend()--), 0u);
+	EXPECT_EQ(*(v.rend() - 1), 0u);
 	EXPECT_EQ(*v.crbegin(), 2u);
-	EXPECT_EQ(*(v.crend()--), 0u);
+	EXPECT_EQ(*(v.crend() - 1), 0u);
 
 	EXPECT_EQ(v.front(), 0u);
 	EXPECT_EQ(v.back(), 2u);
@@ -48,8 +48,8 @@ TEST(stack_vector, basics) {
 	EXPECT_EQ(size_t(std::distance(v.rbegin(), v.rend())), 4u);
 	EXPECT_EQ(size_t(std::distance(v.crbegin(), v.crend())), 4u);
 
-	EXPECT_EQ(*(v.end()--), 3u);
-	EXPECT_EQ(*(v.cend()--), 3u);
+	EXPECT_EQ(*(v.end() - 1), 3u);
+	EXPECT_EQ(*(v.cend() - 1), 3u);
 	EXPECT_EQ(*v.rbegin(), 3u);
 	EXPECT_EQ(*v.crbegin(), 3u);
 
@@ -67,8 +67,8 @@ TEST(stack_vector, basics) {
 	EXPECT_EQ(size_t(std::distance(v.rbegin(), v.rend())), 3u);
 	EXPECT_EQ(size_t(std::distance(v.crbegin(), v.crend())), 3u);
 
-	EXPECT_EQ(*(v.end()--), 2u);
-	EXPECT_EQ(*(v.cend()--), 2u);
+	EXPECT_EQ(*(v.end() - 1), 2u);
+	EXPECT_EQ(*(v.cend() - 1), 2u);
 	EXPECT_EQ(*v.rbegin(), 2u);
 	EXPECT_EQ(*v.crbegin(), 2u);
 
