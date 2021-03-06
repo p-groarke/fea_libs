@@ -11,8 +11,8 @@ TEST(span, basics) {
 	EXPECT_FALSE(s.empty());
 	EXPECT_NE(s.data(), nullptr);
 
-	EXPECT_EQ(std::distance(s.begin(), s.end()), 3u);
-	EXPECT_EQ(std::distance(s.rbegin(), s.rend()), 3u);
+	EXPECT_EQ(size_t(std::distance(s.begin(), s.end())), 3u);
+	EXPECT_EQ(size_t(std::distance(s.rbegin(), s.rend())), 3u);
 	EXPECT_EQ(s.front(), 0u);
 	EXPECT_EQ(s.back(), 2u);
 	EXPECT_EQ(*s.data(), 0u);
@@ -44,7 +44,7 @@ TEST(span, empty) {
 	EXPECT_TRUE(s.empty());
 	EXPECT_EQ(s.data(), nullptr);
 
-	EXPECT_EQ(std::distance(s.begin(), s.end()), 0u);
-	EXPECT_EQ(std::distance(s.rbegin(), s.rend()), 0u);
+	EXPECT_EQ(size_t(std::distance(s.begin(), s.end())), 0u);
+	EXPECT_EQ(size_t(std::distance(s.rbegin(), s.rend())), 0u);
 }
 } // namespace

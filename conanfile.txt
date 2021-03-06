@@ -1,6 +1,6 @@
 [requires]
 gtest/1.10.0
-tbb/2020.3
+tbb/2019_u9
 date/3.0.0
 
 [generators]
