@@ -1,4 +1,5 @@
 ﻿#include <array>
+#include <fea/meta/static_for.hpp>
 #include <fea/meta/tuple.hpp>
 #include <gtest/gtest.h>
 
@@ -108,4 +109,161 @@ TEST(tuple, basics) {
 				"tuple.cpp : test failed");
 	}
 }
+
+TEST(tuple, runtime_get) {
+	{
+		constexpr std::tuple<int32_t, uint32_t, int64_t, int8_t, uint8_t> tup
+				= std::make_tuple(1, 42u, -42, int8_t(2), uint8_t(5));
+		using tup_t = decltype(tup);
+
+		{
+			uintptr_t offset = fea::tuple_offset<0>(tup);
+
+			int32_t i = fea::offset_get<int32_t>(offset, tup);
+			EXPECT_EQ(i, 1);
+		}
+		{
+			uintptr_t offset = fea::tuple_offset<1>(tup);
+
+			uint32_t i = fea::offset_get<uint32_t>(offset, tup);
+			EXPECT_EQ(i, 42u);
+		}
+		{
+			uintptr_t offset = fea::tuple_offset<2>(tup);
+
+			int64_t i = fea::offset_get<int64_t>(offset, tup);
+			EXPECT_EQ(i, -42);
+		}
+		{
+			uintptr_t offset = fea::tuple_offset<3>(tup);
+
+			int8_t i = fea::offset_get<int8_t>(offset, tup);
+			EXPECT_EQ(i, 2);
+		}
+		{
+			uintptr_t offset = fea::tuple_offset<4>(tup);
+
+			uint8_t i = fea::offset_get<uint8_t>(offset, tup);
+			EXPECT_EQ(i, 5u);
+		}
+
+		auto lookup = fea::make_offset_lookup(tup);
+		fea::static_for<std::tuple_size<tup_t>::value>([&](auto idx) {
+			EXPECT_EQ(lookup[idx], fea::tuple_offset<idx>(tup));
+			size_t off2 = fea::tuple_offset<idx>(tup);
+			EXPECT_EQ(lookup[idx], off2);
+		});
+
+		{
+			const int32_t* ptr = (int32_t*)fea::runtime_get(0, tup);
+			EXPECT_EQ(*ptr, 1);
+		}
+		{
+			const uint32_t* ptr = (uint32_t*)fea::runtime_get(1, tup);
+			EXPECT_EQ(*ptr, 42u);
+		}
+		{
+			const int64_t* ptr = (int64_t*)fea::runtime_get(2, tup);
+			EXPECT_EQ(*ptr, -42);
+		}
+		{
+			const int8_t* ptr = (int8_t*)fea::runtime_get(3, tup);
+			EXPECT_EQ(*ptr, 2);
+		}
+		{
+			const uint8_t* ptr = (uint8_t*)fea::runtime_get(4, tup);
+			EXPECT_EQ(*ptr, 5u);
+		}
+	}
+}
+
+#if FEA_CPP17
+TEST(tuple, runtime_get_cpp17) {
+	{
+		const std::tuple<int32_t, uint32_t, int64_t, int8_t, uint8_t> tup
+				= std::make_tuple(1, 42u, -42, int8_t(2), uint8_t(5));
+
+		int32_t i32 = 0;
+		uint32_t ui32 = 0;
+		int64_t i64 = 0;
+		int8_t i8 = 0;
+		uint8_t ui8 = 0;
+
+		auto tester = [&, ret = 42](const auto& v) -> const int& {
+			using T = std::decay_t<decltype(v)>;
+			if constexpr (std::is_same<T, int32_t>::value) {
+				i32 = v;
+			} else if constexpr (std::is_same<T, uint32_t>::value) {
+				ui32 = v;
+			} else if constexpr (std::is_same<T, int64_t>::value) {
+				i64 = v;
+			} else if constexpr (std::is_same<T, int8_t>::value) {
+				i8 = v;
+			} else if constexpr (std::is_same<T, uint8_t>::value) {
+				ui8 = v;
+			}
+			return ret;
+		};
+
+		const int& ret = fea::runtime_get(tester, 0, tup);
+		EXPECT_EQ(i32, 1);
+		EXPECT_EQ(ret, 42);
+
+		fea::runtime_get(tester, 1, tup);
+		EXPECT_EQ(ui32, 42u);
+
+		fea::runtime_get(tester, 2, tup);
+		EXPECT_EQ(i64, -42);
+
+		fea::runtime_get(tester, 3, tup);
+		EXPECT_EQ(i8, 2);
+
+		fea::runtime_get(tester, 4, tup);
+		EXPECT_EQ(ui8, 5);
+	}
+
+	{
+		std::tuple<int32_t, uint32_t, int64_t, int8_t, uint8_t> tup
+				= std::make_tuple(1, 42u, -42, int8_t(2), uint8_t(5));
+
+		int32_t i32 = 0;
+		uint32_t ui32 = 0;
+		int64_t i64 = 0;
+		int8_t i8 = 0;
+		uint8_t ui8 = 0;
+
+		auto tester = [&, ret = 42](auto& v) mutable -> int& {
+			using T = std::decay_t<decltype(v)>;
+			if constexpr (std::is_same<T, int32_t>::value) {
+				i32 = v;
+			} else if constexpr (std::is_same<T, uint32_t>::value) {
+				ui32 = v;
+			} else if constexpr (std::is_same<T, int64_t>::value) {
+				i64 = v;
+			} else if constexpr (std::is_same<T, int8_t>::value) {
+				i8 = v;
+			} else if constexpr (std::is_same<T, uint8_t>::value) {
+				ui8 = v;
+			}
+			return ret;
+		};
+
+		int& ret = fea::runtime_get(tester, 0, tup);
+		EXPECT_EQ(i32, 1);
+		EXPECT_EQ(ret, 42);
+
+		fea::runtime_get(tester, 1, tup);
+		EXPECT_EQ(ui32, 42u);
+
+		fea::runtime_get(tester, 2, tup);
+		EXPECT_EQ(i64, -42);
+
+		fea::runtime_get(tester, 3, tup);
+		EXPECT_EQ(i8, 2);
+
+		fea::runtime_get(tester, 4, tup);
+		EXPECT_EQ(ui8, 5);
+	}
+}
+#endif
 } // namespace

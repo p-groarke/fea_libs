@@ -32,59 +32,63 @@
  **/
 
 #pragma once
-#include "fea/utils/unused.hpp"
+#include "fea/utils/platform.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <type_traits>
-#include <utility>
 
 namespace fea {
-// Fold expressions for c++ < 17.
-// Calls your function with each of the provided variadic argument.
-template <class Func, class... Args>
-constexpr void fold(Func&& func, Args&&... args) {
-#if FEA_CPP17
-	(func(args), ...);
-#else
-	char dummy[] = { (void(func(args)), '0')... };
-	unused(dummy);
-#endif
-}
-
 namespace detail {
-template <class Func, size_t... I>
-constexpr void static_for(Func&& func, std::index_sequence<I...>) {
-#if FEA_CPP17
-	return (func(std::integral_constant<size_t, I>{}), ...);
-#else
-	char dummy[]
-			= { (void(func(std::integral_constant<size_t, I>{})), '0')... };
-	unused(dummy);
-#endif
-}
+template <class T, T...>
+struct max_nt;
+
+template <class T, T First, T Second>
+struct max_nt<T, First, Second> {
+	static constexpr auto value = First > Second ? First : Second;
+};
+
+template <class T, T First, T Second, T... Args>
+struct max_nt<T, First, Second, Args...> {
+	static constexpr auto value = First > Second
+			? max_nt<T, First, Args...>::value
+			: max_nt<T, Second, Args...>::value;
+};
+
+template <class T, T...>
+struct min_nt;
+
+template <class T, T First, T Second>
+struct min_nt<T, First, Second> {
+	static constexpr auto value = First < Second ? First : Second;
+};
+
+template <class T, T First, T Second, T... Args>
+struct min_nt<T, First, Second, Args...> {
+	static constexpr auto value = First < Second
+			? min_nt<T, First, Args...>::value
+			: min_nt<T, Second, Args...>::value;
+};
 } // namespace detail
 
-// Call a for loop at compile time.
-// Your lambda is provided with an integral_constant.
-// Accept it with auto, access the index with '::value'.
-template <size_t N, class Func>
-constexpr void static_for(Func&& func) {
-	detail::static_for(std::forward<Func>(func), std::make_index_sequence<N>{});
-}
+// Finds the maximum value of provided non-type values.
+template <class T, T... Args>
+FEA_INLINE_VAR constexpr auto max_nt_v = detail::max_nt<T, Args...>::value;
+
+// Finds the minimum value of provided non-type values.
+template <class T, T... Args>
+FEA_INLINE_VAR constexpr auto min_nt_v = detail::min_nt<T, Args...>::value;
 
 
-// "std::apply index_sequence"
-namespace detail {
-template <class Func, size_t... Idx>
-constexpr auto apply_indexes(Func&& f, std::index_sequence<Idx...>) {
-	return std::forward<Func>(f)(std::integral_constant<size_t, Idx>{}...);
-}
-} // namespace detail
+#if FEA_CPP17
 
-template <size_t N, class Func>
-constexpr auto apply_indexes(Func&& f) {
-	return detail::apply_indexes(
-			std::forward<Func>(f), std::make_index_sequence<N>{});
-}
+// Finds the maximum value of provided non-type values.
+template <auto First, auto... Args>
+FEA_INLINE_VAR constexpr auto max_v = max_nt_v<decltype(First), First, Args...>;
 
+// Finds the minimum value of provided non-type values.
+template <auto First, auto... Args>
+FEA_INLINE_VAR constexpr auto min_v = min_nt_v<decltype(First), First, Args...>;
+
+#endif // CPP17
 } // namespace fea

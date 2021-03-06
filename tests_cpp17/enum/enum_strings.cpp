@@ -1,77 +1,8 @@
-﻿#include <fea/utils/enum.hpp>
+﻿#include <fea/enum/enum_strings.hpp>
 #include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
 
 namespace {
-TEST(enum, traits) {
-	enum class e {
-		one,
-		two,
-		three,
-		four,
-		count,
-	};
-
-	fea::pack_nt<e::one, e::two, e::three, e::four> p
-			= fea::explode_enum<e>([](auto... cs) {
-				  using pack_t = fea::pack_nt<decltype(cs)::value...>;
-				  constexpr size_t idx = fea::pack_idx_nt_v<e::three, pack_t>;
-				  static_assert(idx == 2, "traits.cpp : test failed");
-				  return fea::pack_nt<decltype(cs)::value...>{};
-			  });
-	fea::unused(p);
-
-	static_assert(!fea::is_same_nt_v<e, e::one, e::two>,
-			"type_map.cpp : test failed");
-	static_assert(
-			!fea::is_same_nt_v2<e::one, e::two>, "type_map.cpp : test failed");
-	static_assert(
-			fea::is_same_nt_v<e, e::one, e::one>, "type_map.cpp : test failed");
-	static_assert(
-			fea::is_same_nt_v2<e::one, e::one>, "type_map.cpp : test failed");
-}
-
-TEST(enum, safe_switch) {
-	enum class e {
-		one,
-		two,
-		three,
-		four,
-		count,
-	};
-
-	int result = 0;
-	auto switcher = fea::safe_switch<e>()
-							.case_<e::one>([&]() { result = 1; })
-							.case_<e::three>([&]() { result = 3; })
-							.case_<e::two>([&]() { result = 2; })
-							.case_<e::four>([&]() { result = 4; });
-	switcher(e::one);
-	EXPECT_EQ(result, 1);
-
-	switcher(e::three);
-	EXPECT_EQ(result, 3);
-
-	switcher(e::two);
-	EXPECT_EQ(result, 2);
-
-	switcher(e::four);
-	EXPECT_EQ(result, 4);
-
-#if FEA_DEBUG
-	EXPECT_DEATH(switcher(e::count), "");
-#endif
-
-	// Using operator () example.
-	fea::safe_switch<e>()
-			.case_<e::one>([&]() { result = 1; })
-			.case_<e::three>([&]() { result = 3; })
-			.case_<e::two>([&]() { result = 2; })
-			.case_<e::four>([&]() { result = 4; })(e::three);
-
-	EXPECT_EQ(result, 3);
-}
-
 namespace espace_all {
 
 FEA_ALLSTRINGS_ENUM(e, unsigned, zero, one, two, three, four, five, count)

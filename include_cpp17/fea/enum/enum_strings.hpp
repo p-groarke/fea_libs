@@ -32,7 +32,7 @@
  **/
 
 #pragma once
-#include "fea/containers/enum_array.hpp"
+#include "fea/enum/enum_array.hpp"
 #include "fea/maps/type_map.hpp"
 #include "fea/meta/macros.hpp"
 #include "fea/meta/pack.hpp"
@@ -80,12 +80,6 @@ const fea::enum_array<std::u32string, ...> my_enum_u32strings;
 
 etc...
 
-
-fea::explode_enum calls your lambda with a variadic pack of
-std::integral_constant<your_enum, val>...
-
-fea::safe_switch creates a switch-case that will fail (wont compile) if you add
-or remove values to an enum.
 */
 
 
@@ -452,108 +446,3 @@ or remove values to an enum.
 \
 	/* Call user macro once everything is done. */ \
 	user_macro(ename, __VA_ARGS__)
-
-
-namespace fea {
-namespace detail {
-template <class Enum, class Func, size_t... Idx>
-constexpr auto explode_enum(Func&& func, std::index_sequence<Idx...>) {
-	return std::forward<Func>(func)(
-			std::integral_constant<Enum, Enum(Idx)>{}...);
-}
-} // namespace detail
-
-// Explodes all enum values into a non-type parameter pack and calls your
-// function with it.
-// Enum must be from 0 to N.
-// You must "extract" the non-type enum as it is passed by
-// std::integral_constant, use ::value.
-template <class Enum, size_t N, class Func>
-constexpr auto explode_enum(Func&& func) {
-	return detail::explode_enum<Enum>(
-			std::forward<Func>(func), std::make_index_sequence<N>{});
-}
-
-// Explodes all enum values into a non-type parameter pack and calls your
-// function with it.
-// Enum must be from 0 to N.
-// Overload for enums that contain a 'count' member.
-template <class Enum, class Func>
-constexpr auto explode_enum(Func&& func) {
-	return detail::explode_enum<Enum>(std::forward<Func>(func),
-			std::make_index_sequence<size_t(Enum::count)>{});
-}
-
-
-// Calls your function with each non-type enum values.
-// Enum must be from 0 to N.
-// Provide N if your enum doesn't have the member 'count'.
-template <class Enum, size_t N = size_t(Enum::count), class Func>
-constexpr void enum_for_each(Func&& func) {
-	fea::explode_enum<Enum, N>(
-			[&](auto... constants) { (func(constants), ...); });
-}
-
-
-namespace detail {
-template <class Enum, size_t N, class Funcs, Enum... Es>
-struct switcher;
-
-template <class Enum, size_t N, class... Funcs, Enum... Es>
-struct switcher<Enum, N, std::tuple<Funcs...>, Es...> {
-
-	constexpr switcher() = default;
-	constexpr switcher(std::tuple<Funcs...>&& funcs)
-			: _funcs(std::move(funcs)) {
-	}
-
-	template <Enum E, class NewFunc>
-	constexpr auto case_(NewFunc&& func) const&& {
-		return switcher<Enum, N, std::tuple<Funcs..., NewFunc>, Es..., E>{
-			std::tuple_cat(std::move(_funcs.data()),
-					std::make_tuple(std::forward<NewFunc>(func)))
-		};
-	}
-
-	template <Enum E>
-	constexpr auto empty() const&& {
-		auto l = []() {};
-		return switcher<Enum, N, std::tuple<Funcs..., decltype(l)>, Es..., E>{
-			std::tuple_cat(std::move(_funcs.data()), std::make_tuple(l))
-		};
-	}
-
-	constexpr void operator()(Enum e) const {
-		static_assert(sizeof...(Es) == N,
-				"safe_switch : missing enum case statement");
-
-#if FEA_DEBUG
-		constexpr std::array<Enum, N> arr{ Es... };
-		auto it = std::find(arr.begin(), arr.end(), e);
-		assert(it != arr.end());
-#endif
-
-		fea::static_for<N>([&, this](auto ic) {
-			constexpr size_t e_idx = decltype(ic)::value;
-			if (e_idx == size_t(e)) {
-				return _funcs.template find<Enum(e_idx)>()();
-			}
-		});
-	}
-
-
-private:
-	fea::type_map<fea::pack_nt<Es...>, Funcs...> _funcs;
-};
-} // namespace detail
-
-
-// Won't compile if missing a case statement.
-// Deduces the size if the enum contains a 'count' member.
-template <class Enum, size_t N = size_t(Enum::count)>
-constexpr auto safe_switch() {
-	return detail::switcher<Enum, N, std::tuple<>>{};
-}
-
-
-} // namespace fea
