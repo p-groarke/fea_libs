@@ -47,18 +47,18 @@ TEST(pack, basics) {
 				fea::pack_idx_v<float, p_cat_t> == 2, "pack.cpp : test failed");
 
 		using int_idxes = fea::pack_idxes_t<int, p_cat_t>;
-		static_assert(
-				std::is_same<int_idxes, fea::pack_nt<size_t, 0, 3>>::value,
+		static_assert(std::is_same<int_idxes,
+							  fea::pack_nt<size_t(0), size_t(3)>>::value,
 				"pack.cpp : test failed");
 
 		using double_idxes = fea::pack_idxes_t<double, p_cat_t>;
-		static_assert(
-				std::is_same<double_idxes, fea::pack_nt<size_t, 1, 4>>::value,
+		static_assert(std::is_same<double_idxes,
+							  fea::pack_nt<size_t(1), size_t(4)>>::value,
 				"pack.cpp : test failed");
 
 		using float_idxes = fea::pack_idxes_t<float, p_cat_t>;
-		static_assert(
-				std::is_same<float_idxes, fea::pack_nt<size_t, 2, 5>>::value,
+		static_assert(std::is_same<float_idxes,
+							  fea::pack_nt<size_t(2), size_t(5)>>::value,
 				"pack.cpp : test failed");
 
 		static_assert(
@@ -82,10 +82,10 @@ TEST(pack, basics) {
 			count,
 		};
 
-		constexpr fea::pack_nt<e, e::one, e::three, e::two> p1;
+		constexpr fea::pack_nt<e::one, e::three, e::two> p1;
 		constexpr decltype(p1) p2;
 
-		constexpr fea::pack_nt<e, e::one, e::three, e::two, e::one, e::three,
+		constexpr fea::pack_nt<e::one, e::three, e::two, e::one, e::three,
 				e::two>
 				p_cat = fea::pack_cat(p1, p2);
 		constexpr auto p_cat2 = fea::pack_cat(p1, p2);
@@ -118,18 +118,18 @@ TEST(pack, basics) {
 
 
 		using one_indexes = fea::pack_idxes_nt_t<e::one, p_cat_t>;
-		static_assert(
-				std::is_same<one_indexes, fea::pack_nt<size_t, 0, 3>>::value,
+		static_assert(std::is_same<one_indexes,
+							  fea::pack_nt<size_t(0), size_t(3)>>::value,
 				"pack.cpp : test failed");
 
 		using three_idxes = fea::pack_idxes_nt_t<e::three, p_cat_t>;
-		static_assert(
-				std::is_same<three_idxes, fea::pack_nt<size_t, 1, 4>>::value,
+		static_assert(std::is_same<three_idxes,
+							  fea::pack_nt<size_t(1), size_t(4)>>::value,
 				"pack.cpp : test failed");
 
 		using two_idxes = fea::pack_idxes_nt_t<e::two, p_cat_t>;
-		static_assert(
-				std::is_same<two_idxes, fea::pack_nt<size_t, 2, 5>>::value,
+		static_assert(std::is_same<two_idxes,
+							  fea::pack_nt<size_t(2), size_t(5)>>::value,
 				"pack.cpp : test failed");
 
 

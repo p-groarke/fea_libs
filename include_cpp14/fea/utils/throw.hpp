@@ -73,7 +73,8 @@ inline void maybe_throw(
 	assert(false);
 
 #if !defined(FEA_NOTHROW)
-	throw Ex{ std::string{ func_name } + " : " + message };
+	throw Ex{ std::string{ func_name } + "(" + std::to_string(line) + ")"
+		+ " : " + message };
 #else
 	std::exit(EXIT_FAILURE);
 #endif
@@ -89,7 +90,7 @@ inline void error_exit(
 	std::exit(EXIT_FAILURE);
 }
 
-// Prints message and asserts.
+// Prints error message and asserts.
 // Provide __FUNCTION__, __LINE__, "your message".
 inline void error_message(
 		const char* func_name, size_t line, const std::string& message) {

@@ -30,6 +30,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/containers/span.hpp"
+#include "fea/containers/stack_vector.hpp"
+#include "fea/functional/callback.hpp"
 #include "fea/utils/throw.hpp"
 
 #include <algorithm>
@@ -45,7 +48,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace fea {
 // TODO : callback should be 1 vector of pair<parent_id, bool_was_dirty>
 
-template <class Id, class NodeData, class DirtyVersion>
+template <class Id, class NodeData, class DirtyVersion, size_t MaxParents>
 struct node {
 	/**
 	 * Graph Functions
@@ -86,8 +89,7 @@ struct node {
 	}
 
 	void add_parent(Id parent_id) {
-		_parents.insert({ parent_id, dirty_sentinel() });
-		_dirty_evaluation_graph = true;
+		add_parent<MaxParents>(parent_id);
 	}
 
 	void remove_parent(Id parent_id) {
@@ -117,8 +119,8 @@ struct node {
 	// A left to right graph of parents needed to update this node.
 	const std::vector<Id>& evaluation_graph() const {
 		if (_dirty_evaluation_graph) {
-			fea::maybe_throw<std::runtime_error>(
-					__FUNCTION__, "reading dirty evaluation graph");
+			fea::maybe_throw(
+					__FUNCTION__, __LINE__, "reading dirty evaluation graph");
 		}
 		return _evaluation_graph;
 	}
@@ -172,18 +174,34 @@ struct node {
 	}
 
 private:
+	// Overload for max_parents set
+	template <size_t N>
+	void add_parent(Id parent_id) {
+		if (_parents.size() == N) {
+			fea::maybe_throw(
+					__FUNCTION__, __LINE__, "trying to add too many parents");
+		}
+		add_parent<0>(parent_id);
+	}
+	template <>
+	void add_parent<0>(Id parent_id) {
+		_parents.insert({ parent_id, dirty_sentinel() });
+		_dirty_evaluation_graph = true;
+	}
+
 	// Your parents.
 	// Stored in unordered_map because we do random lookups very often vs.
 	// adding or looping.
 	// The value is the version of your parent when you were last updated.
 	// Used to check if you are dirty (my version != current parent version).
 
+	// Your children.
+	std::vector<Id> _children;
+
 	// TODO : investigate storing the versions inside the parent, to minimize
 	// map lookups.
 	std::unordered_map<Id, DirtyVersion> _parents;
 
-	// Your children.
-	std::vector<Id> _children;
 
 	// This is an optimization, we tradeoff memory and insert time for faster
 	// clean times.
@@ -205,6 +223,34 @@ private:
 };
 
 
+// A pair-like struct provided to your clean callback.
+// parent_id : the parent
+// was_dirty : if the parent was dirty and triggered a clean.
+template <class Id, class NodeData = char>
+struct parent_status {
+	parent_status() = default;
+	parent_status(Id id, const NodeData* n, bool dirty)
+			: node_data(n)
+			, parent_id(id)
+			, was_dirty(dirty) {
+	}
+
+	const NodeData* node_data = nullptr;
+	Id parent_id{};
+	bool was_dirty = false;
+};
+
+// This is the data provided to your clean callback.
+// id : your current id (the child to clean).
+// node_data : your current node_data, char if node data unused.
+// parents : your parent ids, and if they were dirty.
+template <class Id, class NodeData = char>
+struct callback_data {
+	fea::span<const parent_status<Id, NodeData>> parents{};
+	NodeData* node_data = nullptr;
+	Id id{};
+};
+
 // Id is user provided and must be insertable in an unordered_map.
 // It should be as small as possible.
 // NodeData is optional. It is extra data you want each node to have.
@@ -213,13 +259,17 @@ private:
 // UnorderedContainer is optional. You can provide your own std::unordered_map
 // compliant container.
 template <class Id, class NodeData = char, class DirtyVersion = uint64_t,
-		template <class...> class UnorderedContainer = std::unordered_map>
+		template <class...> class UnorderedContainer = std::unordered_map,
+		size_t MaxParents = 0>
 struct lazy_graph {
 	static_assert(std::is_unsigned<DirtyVersion>::value,
 			"fea::lazy_graph : DirtyVersion must be an unsigned integral");
 
 	static_assert(std::is_default_constructible<NodeData>::value,
 			"fea::lazy_graph : NodeData must be default constructible.");
+
+	using parent_status_t = parent_status<Id>;
+	using callback_data_t = callback_data<Id, NodeData>;
 
 	// The storage container will take care of not compiling if the data is not
 	// copyable/moveable.
@@ -453,6 +503,32 @@ struct lazy_graph {
 		++n.version();
 	}
 
+	// Mark a node as written to, but only if it's not dirty.
+	// This helps increase the version space if you call write many times.
+	// Has significant overhead.
+	void make_dirty_if_not(Id id) {
+		node_t& n = _nodes.at(id);
+
+		if (n.children().empty()) {
+			return;
+		}
+
+		bool dirty_it = false;
+		const std::vector<Id>& children = n.children();
+		for (Id child_id : children) {
+			if (_nodes.at(child_id).parent_version(id) == n.version()) {
+				dirty_it = true;
+				break;
+			}
+		}
+
+		if (!dirty_it) {
+			return;
+		}
+
+		make_dirty(id);
+	}
+
 	// Can you read a node? Does a node need an update?
 	bool is_dirty(Id id) const {
 		return recurse_up(id, [&, this](Id, const node_t& n) {
@@ -466,16 +542,20 @@ struct lazy_graph {
 		});
 	}
 
+	// Get the nodes version.
+	DirtyVersion version(Id id) const {
+		return _nodes.at(id).version();
+	}
+
 	// Update a node.
 	// Your function should clean the provided node.
 	// Your lambda will be called recursively from parent to child.
 	// A node that depends on nothing is always valid. Your function will not be
 	// called on valid nodes.
 	// This call is heavy, so the overhead of std::function is minimized.
+	template <class Func>
 	void clean(Id id,
-			/* void(your_node, vector<parent, was_dirty>)*/
-			const std::function<void(
-					Id, const std::vector<std::pair<Id, bool>>&)>& func) {
+			const fea::callback<Func, void(const callback_data_t&)>& func) {
 		if (_nodes.at(id).is_root()) {
 			return;
 		}
@@ -484,7 +564,7 @@ struct lazy_graph {
 		const std::vector<Id>& graph = evaluation_graph(id);
 
 		// Stored here to reuse memory.
-		std::vector<std::pair<Id, bool>> callback_parents;
+		clean_container_t parent_statuses;
 
 		// Now that we have the correct evaluation graph, evaluate it.
 		// Call the user funcion with the current node id and provide it's
@@ -496,25 +576,27 @@ struct lazy_graph {
 			Id nid = graph[i];
 			node_t& n = _nodes.at(nid);
 
-			callback_parents.clear();
-
 			// Nodes that don't depend on anything never need to be updated.
 			if (n.is_root()) {
 				continue;
 			}
+
+			parent_statuses.clear();
 
 			// Check all my parents to see if I am really dirty.
 			// Also reset my version while we are looping.
 			bool dirty = false;
 			std::unordered_map<Id, DirtyVersion>& parents = n.parents();
 
-			// eh, not great. better way to pass on parents to user funcion?
 			for (std::pair<const Id, DirtyVersion>& parent : parents) {
-				callback_parents.push_back({ parent.first, false });
+				const node_t& parent_node = _nodes.at(parent.first);
 
-				DirtyVersion parent_version = _nodes.at(parent.first).version();
+				parent_statuses.push_back(
+						{ parent.first, &parent_node.node_data(), false });
+
+				DirtyVersion parent_version = parent_node.version();
 				if (parent.second != parent_version) {
-					callback_parents.back().second = true;
+					parent_statuses.back().was_dirty = true;
 
 					// clean my parent tracking version
 					parent.second = parent_version;
@@ -528,10 +610,15 @@ struct lazy_graph {
 				continue;
 			}
 
+			callback_data_t c_data;
+			c_data.id = nid;
+			c_data.node_data = &n.node_data();
+			c_data.parents = { parent_statuses.data(), parent_statuses.size() };
+
 			// And finally, call the user lambda. Provide it with its id and
 			// parent ids.
 			// todo : pass parent ids
-			func(nid, callback_parents);
+			func(c_data);
 			make_dirty(nid);
 		}
 	}
@@ -542,11 +629,9 @@ struct lazy_graph {
 	// A node that depends on nothing is always valid. Your function will not be
 	// called on valid nodes.
 	// This call is heavy, so the overhead of std::function is minimized.
+	template <class Func>
 	void clean(const std::vector<Id>& ids,
-			/* void(your_node, vector<parent, was_dirty>)*/
-			const std::function<void(
-					Id, const std::vector<std::pair<Id, bool>>&)>& func) {
-
+			const fea::callback<Func, void(const callback_data_t&)>& func) {
 		for (Id id : ids) {
 			clean(id, func);
 		}
@@ -560,11 +645,10 @@ struct lazy_graph {
 	// will not be called on valid nodes.
 	// It is important to only read your parents, and only write to yourself
 	// during this evaluation!
+	template <class Func>
 	void clean_mt(Id id,
 			/* void(your_node, vector<parent, was_dirty>)*/
-			const std::function<void(
-					Id, const std::vector<std::pair<Id, bool>>&)>& func) {
-
+			const fea::callback<Func, void(const callback_data_t&)>& func) {
 		if (_nodes.at(id).is_root()) {
 			return;
 		}
@@ -612,17 +696,20 @@ struct lazy_graph {
 			bool dirty = false;
 			std::unordered_map<Id, DirtyVersion>& parents = n.parents();
 
-			std::vector<std::pair<Id, bool>> callback_parents;
-			callback_parents.reserve(parents.size());
+			clean_container_t parent_statuses;
+			parent_statuses.reserve(parents.size());
 
 			// eh, not great. better way to pass on parents to user funcion?
 			for (std::pair<const Id, DirtyVersion>& parent : parents) {
-				callback_parents.push_back({ parent.first, false });
+				const node_t& parent_node = _nodes.at(parent.first);
 
-				DirtyVersion parent_version = _nodes.at(parent.first).version();
+				parent_statuses.push_back(
+						{ parent.first, &parent_node.node_data(), false });
+
+				DirtyVersion parent_version = parent_node.version();
 				if (parent.second != parent_version) {
 					// set the callback bool to dirty
-					callback_parents.back().second = true;
+					parent_statuses.back().was_dirty = true;
 
 					// clean the parent
 					parent.second = parent_version;
@@ -637,9 +724,15 @@ struct lazy_graph {
 			}
 
 			evaluating.push_back(nid);
-			g.run([p = std::move(callback_parents), nid, func, this]() {
+			g.run([p = std::move(parent_statuses), nid, node_d = &n.node_data(),
+						  func, this]() {
+				callback_data_t c_data;
+				c_data.id = nid;
+				c_data.node_data = node_d;
+				c_data.parents = { p.data(), p.size() };
+
 				// And finally, call the user lambda. Provide it with its id.
-				func(nid, p);
+				func(c_data);
 				make_dirty(nid);
 			});
 		}
@@ -657,10 +750,10 @@ struct lazy_graph {
 	// will not be called on valid nodes.
 	// It is important to only read your parents, and only write to yourself
 	// during this evaluation!
+	template <class Func>
 	void clean_mt(const std::vector<Id>& ids,
 			/* void(your_node, vector<parent, was_dirty>)*/
-			const std::function<void(
-					Id, const std::vector<std::pair<Id, bool>>&)>& func) {
+			const fea::callback<Func, void(const callback_data_t&)>& func) {
 		// Figure out which graphs can run completely in parallel and which
 		// can't.
 		auto ind_data = are_eval_graphs_independent(ids);
@@ -756,9 +849,9 @@ struct lazy_graph {
 	// This returns the flattened graph required to clean a node.
 	// To visit the graph, loop left to right.
 	// This function isn't const because it will recompute the eval graph if
-	// needed.
-	// You shouldn't need to call this yourself, but it is exposed for debugging
-	// and testing purposes.
+	// needed. Recomputing the evaluation graph is heavy and mallocs, so we do
+	// it rarely. You shouldn't need to call this yourself, but it is exposed
+	// for debugging and testing purposes.
 	const std::vector<Id>& evaluation_graph(Id node_id) {
 		node_t& n = _nodes.at(node_id);
 		if (!n.is_evaluation_graph_dirty()) {
@@ -828,7 +921,18 @@ struct lazy_graph {
 
 
 private:
-	using node_t = node<Id, NodeData, DirtyVersion>;
+	using node_t = node<Id, NodeData, DirtyVersion, MaxParents>;
+
+	template <size_t N>
+	struct clean_container {
+		using type = fea::stack_vector<parent_status_t, N>;
+	};
+	template <>
+	struct clean_container<0> {
+		using type = std::vector<parent_status_t>;
+	};
+
+	using clean_container_t = typename clean_container<MaxParents>::type;
 
 
 	// Recurse downward.

@@ -22,6 +22,41 @@ TEST(type_map, basics) {
 	}
 
 	{
+		auto m = fea::make_type_map(fea::kv_t{ int{}, short(0) },
+				fea::kv_t{ double{}, size_t(42) });
+
+		static_assert(m.template contains<int>(), "type_map.cpp : test failed");
+		static_assert(
+				!m.template contains<short>(), "type_map.cpp : test failed");
+
+		EXPECT_EQ(m.template find<double>(), 42u);
+
+		using find_t = std::decay_t<decltype(m.find<double>())>;
+		static_assert(std::is_same<find_t, size_t>::value,
+				"type_map.cpp : test failed");
+
+		static_assert(
+				std::is_same_v<decltype(m),
+						fea::type_map<fea::pack<int, double>, short, size_t>>,
+				"type_map.cpp : test failed");
+	}
+
+	{
+		auto m = fea::make_type_map(
+				fea::make_kv<int>(short(0)), fea::make_kv<double>(size_t(42)));
+
+		static_assert(m.template contains<int>(), "type_map.cpp : test failed");
+		static_assert(
+				!m.template contains<short>(), "type_map.cpp : test failed");
+
+		EXPECT_EQ(m.template find<double>(), 42u);
+
+		using find_t = std::decay_t<decltype(m.find<double>())>;
+		static_assert(std::is_same<find_t, size_t>::value,
+				"type_map.cpp : test failed");
+	}
+
+	{
 		enum class e {
 			one,
 			two,
@@ -30,7 +65,7 @@ TEST(type_map, basics) {
 			count,
 		};
 
-		constexpr fea::pack_nt<e, e::one, e::two> k2;
+		constexpr fea::pack_nt<e::one, e::two> k2;
 		constexpr std::tuple<short, size_t> v2{ short(0), size_t(42) };
 		auto m = fea::make_type_map(k2, v2);
 
@@ -46,15 +81,6 @@ TEST(type_map, basics) {
 				"type_map.cpp : test failed");
 	}
 
-	{
-		auto tmap = fea::make_type_map(
-				fea::kv_t{ int(), 42.f }, fea::kv_t{ short(), 42.0 });
-
-		static_assert(
-				std::is_same_v<decltype(tmap),
-						fea::type_map<fea::pack<int, short>, float, double>>,
-				"type_map.cpp : test failed");
-	}
 
 	{
 		enum class e {
@@ -69,8 +95,8 @@ TEST(type_map, basics) {
 				fea::make_kv_nt<e::one>(42.f), fea::make_kv_nt<e::two>(42.0));
 
 		static_assert(std::is_same_v<decltype(tmap),
-							  fea::type_map<fea::pack_nt<e, e::one, e::two>,
-									  float, double>>,
+							  fea::type_map<fea::pack_nt<e::one, e::two>, float,
+									  double>>,
 				"type_map.cpp : test failed");
 	}
 }

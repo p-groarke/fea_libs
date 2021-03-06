@@ -30,7 +30,6 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  **/
-
 #pragma once
 #include "fea/meta/pack.hpp"
 #include "fea/meta/traits.hpp"
@@ -132,20 +131,20 @@ struct type_map<fea::pack<Keys...>, Values...>
 };
 
 // Non-type type_map.
-template <class T, T... Keys, class... Values>
-struct type_map<fea::pack_nt<T, Keys...>, Values...>
+template <auto... Keys, class... Values>
+struct type_map<fea::pack_nt<Keys...>, Values...>
 		: detail::type_map_shared<Values...> {
 	static_assert(sizeof...(Keys) == sizeof...(Values),
 			"type_map : unequal number of keys and values");
 
-	using pack_t = fea::pack_nt<T, Keys...>;
+	using pack_t = fea::pack_nt<Keys...>;
 
 	// Inherit ctors.
 	using base_t = typename detail::type_map_shared<Values...>;
 	using base_t::base_t;
 
 	// Does map contain non-type Key?
-	template <T Key>
+	template <auto Key>
 	static constexpr bool contains() {
 		// Just to make sure we are in constexpr land.
 		constexpr bool ret = pack_contains_nt_v<Key, pack_t>;
@@ -153,7 +152,7 @@ struct type_map<fea::pack_nt<T, Keys...>, Values...>
 	}
 
 	// Search for value associated with non-type key.
-	template <T Key>
+	template <auto Key>
 	constexpr const auto& find() const {
 		static_assert(
 				contains<Key>(), "type_map : doesn't contain requested key");
@@ -161,7 +160,7 @@ struct type_map<fea::pack_nt<T, Keys...>, Values...>
 		constexpr size_t idx = pack_idx_nt_v<Key, pack_t>;
 		return std::get<idx>(base_t::data());
 	}
-	template <T Key>
+	template <auto Key>
 	constexpr auto& find() {
 		static_assert(
 				contains<Key>(), "type_map : doesn't contain requested key");
@@ -179,10 +178,10 @@ constexpr auto make_type_map(
 }
 
 // Construct a non-type type_map using a fea::pack and a std::tuple.
-template <class K, K... Keys, class... Values>
+template <auto... Keys, class... Values>
 constexpr auto make_type_map(
-		pack_nt<K, Keys...>, const std::tuple<Values...>& values) {
-	return type_map<pack_nt<K, Keys...>, Values...>(values);
+		pack_nt<Keys...>, const std::tuple<Values...>& values) {
+	return type_map<pack_nt<Keys...>, Values...>(values);
 }
 
 // kv_t is a holder for a type Key and Value v.
@@ -208,14 +207,19 @@ struct kv_t {
 
 // Helper to deduce kv_t in c++ < 17.
 template <class Key, class Value>
-kv_t<Key, Value> make_kv_t(Key&&, Value&& v) {
+kv_t<Key, Value> make_kv(Key&&, Value&& v) {
+	return kv_t<Key, Value>{ std::forward<Value>(v) };
+}
+
+template <class Key, class Value>
+kv_t<Key, Value> make_kv(Value&& v) {
 	return kv_t<Key, Value>{ std::forward<Value>(v) };
 }
 
 // kv_t for non-types.
-template <class K, K Key, class Value>
+template <auto Key, class Value>
 struct kv_nt {
-	using key_t = K;
+	using key_t = decltype(Key);
 	using value_t = Value;
 
 	kv_nt(Value&& v)
@@ -233,8 +237,8 @@ struct kv_nt {
 
 // Helper which makes it a little cleaner.
 template <auto Key, class Value>
-kv_nt<decltype(Key), Key, Value> make_kv_nt(Value&& v) {
-	return kv_nt<decltype(Key), Key, Value>{ std::forward<Value>(v) };
+kv_nt<Key, Value> make_kv_nt(Value&& v) {
+	return kv_nt<Key, Value>{ std::forward<Value>(v) };
 }
 
 // Construct a type_map using a list of key-value pairs.
@@ -245,9 +249,9 @@ constexpr auto make_type_map(kv_t<Keys, Values>&&... kvs) {
 }
 
 // Construct a non-type type_map using a list of key-value pairs.
-template <class K, K... Keys, class... Values>
-constexpr auto make_type_map(kv_nt<K, Keys, Values>&&... kvs) {
-	return type_map<pack_nt<K, Keys...>, Values...>(
+template <auto... Keys, class... Values>
+constexpr auto make_type_map(kv_nt<Keys, Values>&&... kvs) {
+	return type_map<pack_nt<Keys...>, Values...>(
 			std::make_tuple(fea::maybe_move(kvs.v)...));
 }
 } // namespace fea

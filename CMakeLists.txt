@@ -99,11 +99,11 @@ set_compile_options(${PROJECT_NAME} INTERFACE)
 target_link_libraries(${PROJECT_NAME} INTERFACE TBB::TBB date::date)
 
 # To see files in IDE
-target_sources(${PROJECT_NAME} INTERFACE
-	# $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-	"$<BUILD_INTERFACE:${HEADER_FILES_CPP14}>"
-	"$<BUILD_INTERFACE:$<$<COMPILE_FEATURES:cxx_std_17>:${HEADER_FILES_CPP17}>>"
-)
+# target_sources(${PROJECT_NAME} INTERFACE
+# 	# $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+# 	"$<BUILD_INTERFACE:${HEADER_FILES_CPP14}>"
+# 	"$<BUILD_INTERFACE:$<$<COMPILE_FEATURES:cxx_std_17>:${HEADER_FILES_CPP17}>>"
+# )
 
 # Interface
 target_include_directories(${PROJECT_NAME} INTERFACE
@@ -112,8 +112,8 @@ target_include_directories(${PROJECT_NAME} INTERFACE
 	$<BUILD_INTERFACE:$<$<COMPILE_FEATURES:cxx_std_17>:${CMAKE_CURRENT_SOURCE_DIR}/include_cpp17>>
 )
 
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include_cpp14 PREFIX "Header Files" FILES ${HEADER_FILES_CPP14})
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include_cpp17 PREFIX "Header Files" FILES ${HEADER_FILES_CPP17})
+# source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include_cpp14 PREFIX "Header Files" FILES ${HEADER_FILES_CPP14})
+# source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include_cpp17 PREFIX "Header Files" FILES ${HEADER_FILES_CPP17})
 # make_pretty_source_folders("include_cpp14/fea" "Header Files" "${HEADER_FILES_CPP14}")
 # make_pretty_source_folders("include_cpp17/fea" "Header Files" "${HEADER_FILES_CPP17}")
 
@@ -142,14 +142,19 @@ if (${FEA_TESTS})
 	set(TEST_NAME ${PROJECT_NAME}_tests)
 	set(TEST_NAME_NOTHROW ${PROJECT_NAME}_nothrow_tests)
 
+	file(GLOB_RECURSE TEST_HEADERS_CPP14 "include_cpp14/*.hpp")
+	file(GLOB_RECURSE TEST_HEADERS_CPP17 "include_cpp17/*.hpp")
+
 	file(GLOB_RECURSE TEST_SOURCES_CPP14 "tests_cpp14/*.cpp" "tests_cpp14/*.hpp" "tests_cpp14/*.tpp")
 	file(GLOB_RECURSE TEST_SOURCES_CPP17 "tests_cpp17/*.cpp" "tests_cpp17/*.hpp" "tests_cpp17/*.tpp")
 
-	add_executable(${TEST_NAME} ${TEST_SOURCES_CPP14}
+	add_executable(${TEST_NAME} ${TEST_SOURCES_CPP14} ${TEST_HEADERS_CPP14}
 		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_SOURCES_CPP17}>"
+		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_HEADERS_CPP17}>"
 	)
-	add_executable(${TEST_NAME_NOTHROW} ${TEST_SOURCES_CPP14}
+	add_executable(${TEST_NAME_NOTHROW} ${TEST_SOURCES_CPP14} ${TEST_HEADERS_CPP14}
 		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_SOURCES_CPP17}>"
+		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_HEADERS_CPP17}>"
 	)
 
 	set_compile_options(${TEST_NAME} PRIVATE)
@@ -175,6 +180,8 @@ if (${FEA_TESTS})
 
 	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp14 PREFIX "Source Files" FILES ${TEST_SOURCES_CPP14})
 	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp17 PREFIX "Source Files" FILES ${TEST_SOURCES_CPP17})
+	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include_cpp14 PREFIX "Header Files" FILES ${TEST_HEADERS_CPP14})
+	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include_cpp17 PREFIX "Header Files" FILES ${TEST_HEADERS_CPP17})
 	# make_pretty_source_folders("tests_cpp14" "Source Files" "${TEST_SOURCES_CPP14}")
 	# make_pretty_source_folders("tests_cpp17" "Source Files" "${TEST_SOURCES_CPP17}")
 

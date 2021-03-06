@@ -130,40 +130,6 @@ FEA_INLINE_VAR constexpr bool is_detected_v
 		= is_detected<Op, void, Args...>::value;
 
 
-/*
-member_func_ptr is a trait which constructs a member function pointer, given Ret
-and Args...
-
-It uses the first argument of Args as the class type.
-If no Args are provided, aliases void*.
-*/
-
-namespace detail {
-template <class, class, bool, class...>
-struct member_func_ptr {
-	using type = void*;
-};
-
-template <class Ret, class T, class... Rest>
-struct member_func_ptr<Ret, T, true, Rest...> {
-	using type = Ret (T::*)(Rest...);
-};
-
-} // namespace detail
-
-template <class, class...>
-struct member_func_ptr {
-	using type = void*;
-};
-
-template <class Ret, class T, class... Rest>
-struct member_func_ptr<Ret, T*, Rest...>
-		: detail::member_func_ptr<Ret, T, std::is_class<T>::value, Rest...> {};
-
-template <class Ret, class... Args>
-using member_func_ptr_t = typename member_func_ptr<Ret, Args...>::type;
-
-
 // Is the same non-type parameter.
 template <class T, T T1, T T2>
 struct is_same_nt : std::false_type {};
@@ -225,7 +191,10 @@ struct is_pair<std::pair<U1, U2>> : std::true_type {};
 template <class T>
 FEA_INLINE_VAR constexpr bool is_pair_v = is_pair<T>::value;
 
-// useful is_detected checkers.
+
+/**
+ * Useful is_detected checkers
+ */
 template <class T>
 using has_begin = decltype(std::begin(std::declval<T>()));
 template <class T>
@@ -262,5 +231,6 @@ FEA_INLINE_VAR constexpr bool is_tuple_like_v = fea::is_detected_v<has_get, T>;
 template <class T>
 FEA_INLINE_VAR constexpr bool is_contiguous_v
 		= fea::is_detected_v<has_data, T>&& fea::is_detected_v<has_size, T>;
+
 
 } // namespace fea
