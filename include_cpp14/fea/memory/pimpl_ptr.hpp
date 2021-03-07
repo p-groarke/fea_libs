@@ -76,14 +76,14 @@ struct pimpl_ptr {
 
 	~pimpl_ptr() = default;
 
-	const_pointer get() const noexcept {
+	const_pointer get() const {
 		return _ptr.get();
 	}
 	pointer get() noexcept {
 		return _ptr.get();
 	}
 
-	const_pointer operator->() const noexcept {
+	const_pointer operator->() const {
 		return _ptr.get();
 	}
 	pointer operator->() noexcept {
