@@ -40,7 +40,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <iomanip>
 #include <sstream>
 
+#if FEA_CPP17
+#include <filesystem>
+#endif
+
 namespace fea {
+#if FEA_CPP17
+using file_clock = std::filesystem::file_time_type::clock;
+#endif
+
+using sys_seconds = date::sys_seconds;
+using sys_minutes = date::sys_time<std::chrono::minutes>;
+using sys_hours = date::sys_time<std::chrono::hours>;
+using sys_days = date::sys_days;
+using sys_weeks = date::sys_time<date::weeks>;
 using sys_months = date::sys_time<date::months>;
 using sys_years = date::sys_time<date::years>;
 
@@ -320,6 +333,17 @@ date::sys_time<Duration> to_sys(steady_time<Duration> time) {
 	using namespace std::chrono;
 	return date::sys_time<Duration>{ time.time_since_epoch() };
 }
+
+#if FEA_CPP17
+// WARNING : Looses precision.
+inline std::chrono::system_clock::time_point to_sys(
+		std::filesystem::file_time_type tp) {
+	using namespace std::chrono;
+
+	return time_point_cast<system_clock::duration>(
+			tp - file_clock::now() + system_clock::now());
+}
+#endif
 
 // WARNING : Cannot represent as big values as system_clock.
 inline std::chrono::steady_clock::time_point to_steady(

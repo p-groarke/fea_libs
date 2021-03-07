@@ -54,6 +54,17 @@ void do_basic_test() {
 		EXPECT_TRUE(ret_pair.second);
 		EXPECT_EQ(*ret_pair.first, test2{ i });
 	}
+
+	EXPECT_EQ(
+			size_t(std::distance(map1.begin(), map1.end())), size_t(small_num));
+	EXPECT_EQ(size_t(std::distance(map1.key_begin(), map1.key_end())),
+			size_t(small_num));
+
+	for (KeyT i = 0; i < small_num; ++i) {
+		EXPECT_EQ(*(map1.data() + size_t(i)), test2{ i });
+		EXPECT_EQ(*(map1.key_data() + size_t(i)), i);
+	}
+
 	for (KeyT i = 0; i < small_num; ++i) {
 		auto ret_pair = map1.insert(i, i);
 		EXPECT_FALSE(ret_pair.second);

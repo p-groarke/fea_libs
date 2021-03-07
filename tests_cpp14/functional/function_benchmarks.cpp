@@ -1,13 +1,14 @@
 ﻿#include <fea/utils/platform.hpp>
-#if defined(FEA_RELEASE) && defined(FEA_BENCHMARKS)
+#if defined(FEA_RELEASE) && FEA_CPP17 && defined(FEA_BENCHMARKS)
 
 #include <fea/benchmark/benchmark.hpp>
+#include <fea/functional/callback.hpp>
+#include <fea/functional/function.hpp>
+#include <fea/meta/pack.hpp>
 #include <fea/meta/traits.hpp>
 #include <gtest/gtest.h>
 #include <random>
 #include <vector>
-
-#include <fea/functional/function.hpp>
 
 namespace {
 template <class>
@@ -34,11 +35,11 @@ struct raw_function_with_erasure<FuncRet(FuncArgs...)> {
 			: _member_func(func)
 			, _erased(&raw_function_with_erasure::call_member_func) {
 
-		static_assert(std::is_same<fea::first_t<FuncArgs...>, T*>::value,
+		static_assert(std::is_same<fea::front_t<FuncArgs...>, T*>::value,
 				"fea::raw_function : first argument of member function pointer "
 				"must be pointer to the class");
 
-		static_assert(std::is_same<std::tuple<OtherArgs...>,
+		static_assert(std::is_same<fea::pack<OtherArgs...>,
 							  fea::idx_splice_after_t<0, FuncArgs...>>::value,
 				"fea::raw_function : signature mismatch between provided "
 				"function and expected function");
@@ -90,11 +91,11 @@ struct raw_function_with_if<FuncRet(FuncArgs...)> {
 	constexpr raw_function_with_if(FuncRet (T::*func)(OtherArgs...))
 			: _member_func(func) {
 
-		static_assert(std::is_same<fea::first_t<FuncArgs...>, T*>::value,
+		static_assert(std::is_same<fea::front_t<FuncArgs...>, T*>::value,
 				"fea::raw_function : first argument of member function pointer "
 				"must be pointer to the class");
 
-		static_assert(std::is_same<std::tuple<OtherArgs...>,
+		static_assert(std::is_same<fea::pack<OtherArgs...>,
 							  fea::idx_splice_after_t<0, FuncArgs...>>::value,
 				"fea::raw_function : signature mismatch between provided "
 				"function and expected function");
@@ -141,12 +142,12 @@ struct raw_function_with_union<FuncRet(FuncArgs...)> {
 			: _is_member(true) {
 		_func_union.mem_func = func;
 
-		static_assert(std::is_same<fea::first_t<FuncArgs...>, T*>::value,
+		static_assert(std::is_same<fea::front_t<FuncArgs...>, T*>::value,
 				"fea::raw_function : first argument of member function "
 				"pointer "
 				"must be pointer to the class");
 
-		static_assert(std::is_same<std::tuple<OtherArgs...>,
+		static_assert(std::is_same<fea::pack<OtherArgs...>,
 							  fea::idx_splice_after_t<0, FuncArgs...>>::value,
 				"fea::raw_function : signature mismatch between provided "
 				"function and expected function");
@@ -215,6 +216,7 @@ TEST(function_cl, benchmarks) {
 				fea_raw_function_with_union = &bench_obj::func;
 		fea::function_cl<void(bench_obj*, size_t&)> fea_function_cl
 				= &bench_obj::func;
+		auto fea_callback = fea::make_callback([&](size_t& i) { obj.func(i); });
 
 		std::string title = std::string{ "Calling Callable " }
 				+ std::to_string(bench_count) + std::string{ " Times" };
@@ -249,6 +251,11 @@ TEST(function_cl, benchmarks) {
 				fea_function_cl(&obj, answer);
 			}
 		});
+		suite.benchmark("fea::callback", [&]() {
+			for (size_t i = 0; i < bench_count; ++i) {
+				fea_callback(answer);
+			}
+		});
 		suite.print();
 	}
 
@@ -266,6 +273,11 @@ TEST(function_cl, benchmarks) {
 				fea_raw_function_with_union_vec(vec_size, &bench_obj::func);
 		std::vector<fea::function_cl<void(bench_obj*, size_t&)>>
 				fea_function_cl_vec(vec_size, &bench_obj::func);
+
+		auto fea_callback = fea::make_callback([&](size_t& i) { obj.func(i); });
+		using callback_t = decltype(fea_callback)::func_t;
+		std::vector<fea::callback<callback_t, void(size_t&)>> fea_callback_vec(
+				vec_size, fea_callback);
 
 		std::string title = std::to_string(vec_size)
 				+ " Callables Stored In A Vector, Iterated Linearly";
@@ -298,6 +310,11 @@ TEST(function_cl, benchmarks) {
 		suite.benchmark("fea::function_cl", [&]() {
 			for (size_t i = 0; i < raw_vec.size(); ++i) {
 				fea_function_cl_vec[i](&obj, answer);
+			}
+		});
+		suite.benchmark("fea::callback", [&]() {
+			for (size_t i = 0; i < raw_vec.size(); ++i) {
+				fea_callback_vec[i](answer);
 			}
 		});
 		suite.print();
@@ -347,6 +364,12 @@ TEST(function_cl, benchmarks) {
 			for (size_t i = 0; i < raw_vec.size(); ++i) {
 				size_t idx = random_idxes[i];
 				fea_function_cl_vec[idx](&obj, answer);
+			}
+		});
+		suite.benchmark("fea::callback", [&]() {
+			for (size_t i = 0; i < raw_vec.size(); ++i) {
+				size_t idx = random_idxes[i];
+				fea_callback_vec[idx](answer);
 			}
 		});
 		suite.print();

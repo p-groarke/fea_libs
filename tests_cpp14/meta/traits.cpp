@@ -98,62 +98,39 @@ TEST(traits, is_detected) {
 			"traits.cpp : failed test");
 }
 
-struct obj {
-	void func(int) {
-	}
-};
-
-TEST(traits, member_func_ptr) {
-	static_assert(std::is_class<obj>::value, "");
-
-	using mem_fun = fea::member_func_ptr_t<void, obj*, int>;
-	static_assert(std::is_same<mem_fun, decltype(&obj::func)>::value,
-			"traits.cpp : test failed");
-
-	using mem_fun2 = fea::member_func_ptr_t<void, int>;
-	static_assert(
-			std::is_same<mem_fun2, void*>::value, "traits.cpp : test failed");
-
-	using mem_fun3 = fea::member_func_ptr_t<void, obj, int>;
-	static_assert(
-			std::is_same<mem_fun3, void*>::value, "traits.cpp : test failed");
-
-	using mem_fun4 = fea::member_func_ptr_t<void, obj*, int, double, float>;
-	static_assert(
-			std::is_same<mem_fun4, void (obj::*)(int, double, float)>::value,
-			"traits.cpp : test failed");
-
-	using mem_fun5 = fea::member_func_ptr_t<void, int*>;
-	static_assert(
-			std::is_same<mem_fun5, void*>::value, "traits.cpp : test failed");
-}
-
 TEST(traits, misc) {
 	static_assert(
 			std::is_same<fea::remove_nested_const_t<std::pair<const int, int>>,
 					std::pair<int, int>>::value,
-			"serialize.cpp : test failed");
+			"traits.cpp : test failed");
 
 	static_assert(fea::is_first_const_v<std::pair<const int, int>>,
-			"serialize.cpp : test failed");
+			"traits.cpp : test failed");
 	static_assert(!fea::is_first_const_v<std::pair<int, const int>>,
-			"serialize.cpp : test failed");
+			"traits.cpp : test failed");
 
-	static_assert(fea::is_container_v<std::vector<int>>,
-			"serialize.cpp : test failed");
-	static_assert(!fea::is_container_v<std::tuple<int>>,
-			"serialize.cpp : test failed");
+	static_assert(
+			fea::is_container_v<std::vector<int>>, "traits.cpp : test failed");
+	static_assert(
+			!fea::is_container_v<std::tuple<int>>, "traits.cpp : test failed");
 
-	static_assert(fea::is_tuple_like_v<std::tuple<int>>,
-			"serialize.cpp : test failed");
+	static_assert(
+			fea::is_tuple_like_v<std::tuple<int>>, "traits.cpp : test failed");
 	static_assert(fea::is_tuple_like_v<std::pair<int, int>>,
-			"serialize.cpp : test failed");
+			"traits.cpp : test failed");
 	static_assert(!fea::is_tuple_like_v<std::vector<int>>,
-			"serialize.cpp : test failed");
+			"traits.cpp : test failed");
 
-	static_assert(fea::is_contiguous_v<std::vector<int>>,
-			"serialize.cpp : test failed");
-	static_assert(!fea::is_contiguous_v<std::set<int>>,
-			"serialize.cpp : test failed");
+	static_assert(
+			fea::is_contiguous_v<std::vector<int>>, "traits.cpp : test failed");
+	static_assert(
+			!fea::is_contiguous_v<std::set<int>>, "traits.cpp : test failed");
+}
+
+TEST(traits, front_back_t) {
+	static_assert(std::is_same<fea::front_t<int, double, float>, int>::value,
+			"traits.cpp : test failed");
+	static_assert(std::is_same<fea::back_t<int, double, float>, float>::value,
+			"traits.cpp : test failed");
 }
 } // namespace

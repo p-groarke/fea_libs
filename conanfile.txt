@@ -9,6 +9,8 @@ cmake_find_package_multi
 [options]
 gtest:build_gmock=False
 date:use_system_tz_db=True
+tbb:tbbmalloc=True
+#tbb:tbbproxy=True
 
 [imports]
 bin, *.pdb -> ./bin

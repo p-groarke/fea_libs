@@ -1,4 +1,4 @@
-﻿#include <fea/utils/memory.hpp>
+﻿#include <fea/memory/memory.hpp>
 #include <gtest/gtest.h>
 #include <vector>
 

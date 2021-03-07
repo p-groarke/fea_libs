@@ -127,27 +127,55 @@ template <class CharT>
 [[nodiscard]] string_t<CharT> to_lower(const string_t<CharT>& str) {
 	auto ret = str;
 	std::transform(ret.begin(), ret.end(), ret.begin(),
-			[](auto c) { return static_cast<CharT>(::tolower(c)); });
+			[](auto c) { return CharT(::tolower(c)); });
 	return ret;
 }
 
 template <class CharT>
 void to_lower(string_t<CharT>& out, bool /*inplace*/) {
 	std::transform(out.begin(), out.end(), out.begin(),
-			[](auto c) { return static_cast<CharT>(::tolower(c)); });
+			[](auto c) { return CharT(::tolower(c)); });
 }
 
 [[nodiscard]] inline std::vector<uint8_t> to_lower(
 		const std::vector<uint8_t>& str) {
 	std::vector<uint8_t> ret = str;
 	std::transform(ret.begin(), ret.end(), ret.begin(),
-			[](char c) { return static_cast<char>(::tolower(c)); });
+			[](char c) { return char(::tolower(c)); });
 	return ret;
 }
 
 inline void to_lower(std::vector<uint8_t>& out, bool /*inplace*/) {
 	std::transform(out.begin(), out.end(), out.begin(),
-			[](char c) { return static_cast<char>(::tolower(c)); });
+			[](char c) { return char(::tolower(c)); });
+}
+
+
+template <class CharT>
+[[nodiscard]] string_t<CharT> to_upper(const string_t<CharT>& str) {
+	auto ret = str;
+	std::transform(ret.begin(), ret.end(), ret.begin(),
+			[](auto c) { return CharT(::toupper(c)); });
+	return ret;
+}
+
+template <class CharT>
+void to_upper(string_t<CharT>& out, bool /*inplace*/) {
+	std::transform(out.begin(), out.end(), out.begin(),
+			[](auto c) { return CharT(::toupper(c)); });
+}
+
+[[nodiscard]] inline std::vector<uint8_t> to_upper(
+		const std::vector<uint8_t>& str) {
+	std::vector<uint8_t> ret = str;
+	std::transform(ret.begin(), ret.end(), ret.begin(),
+			[](char c) { return char(::toupper(c)); });
+	return ret;
+}
+
+inline void to_upper(std::vector<uint8_t>& out, bool /*inplace*/) {
+	std::transform(out.begin(), out.end(), out.begin(),
+			[](char c) { return char(::tolower(c)); });
 }
 
 template <class CharT>
@@ -298,6 +326,56 @@ template <class CharT>
 		return {};
 	}
 	return str.substr(0, new_end + 1);
+}
+
+// Inserts the provided thousand seperator in string.
+// https://stackoverflow.com/questions/49319461/how-to-use-custom-thousand-separator-and-decimal-character-with-stdstringstrea
+
+template <class CharT>
+string_t<CharT> utf8_to_any(const std::string& str);
+
+template <class CharT>
+[[nodiscard]] string_t<CharT> thousand_seperate(
+		const string_t<CharT>& str, CharT sep) {
+	string_t<CharT> ret = str;
+
+	size_t i = ret.rfind(CharT('.'));
+	if (i == ret.npos) {
+		i = ret.size();
+	}
+
+	const string_t<CharT> nums = fea::utf8_to_any<CharT>("0123456789");
+	size_t prefix_pos = ret.find_first_of(nums);
+	const size_t digits = 3u + prefix_pos;
+	while (i > digits) {
+		ret.insert(i -= 3, 1, sep);
+	}
+
+	return ret;
+
+	// if (ret.size() <= 3) {
+	//	return str;
+	//}
+
+	// size_t added_chars = (str.size() / 3u);
+	// if (str.size() % 3 == 0) {
+	//	--added_chars;
+	//}
+
+	// string_t<CharT> ret(str.size() + added_chars, '\0');
+
+	// size_t cnt = 0;
+	// int ret_idx = int(ret.size()) - 1;
+	// for (int i = int(str.size()) - 1; i >= 0; --i) {
+	//	++cnt;
+	//	ret[ret_idx--] = str[i];
+
+	//	if (cnt % 3 == 0) {
+	//		ret[ret_idx--] = sep;
+	//	}
+	//}
+
+	// return ret;
 }
 
 
@@ -580,8 +658,7 @@ std::string any_to_utf8(const string_t<CharT>& str) {
 	} else if constexpr (std::is_same_v<CharT, char32_t>) {
 		return utf32_to_utf8(str);
 	} else {
-		fea::maybe_throw<std::runtime_error>(
-				__FUNCTION__, "unsupported string type");
+		fea::maybe_throw(__FUNCTION__, __LINE__, "unsupported string type");
 	}
 }
 
@@ -596,8 +673,7 @@ string_t<CharT> utf8_to_any(const std::string& str) {
 	} else if constexpr (std::is_same_v<CharT, char32_t>) {
 		return utf8_to_utf32(str);
 	} else {
-		fea::maybe_throw<std::runtime_error>(
-				__FUNCTION__, "unsupported string type");
+		fea::maybe_throw(__FUNCTION__, __LINE__, "unsupported string type");
 	}
 }
 
@@ -612,8 +688,7 @@ std::u32string any_to_utf32(const string_t<CharT>& str) {
 	} else if constexpr (std::is_same_v<CharT, char32_t>) {
 		return str;
 	} else {
-		fea::maybe_throw<std::runtime_error>(
-				__FUNCTION__, "unsupported string type");
+		fea::maybe_throw(__FUNCTION__, __LINE__, "unsupported string type");
 	}
 }
 
@@ -628,8 +703,7 @@ string_t<CharT> utf32_to_any(const std::u32string& str) {
 	} else if constexpr (std::is_same_v<CharT, char32_t>) {
 		return str;
 	} else {
-		fea::maybe_throw<std::runtime_error>(
-				__FUNCTION__, "unsupported string type");
+		fea::maybe_throw(__FUNCTION__, __LINE__, "unsupported string type");
 	}
 }
 

@@ -31,10 +31,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
+#include "fea/memory/memory.hpp"
 #include "fea/meta/traits.hpp"
 #include "fea/meta/tuple.hpp"
 #include "fea/serialize/serializer.hpp"
-#include "fea/utils/memory.hpp"
 
 #include <iterator>
 #include <type_traits>
@@ -150,6 +150,9 @@ template <class T>
 		t.reserve(size_t(size));
 	}
 
+	static_assert(std::is_default_constructible_v<val_t>,
+			"fea::deserialize : type must be default constructible");
+
 	for (size_t i = 0; i < size_t(size); ++i) {
 		decltype(get_pair_type<val_t>()) v;
 		using fea::deserialize;
@@ -181,6 +184,9 @@ void serialize(
 
 	using msize_t = FEA_SERIALIZE_SIZE_T;
 	msize_t size = msize_t(std::distance(begin, end));
+
+	// Shouldn't be serializing empty containers.
+	assert(size != 0);
 
 	os.write_unvalidated(size);
 	if constexpr (std::is_trivially_copyable_v<val_t>) {

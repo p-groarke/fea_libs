@@ -30,15 +30,16 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  **/
-
 #pragma once
-#include "fea/meta/traits.hpp"
-#include "fea/utils/platform.hpp"
-
 #include <cassert>
 #include <functional>
 
 /*
+fea::callback is helper to accept templated invocables, all the while specifying
+the arguments and return type. It makes APIs more readable and documented and
+has low overhead compared to std::function.
+
+
 fea::function_cl is a holder for function pointers, which does the "right thing"
 when storing member pointers. It does *not* support captures or functors.
 

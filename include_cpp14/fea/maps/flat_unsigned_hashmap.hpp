@@ -212,6 +212,8 @@ struct flat_unsigned_hashmap {
 	using local_iterator = iterator;
 	using const_local_iterator = const_iterator;
 
+	using key_iterator = typename std::vector<key_type>::const_iterator;
+
 	// Don't make sense
 	// using hasher = std::hash<key_type>;
 	// using key_equal = std::equal_to<key_type>;
@@ -283,6 +285,13 @@ struct flat_unsigned_hashmap {
 	}
 	const_iterator cend() const noexcept {
 		return _values.cend();
+	}
+
+	key_iterator key_begin() const noexcept {
+		return _reverse_lookup.begin();
+	}
+	key_iterator key_end() const noexcept {
+		return _reverse_lookup.end();
 	}
 
 
@@ -496,15 +505,18 @@ struct flat_unsigned_hashmap {
 		return _values.data();
 	}
 
+	const key_type* key_data() const noexcept {
+		return _reverse_lookup.data();
+	}
+
 	// access specified element with bounds checking
 	const mapped_type& at(key_type k) const {
-		const_iterator it = find(k);
-		if (it == end()) {
+		if (!contains(k)) {
 			fea::maybe_throw<std::out_of_range>(
 					__FUNCTION__, __LINE__, "value doesn't exist");
 		}
 
-		return *it;
+		return at_unchecked(k);
 	}
 	mapped_type& at(key_type k) {
 		return const_cast<mapped_type&>(
