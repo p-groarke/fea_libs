@@ -106,7 +106,8 @@ TEST(pack, basics) {
 				"pack.cpp : test failed");
 		static_assert(fea::pack_element_nt_v<4, p_cat_t> == e::three,
 				"pack.cpp : test failed");
-		static_assert(fea::pack_element_nt_v<5, p_cat_t> == e::two,
+		// Fix for msvc 2017, which just dies here.
+		static_assert(e(fea::pack_element_nt_v<5, p_cat_t>) == e::two,
 				"pack.cpp : test failed");
 
 		static_assert(fea::pack_idx_nt_v<e::one, p_cat_t> == 0,
