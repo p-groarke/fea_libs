@@ -46,6 +46,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 namespace fea {
+namespace detail {
+template <size_t N, class T>
+struct clean_container {
+	using type = fea::stack_vector<T, N>;
+};
+template <class T>
+struct clean_container<0, T> {
+	using type = std::vector<T>;
+};
+
+} // namespace detail
 // TODO : callback should be 1 vector of pair<parent_id, bool_was_dirty>
 
 template <class Id, class NodeData, class DirtyVersion, size_t MaxParents>
@@ -950,16 +961,8 @@ struct lazy_graph {
 private:
 	using node_t = node<Id, NodeData, DirtyVersion, MaxParents>;
 
-	template <size_t N>
-	struct clean_container {
-		using type = fea::stack_vector<parent_status_t, N>;
-	};
-	template <>
-	struct clean_container<0> {
-		using type = std::vector<parent_status_t>;
-	};
-
-	using clean_container_t = typename clean_container<MaxParents>::type;
+	using clean_container_t =
+			typename detail::clean_container<MaxParents, parent_status_t>::type;
 
 
 	// Recurse downward.

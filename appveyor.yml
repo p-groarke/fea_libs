@@ -2,13 +2,23 @@ image:
   - Visual Studio 2019
   - Visual Studio 2017
   # - Visual Studio 2015
+
+branches:
+  only:
+    - master
+    - stable
+    - main
+
 platform:
   - x64
   - Win32
+
 configuration:
   - Debug
   - Release
+
 clone_folder: c:\projects\fea_libs
+
 install:
   - cmd: set PATH=%PATH%;%PYTHON%/Scripts/
   - cmd: pip.exe install conan
@@ -18,12 +28,15 @@ install:
   - cmd: conan remote add bincrafters https://api.bintray.com/conan/conan/conan-center
   - cmd: conan profile new default --detect
   - cmd: cd c:\projects\fea_libs
+
 build:
   project: c:\projects\fea_libs\build\fea_libs.sln
   parallel: true
+
 test_script:
   - cmd: c:\projects\fea_libs\build\bin\fea_libs_tests.exe
   - cmd: c:\projects\fea_libs\build\bin\fea_libs_nothrow_tests.exe
+
 for:
   -
     matrix:
