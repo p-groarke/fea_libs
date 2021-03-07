@@ -45,7 +45,6 @@ namespace fea {
 template <class T, class Deleter = std::default_delete<T>>
 struct pimpl_ptr {
 	using pointer = T*;
-	using const_pointer = const pointer;
 	using element_type = T;
 	using deleter_type = Deleter;
 
@@ -76,17 +75,11 @@ struct pimpl_ptr {
 
 	~pimpl_ptr() = default;
 
-	const_pointer get() const {
-		return _ptr.get();
-	}
-	pointer get() noexcept {
+	pointer get() const noexcept {
 		return _ptr.get();
 	}
 
-	const_pointer operator->() const {
-		return _ptr.get();
-	}
-	pointer operator->() noexcept {
+	pointer operator->() const noexcept {
 		return _ptr.get();
 	}
 
