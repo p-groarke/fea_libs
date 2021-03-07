@@ -200,14 +200,13 @@ struct node {
 private:
 	// Overload for max_parents set
 	void add_parent(Id parent_id, std::false_type) {
-		if (_parents.size() == N) {
+		if (_parents.size() == MaxParents) {
 			fea::maybe_throw(
 					__FUNCTION__, __LINE__, "trying to add too many parents");
 		}
 		add_parent(parent_id, std::true_type{});
 	}
-	template <>
-	void add_parent<0>(Id parent_id, std::true_type) {
+	void add_parent(Id parent_id, std::true_type) {
 		_parents.push_back(parent_id);
 		_dirty_evaluation_graph = true;
 	}
