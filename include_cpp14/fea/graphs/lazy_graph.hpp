@@ -97,7 +97,9 @@ struct node {
 	}
 
 	void add_parent(Id parent_id) {
-		add_parent<MaxParents>(parent_id);
+		add_parent(parent_id,
+				std::conditional_t<MaxParents == 0, std::true_type,
+						std::false_type>{});
 	}
 
 	void remove_parent(Id parent_id) {
@@ -197,16 +199,15 @@ struct node {
 
 private:
 	// Overload for max_parents set
-	template <size_t N>
-	void add_parent(Id parent_id) {
+	void add_parent(Id parent_id, std::false_type) {
 		if (_parents.size() == N) {
 			fea::maybe_throw(
 					__FUNCTION__, __LINE__, "trying to add too many parents");
 		}
-		add_parent<0>(parent_id);
+		add_parent(parent_id, std::true_type{});
 	}
 	template <>
-	void add_parent<0>(Id parent_id) {
+	void add_parent<0>(Id parent_id, std::true_type) {
 		_parents.push_back(parent_id);
 		_dirty_evaluation_graph = true;
 	}

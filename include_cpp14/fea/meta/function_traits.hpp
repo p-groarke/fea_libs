@@ -31,7 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #pragma once
-#include "fea/meta/pack.hpp"
 #include "fea/meta/traits.hpp"
 
 #include <tuple>
@@ -117,19 +116,19 @@ struct func_args;
 
 template <class Ret, class... Args>
 struct func_args<Ret(Args...)> {
-	using type = fea::pack<Args...>;
+	using type = std::tuple<Args...>;
 };
 template <class Ret, class... Args>
 struct func_args<Ret (*)(Args...)> {
-	using type = fea::pack<Args...>;
+	using type = std::tuple<Args...>;
 };
 template <class Ret, class T, class... Args>
 struct func_args<Ret (T::*)(Args...)> {
-	using type = fea::pack<Args...>;
+	using type = std::tuple<Args...>;
 };
 template <class Ret, class T, class... Args>
 struct func_args<Ret (T::*)(Args...) const> {
-	using type = fea::pack<Args...>;
+	using type = std::tuple<Args...>;
 };
 template <class Func>
 struct func_args {

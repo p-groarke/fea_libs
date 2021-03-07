@@ -20,19 +20,20 @@ TEST(function_traits, func_ret_and_func_args) {
 			std::is_same<fea::func_ret_t<decltype(&obj::func)>, void>::value,
 			"function_traits.cpp : test failed");
 	static_assert(std::is_same<fea::func_args_t<decltype(&obj::func)>,
-						  fea::pack<int>>::value,
+						  std::tuple<int>>::value,
 			"function_traits.cpp : test failed");
 
 	static_assert(std::is_same<fea::func_ret_t<obj>, int>::value,
 			"function_traits.cpp : test failed");
-	static_assert(std::is_same<fea::func_args_t<obj>, fea::pack<double>>::value,
+	static_assert(
+			std::is_same<fea::func_args_t<obj>, std::tuple<double>>::value,
 			"function_traits.cpp : test failed");
 
 	static_assert(
 			std::is_same<fea::func_ret_t<decltype(&some_func)>, double>::value,
 			"function_traits.cpp : test failed");
 	static_assert(std::is_same<fea::func_args_t<decltype(&some_func)>,
-						  fea::pack<double, float&, const short&>>::value,
+						  std::tuple<double, float&, const short&>>::value,
 			"function_traits.cpp : test failed");
 
 	static_assert(
