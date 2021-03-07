@@ -232,5 +232,37 @@ template <class T>
 FEA_INLINE_VAR constexpr bool is_contiguous_v
 		= fea::is_detected_v<has_data, T>&& fea::is_detected_v<has_size, T>;
 
+/**
+ * First and last types in a parameter pack.
+ */
+
+namespace detail {
+template <class T, class...>
+struct front {
+	using type = T;
+};
+} // namespace detail
+
+// Get the first type of a pack.
+template <class... Args>
+using front_t = typename detail::front<Args...>::type;
+
+namespace detail {
+template <class...>
+struct back;
+
+template <class T>
+struct back<T> {
+	using type = T;
+};
+template <class T, class... Args>
+struct back<T, Args...> {
+	using type = typename back<Args...>::type;
+};
+} // namespace detail
+
+// Get the last type of a pack.
+template <class... Args>
+using back_t = typename detail::back<Args...>::type;
 
 } // namespace fea

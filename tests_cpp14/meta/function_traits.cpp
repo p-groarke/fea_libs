@@ -16,6 +16,11 @@ double some_func(double, float&, const short&) {
 }
 
 TEST(function_traits, func_ret_and_func_args) {
+	double d = 0.0;
+	float f = 0.f;
+	short s = 0;
+	fea::unused(some_func(d, f, s));
+
 	static_assert(
 			std::is_same<fea::func_ret_t<decltype(&obj::func)>, void>::value,
 			"function_traits.cpp : test failed");

@@ -42,6 +42,8 @@ struct callback;
 
 template <class Func, class Ret, class... Args>
 struct callback<Func, Ret(Args...)> {
+	using func_t = Func;
+
 	constexpr callback() = default;
 	constexpr callback(const Func& func)
 			: _func(func) {
@@ -111,7 +113,9 @@ struct callback_selector<Func,
 
 template <class Func, class>
 struct callback : detail::callback_selector<Func> {
+	using func_t = Func;
 	using base = detail::callback_selector<Func>;
+
 	constexpr callback() = default;
 	constexpr callback(const Func& func)
 			: base(func) {
