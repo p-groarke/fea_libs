@@ -286,7 +286,9 @@ struct parent_status {
 // parents : your parent ids, and if they were dirty.
 template <class Id, class NodeData = char>
 struct callback_data {
-	fea::span<const parent_status<Id, NodeData>> parents{};
+	using parent_status_t = parent_status<Id, NodeData>;
+
+	fea::span<const parent_status_t> parents{};
 	NodeData* node_data = nullptr;
 	Id id{};
 };
@@ -308,8 +310,8 @@ struct lazy_graph {
 	static_assert(std::is_default_constructible<NodeData>::value,
 			"fea::lazy_graph : NodeData must be default constructible.");
 
-	using parent_status_t = parent_status<Id>;
 	using callback_data_t = callback_data<Id, NodeData>;
+	using parent_status_t = typename callback_data_t::parent_status_t;
 
 	// The storage container will take care of not compiling if the data is not
 	// copyable/moveable.
