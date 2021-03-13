@@ -48,7 +48,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // - Doesn't provide hint apis.
 
 namespace fea {
-template <class Key, class T, template <class> class Alloc = std::allocator>
+template <class Key, class T, class Alloc = std::allocator<T>>
 struct flat_unsigned_map {
 	static_assert(std::is_unsigned<Key>::value,
 			"unsigned_map : key must be unsigned integer");
@@ -62,9 +62,11 @@ struct flat_unsigned_map {
 	using pos_type = Key;
 	using difference_type = std::ptrdiff_t;
 
-	using allocator_type = Alloc<value_type>;
-	using key_allocator_type = Alloc<key_type>;
-	using pos_allocator_type = Alloc<pos_type>;
+	using allocator_type = Alloc;
+	using key_allocator_type = typename std::allocator_traits<
+			allocator_type>::template rebind_alloc<key_type>;
+	using pos_allocator_type = typename std::allocator_traits<
+			allocator_type>::template rebind_alloc<pos_type>;
 
 	using reference = value_type&;
 	using const_reference = const value_type&;
@@ -476,12 +478,12 @@ struct flat_unsigned_map {
 	// Non-member functions
 
 	//	compares the values in the unordered_map
-	template <class K, class U, template <class> class Alloc>
-	friend bool operator==(const flat_unsigned_map<K, U, Alloc>& lhs,
-			const flat_unsigned_map<K, U, Alloc>& rhs);
-	template <class K, class U, template <class> class Alloc>
-	friend bool operator!=(const flat_unsigned_map<K, U, Alloc>& lhs,
-			const flat_unsigned_map<K, U, Alloc>& rhs);
+	template <class K, class U, class A>
+	friend bool operator==(const flat_unsigned_map<K, U, A>& lhs,
+			const flat_unsigned_map<K, U, A>& rhs);
+	template <class K, class U, class A>
+	friend bool operator!=(const flat_unsigned_map<K, U, A>& lhs,
+			const flat_unsigned_map<K, U, A>& rhs);
 
 private:
 	constexpr pos_type pos_sentinel() const noexcept {
@@ -527,8 +529,8 @@ private:
 	std::vector<value_type, allocator_type> _values; // packed values
 };
 
-template <class Key, class T, template <class> class Alloc>
-inline bool operator==(const flat_unsigned_map<Key, T, Alloc>& lhs,
+template <class Key, class T, class Alloc>
+bool operator==(const flat_unsigned_map<Key, T, Alloc>& lhs,
 		const flat_unsigned_map<Key, T, Alloc>& rhs) {
 	if (lhs.size() != rhs.size())
 		return false;
@@ -546,8 +548,8 @@ inline bool operator==(const flat_unsigned_map<Key, T, Alloc>& lhs,
 
 	return true;
 }
-template <class Key, class T, template <class> class Alloc>
-inline bool operator!=(const flat_unsigned_map<Key, T, Alloc>& lhs,
+template <class Key, class T, class Alloc>
+bool operator!=(const flat_unsigned_map<Key, T, Alloc>& lhs,
 		const flat_unsigned_map<Key, T, Alloc>& rhs) {
 	return !operator==(lhs, rhs);
 }
@@ -555,8 +557,8 @@ inline bool operator!=(const flat_unsigned_map<Key, T, Alloc>& lhs,
 } // namespace fea
 
 namespace std {
-template <class Key, class T, template <class> class Alloc>
-inline void swap(fea::flat_unsigned_map<Key, T, Alloc>& lhs,
+template <class Key, class T, class Alloc>
+void swap(fea::flat_unsigned_map<Key, T, Alloc>& lhs,
 		fea::flat_unsigned_map<Key, T, Alloc>& rhs) noexcept {
 	lhs.swap(rhs);
 }

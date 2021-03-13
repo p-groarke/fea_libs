@@ -47,7 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // - Doesn't provide hint apis.
 
 namespace fea {
-template <class Key, class T>
+template <class Key, class T, class Alloc = std::allocator<T>>
 struct unsigned_map {
 	static_assert(std::is_unsigned<Key>::value,
 			"unsigned_map : key must be unsigned integer");
@@ -61,7 +61,10 @@ struct unsigned_map {
 	using pos_type = Key;
 	using difference_type = std::ptrdiff_t;
 
-	using allocator_type = typename std::vector<value_type>::allocator_type;
+	using allocator_type = typename std::allocator_traits<
+			Alloc>::template rebind_alloc<value_type>;
+	using pos_allocator_type = typename std::allocator_traits<
+			allocator_type>::template rebind_alloc<pos_type>;
 
 	using reference = value_type&;
 	using const_reference = const value_type&;
@@ -70,8 +73,9 @@ struct unsigned_map {
 			typename std::allocator_traits<allocator_type>::const_pointer;
 
 	// TODO : cont key type
-	using iterator = typename std::vector<value_type>::iterator;
-	using const_iterator = typename std::vector<value_type>::const_iterator;
+	using iterator = typename std::vector<value_type, allocator_type>::iterator;
+	using const_iterator =
+			typename std::vector<value_type, allocator_type>::const_iterator;
 	using local_iterator = iterator;
 	using const_local_iterator = const_iterator;
 
@@ -399,12 +403,12 @@ struct unsigned_map {
 	// Non-member functions
 
 	//	compares the values in the unordered_map
-	template <class K, class U>
+	template <class K, class U, class A>
 	friend bool operator==(
-			const unsigned_map<K, U>& lhs, const unsigned_map<K, U>& rhs);
-	template <class K, class U>
+			const unsigned_map<K, U, A>& lhs, const unsigned_map<K, U, A>& rhs);
+	template <class K, class U, class A>
 	friend bool operator!=(
-			const unsigned_map<K, U>& lhs, const unsigned_map<K, U>& rhs);
+			const unsigned_map<K, U, A>& lhs, const unsigned_map<K, U, A>& rhs);
 
 private:
 	constexpr pos_type pos_sentinel() const noexcept {
@@ -442,13 +446,13 @@ private:
 		return { std::prev(_values.end()), true };
 	}
 
-	std::vector<pos_type> _indexes; // key -> position
-	std::vector<value_type> _values; // pair with reverse_lookup
+	std::vector<pos_type, pos_allocator_type> _indexes; // key -> position
+	std::vector<value_type, allocator_type> _values; // pair with reverse_lookup
 };
 
-template <class Key, class T>
-inline bool operator==(
-		const unsigned_map<Key, T>& lhs, const unsigned_map<Key, T>& rhs) {
+template <class Key, class T, class Alloc>
+inline bool operator==(const unsigned_map<Key, T, Alloc>& lhs,
+		const unsigned_map<Key, T, Alloc>& rhs) {
 	if (lhs.size() != rhs.size())
 		return false;
 
@@ -464,18 +468,18 @@ inline bool operator==(
 
 	return true;
 }
-template <class Key, class T>
-inline bool operator!=(
-		const unsigned_map<Key, T>& lhs, const unsigned_map<Key, T>& rhs) {
+template <class Key, class T, class Alloc>
+inline bool operator!=(const unsigned_map<Key, T, Alloc>& lhs,
+		const unsigned_map<Key, T, Alloc>& rhs) {
 	return !operator==(lhs, rhs);
 }
 
 } // namespace fea
 
 namespace std {
-template <class Key, class T>
-inline void swap(fea::unsigned_map<Key, T>& lhs,
-		fea::unsigned_map<Key, T>& rhs) noexcept {
+template <class Key, class T, class Alloc>
+inline void swap(fea::unsigned_map<Key, T, Alloc>& lhs,
+		fea::unsigned_map<Key, T, Alloc>& rhs) noexcept {
 	lhs.swap(rhs);
 }
 } // namespace std
