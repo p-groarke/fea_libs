@@ -121,8 +121,8 @@ struct flat_unsigned_map {
 		assert(_values.size() == _reverse_lookup.size());
 	}
 
-	explicit flat_unsigned_map(std::initializer_list<key_type>&& keys,
-			std::initializer_list<value_type>&& values) {
+	explicit flat_unsigned_map(const std::initializer_list<key_type>& keys,
+			const std::initializer_list<value_type>& values) {
 		if (keys.size() != values.size()) {
 			fea::maybe_throw(__FUNCTION__, __LINE__,
 					"mismatch amount of keys and values");
@@ -131,7 +131,7 @@ struct flat_unsigned_map {
 		// TODO : benchmark and potentially optimize
 		auto val_it = values.begin();
 		for (auto it = keys.begin(); it != keys.end(); ++it) {
-			insert(*it, fea::maybe_move(*val_it));
+			insert(*it, *val_it);
 			++val_it;
 		}
 		assert(_values.size() == _reverse_lookup.size());
@@ -250,8 +250,8 @@ struct flat_unsigned_map {
 		}
 		assert(_values.size() == _reverse_lookup.size());
 	}
-	void insert(std::initializer_list<key_type>&& keys,
-			std::initializer_list<value_type>&& values) {
+	void insert(const std::initializer_list<key_type>& keys,
+			const std::initializer_list<value_type>& values) {
 		if (keys.size() != values.size()) {
 			fea::maybe_throw(__FUNCTION__, __LINE__,
 					"mismatch amount of keys and values");
@@ -260,7 +260,7 @@ struct flat_unsigned_map {
 		// TODO : benchmark and potentially optimize
 		auto val_it = values.begin();
 		for (auto it = keys.begin(); it != keys.end(); ++it) {
-			insert(*it, fea::maybe_move(*val_it));
+			insert(*it, *val_it);
 			++val_it;
 		}
 		assert(_values.size() == _reverse_lookup.size());

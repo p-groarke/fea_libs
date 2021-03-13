@@ -220,15 +220,11 @@ public:
 	flat_unsigned_hashmap& operator=(const flat_unsigned_hashmap&) = default;
 	flat_unsigned_hashmap& operator=(flat_unsigned_hashmap&&) = default;
 
-	explicit flat_unsigned_hashmap(size_t reserve_count)
-			: flat_unsigned_hashmap() {
-		_lookup.reserve(reserve_count);
-		_reverse_lookup.reserve(reserve_count);
-		_values.reserve(reserve_count);
+	explicit flat_unsigned_hashmap(size_t reserve_count) {
+		reserve(reserve_count);
 	}
 	explicit flat_unsigned_hashmap(
-			size_t key_reserve_count, size_t value_reserve_count)
-			: flat_unsigned_hashmap() {
+			size_t key_reserve_count, size_t value_reserve_count) {
 		_lookup.reserve(key_reserve_count);
 		_reverse_lookup.reserve(value_reserve_count);
 		_values.reserve(value_reserve_count);
@@ -245,8 +241,8 @@ public:
 	//}
 
 	explicit flat_unsigned_hashmap(
-			const std::initializer_list<std::pair<key_type, value_type>>& init)
-			: flat_unsigned_hashmap() {
+			const std::initializer_list<std::pair<key_type, value_type>>&
+					init) {
 		// TODO : benchmark and potentially optimize
 		for (const std::pair<key_type, value_type>& kv : init) {
 			insert(kv.first, kv.second);

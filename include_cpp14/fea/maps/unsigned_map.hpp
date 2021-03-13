@@ -95,8 +95,7 @@ struct unsigned_map {
 	unsigned_map& operator=(unsigned_map&&) = default;
 
 	explicit unsigned_map(size_t reserve_count) {
-		_indexes.reserve(reserve_count);
-		_values.reserve(reserve_count);
+		reserve(reserve_count);
 	}
 	explicit unsigned_map(
 			size_t key_reserve_count, size_t value_reserve_count) {
@@ -112,7 +111,7 @@ struct unsigned_map {
 		}
 	}
 
-	explicit unsigned_map(std::initializer_list<value_type> init) {
+	explicit unsigned_map(const std::initializer_list<value_type>& init) {
 		// TODO : benchmark and potentially optimize
 		for (const value_type& kv : init) {
 			insert(kv);
@@ -203,7 +202,7 @@ struct unsigned_map {
 			insert(*it);
 		}
 	}
-	void insert(std::initializer_list<value_type> ilist) {
+	void insert(const std::initializer_list<value_type>& ilist) {
 		// TODO : benchmark and potentially optimize
 		for (const value_type& kv : ilist) {
 			insert(kv);
