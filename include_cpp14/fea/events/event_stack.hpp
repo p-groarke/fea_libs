@@ -37,6 +37,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <functional>
 #include <limits>
 #include <tbb/parallel_for.h>
 #include <tuple>
