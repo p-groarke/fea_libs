@@ -32,16 +32,18 @@
  **/
 
 #pragma once
-#include <type_traits>
 #include <utility>
 
 namespace fea {
-
 template <class Func>
 struct on_exit {
-	on_exit(Func&& func)
-			: _func(std::forward<Func>(func)) {
+	on_exit(const Func& func)
+			: _func(func) {
 	}
+	on_exit(Func&& func)
+			: _func(std::move(func)) {
+	}
+
 	~on_exit() {
 		_func();
 	}
@@ -49,5 +51,10 @@ struct on_exit {
 private:
 	Func _func;
 };
+
+template <class Func>
+auto make_on_exit(Func&& func) {
+	return on_exit<Func>{ std::forward<Func>(func) };
+}
 
 } // namespace fea

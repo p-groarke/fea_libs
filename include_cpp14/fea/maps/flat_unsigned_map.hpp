@@ -31,14 +31,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 #include "fea/memory/memory.hpp"
+#include "fea/meta/tuple.hpp"
 #include "fea/utils/throw.hpp"
 
 #include <cassert>
+#include <functional>
 #include <initializer_list>
 #include <iterator>
 #include <limits>
 #include <type_traits>
-#include <utility>
 #include <vector>
 
 // Notes :
@@ -48,21 +49,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 namespace fea {
 template <class Key, class T, class Alloc = std::allocator<T>>
-struct unsigned_map {
+struct flat_unsigned_map {
 	static_assert(std::is_unsigned<Key>::value,
 			"unsigned_map : key must be unsigned integer");
 
 	using key_type = Key;
 	using const_key_type = const key_type;
 	using mapped_type = T;
-	using value_type = std::pair<key_type, mapped_type>;
-	using iter_value_type = std::pair<const_key_type, mapped_type>;
+	using value_type = mapped_type;
+	using iter_value_type = mapped_type;
 	using size_type = std::size_t;
 	using pos_type = Key;
 	using difference_type = std::ptrdiff_t;
 
-	using allocator_type = typename std::allocator_traits<
-			Alloc>::template rebind_alloc<value_type>;
+	using allocator_type = Alloc;
+	using key_allocator_type = typename std::allocator_traits<
+			allocator_type>::template rebind_alloc<key_type>;
 	using pos_allocator_type = typename std::allocator_traits<
 			allocator_type>::template rebind_alloc<pos_type>;
 
@@ -72,50 +74,67 @@ struct unsigned_map {
 	using const_pointer =
 			typename std::allocator_traits<allocator_type>::const_pointer;
 
-	// TODO : cont key type
 	using iterator = typename std::vector<value_type, allocator_type>::iterator;
 	using const_iterator =
 			typename std::vector<value_type, allocator_type>::const_iterator;
 	using local_iterator = iterator;
 	using const_local_iterator = const_iterator;
 
-	// Don't make sense
-	// using hasher = std::hash<key_type>;
-	// using key_equal = std::equal_to<key_type>;
-	// using node_type;
-	// using insert_return_type;
-
+	using key_iterator =
+			typename std::vector<key_type, key_allocator_type>::iterator;
+	using const_key_iterator =
+			typename std::vector<key_type, key_allocator_type>::const_iterator;
 
 	// Constructors, destructors and assignement
 
-	unsigned_map() = default;
-	unsigned_map(const unsigned_map&) = default;
-	unsigned_map(unsigned_map&&) = default;
-	unsigned_map& operator=(const unsigned_map&) = default;
-	unsigned_map& operator=(unsigned_map&&) = default;
+	flat_unsigned_map() = default;
+	flat_unsigned_map(const flat_unsigned_map&) = default;
+	flat_unsigned_map(flat_unsigned_map&&) = default;
+	flat_unsigned_map& operator=(const flat_unsigned_map&) = default;
+	flat_unsigned_map& operator=(flat_unsigned_map&&) = default;
 
-	explicit unsigned_map(size_t reserve_count) {
+	explicit flat_unsigned_map(size_t reserve_count) {
 		reserve(reserve_count);
 	}
-	explicit unsigned_map(
+	explicit flat_unsigned_map(
 			size_t key_reserve_count, size_t value_reserve_count) {
 		_indexes.reserve(key_reserve_count);
+		_reverse_lookup.reserve(value_reserve_count);
 		_values.reserve(value_reserve_count);
 	}
 
-	template <class InputIt>
-	unsigned_map(InputIt first, InputIt last) {
-		// TODO : benchmark and potentially optimize
-		for (auto it = first; it != last; ++it) {
-			insert(*it);
+	template <class InputIt, class InputValIt>
+	flat_unsigned_map(InputIt first_key, InputIt last_key, InputValIt first_val,
+			InputValIt last_val) {
+		if (std::distance(first_key, last_key)
+				!= std::distance(first_val, last_val)) {
+			fea::maybe_throw(__FUNCTION__, __LINE__,
+					"mismatch amount of keys and values");
 		}
+
+		// TODO : benchmark and potentially optimize
+		auto val_it = first_val;
+		for (auto it = first_key; it != last_key; ++it) {
+			insert(*it, *val_it);
+			++val_it;
+		}
+		assert(_values.size() == _reverse_lookup.size());
 	}
 
-	explicit unsigned_map(const std::initializer_list<value_type>& init) {
-		// TODO : benchmark and potentially optimize
-		for (const value_type& kv : init) {
-			insert(kv);
+	explicit flat_unsigned_map(const std::initializer_list<key_type>& keys,
+			const std::initializer_list<value_type>& values) {
+		if (keys.size() != values.size()) {
+			fea::maybe_throw(__FUNCTION__, __LINE__,
+					"mismatch amount of keys and values");
 		}
+
+		// TODO : benchmark and potentially optimize
+		auto val_it = values.begin();
+		for (auto it = keys.begin(); it != keys.end(); ++it) {
+			insert(*it, *val_it);
+			++val_it;
+		}
+		assert(_values.size() == _reverse_lookup.size());
 	}
 
 
@@ -143,6 +162,22 @@ struct unsigned_map {
 		return _values.cend();
 	}
 
+	// returns an iterator to the beginning keys
+	const_key_iterator key_begin() const noexcept {
+		return _reverse_lookup.begin();
+	}
+	const_key_iterator key_cbegin() const noexcept {
+		return _reverse_lookup.cbegin();
+	}
+
+	// returns an iterator to the end (one past last)
+	const_key_iterator key_end() const noexcept {
+		return _reverse_lookup.end();
+	}
+	const_key_iterator key_cend() const noexcept {
+		return _reverse_lookup.cend();
+	}
+
 
 	// Capacity
 
@@ -165,6 +200,7 @@ struct unsigned_map {
 	// reserves storage
 	void reserve(size_type new_cap) {
 		_indexes.reserve(new_cap);
+		_reverse_lookup.reserve(new_cap);
 		_values.reserve(new_cap);
 	}
 
@@ -177,6 +213,7 @@ struct unsigned_map {
 	// reduces memory usage by freeing unused memory
 	void shrink_to_fit() {
 		_indexes.shrink_to_fit();
+		_reverse_lookup.shrink_to_fit();
 		_values.shrink_to_fit();
 	}
 
@@ -185,28 +222,48 @@ struct unsigned_map {
 	// clears the contents
 	void clear() noexcept {
 		_indexes.clear();
+		_reverse_lookup.clear();
 		_values.clear();
 	}
 
 	// inserts elements or nodes
-	std::pair<iterator, bool> insert(const value_type& value) {
-		return minsert(value.first, value.second);
+	std::pair<iterator, bool> insert(key_type k, const value_type& v) {
+		return minsert(k, v);
 	}
-	std::pair<iterator, bool> insert(value_type&& value) {
-		return minsert(value.first, fea::maybe_move(value.second));
+	std::pair<iterator, bool> insert(key_type k, value_type&& v) {
+		return minsert(k, fea::maybe_move(v));
 	}
-	template <class InputIt>
-	void insert(InputIt first, InputIt last) {
-		// TODO : benchmark and potentially optimize
-		for (auto it = first; it != last; ++it) {
-			insert(*it);
+	template <class KeyIt, class ValIt>
+	void insert(
+			KeyIt first_key, KeyIt last_key, ValIt first_val, ValIt last_val) {
+		if (std::distance(first_key, last_key)
+				!= std::distance(first_val, last_val)) {
+			fea::maybe_throw(__FUNCTION__, __LINE__,
+					"mismatch amount of keys and values");
 		}
-	}
-	void insert(const std::initializer_list<value_type>& ilist) {
+
 		// TODO : benchmark and potentially optimize
-		for (const value_type& kv : ilist) {
-			insert(kv);
+		auto val_it = first_val;
+		for (auto it = first_key; it != last_key; ++it) {
+			insert(*it, *val_it);
+			++val_it;
 		}
+		assert(_values.size() == _reverse_lookup.size());
+	}
+	void insert(const std::initializer_list<key_type>& keys,
+			const std::initializer_list<value_type>& values) {
+		if (keys.size() != values.size()) {
+			fea::maybe_throw(__FUNCTION__, __LINE__,
+					"mismatch amount of keys and values");
+		}
+
+		// TODO : benchmark and potentially optimize
+		auto val_it = values.begin();
+		for (auto it = keys.begin(); it != keys.end(); ++it) {
+			insert(*it, *val_it);
+			++val_it;
+		}
+		assert(_values.size() == _reverse_lookup.size());
 	}
 
 	// inserts an element or assigns to the current element if the key already
@@ -227,8 +284,10 @@ struct unsigned_map {
 		resize_indexes_if_needed(k);
 
 		_indexes[k] = pos_type(_values.size());
-		_values.emplace_back(k, std::forward<Args>(args)...);
+		_reverse_lookup.push_back(k);
+		_values.emplace_back(std::forward<Args>(args)...);
 
+		assert(_values.size() == _reverse_lookup.size());
 		return { std::prev(_values.end()), true };
 	}
 
@@ -244,62 +303,74 @@ struct unsigned_map {
 	// erases elements
 	iterator erase(const_iterator pos) {
 		size_t idx = std::distance(_values.cbegin(), pos);
-		erase(pos->first);
+		erase(_reverse_lookup[idx]);
+		assert(_values.size() == _reverse_lookup.size());
 
-		if (idx >= _values.size())
+		if (idx >= _values.size()) {
 			return end();
+		}
 
-		return find(_values[idx].first);
+		return _values.begin() + idx;
 	}
 	iterator erase(const_iterator first, const_iterator last) {
 		size_t first_idx = std::distance(_values.cbegin(), first);
 		size_t last_idx = std::distance(_values.cbegin(), last);
-
+		assert(first_idx < _values.size());
+		assert(last_idx <= _values.size());
 
 		std::vector<key_type> to_erase;
 		to_erase.reserve(last_idx - first_idx);
-		for (auto it = _values.begin() + first_idx;
-				it != _values.begin() + last_idx; ++it) {
-			to_erase.push_back(it->first);
+		for (auto it = _reverse_lookup.begin() + first_idx;
+				it != _reverse_lookup.begin() + last_idx; ++it) {
+			to_erase.push_back(*it);
 		}
 
 		for (key_type& k : to_erase) {
 			erase(k);
 		}
 
-		if (first_idx >= _values.size())
+		assert(_values.size() == _reverse_lookup.size());
+		if (first_idx >= _values.size()) {
 			return end();
-		return find(_values[first_idx].first);
+		}
+		return _values.begin() + first_idx;
 	}
 	size_type erase(key_type k) {
-		iterator it = find(k);
-		if (it == end()) {
+		iterator replace_it = find(k);
+		if (replace_it == end()) {
 			return 0;
 		}
 
-		iterator last_it = std::prev(end());
+		iterator last_val_it = std::prev(end());
 		_indexes[k] = pos_sentinel();
 
 		// No need for swap, object is already at end.
-		if (last_it == it) {
+		if (last_val_it == replace_it) {
 			_values.pop_back();
+			_reverse_lookup.pop_back();
+			assert(_values.size() == _reverse_lookup.size());
 			return 1;
 		}
 
 		// swap & pop
-		pos_type value_idx = pos_type(std::distance(_values.begin(), it));
-		key_type last_key = _values.back().first;
+		pos_type new_idx = pos_type(std::distance(_values.begin(), replace_it));
+		key_iterator replace_key_it = _reverse_lookup.begin() + new_idx;
+		key_type last_key = _reverse_lookup.back();
 
-		*it = fea::maybe_move(_values.back());
+		*replace_it = fea::maybe_move(_values.back());
+		*replace_key_it = _reverse_lookup.back();
 		_values.pop_back();
-		_indexes[last_key] = value_idx;
+		_reverse_lookup.pop_back();
+		_indexes[last_key] = new_idx;
 
+		assert(_values.size() == _reverse_lookup.size());
 		return 1;
 	}
 
 	// swaps the contents
-	void swap(unsigned_map& other) noexcept {
+	void swap(flat_unsigned_map& other) noexcept {
 		_indexes.swap(other._indexes);
+		_reverse_lookup.swap(other._reverse_lookup);
 		_values.swap(other._values);
 	}
 
@@ -313,6 +384,10 @@ struct unsigned_map {
 		return _values.data();
 	}
 
+	const key_type* key_data() const noexcept {
+		return _reverse_lookup.data();
+	}
+
 	// access specified element with bounds checking
 	const mapped_type& at(key_type k) const {
 		if (!contains(k)) {
@@ -324,16 +399,16 @@ struct unsigned_map {
 	}
 	mapped_type& at(key_type k) {
 		return const_cast<mapped_type&>(
-				static_cast<const unsigned_map*>(this)->at(k));
+				static_cast<const flat_unsigned_map*>(this)->at(k));
 	}
 
 	// access specified element without any bounds checking
 	const mapped_type& at_unchecked(key_type k) const {
-		return _values[_indexes[k]].second;
+		return _values[_indexes[k]];
 	}
 	mapped_type& at_unchecked(key_type k) {
 		return const_cast<mapped_type&>(
-				static_cast<const unsigned_map*>(this)->at_unchecked(k));
+				static_cast<const flat_unsigned_map*>(this)->at_unchecked(k));
 	}
 
 	// access or insert specified element
@@ -348,8 +423,9 @@ struct unsigned_map {
 	// returns the number of elements matching specific key (which is 1 or 0,
 	// since there are no duplicates)
 	size_type count(key_type k) const {
-		if (contains(k))
+		if (contains(k)) {
 			return 1;
+		}
 
 		return 0;
 	}
@@ -403,11 +479,11 @@ struct unsigned_map {
 
 	//	compares the values in the unordered_map
 	template <class K, class U, class A>
-	friend bool operator==(
-			const unsigned_map<K, U, A>& lhs, const unsigned_map<K, U, A>& rhs);
+	friend bool operator==(const flat_unsigned_map<K, U, A>& lhs,
+			const flat_unsigned_map<K, U, A>& rhs);
 	template <class K, class U, class A>
-	friend bool operator!=(
-			const unsigned_map<K, U, A>& lhs, const unsigned_map<K, U, A>& rhs);
+	friend bool operator!=(const flat_unsigned_map<K, U, A>& lhs,
+			const flat_unsigned_map<K, U, A>& rhs);
 
 private:
 	constexpr pos_type pos_sentinel() const noexcept {
@@ -433,7 +509,7 @@ private:
 		iterator it = find(k);
 		if (it != end()) {
 			if (assign_found) {
-				it->second = std::forward<M>(obj);
+				*it = std::forward<M>(obj);
 			}
 			return { it, false };
 		}
@@ -441,35 +517,40 @@ private:
 		resize_indexes_if_needed(k);
 
 		_indexes[k] = pos_type(_values.size());
-		_values.push_back({ k, std::forward<M>(obj) });
+		_reverse_lookup.push_back(k);
+		_values.push_back(std::forward<M>(obj));
+
+		assert(_values.size() == _reverse_lookup.size());
 		return { std::prev(_values.end()), true };
 	}
 
 	std::vector<pos_type, pos_allocator_type> _indexes; // key -> position
-	std::vector<value_type, allocator_type> _values; // pair with reverse_lookup
+	std::vector<key_type, key_allocator_type> _reverse_lookup; // used in erase
+	std::vector<value_type, allocator_type> _values; // packed values
 };
 
 template <class Key, class T, class Alloc>
-inline bool operator==(const unsigned_map<Key, T, Alloc>& lhs,
-		const unsigned_map<Key, T, Alloc>& rhs) {
+bool operator==(const flat_unsigned_map<Key, T, Alloc>& lhs,
+		const flat_unsigned_map<Key, T, Alloc>& rhs) {
 	if (lhs.size() != rhs.size())
 		return false;
 
-	for (const auto& kv : lhs) {
+
+	for (auto it = lhs.key_begin(); it != lhs.key_end(); ++it) {
 		// Key doesn't exist in rhs, not equal.
-		if (!rhs.contains(kv.first))
+		if (!rhs.contains(*it))
 			return false;
 
 		// Compare value.
-		if (kv != *rhs.find(kv.first))
+		if (lhs.at_unchecked(*it) != rhs.at_unchecked(*it))
 			return false;
 	}
 
 	return true;
 }
 template <class Key, class T, class Alloc>
-inline bool operator!=(const unsigned_map<Key, T, Alloc>& lhs,
-		const unsigned_map<Key, T, Alloc>& rhs) {
+bool operator!=(const flat_unsigned_map<Key, T, Alloc>& lhs,
+		const flat_unsigned_map<Key, T, Alloc>& rhs) {
 	return !operator==(lhs, rhs);
 }
 
@@ -477,8 +558,8 @@ inline bool operator!=(const unsigned_map<Key, T, Alloc>& lhs,
 
 namespace std {
 template <class Key, class T, class Alloc>
-inline void swap(fea::unsigned_map<Key, T, Alloc>& lhs,
-		fea::unsigned_map<Key, T, Alloc>& rhs) noexcept {
+void swap(fea::flat_unsigned_map<Key, T, Alloc>& lhs,
+		fea::flat_unsigned_map<Key, T, Alloc>& rhs) noexcept {
 	lhs.swap(rhs);
 }
 } // namespace std

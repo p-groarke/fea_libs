@@ -30,6 +30,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/memory/memory.hpp"
+#include "fea/utils/scope.hpp"
 #include "fea/utils/throw.hpp"
 
 #include <algorithm>
@@ -62,32 +64,6 @@ Its special characteristics are :
 
 namespace fea {
 namespace detail {
-template <class T>
-inline constexpr std::conditional_t<!std::is_move_constructible<T>::value
-				&& std::is_copy_constructible<T>::value,
-		const T&, T&&>
-flathashmap_maybe_move(T& arg) noexcept {
-	return std::move(arg);
-}
-
-template <class Func>
-struct flathhashmap_on_exit {
-	flathhashmap_on_exit(Func func)
-			: _func(func) {
-	}
-	~flathhashmap_on_exit() {
-		_func();
-	}
-
-private:
-	Func _func;
-};
-
-template <class Func>
-auto flathashmap_make_on_exit(Func func) {
-	return flathhashmap_on_exit<Func>{ func };
-}
-
 // https://stackoverflow.com/questions/30052316/find-next-prime-number-algorithm
 template <class T>
 bool is_prime(T number) {
@@ -185,7 +161,7 @@ T next_prime(T a) {
 } // namespace detail
 
 
-template <class Key, class T>
+template <class Key, class T, class Alloc = std::allocator<T>>
 struct flat_unsigned_hashmap {
 	static_assert(std::is_unsigned<Key>::value,
 			"unsigned_map : key must be unsigned integer");
@@ -199,7 +175,9 @@ struct flat_unsigned_hashmap {
 					key_type, size_type>::type;
 	using difference_type = std::ptrdiff_t;
 
-	using allocator_type = typename std::vector<value_type>::allocator_type;
+	using allocator_type = Alloc;
+	using key_allocator_type = typename std::allocator_traits<
+			allocator_type>::template rebind_alloc<key_type>;
 
 	using reference = value_type&;
 	using const_reference = const value_type&;
@@ -207,12 +185,14 @@ struct flat_unsigned_hashmap {
 	using const_pointer =
 			typename std::allocator_traits<allocator_type>::const_pointer;
 
-	using iterator = typename std::vector<value_type>::iterator;
-	using const_iterator = typename std::vector<value_type>::const_iterator;
+	using iterator = typename std::vector<value_type, allocator_type>::iterator;
+	using const_iterator =
+			typename std::vector<value_type, allocator_type>::const_iterator;
 	using local_iterator = iterator;
 	using const_local_iterator = const_iterator;
 
-	using key_iterator = typename std::vector<key_type>::const_iterator;
+	using const_key_iterator =
+			typename std::vector<key_type, key_allocator_type>::const_iterator;
 
 	// Don't make sense
 	// using hasher = std::hash<key_type>;
@@ -220,24 +200,31 @@ struct flat_unsigned_hashmap {
 	// using node_type;
 	// using insert_return_type;
 
+private:
+	struct lookup_data {
+		// The user provided key.
+		key_type key = key_sentinel();
+
+		// The index of the user data in the _values container.
+		idx_type idx = idx_sentinel();
+	};
+
+public:
+	using lookup_allocator_type = typename std::allocator_traits<
+			allocator_type>::template rebind_alloc<lookup_data>;
 
 	// Constructors, destructors and assignement
-
 	flat_unsigned_hashmap() = default;
 	flat_unsigned_hashmap(const flat_unsigned_hashmap&) = default;
 	flat_unsigned_hashmap(flat_unsigned_hashmap&&) = default;
 	flat_unsigned_hashmap& operator=(const flat_unsigned_hashmap&) = default;
 	flat_unsigned_hashmap& operator=(flat_unsigned_hashmap&&) = default;
 
-	explicit flat_unsigned_hashmap(size_t reserve_count)
-			: flat_unsigned_hashmap() {
-		_lookup.reserve(reserve_count);
-		_reverse_lookup.reserve(reserve_count);
-		_values.reserve(reserve_count);
+	explicit flat_unsigned_hashmap(size_t reserve_count) {
+		reserve(reserve_count);
 	}
 	explicit flat_unsigned_hashmap(
-			size_t key_reserve_count, size_t value_reserve_count)
-			: flat_unsigned_hashmap() {
+			size_t key_reserve_count, size_t value_reserve_count) {
 		_lookup.reserve(key_reserve_count);
 		_reverse_lookup.reserve(value_reserve_count);
 		_values.reserve(value_reserve_count);
@@ -254,8 +241,8 @@ struct flat_unsigned_hashmap {
 	//}
 
 	explicit flat_unsigned_hashmap(
-			const std::initializer_list<std::pair<key_type, value_type>>& init)
-			: flat_unsigned_hashmap() {
+			const std::initializer_list<std::pair<key_type, value_type>>&
+					init) {
 		// TODO : benchmark and potentially optimize
 		for (const std::pair<key_type, value_type>& kv : init) {
 			insert(kv.first, kv.second);
@@ -287,10 +274,10 @@ struct flat_unsigned_hashmap {
 		return _values.cend();
 	}
 
-	key_iterator key_begin() const noexcept {
+	const_key_iterator key_begin() const noexcept {
 		return _reverse_lookup.begin();
 	}
-	key_iterator key_end() const noexcept {
+	const_key_iterator key_end() const noexcept {
 		return _reverse_lookup.end();
 	}
 
@@ -349,7 +336,7 @@ struct flat_unsigned_hashmap {
 		return minsert(key, value);
 	}
 	std::pair<iterator, bool> insert(key_type key, value_type&& value) {
-		return minsert(key, detail::flathashmap_maybe_move(value));
+		return minsert(key, fea::maybe_move(value));
 	}
 
 	// todo : pair iterators
@@ -376,7 +363,7 @@ struct flat_unsigned_hashmap {
 	}
 	std::pair<iterator, bool> insert_or_assign(
 			key_type key, value_type&& value) {
-		return minsert(key, detail::flathashmap_maybe_move(value), true);
+		return minsert(key, fea::maybe_move(value), true);
 	}
 
 	// constructs element in-place
@@ -448,7 +435,7 @@ struct flat_unsigned_hashmap {
 			return 0;
 		}
 
-		auto e = detail::flathashmap_make_on_exit(
+		auto e = fea::make_on_exit(
 				[lookup_idx = std::distance(_lookup.begin(), lookup_it),
 						this]() { repack_collisions(lookup_idx); });
 
@@ -474,8 +461,7 @@ struct flat_unsigned_hashmap {
 		*lookup_it = {};
 
 		// "swap" the elements
-		_values[last_lookup_it->idx]
-				= detail::flathashmap_maybe_move(_values.back());
+		_values[last_lookup_it->idx] = fea::maybe_move(_values.back());
 		_reverse_lookup[last_lookup_it->idx] = last_key;
 
 		// delete last
@@ -610,7 +596,7 @@ struct flat_unsigned_hashmap {
 		}
 		assert(detail::is_prime(count));
 
-		std::vector<lookup_data> new_lookup(count);
+		std::vector<lookup_data, lookup_allocator_type> new_lookup(count);
 
 		for (const lookup_data& lookup : _lookup) {
 			if (lookup.idx == idx_sentinel()) {
@@ -641,22 +627,14 @@ struct flat_unsigned_hashmap {
 	// Non-member functions
 
 	//	compares the values in the unordered_map
-	template <class K, class U>
-	friend bool operator==(const flat_unsigned_hashmap<K, U>& lhs,
-			const flat_unsigned_hashmap<K, U>& rhs);
-	template <class K, class U>
-	friend bool operator!=(const flat_unsigned_hashmap<K, U>& lhs,
-			const flat_unsigned_hashmap<K, U>& rhs);
+	template <class K, class U, class A>
+	friend bool operator==(const flat_unsigned_hashmap<K, U, A>& lhs,
+			const flat_unsigned_hashmap<K, U, A>& rhs);
+	template <class K, class U, class A>
+	friend bool operator!=(const flat_unsigned_hashmap<K, U, A>& lhs,
+			const flat_unsigned_hashmap<K, U, A>& rhs);
 
 private:
-	struct lookup_data {
-		// The user provided key.
-		key_type key = key_sentinel();
-
-		// The index of the user data in the _values container.
-		idx_type idx = idx_sentinel();
-	};
-
 	size_type hash_max() const {
 		assert(detail::is_prime(_hash_max) || _hash_max == 0);
 		return _hash_max;
@@ -837,26 +815,26 @@ private:
 
 	// Stores the key at hash and points to the values index.
 	// Lookups at odd indexes are collisions stored in-place.
-	std::vector<lookup_data> _lookup;
+	std::vector<lookup_data, lookup_allocator_type> _lookup;
 
 	// Used in erase for swap & pop.
-	std::vector<key_type> _reverse_lookup;
+	std::vector<key_type, key_allocator_type> _reverse_lookup;
 
 	// Packed user values.
 	// Since this is a flat map, the values are tightly packed instead of in
 	// pairs.
 	// This means we cannot fulfill standard apis.
 	// todo : make unsigned_hashmap for cases when you need pair iterators.
-	std::vector<value_type> _values;
+	std::vector<value_type, allocator_type> _values;
 
 	// When the lookup collisions fill up the end of the lookup container, by
 	// how much do we resize it?
 	constexpr static double _lookup_trailing_amount = 1.25;
 };
 
-template <class Key, class T>
-inline bool operator==(const flat_unsigned_hashmap<Key, T>& lhs,
-		const flat_unsigned_hashmap<Key, T>& rhs) {
+template <class Key, class T, class Alloc>
+inline bool operator==(const flat_unsigned_hashmap<Key, T, Alloc>& lhs,
+		const flat_unsigned_hashmap<Key, T, Alloc>& rhs) {
 	if (lhs.size() != rhs.size())
 		return false;
 
@@ -874,9 +852,9 @@ inline bool operator==(const flat_unsigned_hashmap<Key, T>& lhs,
 
 	return true;
 }
-template <class Key, class T>
-inline bool operator!=(const flat_unsigned_hashmap<Key, T>& lhs,
-		const flat_unsigned_hashmap<Key, T>& rhs) {
+template <class Key, class T, class Alloc>
+inline bool operator!=(const flat_unsigned_hashmap<Key, T, Alloc>& lhs,
+		const flat_unsigned_hashmap<Key, T, Alloc>& rhs) {
 	return !operator==(lhs, rhs);
 }
 } // namespace fea

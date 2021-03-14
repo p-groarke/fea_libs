@@ -90,7 +90,7 @@ struct pimpl_ptr {
 		return *_ptr;
 	}
 
-private:
+protected:
 	const std::unique_ptr<element_type, deleter_type> _ptr;
 };
 
