@@ -31,14 +31,51 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
-#include "fea/containers/enum_array.hpp"
+#include "fea/reflection/reflection_macros.hpp"
 
 #include <tuple>
 
 namespace fea {
+namespace detail {
+template <class, size_t, size_t = 0>
+struct make_map_t;
 
-template <class... Args>
-struct named_tuple {};
+template <class descriptor, size_t Count>
+struct make_map_t<descriptor, Count, Count> {
+	using key = fea::pack_nt<>;
+	using type = std::tuple<>;
+	using key_pack = fea::pack_nt<>;
+	using type_tup = std::tuple<>;
+};
+
+// Takes user pack of var_builders and transforms it into type_map (nt).
+template <class Vars, size_t Count, size_t Idx>
+struct make_map_t {
+	// A pack with one key, will be catenated.
+	using key = fea::pack_nt<fea::pack_element_t<Idx, Vars>::key>;
+
+	// A tuple with one variable, will be catenated.
+	using type = std::tuple<typename fea::pack_element_t<Idx, Vars>::type>;
+
+	// The next recursion.
+	using next_t = make_map_t<Vars, Count, Idx + 1>;
+
+	// All the keys.
+	using key_pack = fea::pack_cat_t<key, typename next_t::key_pack>;
+	// All the types.
+	using type_tup
+			= decltype(std::tuple_cat(type{}, typename next_t::type_tup{}));
+
+	// Final type_map.
+	using type_map = decltype(fea::make_type_map(key_pack{}, type_tup{}));
+};
+
+template <class Descriptor>
+struct key_to_idx_map {
+	using type_map = typename detail::make_map_t<decltype(Descriptor::vars),
+			fea::pack_size_v<decltype(Descriptor::vars)>>::type_map;
+};
+} // namespace detail
 
 
 // struct blabla {

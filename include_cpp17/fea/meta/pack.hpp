@@ -32,6 +32,7 @@
  **/
 
 #pragma once
+#include "fea/enum/enum_traits.hpp"
 #include "fea/meta/traits.hpp"
 #include "fea/meta/tuple.hpp"
 #include "fea/utils/platform.hpp"
@@ -44,7 +45,11 @@ provided traits and helpers to query things about the pack.
 namespace fea {
 // Holder for types.
 template <class... Args>
-struct pack {};
+struct pack {
+	constexpr pack() = default;
+	constexpr pack(Args&&...) {
+	}
+};
 
 template <auto... Ts>
 struct pack_nt {
@@ -380,4 +385,26 @@ using idx_splice_before_t = typename idx_splice<Idx, Args...>::before_pack;
 // Get the elements after Idx in parameter pack, stored as a tuple type.
 template <size_t Idx, class... Args>
 using idx_splice_after_t = typename idx_splice<Idx, Args...>::after_pack;
+
+
+// Get the index of a type at runtime.
+template <class T, class... Args>
+constexpr size_t pack_get_idx(const T&, const fea::pack<Args...>&) {
+	static_assert(fea::pack_contains_v<T, fea::pack<Args...>>,
+			"fea::runtime_get_idx : pack doesn't contain type T");
+
+	return fea::pack_idx_v<T, fea::pack<Args...>>;
+}
+
+// Get the index of a non-type at runtime.
+// E must be enum or integral non-type.
+template <class E, auto... Args>
+size_t pack_get_idx(E e, const fea::pack_nt<Args...>&) {
+	static_assert(fea::all_of_v<std::is_same<E, decltype(Args)>...>,
+			"fea::pack_get_idx : E must be of same type as non-type arguments");
+
+	static constexpr auto lookup = fea::make_enum_lookup<Args...>();
+	return lookup[size_t(e)];
+}
+
 } // namespace fea

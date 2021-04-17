@@ -120,6 +120,7 @@ struct type_map<fea::pack<Keys...>, Values...>
 		constexpr size_t idx = pack_idx_v<Key, pack_t>;
 		return std::get<idx>(base_t::data());
 	}
+	// Search for value associated with key.
 	template <class Key>
 	constexpr auto& find() {
 		static_assert(
@@ -160,6 +161,7 @@ struct type_map<fea::pack_nt<Keys...>, Values...>
 		constexpr size_t idx = pack_idx_nt_v<Key, pack_t>;
 		return std::get<idx>(base_t::data());
 	}
+	// Search for value associated with non-type key.
 	template <auto Key>
 	constexpr auto& find() {
 		static_assert(
@@ -254,4 +256,11 @@ constexpr auto make_type_map(kv_nt<Keys, Values>&&... kvs) {
 	return type_map<pack_nt<Keys...>, Values...>(
 			std::make_tuple(fea::maybe_move(kvs.v)...));
 }
+
+
+/*
+External helpers.
+*/
+
+
 } // namespace fea

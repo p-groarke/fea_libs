@@ -145,6 +145,39 @@ TEST(pack, basics) {
 		static_assert(!fea::pack_contains_nt_v<e::count, p_cat_t>,
 				"pack.cpp : test failed");
 	}
+
+	{
+		fea::pack<int, double, float> my_pack;
+		double d = 42.0;
+		static_assert(
+				fea::pack_get_idx(d, my_pack) == 1, "pack.cpp : test failed");
+	}
+
+	{
+		enum class e {
+			one,
+			two,
+			three,
+			four,
+			count,
+		};
+
+		fea::pack_nt<e::one, e::three, e::two, e::four, e::count> my_pack;
+
+		size_t idx = fea::pack_get_idx(e::one, my_pack);
+		EXPECT_EQ(idx, 0u);
+		idx = fea::pack_get_idx(e::two, my_pack);
+		EXPECT_EQ(idx, 2u);
+		idx = fea::pack_get_idx(e::three, my_pack);
+		EXPECT_EQ(idx, 1u);
+		idx = fea::pack_get_idx(e::four, my_pack);
+		EXPECT_EQ(idx, 3u);
+		idx = fea::pack_get_idx(e::count, my_pack);
+		EXPECT_EQ(idx, 4u);
+
+		// std::tuple<int, double, float, short, unsigned> my_tup;
+		// constexpr size_t i = fea::pack_get_idx(e::three, my_pack);
+	}
 }
 
 TEST(pack, splice) {
