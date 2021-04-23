@@ -36,6 +36,7 @@
 #include "fea/meta/traits.hpp"
 
 #include <array>
+#include <limits>
 #include <type_traits>
 
 /*
@@ -170,6 +171,15 @@ template <auto... Args>
 constexpr auto make_enum_lookup() {
 	constexpr size_t arr_size = size_t(fea::enum_max_v<Args...>) + 1u;
 	std::array<size_t, arr_size> ret{};
+
+	// Initialize everything with sentinel.
+	fea::static_for<arr_size>([&](auto ic) {
+		constexpr size_t idx = decltype(ic)::value;
+		ret[idx] = (std::numeric_limits<size_t>::max)();
+	});
+
+	// Create association between enum value and actual index.
+	// Aka, slot map from enum -> pack index
 	detail::enum_for_each_w_idx<Args...>([&](auto idx, auto e_ic) {
 		constexpr size_t i = decltype(idx)::value;
 		constexpr auto e = decltype(e_ic)::value;

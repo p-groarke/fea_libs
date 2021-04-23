@@ -74,8 +74,8 @@ struct switcher<Enum, N, std::tuple<Funcs...>, Es...> {
 	}
 
 	constexpr void operator()(Enum e) const {
-		static_assert(sizeof...(Es) == N,
-				"safe_switch : missing enum case statement");
+		static_assert(
+				sizeof...(Es) == N, "safe_switch : missing case statement");
 
 #if FEA_DEBUG
 		constexpr std::array<Enum, N> arr{ Es... };
@@ -83,9 +83,15 @@ struct switcher<Enum, N, std::tuple<Funcs...>, Es...> {
 		assert(it != arr.end());
 #endif
 
+		bool found = false;
 		fea::static_for<N>([&, this](auto ic) {
+			if (found) {
+				return;
+			}
+
 			constexpr size_t e_idx = decltype(ic)::value;
 			if (e_idx == size_t(e)) {
+				found = true;
 				return _funcs.template find<Enum(e_idx)>()();
 			}
 		});
