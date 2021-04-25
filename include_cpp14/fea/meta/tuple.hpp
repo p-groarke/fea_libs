@@ -230,72 +230,49 @@ void* runtime_get(size_t idx, std::tuple<Args...>& tup) {
 
 #if FEA_CPP17
 namespace detail {
-template <class FuncRet, class Func, class TupleRef, size_t... Idxes>
-constexpr auto make_functions(std::index_sequence<Idxes...>) {
-	return std::make_tuple([](Func& user_func, TupleRef tup) -> FuncRet {
-		constexpr size_t idx = Idxes;
-		return user_func(std::get<idx>(tup));
-	}...);
+template <size_t Idx, class FuncRet, class Func, class TupleRef>
+FuncRet unerase(Func& func, TupleRef tup) {
+	return func(std::get<Idx>(tup));
 }
 
 template <class FuncRet, class Func, class TupleRef>
-struct funcs_maker {
-	static constexpr auto funcs
-			= detail::make_functions<FuncRet, Func, TupleRef>(
-					std::make_index_sequence<
-							std::tuple_size_v<std::decay_t<TupleRef>>>{});
-};
-
-template <class FuncRet, class Func, class TupleRef, class FuncsMaker>
 constexpr auto make_lookup() {
+	using unerase_t = FuncRet (*)(Func&, TupleRef);
 	constexpr size_t tup_size = std::tuple_size_v<std::decay_t<TupleRef>>;
-	using func_t = FuncRet (*)(Func&, TupleRef);
 
-	std::array<func_t, tup_size> lookup{};
+	std::array<unerase_t, tup_size> ret{};
 	fea::static_for<tup_size>([&](auto ic) {
 		constexpr size_t idx = decltype(ic)::value;
-		lookup[idx] = std::get<idx>(FuncsMaker::funcs);
+		ret[idx] = &unerase<idx, FuncRet, Func, TupleRef>;
 	});
-
-	return lookup;
+	return ret;
 }
+
 } // namespace detail
 
-
-// Get an item at idx in a tuple. Evaluated at runtime.
-// O(1), type-safe and minimal overhead (lookup + function call).
-// Your callback will be called with a ref to the element.
-// ex: fea::runtime_get([](const auto& the_val){}, 0, my_tup);
 template <class Func, class Arg1, class... Args>
 std::invoke_result_t<Func, const Arg1&> runtime_get(
-		Func& func, size_t idx, const std::tuple<Arg1, Args...>& tup) {
+		Func&& func, size_t idx, const std::tuple<Arg1, Args...>& tup) {
 
-	constexpr size_t tup_size = sizeof...(Args) + 1;
+	using func_ret_t = std::invoke_result_t<Func, const Arg1&>;
 	using tup_ref_t = const std::tuple<Arg1, Args...>&;
-	using return_t = decltype(func(std::get<0>(tup)));
 
-	static constexpr auto lookup = detail::make_lookup<return_t, Func,
-			tup_ref_t, detail::funcs_maker<return_t, Func, tup_ref_t>>();
-
+	static constexpr auto lookup
+			= detail::make_lookup<func_ret_t, Func, tup_ref_t>();
 	return lookup[idx](func, tup);
 }
 
-// Get an item at idx in a tuple. Evaluated at runtime.
-// O(1), type-safe and minimal overhead (lookup + function call).
-// Your callback will be called with a ref to the element.
-// ex: fea::runtime_get([](auto& the_val){}, 0, my_tup);
 template <class Func, class Arg1, class... Args>
 std::invoke_result_t<Func, Arg1&> runtime_get(
-		Func& func, size_t idx, std::tuple<Arg1, Args...>& tup) {
+		Func&& func, size_t idx, std::tuple<Arg1, Args...>& tup) {
 
-	constexpr size_t tup_size = sizeof...(Args) + 1;
-	using tup_ref_t = std::tuple<Arg1, Args...>&; // Not const.
-	using return_t = decltype(func(std::get<0>(tup)));
+	using func_ret_t = std::invoke_result_t<Func, Arg1&>;
+	using tup_ref_t = std::tuple<Arg1, Args...>&;
 
-	static constexpr auto lookup = detail::make_lookup<return_t, Func,
-			tup_ref_t, detail::funcs_maker<return_t, Func, tup_ref_t>>();
-
+	static constexpr auto lookup
+			= detail::make_lookup<func_ret_t, Func, tup_ref_t>();
 	return lookup[idx](func, tup);
 }
+
 #endif // CPP17
 } // namespace fea
