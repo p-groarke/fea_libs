@@ -201,7 +201,6 @@ T& offset_get(uintptr_t offset, std::tuple<Args...>& tup) {
 // Array index matches std::get position in tuple.
 template <class... Args>
 auto make_offset_lookup(const std::tuple<Args...>& tup) {
-	using tup_t = std::decay_t<decltype(tup)>;
 	constexpr size_t arr_size = sizeof...(Args);
 	std::array<uintptr_t, arr_size> ret{};
 
