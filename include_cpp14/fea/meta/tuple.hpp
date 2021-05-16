@@ -163,6 +163,8 @@ template <class... Args>
 using tuple_type_cat_t = typename tuple_type_cat<Args...>::type;
 
 
+/*
+// Doesn't compile on clang.
 // Gets the tuple member offsetof at Idx.
 template <size_t Idx, class Tuple>
 uintptr_t tuple_offset() {
@@ -173,6 +175,7 @@ template <class T, class Tuple>
 uintptr_t tuple_offset() {
 	return uintptr_t((const char*)(&std::get<T>(*(const Tuple*)0)));
 }
+*/
 
 // Gets the tuple member offsetof at Idx.
 template <size_t Idx, class... Args>

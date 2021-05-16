@@ -72,7 +72,7 @@ struct max_nt<false, T, Args...> {
 
 // Finds the maximum value of provided non-type values.
 template <class T, T... Args>
-inline constexpr auto max_nt_v
+FEA_INLINE_VAR constexpr auto max_nt_v
 		= detail::max_nt<std::is_enum<T>::value, T, Args...>::value;
 
 
@@ -109,7 +109,7 @@ struct min_nt<false, T, Args...> {
 
 // Finds the minimum value of provided non-type values.
 template <class T, T... Args>
-inline constexpr auto min_nt_v
+FEA_INLINE_VAR constexpr auto min_nt_v
 		= detail::min_nt<std::is_enum<T>::value, T, Args...>::value;
 
 
@@ -150,8 +150,9 @@ struct max_nt<false, Args...> {
 
 // Finds the maximum value of provided non-type values.
 template <auto First, auto... Args>
-inline constexpr auto max_v = detail17::max_nt<std::is_enum_v<decltype(First)>,
-		First, Args...>::value;
+FEA_INLINE_VAR constexpr auto max_v
+		= detail17::max_nt<std::is_enum_v<decltype(First)>, First,
+				Args...>::value;
 
 
 namespace detail17 {
@@ -189,8 +190,9 @@ struct min_nt<false, Args...> {
 
 // Finds the minimum value of provided non-type values.
 template <auto First, auto... Args>
-inline constexpr auto min_v = detail17::min_nt<std::is_enum_v<decltype(First)>,
-		First, Args...>::value;
+FEA_INLINE_VAR constexpr auto min_v
+		= detail17::min_nt<std::is_enum_v<decltype(First)>, First,
+				Args...>::value;
 
 #endif // CPP17
 } // namespace fea

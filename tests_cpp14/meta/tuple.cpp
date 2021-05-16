@@ -117,36 +117,31 @@ TEST(tuple, runtime_get) {
 		using tup_t = decltype(tup);
 
 		{
-			uintptr_t offset = fea::tuple_offset<0, tup_t>();
-			EXPECT_EQ(fea::tuple_offset<0>(tup), offset);
+			uintptr_t offset = fea::tuple_offset<0>(tup);
 
 			int32_t i = fea::offset_get<int32_t>(offset, tup);
 			EXPECT_EQ(i, 1);
 		}
 		{
-			uintptr_t offset = fea::tuple_offset<1, tup_t>();
-			EXPECT_EQ(fea::tuple_offset<1>(tup), offset);
+			uintptr_t offset = fea::tuple_offset<1>(tup);
 
 			uint32_t i = fea::offset_get<uint32_t>(offset, tup);
 			EXPECT_EQ(i, 42u);
 		}
 		{
-			uintptr_t offset = fea::tuple_offset<2, tup_t>();
-			EXPECT_EQ(fea::tuple_offset<2>(tup), offset);
+			uintptr_t offset = fea::tuple_offset<2>(tup);
 
 			int64_t i = fea::offset_get<int64_t>(offset, tup);
 			EXPECT_EQ(i, -42);
 		}
 		{
-			uintptr_t offset = fea::tuple_offset<3, tup_t>();
-			EXPECT_EQ(fea::tuple_offset<3>(tup), offset);
+			uintptr_t offset = fea::tuple_offset<3>(tup);
 
 			int8_t i = fea::offset_get<int8_t>(offset, tup);
 			EXPECT_EQ(i, 2);
 		}
 		{
-			uintptr_t offset = fea::tuple_offset<4, tup_t>();
-			EXPECT_EQ(fea::tuple_offset<4>(tup), offset);
+			uintptr_t offset = fea::tuple_offset<4>(tup);
 
 			uint8_t i = fea::offset_get<uint8_t>(offset, tup);
 			EXPECT_EQ(i, 5u);
@@ -155,7 +150,7 @@ TEST(tuple, runtime_get) {
 		auto lookup = fea::make_offset_lookup(tup);
 		fea::static_for<std::tuple_size<tup_t>::value>([&](auto idx) {
 			EXPECT_EQ(lookup[idx], fea::tuple_offset<idx>(tup));
-			size_t off2 = fea::tuple_offset<idx, tup_t>();
+			size_t off2 = fea::tuple_offset<idx>(tup);
 			EXPECT_EQ(lookup[idx], off2);
 		});
 

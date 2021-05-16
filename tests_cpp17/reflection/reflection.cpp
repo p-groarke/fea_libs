@@ -126,11 +126,11 @@ TEST(reflection, basics) {
 		auto all = t.cexpr_filter_all();
 		size_t i = 0;
 		t.for_each([&](auto, auto&) { ++i; }, all);
-		EXPECT_EQ(i, 0);
+		EXPECT_EQ(i, 0u);
 
 		auto none = t.cexpr_filter_none();
 		t.for_each([&](auto, auto&) { ++i; }, none);
-		EXPECT_EQ(i, 3);
+		EXPECT_EQ(i, 3u);
 
 		auto f1 = t.cexpr_filter_all()
 						  .enable<my_struct::var::potato,
@@ -150,7 +150,7 @@ TEST(reflection, basics) {
 					++i;
 				},
 				f1);
-		EXPECT_EQ(i, 2);
+		EXPECT_EQ(i, 2u);
 
 		// Other style
 		auto f2 = t.cexpr_filter_all()
@@ -171,7 +171,7 @@ TEST(reflection, basics) {
 					++i;
 				},
 				f2);
-		EXPECT_EQ(i, 2);
+		EXPECT_EQ(i, 2u);
 
 
 		auto f3 = t.cexpr_filter_none()
@@ -189,7 +189,7 @@ TEST(reflection, basics) {
 					++i;
 				},
 				f3);
-		EXPECT_EQ(i, 1);
+		EXPECT_EQ(i, 1u);
 
 		// Other style
 		auto f4 = t.cexpr_filter_none()
@@ -207,7 +207,7 @@ TEST(reflection, basics) {
 					++i;
 				},
 				f4);
-		EXPECT_EQ(i, 1);
+		EXPECT_EQ(i, 1u);
 	}
 
 	// Runtime filters.
@@ -215,11 +215,11 @@ TEST(reflection, basics) {
 		auto all = t.filter_all();
 		size_t i = 0;
 		t.for_each([&](auto, auto&) { ++i; }, all);
-		EXPECT_EQ(i, 0);
+		EXPECT_EQ(i, 0u);
 
 		auto none = t.filter_none();
 		t.for_each([&](auto, auto&) { ++i; }, none);
-		EXPECT_EQ(i, 3);
+		EXPECT_EQ(i, 3u);
 
 		auto f1 = t.filter_all()
 						  .enable<my_struct::var::potato,
@@ -239,7 +239,7 @@ TEST(reflection, basics) {
 					++i;
 				},
 				f1);
-		EXPECT_EQ(i, 2);
+		EXPECT_EQ(i, 2u);
 
 		// Other style
 		auto f2 = t.filter_all()
@@ -259,7 +259,7 @@ TEST(reflection, basics) {
 					++i;
 				},
 				f2);
-		EXPECT_EQ(i, 2);
+		EXPECT_EQ(i, 2u);
 
 
 		auto f3 = t.filter_none()
@@ -277,7 +277,7 @@ TEST(reflection, basics) {
 					++i;
 				},
 				f3);
-		EXPECT_EQ(i, 1);
+		EXPECT_EQ(i, 1u);
 
 		// Other style
 		auto f4 = t.filter_none()
@@ -296,7 +296,7 @@ TEST(reflection, basics) {
 					++i;
 				},
 				f4);
-		EXPECT_EQ(i, 1);
+		EXPECT_EQ(i, 1u);
 	}
 }
 } // namespace

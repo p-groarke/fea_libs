@@ -44,10 +44,13 @@
 
 #define FEA_REFL_ENAME var
 
-#define FEA_REFL_STRINGIFY_MAP(x) { #x, FEA_REFL_ENAME::##x },
-#define FEA_REFL_WSTRINGIFY_MAP(x) { FEA_PASTE(L, #x), FEA_REFL_ENAME::##x },
-#define FEA_REFL_U16STRINGIFY_MAP(x) { FEA_PASTE(u, #x), FEA_REFL_ENAME::##x },
-#define FEA_REFL_U32STRINGIFY_MAP(x) { FEA_PASTE(U, #x), FEA_REFL_ENAME::##x },
+#define FEA_REFL_STRINGIFY_MAP(x) { #x, FEA_PASTE(FEA_REFL_ENAME::, x) },
+#define FEA_REFL_WSTRINGIFY_MAP(x) \
+	{ FEA_PASTE(L, #x), FEA_PASTE(FEA_REFL_ENAME::, x) },
+#define FEA_REFL_U16STRINGIFY_MAP(x) \
+	{ FEA_PASTE(u, #x), FEA_PASTE(FEA_REFL_ENAME::, x) },
+#define FEA_REFL_U32STRINGIFY_MAP(x) \
+	{ FEA_PASTE(U, #x), FEA_PASTE(FEA_REFL_ENAME::, x) },
 
 // Get the variables' name.
 #define FEA_DETAIL_REFL_VARNAME_PRIV(prefix, ename, suffix) \
@@ -100,36 +103,9 @@ public: \
 				.at(str); \
 	}
 
-//#define FEA_DETAIL_MAKE_CTORS(x) constexpr
-// const auto& x() const {
-//	return get<FEA_REFL_ENAME::##x>();
-//}
-//
-//#define FEA_DETAIL_MAKE_GETTER(x) \
-//	const auto& x() const { \
-//		return get<FEA_REFL_ENAME::##x>(); \
-//	}
-
-//#define FEA_DETAIL_REFL_GETTERS(...) \
-//protected: \
-//	/* Create a class reflectable can inherit from. */ \
-//	template <class Reflactable> \
-//	struct getters { \
-//		constexpr getters(Reflectable* r) { \
-//		} \
-//\
-//		/*Generate getters for each variable.*/ \
-//		FEA_FOR_EACH(FEA_DETAIL_MAKE_GETTER, __VA_ARGS__) \
-//\
-//	private: \
-//		Reflectable* _parent = nullptr; \
-//	};
-
 #define FEA_REFLECTION_VARNAMES(...) \
 	/* Declares your enum. */ \
 	enum class FEA_REFL_ENAME : uint16_t { __VA_ARGS__, count }; \
 	/* char and std::string */ \
 	FEA_DETAIL_REFL_ARRAY(char, , FEA_REFL_ENAME, __VA_ARGS__); \
 	FEA_DETAIL_REFL_FUNCS(char, , FEA_REFL_ENAME)
-
-// FEA_DETAIL_REFL_GETTERS(__VA_ARGS__)
