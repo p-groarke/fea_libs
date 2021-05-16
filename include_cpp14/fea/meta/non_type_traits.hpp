@@ -60,7 +60,7 @@ struct max_nt;
 
 template <class T, T... Args>
 struct max_nt<true, T, Args...> {
-	static constexpr auto value = T(max_nt_int<std::underlying_type_t<T>,
+	static constexpr T value = T(max_nt_int<std::underlying_type_t<T>,
 			std::underlying_type_t<T>(Args)...>::value);
 };
 
@@ -97,7 +97,7 @@ struct min_nt;
 
 template <class T, T... Args>
 struct min_nt<true, T, Args...> {
-	static constexpr auto value = T(min_nt_int<std::underlying_type_t<T>,
+	static constexpr T value = T(min_nt_int<std::underlying_type_t<T>,
 			std::underlying_type_t<T>(Args)...>::value);
 };
 

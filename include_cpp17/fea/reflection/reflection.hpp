@@ -218,7 +218,7 @@ public:
 	template <class Func>
 	void for_each(Func&& func, const var_filter<var>& filter) const {
 		_type_map.for_each([&](auto key, const auto& val) {
-			if (filter.at<key()>()) {
+			if (filter.at<var(key)>()) {
 				func(key, val);
 			}
 		});
@@ -229,7 +229,7 @@ public:
 	template <class Func, bool... Vals>
 	void for_each(Func&& func, const var_filter<var>& filter) {
 		_type_map.for_each([&](auto key, auto& val) {
-			if (filter.at<key()>()) {
+			if (filter.at<var(key)>()) {
 				func(key, val);
 			}
 		});
