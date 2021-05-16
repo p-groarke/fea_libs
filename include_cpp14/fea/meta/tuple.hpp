@@ -222,7 +222,7 @@ const void* runtime_get(size_t idx, const std::tuple<Args...>& tup) {
 template <class... Args>
 void* runtime_get(size_t idx, std::tuple<Args...>& tup) {
 	const auto& c_tup = tup;
-	return const_cast<void*>(runtime_get(c_tup));
+	return const_cast<void*>(runtime_get(idx, c_tup));
 }
 
 
