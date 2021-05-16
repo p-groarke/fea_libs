@@ -45,14 +45,16 @@ struct max_nt_int;
 
 template <class T, T First, T Second>
 struct max_nt_int<T, First, Second> {
-	static constexpr auto value = First > Second ? First : Second;
+	static constexpr T value = std::conditional_t<(First > Second),
+			std::integral_constant<T, First>,
+			std::integral_constant<T, Second>>::value;
 };
 
 template <class T, T First, T Second, T... Args>
 struct max_nt_int<T, First, Second, Args...> {
-	static constexpr auto value = First > Second
-			? max_nt_int<T, First, Args...>::value
-			: max_nt_int<T, Second, Args...>::value;
+	static constexpr T value = std::conditional_t<(First > Second),
+			max_nt_int<T, First, Args...>,
+			max_nt_int<T, Second, Args...>>::value;
 };
 
 template <bool, class T, T... Args>

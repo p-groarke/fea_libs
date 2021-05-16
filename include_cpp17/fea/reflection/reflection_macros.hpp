@@ -44,13 +44,10 @@
 
 #define FEA_REFL_ENAME var
 
-#define FEA_REFL_STRINGIFY_MAP(x) { #x, FEA_PASTE(FEA_REFL_ENAME::, x) },
-#define FEA_REFL_WSTRINGIFY_MAP(x) \
-	{ FEA_PASTE(L, #x), FEA_PASTE(FEA_REFL_ENAME::, x) },
-#define FEA_REFL_U16STRINGIFY_MAP(x) \
-	{ FEA_PASTE(u, #x), FEA_PASTE(FEA_REFL_ENAME::, x) },
-#define FEA_REFL_U32STRINGIFY_MAP(x) \
-	{ FEA_PASTE(U, #x), FEA_PASTE(FEA_REFL_ENAME::, x) },
+#define FEA_REFL_STRINGIFY_MAP(x) { #x, FEA_REFL_ENAME::x },
+#define FEA_REFL_WSTRINGIFY_MAP(x) { FEA_PASTE(L, #x), FEA_REFL_ENAME::x },
+#define FEA_REFL_U16STRINGIFY_MAP(x) { FEA_PASTE(u, #x), FEA_REFL_ENAME::x },
+#define FEA_REFL_U32STRINGIFY_MAP(x) { FEA_PASTE(U, #x), FEA_REFL_ENAME::x },
 
 // Get the variables' name.
 #define FEA_DETAIL_REFL_VARNAME_PRIV(prefix, ename, suffix) \

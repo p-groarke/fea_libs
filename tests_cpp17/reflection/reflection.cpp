@@ -43,8 +43,9 @@ TEST(reflection, basics) {
 	my_struct t;
 
 	// const auto enum_arr = descriptor::_var_strings;
-	fea::enum_array<std::string, my_struct::var> test_arr{ { "potato" },
-		{ "tomato" }, { "onion" } };
+	fea::enum_array<std::string, my_struct::var> test_arr{
+		std::string{ "potato" }, std::string{ "tomato" }, std::string{ "onion" }
+	};
 	// Get all variable names.
 	EXPECT_EQ(t.var_names(), test_arr);
 	EXPECT_EQ(t.var_names().size(), size_t(my_struct::var::count));
