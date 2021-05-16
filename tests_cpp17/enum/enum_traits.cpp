@@ -34,20 +34,15 @@ TEST(enum, traits) {
 
 	{
 		std::vector<e> visited;
-		fea::enum_for_each<e::four, e::one>([&](auto ic) {
-			constexpr e my_e = decltype(ic)::value;
-			visited.push_back(my_e);
-		});
+		fea::enum_for_each<e::four, e::one>(
+				[&](auto my_e) { visited.push_back(my_e); });
 		EXPECT_EQ(visited.size(), 2);
 		EXPECT_EQ(visited[0], e::four);
 		EXPECT_EQ(visited[1], e::one);
 
 		visited.clear();
 		fea::enum_for_each<e::count, e::four, e::three, e::two, e::one>(
-				[&](auto ic) {
-					constexpr e my_e = decltype(ic)::value;
-					visited.push_back(my_e);
-				});
+				[&](auto my_e) { visited.push_back(my_e); });
 		EXPECT_EQ(visited.size(), 5);
 		EXPECT_EQ(visited[0], e::count);
 		EXPECT_EQ(visited[1], e::four);
@@ -56,18 +51,18 @@ TEST(enum, traits) {
 		EXPECT_EQ(visited[4], e::one);
 	}
 
-	static_assert(fea::enum_max_v<e::four, e::two, e::three> == e::four,
+	static_assert(fea::max_v<e::four, e::two, e::three> == e::four,
 			"enum_traits.cpp : test failed");
-	static_assert(fea::enum_max_v<e::two, e::one, e::three> == e::three,
+	static_assert(fea::max_v<e::two, e::one, e::three> == e::three,
 			"enum_traits.cpp : test failed");
-	static_assert(fea::enum_max_v<e::two, e::four, e::three> == e::four,
+	static_assert(fea::max_v<e::two, e::four, e::three> == e::four,
 			"enum_traits.cpp : test failed");
 
-	static_assert(fea::enum_min_v<e::one, e::two, e::three> == e::one,
+	static_assert(fea::min_v<e::one, e::two, e::three> == e::one,
 			"enum_traits.cpp : test failed");
-	static_assert(fea::enum_min_v<e::two, e::three, e::one> == e::one,
+	static_assert(fea::min_v<e::two, e::three, e::one> == e::one,
 			"enum_traits.cpp : test failed");
-	static_assert(fea::enum_min_v<e::count, e::three, e::four> == e::three,
+	static_assert(fea::min_v<e::count, e::three, e::four> == e::three,
 			"enum_traits.cpp : test failed");
 
 	{

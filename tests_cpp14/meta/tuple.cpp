@@ -153,8 +153,7 @@ TEST(tuple, runtime_get) {
 		}
 
 		auto lookup = fea::make_offset_lookup(tup);
-		fea::static_for<std::tuple_size<tup_t>::value>([&](auto ic) {
-			constexpr size_t idx = decltype(ic)::value;
+		fea::static_for<std::tuple_size<tup_t>::value>([&](auto idx) {
 			EXPECT_EQ(lookup[idx], fea::tuple_offset<idx>(tup));
 			size_t off2 = fea::tuple_offset<idx, tup_t>();
 			EXPECT_EQ(lookup[idx], off2);

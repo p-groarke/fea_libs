@@ -84,15 +84,14 @@ struct switcher<Enum, N, std::tuple<Funcs...>, Es...> {
 #endif
 
 		bool found = false;
-		fea::static_for<N>([&, this](auto ic) {
+		fea::static_for<N>([&, this](auto e_idx) {
 			if (found) {
 				return;
 			}
 
-			constexpr size_t e_idx = decltype(ic)::value;
 			if (e_idx == size_t(e)) {
 				found = true;
-				return _funcs.template find<Enum(e_idx)>()();
+				return _funcs.template find<Enum(e_idx())>()();
 			}
 		});
 	}

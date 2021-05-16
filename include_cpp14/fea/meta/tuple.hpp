@@ -205,10 +205,8 @@ auto make_offset_lookup(const std::tuple<Args...>& tup) {
 	constexpr size_t arr_size = sizeof...(Args);
 	std::array<uintptr_t, arr_size> ret{};
 
-	fea::static_for<arr_size>([&](auto ic) {
-		constexpr size_t idx = decltype(ic)::value;
-		ret[idx] = fea::tuple_offset<idx>(tup);
-	});
+	fea::static_for<arr_size>(
+			[&](auto idx) { ret[idx] = fea::tuple_offset<idx>(tup); });
 
 	return ret;
 }
@@ -241,8 +239,7 @@ constexpr auto make_lookup() {
 	constexpr size_t tup_size = std::tuple_size_v<std::decay_t<TupleRef>>;
 
 	std::array<unerase_t, tup_size> ret{};
-	fea::static_for<tup_size>([&](auto ic) {
-		constexpr size_t idx = decltype(ic)::value;
+	fea::static_for<tup_size>([&](auto idx) {
 		ret[idx] = &unerase<idx, FuncRet, Func, TupleRef>;
 	});
 	return ret;

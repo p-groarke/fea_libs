@@ -33,6 +33,7 @@
 
 #pragma once
 #include "fea/enum/enum_array.hpp"
+#include "fea/meta/non_type_traits.hpp"
 #include "fea/meta/traits.hpp"
 
 #include <array>
@@ -93,54 +94,6 @@ constexpr void enum_for_each(const Func& func) {
 
 
 namespace detail {
-template <auto...>
-struct enum_max;
-
-template <auto First, auto Second>
-struct enum_max<First, Second> {
-	static constexpr auto value
-			= size_t(First) > size_t(Second) ? First : Second;
-};
-
-template <auto First, auto Second, auto... Args>
-struct enum_max<First, Second, Args...> {
-	static constexpr auto value = size_t(First) > size_t(Second)
-			? enum_max<First, Args...>::value
-			: enum_max<Second, Args...>::value;
-};
-
-} // namespace detail
-
-// Finds the maximum value of provided non-type enum values.
-template <auto... Args>
-inline constexpr auto enum_max_v = detail::enum_max<Args...>::value;
-
-
-namespace detail {
-template <auto...>
-struct enum_min;
-
-template <auto First, auto Second>
-struct enum_min<First, Second> {
-	static constexpr auto value
-			= size_t(First) < size_t(Second) ? First : Second;
-};
-
-template <auto First, auto Second, auto... Args>
-struct enum_min<First, Second, Args...> {
-	static constexpr auto value = size_t(First) < size_t(Second)
-			? enum_min<First, Args...>::value
-			: enum_min<Second, Args...>::value;
-};
-
-} // namespace detail
-
-// Finds the minimum value of provided non-type enum values.
-template <auto... Args>
-inline constexpr auto enum_min_v = detail::enum_min<Args...>::value;
-
-
-namespace detail {
 // Calls your function with each non-type enum values.
 // Passes idx std::integral_constant and enum std::integral_constant.
 template <class E, class Func, size_t... Idx, auto... Args>
@@ -169,14 +122,12 @@ constexpr void enum_for_each_w_idx(const Func& func) {
 // Effectively, enables creation of programmatic switch-case lookups.
 template <auto... Args>
 constexpr auto make_enum_lookup() {
-	constexpr size_t arr_size = size_t(fea::enum_max_v<Args...>) + 1u;
+	constexpr size_t arr_size = size_t(fea::max_v<Args...>) + 1u;
 	std::array<size_t, arr_size> ret{};
 
 	// Initialize everything with sentinel.
-	fea::static_for<arr_size>([&](auto ic) {
-		constexpr size_t idx = decltype(ic)::value;
-		ret[idx] = (std::numeric_limits<size_t>::max)();
-	});
+	fea::static_for<arr_size>(
+			[&](auto idx) { ret[idx] = (std::numeric_limits<size_t>::max)(); });
 
 	// Create association between enum value and actual index.
 	// Aka, slot map from enum -> pack index

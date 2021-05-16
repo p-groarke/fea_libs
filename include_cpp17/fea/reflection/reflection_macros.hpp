@@ -59,10 +59,11 @@
 // Generates an enum_array of const char* const and one of std::string.
 // The arrays are prefixed with the provided string type prefix.
 #define FEA_DETAIL_REFL_ARRAY(chartype, prefix, ename, ...) \
+protected: \
 	/* The array of your strings, indexed at the enum position. */ \
 	inline static const fea::enum_array<fea::string_t<chartype>, ename, \
 			FEA_SIZEOF_VAARGS(__VA_ARGS__)> \
-			FEA_DETAIL_REFL_VARNAME_PRIV(prefix, ename, strings){ \
+			FEA_DETAIL_REFL_VARNAME_PRIV(prefix, ename, names){ \
 				{ FEA_FOR_EACH(FEA_STRINGIFY_COMMA, __VA_ARGS__) } \
 			}; \
 	/* A reverse-lookup map, to get the enum from a string in O(1). */ \
@@ -75,28 +76,54 @@
 // Declares and implements helper functions.
 // string<enum>(), to_string<enum::val>(), to_string(enum::val)
 #define FEA_DETAIL_REFL_FUNCS(chartype, prefix, ename) \
+public: \
 	/* Returns the variable strings */ \
 	[[maybe_unused]] static const auto& FEA_DETAIL_REFL_VARNAME( \
-			prefix, ename, strings)() { \
-		return FEA_DETAIL_REFL_VARNAME_PRIV(prefix, ename, strings); \
+			prefix, ename, names)() { \
+		return FEA_DETAIL_REFL_VARNAME_PRIV(prefix, ename, names); \
 	} \
 	/* Non-type compile-time getters. */ \
 	template <ename E> \
 	[[maybe_unused]] static const fea::string_t<chartype>& \
-	FEA_DETAIL_REFL_VARNAME(prefix, to, string)() { \
-		return FEA_DETAIL_REFL_VARNAME_PRIV(prefix, ename, strings).at<E>(); \
+	FEA_DETAIL_REFL_VARNAME(prefix, ename, name)() { \
+		return FEA_DETAIL_REFL_VARNAME_PRIV(prefix, ename, names).at<E>(); \
 	} \
 	/* Non-templated getters, fast O(1). */ \
 	[[maybe_unused]] static const fea::string_t<chartype>& \
-	FEA_DETAIL_REFL_VARNAME(prefix, to, string)(ename e) { \
-		return FEA_DETAIL_REFL_VARNAME_PRIV(prefix, ename, strings)[e]; \
+	FEA_DETAIL_REFL_VARNAME(prefix, ename, name)(ename e) { \
+		return FEA_DETAIL_REFL_VARNAME_PRIV(prefix, ename, names)[e]; \
 	} \
 	/* Reverse lookup with string, slow O(1). */ \
 	[[maybe_unused]] static ename FEA_DETAIL_REFL_VARNAME( \
-			prefix, from, string)(const fea::string_t<chartype>& str) { \
+			prefix, ename, enum)(const fea::string_t<chartype>& str) { \
 		return FEA_DETAIL_REFL_VARNAME_PRIV(prefix, ename, reverse_lookup) \
 				.at(str); \
 	}
+
+//#define FEA_DETAIL_MAKE_CTORS(x) constexpr
+// const auto& x() const {
+//	return get<FEA_REFL_ENAME::##x>();
+//}
+//
+//#define FEA_DETAIL_MAKE_GETTER(x) \
+//	const auto& x() const { \
+//		return get<FEA_REFL_ENAME::##x>(); \
+//	}
+
+//#define FEA_DETAIL_REFL_GETTERS(...) \
+//protected: \
+//	/* Create a class reflectable can inherit from. */ \
+//	template <class Reflactable> \
+//	struct getters { \
+//		constexpr getters(Reflectable* r) { \
+//		} \
+//\
+//		/*Generate getters for each variable.*/ \
+//		FEA_FOR_EACH(FEA_DETAIL_MAKE_GETTER, __VA_ARGS__) \
+//\
+//	private: \
+//		Reflectable* _parent = nullptr; \
+//	};
 
 #define FEA_REFLECTION_VARNAMES(...) \
 	/* Declares your enum. */ \
@@ -104,3 +131,5 @@
 	/* char and std::string */ \
 	FEA_DETAIL_REFL_ARRAY(char, , FEA_REFL_ENAME, __VA_ARGS__); \
 	FEA_DETAIL_REFL_FUNCS(char, , FEA_REFL_ENAME)
+
+// FEA_DETAIL_REFL_GETTERS(__VA_ARGS__)

@@ -149,8 +149,8 @@ TEST(pack, basics) {
 	{
 		fea::pack<int, double, float> my_pack;
 		double d = 42.0;
-		static_assert(
-				fea::pack_get_idx(d, my_pack) == 1, "pack.cpp : test failed");
+		static_assert(fea::runtime_get_idx(d, my_pack) == 1,
+				"pack.cpp : test failed");
 	}
 
 	{
@@ -164,15 +164,15 @@ TEST(pack, basics) {
 
 		fea::pack_nt<e::one, e::three, e::two, e::four, e::count> my_pack;
 
-		size_t idx = fea::pack_get_idx(e::one, my_pack);
+		size_t idx = fea::runtime_get_idx(e::one, my_pack);
 		EXPECT_EQ(idx, 0u);
-		idx = fea::pack_get_idx(e::two, my_pack);
+		idx = fea::runtime_get_idx(e::two, my_pack);
 		EXPECT_EQ(idx, 2u);
-		idx = fea::pack_get_idx(e::three, my_pack);
+		idx = fea::runtime_get_idx(e::three, my_pack);
 		EXPECT_EQ(idx, 1u);
-		idx = fea::pack_get_idx(e::four, my_pack);
+		idx = fea::runtime_get_idx(e::four, my_pack);
 		EXPECT_EQ(idx, 3u);
-		idx = fea::pack_get_idx(e::count, my_pack);
+		idx = fea::runtime_get_idx(e::count, my_pack);
 		EXPECT_EQ(idx, 4u);
 
 		// std::tuple<int, double, float, short, unsigned> my_tup;
@@ -228,6 +228,45 @@ TEST(pack, splice) {
 			std::is_same<fea::idx_splice_after_t<3, int, double, float, short>,
 					fea::pack<>>::value,
 			"traits.cpp : test failed");
+}
+
+TEST(pack, for_each) {
+	{
+		fea::pack<int, double, short> p;
+
+		std::array<std::string, 3> arr;
+		size_t i = 0;
+		fea::pack_for_each(
+				[&](auto ptr) {
+					using T = decltype(ptr);
+					if constexpr (std::is_same_v<T, int*>) {
+						EXPECT_EQ(i, 0);
+					} else if constexpr (std::is_same_v<T, double*>) {
+						EXPECT_EQ(i, 1);
+					} else if constexpr (std::is_same_v<T, short*>) {
+						EXPECT_EQ(i, 2);
+					}
+					++i;
+				},
+				p);
+	}
+
+	{
+		fea::pack_nt<42, -42, 0> p;
+		size_t i = 0;
+		fea::pack_for_each(
+				[&](auto val) {
+					if constexpr (val == 42) {
+						EXPECT_EQ(i, 0);
+					} else if constexpr (val == -42) {
+						EXPECT_EQ(i, 1);
+					} else if constexpr (val == 0) {
+						EXPECT_EQ(i, 2);
+					}
+					++i;
+				},
+				p);
+	}
 }
 
 } // namespace
