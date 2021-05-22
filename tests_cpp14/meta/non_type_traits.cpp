@@ -175,6 +175,10 @@ TEST(non_type_traits, enums_cpp17) {
 			three = 42,
 		};
 
+		static_assert(
+				std::is_enum_v<decltype(fea::max_v<e::one, e::two, e::three>)>,
+				"non_type_traits.cpp : test failed");
+
 		static_assert(fea::max_v<e::one, e::two, e::three> == e::three,
 				"non_type_traits.cpp : test failed");
 		static_assert(fea::max_v<e::one, e::three, e::two> == e::three,

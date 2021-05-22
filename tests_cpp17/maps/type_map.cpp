@@ -172,7 +172,7 @@ TEST(type_map, runtime_get) {
 				fea::make_kv_nt<e::one>(-42.f), fea::make_kv_nt<e::two>(42.0));
 
 		fea::runtime_get(
-				[](auto val) {
+				[](auto& val) {
 					using T = decltype(val);
 					if constexpr (std::is_same_v<T, float>) {
 						EXPECT_EQ(val, -42.f);

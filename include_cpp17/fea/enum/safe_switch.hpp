@@ -35,6 +35,7 @@
 #include "fea/maps/type_map.hpp"
 #include "fea/meta/traits.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <tuple>

@@ -240,11 +240,11 @@ TEST(pack, for_each) {
 				[&](auto ptr) {
 					using T = decltype(ptr);
 					if constexpr (std::is_same_v<T, int*>) {
-						EXPECT_EQ(i, 0);
+						EXPECT_EQ(i, 0u);
 					} else if constexpr (std::is_same_v<T, double*>) {
-						EXPECT_EQ(i, 1);
+						EXPECT_EQ(i, 1u);
 					} else if constexpr (std::is_same_v<T, short*>) {
-						EXPECT_EQ(i, 2);
+						EXPECT_EQ(i, 2u);
 					}
 					++i;
 				},
@@ -257,11 +257,11 @@ TEST(pack, for_each) {
 		fea::pack_for_each(
 				[&](auto val) {
 					if constexpr (val == 42) {
-						EXPECT_EQ(i, 0);
+						EXPECT_EQ(i, 0u);
 					} else if constexpr (val == -42) {
-						EXPECT_EQ(i, 1);
+						EXPECT_EQ(i, 1u);
 					} else if constexpr (val == 0) {
-						EXPECT_EQ(i, 2);
+						EXPECT_EQ(i, 2u);
 					}
 					++i;
 				},
