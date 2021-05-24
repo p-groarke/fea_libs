@@ -36,14 +36,14 @@ TEST(enum, traits) {
 		std::vector<e> visited;
 		fea::enum_for_each<e::four, e::one>(
 				[&](auto my_e) { visited.push_back(my_e); });
-		EXPECT_EQ(visited.size(), 2);
+		EXPECT_EQ(visited.size(), 2u);
 		EXPECT_EQ(visited[0], e::four);
 		EXPECT_EQ(visited[1], e::one);
 
 		visited.clear();
 		fea::enum_for_each<e::count, e::four, e::three, e::two, e::one>(
 				[&](auto my_e) { visited.push_back(my_e); });
-		EXPECT_EQ(visited.size(), 5);
+		EXPECT_EQ(visited.size(), 5u);
 		EXPECT_EQ(visited[0], e::count);
 		EXPECT_EQ(visited[1], e::four);
 		EXPECT_EQ(visited[2], e::three);

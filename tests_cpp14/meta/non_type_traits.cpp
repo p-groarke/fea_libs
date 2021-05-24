@@ -169,7 +169,7 @@ TEST(non_type_traits, enums_cpp17) {
 	}
 
 	{
-		enum class e {
+		enum class e : int {
 			one = -42,
 			two = 0,
 			three = 42,
@@ -179,15 +179,21 @@ TEST(non_type_traits, enums_cpp17) {
 				std::is_enum_v<decltype(fea::max_v<e::one, e::two, e::three>)>,
 				"non_type_traits.cpp : test failed");
 
-		static_assert(fea::max_v<e::one, e::two, e::three> == e::three,
-				"non_type_traits.cpp : test failed");
+		{
+			constexpr e answer = fea::max_v<e::one, e::two, e::three>;
+			static_assert(
+					answer == e::three, "non_type_traits.cpp : test failed");
+		}
 		static_assert(fea::max_v<e::one, e::three, e::two> == e::three,
 				"non_type_traits.cpp : test failed");
 		static_assert(fea::max_v<e::three, e::one, e::two> == e::three,
 				"non_type_traits.cpp : test failed");
 
-		static_assert(fea::min_v<e::one, e::two, e::three> == e::one,
-				"non_type_traits.cpp : test failed");
+		{
+			constexpr e answer = fea::min_v<e::one, e::two, e::three>;
+			static_assert(
+					answer == e::one, "non_type_traits.cpp : test failed");
+		}
 		static_assert(fea::min_v<e::two, e::one, e::three> == e::one,
 				"non_type_traits.cpp : test failed");
 		static_assert(fea::min_v<e::two, e::three, e::one> == e::one,
