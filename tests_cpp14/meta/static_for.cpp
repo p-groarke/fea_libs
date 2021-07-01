@@ -19,20 +19,14 @@ TEST(static_for, basics) {
 
 	{
 		int ans = 0;
-		fea::static_for<4>([&](auto ic) {
-			constexpr size_t v = decltype(ic)::value;
-			ans += int(v);
-		});
+		fea::static_for<4>([&](auto v) { ans += int(v()); });
 		EXPECT_EQ(ans, 6);
 	}
 
 	{
 		int ans = 0;
 		fea::apply_indexes<4>([&](auto... ic) {
-			auto l = [&](auto ic) {
-				constexpr size_t v = decltype(ic)::value;
-				ans += int(v);
-			};
+			auto l = [&](auto v) { ans += int(v()); };
 
 			fea::fold(l, ic...);
 		});

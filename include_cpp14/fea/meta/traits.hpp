@@ -237,10 +237,19 @@ FEA_INLINE_VAR constexpr bool is_contiguous_v
  */
 
 namespace detail {
-template <class T, class...>
-struct front {
+template <class...>
+struct front;
+
+template <>
+struct front<> {
+	using type = void;
+};
+
+template <class T, class... Args>
+struct front<T, Args...> {
 	using type = T;
 };
+
 } // namespace detail
 
 // Get the first type of a pack.
@@ -258,6 +267,11 @@ struct back<T> {
 template <class T, class... Args>
 struct back<T, Args...> {
 	using type = typename back<Args...>::type;
+};
+
+template <>
+struct back<> {
+	using type = void;
 };
 } // namespace detail
 
