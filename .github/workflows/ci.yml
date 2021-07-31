@@ -168,6 +168,9 @@ jobs:
         conan profile new default --detect
 
     - name: Configure
+      env:
+        CC: gcc-${{ matrix.config.gcc_ver }}
+        CXX: g++-${{ matrix.config.gcc_ver }}
       run: |
         cd ${{github.workspace}}
         mkdir build
