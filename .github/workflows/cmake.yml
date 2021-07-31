@@ -28,7 +28,7 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: '3.7'
-        architecture: 'x64' # optional
+        architecture: 'x64' # optional, x86
 
     - name: Install Conan
       run: |
@@ -60,6 +60,6 @@ jobs:
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: |
         cd ${{github.workspace}}/build
-        fea_libs_tests
-        fea_libs_nothrow_tests
+        ./bin/fea_libs_tests
+        ./bin/fea_libs_nothrow_tests
 
