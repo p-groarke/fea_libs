@@ -204,7 +204,7 @@ TEST(file, basics) {
 			if (filepath.string().find("crlf") != std::string::npos) {
 				tester = "Line1\r\nLine2\r\n\r\nLine4";
 			}
-			EXPECT_EQ(text.size(), tester.size());
+			EXPECT_EQ(text.size(), tester.size()) << filepath.string();
 			EXPECT_EQ(text, tester);
 		}
 		{
