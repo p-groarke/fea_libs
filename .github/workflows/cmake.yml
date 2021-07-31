@@ -18,7 +18,7 @@ jobs:
     # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
     runs-on: windows-latest
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         # os: [windows-latest] # [ubuntu-20.04, ubuntu-18.04, windows-2019, windows-2016, macos-11, macos-10.15]
         build_type: [Release, Debug]
@@ -55,7 +55,7 @@ jobs:
         cd ${{github.workspace}}
         mkdir build
         cd build
-        cmake .. -T ${{ matrix.config.vs_ver }} -A ${{ matrix.build_arch }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.config.fea_ver }}
+        cmake .. -T ${{ matrix.config.toolset }} -A ${{ matrix.build_arch }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.config.fea_ver }}
 
     - name: Build
       # Build your program with the given configuration
