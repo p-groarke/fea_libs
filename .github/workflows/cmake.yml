@@ -24,11 +24,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Install Conan
+    - name: Install Python
       uses: actions/setup-python@v2
       with:
         python-version: '3.7'
         architecture: 'x64' # optional
+    - name: Install Conan
       run: |
         python --version
         pip install conan
