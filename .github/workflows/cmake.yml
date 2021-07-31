@@ -24,9 +24,9 @@ jobs:
         build_type: [Release, Debug]
         build_arch: [x64, Win32]
         config:
-          - { vs_ver: '"Visual Studio 16"', fea_ver: "" }
-          - { vs_ver: '"Visual Studio 15"', fea_ver: "-DFEA_CPP17=On" }
-          - { vs_ver: '"Visual Studio 14"', fea_ver: "-DFEA_CPP14=On" }
+          - { toolset: '"v142"', fea_ver: "" }
+          - { toolset: '"v141"', fea_ver: "-DFEA_CPP17=On" }
+          - { toolset: '"v140"', fea_ver: "-DFEA_CPP14=On" }
 
     steps:
     - name: Setup Git Line Endings
@@ -55,7 +55,7 @@ jobs:
         cd ${{github.workspace}}
         mkdir build
         cd build
-        cmake .. -G ${{ matrix.config.vs_ver }} -A ${{ matrix.build_arch }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.config.fea_ver }}
+        cmake .. -T ${{ matrix.config.vs_ver }} -A ${{ matrix.build_arch }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.config.fea_ver }}
 
     - name: Build
       # Build your program with the given configuration
