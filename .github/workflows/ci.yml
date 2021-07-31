@@ -133,7 +133,7 @@ jobs:
         config:
           - { gcc_ver: "8", fea_ver: "" }
           - { gcc_ver: "7", fea_ver: "-DFEA_CPP14=On" }
-          - { gcc_ver: "6", fea_ver: "-DFEA_CPP14=On" }
+          # - { gcc_ver: "6", fea_ver: "-DFEA_CPP14=On" }
 
     steps:
     - name: Git Line Endings
