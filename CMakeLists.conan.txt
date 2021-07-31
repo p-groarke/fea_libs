@@ -21,5 +21,11 @@ else()
 	set(CONAN_TOOLSET)
 endif()
 
-execute_process(COMMAND conan install ${CMAKE_CURRENT_SOURCE_DIR} --build missing -s build_type=Debug ${CONAN_ARCH} ${CONAN_TOOLSET})
-execute_process(COMMAND conan install ${CMAKE_CURRENT_SOURCE_DIR} --build missing -s build_type=Release ${CONAN_ARCH} ${CONAN_TOOLSET})
+execute_process(COMMAND conan install ${CMAKE_CURRENT_SOURCE_DIR} --build missing -s
+	build_type=Debug ${CONAN_ARCH} ${CONAN_TOOLSET}
+	COMMAND_ECHO STDOUT
+)
+execute_process(COMMAND conan install ${CMAKE_CURRENT_SOURCE_DIR} --build missing -s
+	build_type=Release ${CONAN_ARCH} ${CONAN_TOOLSET}
+	COMMAND_ECHO STDOUT
+)
