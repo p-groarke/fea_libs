@@ -178,6 +178,9 @@ jobs:
         cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.config.fea_ver }}
 
     - name: Build
+      env:
+        CC: gcc-${{ matrix.config.gcc_ver }}
+        CXX: g++-${{ matrix.config.gcc_ver }}
       run: |
         cd ${{github.workspace}}/build
         cmake --build . --config ${{ matrix.build_type }}
