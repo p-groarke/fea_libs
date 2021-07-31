@@ -1,0 +1,30 @@
+name: C++ CI
+
+on:
+  push:
+    branches: [ $default-branch ]
+  pull_request:
+    branches: [ $default-branch ]
+
+
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, ubuntu-18.04, windows-2019, windows-2016, macos-11, macos-10.15]
+        # node: [10, 12, 14]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: cmake-configure
+      run: mkdir build
+      run: cd build
+      run: cmake ..
+    - name: cmake-build
+      run: cmake --build .
+    - name: unit-tests
+      run: fea_libs_tests
+      run: fea_libs_nothrow_tests
