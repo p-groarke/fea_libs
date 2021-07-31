@@ -29,7 +29,7 @@ jobs:
       with:
         python-version: '3.7'
         architecture: 'x64' # optional
-    - run: |
+      run: |
       python --version
       pip install conan
       conan user
