@@ -24,9 +24,9 @@ jobs:
         build_type: [Release, Debug]
         build_arch: [x64, Win32]
         config:
-          - { vs_ver: "Visual Studio 16", fea_ver: "" }
-          - { vs_ver: "Visual Studio 15", fea_ver: "-DFEA_CPP17=On" }
-          - { vs_ver: "Visual Studio 14", fea_ver: "-DFEA_CPP14=On" }
+          - { vs_ver: '"Visual Studio 16"', fea_ver: "" }
+          - { vs_ver: '"Visual Studio 15"', fea_ver: "-DFEA_CPP17=On" }
+          - { vs_ver: '"Visual Studio 14"', fea_ver: "-DFEA_CPP14=On" }
 
     steps:
     - name: Setup Git Line Endings
