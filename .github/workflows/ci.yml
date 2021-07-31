@@ -166,6 +166,7 @@ jobs:
         conan --version
         conan remote add bincrafters https://api.bintray.com/conan/conan/conan-center
         conan profile new default --detect
+        conan profile update settings.compiler.libcxx=libstdc++11 default
 
     - name: Configure
       env:
@@ -178,9 +179,6 @@ jobs:
         cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.config.fea_ver }}
 
     - name: Build
-      env:
-        CC: gcc-${{ matrix.config.gcc_ver }}
-        CXX: g++-${{ matrix.config.gcc_ver }}
       run: |
         cd ${{github.workspace}}/build
         cmake --build . --config ${{ matrix.build_type }}
