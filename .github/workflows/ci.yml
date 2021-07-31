@@ -125,15 +125,16 @@ jobs:
 
 
   Gcc:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: true
       matrix:
         build_type: [Release, Debug]
+        # build_arch: [x64, x86]
         config:
-          - { gcc_ver: "8", fea_ver: "" }
-          - { gcc_ver: "7", fea_ver: "-DFEA_CPP14=On" }
-          # - { gcc_ver: "6", fea_ver: "-DFEA_CPP14=On" }
+          - { os: ubuntu-20.04, gcc_ver: "10", fea_ver: "" }
+          - { os: ubuntu-20.04, gcc_ver: "9", fea_ver: "" }
+          - { os: ubuntu-18.04, gcc_ver: "7", fea_ver: "-DFEA_CPP14=On" }
 
     steps:
     - name: Git Line Endings
@@ -142,11 +143,11 @@ jobs:
 
     - uses: actions/checkout@v2
 
-    - name: Install Gcc
-      uses: egor-tensin/setup-gcc@v1
-      with:
-        version: ${{ matrix.config.gcc_ver }}
-        platform: x64
+    # - name: Install Gcc
+    #   uses: egor-tensin/setup-gcc@v1
+    #   with:
+    #     version: ${{ matrix.config.gcc_ver }}
+    #     platform: ${{ matrix.build_arch }}
 
     - name: Install Python
       uses: actions/setup-python@v2
@@ -167,9 +168,6 @@ jobs:
         conan profile new default --detect
 
     - name: Configure
-      env:
-        CC: gcc-${{ matrix.config.gcc_ver }}
-        CXX: g++-${{ matrix.config.gcc_ver }}
       run: |
         cd ${{github.workspace}}
         mkdir build
