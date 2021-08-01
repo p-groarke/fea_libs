@@ -55,7 +55,7 @@ namespace detail {
 template <class Func, size_t... I>
 constexpr void static_for(Func& func, std::index_sequence<I...>) {
 #if FEA_CPP17
-	return (func(std::integral_constant<size_t, I>{}), ...);
+	(func(std::integral_constant<size_t, I>{}), ...);
 #else
 	char dummy[]
 			= { (void(func(std::integral_constant<size_t, I>{})), '0')... };
