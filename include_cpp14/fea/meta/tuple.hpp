@@ -255,7 +255,7 @@ constexpr auto make_lookup() {
 	constexpr size_t tup_size = std::tuple_size_v<std::decay_t<TupleRef>>;
 
 	std::array<unerase_t, tup_size> ret{};
-	gcc_static_for<tup_size>([&](auto idx) {
+	::fea::static_for<tup_size>([&](auto idx) {
 		ret[idx] = &unerase<idx, FuncRet, Func, TupleRef>;
 	});
 	return ret;
