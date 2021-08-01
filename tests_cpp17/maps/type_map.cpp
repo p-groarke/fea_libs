@@ -1,9 +1,18 @@
 ﻿#include <array>
 #include <fea/maps/type_map.hpp>
 #include <fea/utils/platform.hpp>
+#include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
 
 namespace {
+enum class e {
+	one,
+	two,
+	three,
+	four,
+	count,
+};
+
 TEST(type_map, basics) {
 	{
 		constexpr fea::pack<int, double> k;
@@ -25,13 +34,14 @@ TEST(type_map, basics) {
 		static_assert(std::is_same_v<decltype(m)::back_t, size_t>,
 				"type_map.cpp : test failed");
 
-		m.for_each([](auto* ptr, [[maybe_unused]] auto& val) {
+		m.for_each([](auto* ptr, auto& val) {
 			using K = std::remove_pointer_t<decltype(ptr)>;
 			if constexpr (std::is_same_v<K, short>) {
 				EXPECT_EQ(val, short(0));
 			} else if constexpr (std::is_same_v<K, size_t>) {
 				EXPECT_EQ(val, 42u);
 			}
+			fea::unused(val);
 		});
 	}
 
@@ -89,14 +99,6 @@ TEST(type_map, basics) {
 	}
 
 	{
-		enum class e {
-			one,
-			two,
-			three,
-			four,
-			count,
-		};
-
 		constexpr fea::pack_nt<e::one, e::two> k2;
 		constexpr std::tuple<short, size_t> v2{ short(0), size_t(42) };
 		auto m = fea::make_type_map(k2, v2);
@@ -123,14 +125,6 @@ TEST(type_map, basics) {
 
 
 	{
-		enum class e {
-			one,
-			two,
-			three,
-			four,
-			count,
-		};
-
 		auto tmap = fea::make_type_map(
 				fea::make_kv_nt<e::one>(42.f), fea::make_kv_nt<e::two>(42.0));
 
@@ -149,7 +143,6 @@ TEST(type_map, basics) {
 	}
 }
 
-#if FEA_CPP20
 TEST(type_map, runtime_get) {
 
 	// TODO :
@@ -161,14 +154,6 @@ TEST(type_map, runtime_get) {
 	//}
 
 	{
-		enum class e {
-			one,
-			two,
-			three,
-			four,
-			count,
-		};
-
 		auto tmap = fea::make_type_map(
 				fea::make_kv_nt<e::one>(-42.f), fea::make_kv_nt<e::two>(42.0));
 
@@ -184,5 +169,4 @@ TEST(type_map, runtime_get) {
 				e::two, tmap);
 	}
 }
-#endif
 } // namespace

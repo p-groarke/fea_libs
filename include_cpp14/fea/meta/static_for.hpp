@@ -53,7 +53,7 @@ constexpr void fold(Func&& func, Args&&... args) {
 
 namespace detail {
 template <class Func, size_t... I>
-constexpr void static_for(Func&& func, std::index_sequence<I...>) {
+constexpr void static_for(Func& func, std::index_sequence<I...>) {
 #if FEA_CPP17
 	return (func(std::integral_constant<size_t, I>{}), ...);
 #else
@@ -69,7 +69,7 @@ constexpr void static_for(Func&& func, std::index_sequence<I...>) {
 // Accept it with auto, access the index with '::value'.
 template <size_t N, class Func>
 constexpr void static_for(Func&& func) {
-	detail::static_for(std::forward<Func>(func), std::make_index_sequence<N>{});
+	detail::static_for(func, std::make_index_sequence<N>{});
 }
 
 
