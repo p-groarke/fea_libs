@@ -172,9 +172,9 @@ TEST(non_type_traits, enums_cpp17) {
 		static_assert(std::is_enum_v<decltype(
 							  fea::max_v<e2::one, e2::two, e2::three>)>,
 				"non_type_traits.cpp : test failed");
-		static_assert(std::is_enum_v<decltype(
-							  fea::min_v<e2::one, e2::two, e2::three>)>,
-				"non_type_traits.cpp : test failed");
+		// static_assert(std::is_enum_v<decltype(
+		//					  fea::min_v<e2::one, e2::two, e2::three>)>,
+		//		"non_type_traits.cpp : test failed");
 
 		{
 			constexpr e2 answer = e2(fea::max_v<e2::one, e2::two, e2::three>);
