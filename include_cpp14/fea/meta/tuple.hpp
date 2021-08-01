@@ -37,6 +37,7 @@
 #include "fea/utils/unused.hpp"
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <tuple>
 #include <type_traits>
@@ -242,14 +243,18 @@ constexpr auto make_lookup() {
 	constexpr size_t tup_size = std::tuple_size_v<std::decay_t<TupleRef>>;
 
 	std::array<unerase_t, tup_size> ret{};
-	fea::static_for<tup_size>([&](auto idx) {
-		ret[idx] = &unerase<idx(), FuncRet, Func, TupleRef>;
+	fea::static_for<tup_size>([&](auto idx) constexpr {
+		ret[idx()] = &unerase<idx(), FuncRet, Func, TupleRef>;
 	});
 	return ret;
 }
-
 } // namespace detail
 
+
+// Get a tuple value at runtime, located at idx.
+// Provide a generic lambda which accepts const auto& to recieve the value.
+// Your lambda may return a value, but it must be the same type for all
+// specializations.
 template <class Func, class Arg1, class... Args>
 std::invoke_result_t<Func, const Arg1&> runtime_get(
 		Func&& func, size_t idx, const std::tuple<Arg1, Args...>& tup) {
@@ -262,6 +267,10 @@ std::invoke_result_t<Func, const Arg1&> runtime_get(
 	return lookup[idx](func, tup);
 }
 
+// Get a tuple value at runtime, located at idx.
+// Provide a generic lambda which accepts auto& to recieve the value.
+// Your lambda may return a value, but it must be the same type for all
+// specializations.
 template <class Func, class Arg1, class... Args>
 std::invoke_result_t<Func, Arg1&> runtime_get(
 		Func&& func, size_t idx, std::tuple<Arg1, Args...>& tup) {

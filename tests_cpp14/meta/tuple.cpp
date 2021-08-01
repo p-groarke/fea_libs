@@ -191,15 +191,15 @@ TEST(tuple, runtime_get_cpp17) {
 
 		auto tester = [&, ret = 42](const auto& v) -> const int& {
 			using T = std::decay_t<decltype(v)>;
-			if constexpr (std::is_same<T, int32_t>::value) {
+			if constexpr (std::is_same_v<T, int32_t>) {
 				i32 = v;
-			} else if constexpr (std::is_same<T, uint32_t>::value) {
+			} else if constexpr (std::is_same_v<T, uint32_t>) {
 				ui32 = v;
-			} else if constexpr (std::is_same<T, int64_t>::value) {
+			} else if constexpr (std::is_same_v<T, int64_t>) {
 				i64 = v;
-			} else if constexpr (std::is_same<T, int8_t>::value) {
+			} else if constexpr (std::is_same_v<T, int8_t>) {
 				i8 = v;
-			} else if constexpr (std::is_same<T, uint8_t>::value) {
+			} else if constexpr (std::is_same_v<T, uint8_t>) {
 				ui8 = v;
 			}
 			return ret;
@@ -234,15 +234,15 @@ TEST(tuple, runtime_get_cpp17) {
 
 		auto tester = [&, ret = 42](auto& v) mutable -> int& {
 			using T = std::decay_t<decltype(v)>;
-			if constexpr (std::is_same<T, int32_t>::value) {
+			if constexpr (std::is_same_v<T, int32_t>) {
 				i32 = v;
-			} else if constexpr (std::is_same<T, uint32_t>::value) {
+			} else if constexpr (std::is_same_v<T, uint32_t>) {
 				ui32 = v;
-			} else if constexpr (std::is_same<T, int64_t>::value) {
+			} else if constexpr (std::is_same_v<T, int64_t>) {
 				i64 = v;
-			} else if constexpr (std::is_same<T, int8_t>::value) {
+			} else if constexpr (std::is_same_v<T, int8_t>) {
 				i8 = v;
-			} else if constexpr (std::is_same<T, uint8_t>::value) {
+			} else if constexpr (std::is_same_v<T, uint8_t>) {
 				ui8 = v;
 			}
 			return ret;

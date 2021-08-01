@@ -310,7 +310,6 @@ constexpr auto make_type_map(kv_nt<Keys, Values>&&... kvs) {
  * External Helpers
  */
 
-#if FEA_CPP17
 // Get a mapped value at runtime.
 template <class Func, class Key, Key... Keys, class Val1, class... Values>
 std::invoke_result_t<Func, const Val1&> runtime_get(Func&& func, Key e,
@@ -330,5 +329,4 @@ std::invoke_result_t<Func, Val1&> runtime_get(Func&& func, Key e,
 	size_t val_idx = fea::runtime_get_idx(e, fea::pack_nt<Keys...>{});
 	return fea::runtime_get(std::forward<Func>(func), val_idx, t_map.data());
 }
-#endif
 } // namespace fea

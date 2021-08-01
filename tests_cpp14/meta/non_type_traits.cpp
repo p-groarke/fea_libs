@@ -103,7 +103,6 @@ TEST(non_type_traits, enums) {
 	}
 }
 
-// Broken in vs2017 and gcc
 #if FEA_CPP17
 TEST(non_type_traits, basics_cpp17) {
 
@@ -172,6 +171,9 @@ TEST(non_type_traits, enums_cpp17) {
 		static_assert(std::is_enum_v<decltype(
 							  fea::max_v<e2::one, e2::two, e2::three>)>,
 				"non_type_traits.cpp : test failed");
+
+		// VS2017 doesn't like the following :(
+		//
 		// static_assert(std::is_enum_v<decltype(
 		//					  fea::min_v<e2::one, e2::two, e2::three>)>,
 		//		"non_type_traits.cpp : test failed");

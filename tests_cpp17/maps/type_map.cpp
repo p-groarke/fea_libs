@@ -144,15 +144,6 @@ TEST(type_map, basics) {
 }
 
 TEST(type_map, runtime_get) {
-
-	// TODO :
-	//{
-	//	auto m = fea::make_type_map(fea::kv_t{ int{}, short(0) },
-	//			fea::kv_t{ double{}, size_t(42) });
-
-	//	//fea::runtime_get([](auto& val) {},
-	//}
-
 	{
 		auto tmap = fea::make_type_map(
 				fea::make_kv_nt<e::one>(-42.f), fea::make_kv_nt<e::two>(42.0));
