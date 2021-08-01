@@ -1,6 +1,5 @@
 # feather_libraries
-[![Build Status](https://travis-ci.org/p-groarke/fea_libs.svg?branch=master)](https://travis-ci.org/p-groarke/fea_libs)
-[![Build status](https://ci.appveyor.com/api/projects/status/olnrr5wjqpmgq2no/branch/master?svg=true)](https://ci.appveyor.com/project/p-groarke/fea-libs/branch/master)
+[![CI](https://github.com/p-groarke/fea_libs/actions/workflows/ci.yml/badge.svg)](https://github.com/p-groarke/fea_libs/actions/workflows/ci.yml)
 
 A collection of useful libraries and utilities.
 

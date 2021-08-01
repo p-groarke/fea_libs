@@ -33,6 +33,7 @@
 #pragma once
 #include <cassert>
 #include <functional>
+#include <cstdint>
 
 /*
 fea::callback is helper to accept templated invocables, all the while specifying
