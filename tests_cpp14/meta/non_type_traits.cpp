@@ -194,7 +194,7 @@ TEST(non_type_traits, enums_cpp17) {
 				"non_type_traits.cpp : test failed");
 
 		{
-			constexpr e answer = fea::min_v<e::one, e::two, e::three>;
+			constexpr e answer = e(fea::min_v<e::one, e::two, e::three>);
 			static_assert(
 					answer == e::one, "non_type_traits.cpp : test failed");
 		}

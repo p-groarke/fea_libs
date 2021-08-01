@@ -81,7 +81,6 @@ FEA_INLINE_VAR constexpr auto min_nt_v = detail::min_nt<T, Args...>::value;
 
 
 #if FEA_CPP17
-
 // Finds the maximum value of provided non-type values.
 template <auto First, auto... Args>
 FEA_INLINE_VAR constexpr auto max_v = max_nt_v<decltype(First), First, Args...>;
@@ -89,6 +88,6 @@ FEA_INLINE_VAR constexpr auto max_v = max_nt_v<decltype(First), First, Args...>;
 // Finds the minimum value of provided non-type values.
 template <auto First, auto... Args>
 FEA_INLINE_VAR constexpr auto min_v = min_nt_v<decltype(First), First, Args...>;
-
 #endif // CPP17
+
 } // namespace fea
