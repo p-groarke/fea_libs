@@ -53,15 +53,17 @@ maps.
 namespace fea {
 namespace detail {
 template <class... Values>
-struct type_map_shared {
+struct type_map_base {
 	using values_t = std::tuple<Values...>;
+	using front_t = fea::front_t<Values...>;
+	using back_t = fea::back_t<Values...>;
 
-	constexpr type_map_shared() = default;
-	constexpr type_map_shared(const std::tuple<Values...>& values)
+	constexpr type_map_base() = default;
+	constexpr type_map_base(const std::tuple<Values...>& values)
 			: _values(values) {
 	}
 
-	constexpr type_map_shared(std::tuple<Values...>&& values)
+	constexpr type_map_base(std::tuple<Values...>&& values)
 			: _values(std::move(values)) {
 	}
 
@@ -93,14 +95,14 @@ struct type_map;
 // Typed type_map.
 template <class... Keys, class... Values>
 struct type_map<fea::pack<Keys...>, Values...>
-		: detail::type_map_shared<Values...> {
+		: detail::type_map_base<Values...> {
 	static_assert(sizeof...(Keys) == sizeof...(Values),
 			"type_map : unequal number of keys and values");
 
 	using pack_t = fea::pack<Keys...>;
 
 	// Inherit ctors.
-	using base_t = typename detail::type_map_shared<Values...>;
+	using base_t = typename detail::type_map_base<Values...>;
 	using base_t::base_t;
 
 	// Does map contain Key?
@@ -120,6 +122,7 @@ struct type_map<fea::pack<Keys...>, Values...>
 		constexpr size_t idx = pack_idx_v<Key, pack_t>;
 		return std::get<idx>(base_t::data());
 	}
+	// Search for value associated with key.
 	template <class Key>
 	constexpr auto& find() {
 		static_assert(
@@ -128,19 +131,44 @@ struct type_map<fea::pack<Keys...>, Values...>
 		constexpr size_t idx = pack_idx_v<Key, pack_t>;
 		return std::get<idx>(base_t::data());
 	}
+
+	// Loops on all elements of map.
+	// Passes (Key*, const auto& val) to user
+	// function.
+	template <class Func>
+	constexpr void for_each(Func&& func) const {
+		fea::pack_for_each(
+				[&, this](auto* ptr) {
+					using K = std::remove_pointer_t<decltype(ptr)>;
+					func(ptr, this->template find<K>());
+				},
+				fea::pack<Keys...>{});
+	}
+	// Loops on all elements of map.
+	// Passes (Key*, auto& val) to user
+	// function.
+	template <class Func>
+	constexpr void for_each(Func&& func) {
+		fea::pack_for_each(
+				[&, this](auto* ptr) {
+					using K = std::remove_pointer_t<decltype(ptr)>;
+					func(ptr, this->template find<K>());
+				},
+				fea::pack<Keys...>{});
+	}
 };
 
 // Non-type type_map.
 template <auto... Keys, class... Values>
 struct type_map<fea::pack_nt<Keys...>, Values...>
-		: detail::type_map_shared<Values...> {
+		: detail::type_map_base<Values...> {
 	static_assert(sizeof...(Keys) == sizeof...(Values),
 			"type_map : unequal number of keys and values");
 
 	using pack_t = fea::pack_nt<Keys...>;
 
 	// Inherit ctors.
-	using base_t = typename detail::type_map_shared<Values...>;
+	using base_t = typename detail::type_map_base<Values...>;
 	using base_t::base_t;
 
 	// Does map contain non-type Key?
@@ -160,6 +188,7 @@ struct type_map<fea::pack_nt<Keys...>, Values...>
 		constexpr size_t idx = pack_idx_nt_v<Key, pack_t>;
 		return std::get<idx>(base_t::data());
 	}
+	// Search for value associated with non-type key.
 	template <auto Key>
 	constexpr auto& find() {
 		static_assert(
@@ -167,6 +196,27 @@ struct type_map<fea::pack_nt<Keys...>, Values...>
 
 		constexpr size_t idx = pack_idx_nt_v<Key, pack_t>;
 		return std::get<idx>(base_t::data());
+	}
+
+	// Loops on all elements of map.
+	// Passes (std::integral_constant<key> key, const auto& val) to user
+	// function.
+	template <class Func>
+	constexpr void for_each(Func&& func) const {
+		fea::pack_for_each(
+				[&, this](
+						auto key) { func(key, this->template find<key()>()); },
+				fea::pack_nt<Keys...>{});
+	}
+	// Loops on all elements of map.
+	// Passes (std::integral_constant<key> key, auto& val) to user
+	// function.
+	template <class Func>
+	constexpr void for_each(Func&& func) {
+		fea::pack_for_each(
+				[&, this](
+						auto key) { func(key, this->template find<key()>()); },
+				fea::pack_nt<Keys...>{});
 	}
 };
 
@@ -253,5 +303,30 @@ template <auto... Keys, class... Values>
 constexpr auto make_type_map(kv_nt<Keys, Values>&&... kvs) {
 	return type_map<pack_nt<Keys...>, Values...>(
 			std::make_tuple(fea::maybe_move(kvs.v)...));
+}
+
+
+/**
+ * External Helpers
+ */
+
+// Get a mapped value at runtime.
+template <class Func, class Key, Key... Keys, class Val1, class... Values>
+std::invoke_result_t<Func, const Val1&> runtime_get(Func&& func, Key e,
+		const type_map<fea::pack_nt<Keys...>, Val1, Values...>& t_map) {
+	// First, get the associated index for the enum value.
+	// The underlying enum value is not necessarily == position.
+	size_t val_idx = fea::runtime_get_idx(e, fea::pack_nt<Keys...>{});
+	return fea::runtime_get(std::forward<Func>(func), val_idx, t_map.data());
+}
+
+// Get a mapped value at runtime.
+template <class Func, class Key, Key... Keys, class Val1, class... Values>
+std::invoke_result_t<Func, Val1&> runtime_get(Func&& func, Key e,
+		type_map<fea::pack_nt<Keys...>, Val1, Values...>& t_map) {
+	// First, get the associated index for the enum value.
+	// The underlying enum value is not necessarily == position.
+	size_t val_idx = fea::runtime_get_idx(e, fea::pack_nt<Keys...>{});
+	return fea::runtime_get(std::forward<Func>(func), val_idx, t_map.data());
 }
 } // namespace fea

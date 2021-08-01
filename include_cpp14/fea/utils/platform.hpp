@@ -38,37 +38,25 @@ namespace fea {
 // Nicer way to check for C++ versions.
 #if __cplusplus >= 202002L
 #undef FEA_CPP20
-#undef FEA_CPP17
-#undef FEA_CPP14
-#undef FEA_CPP11
-#undef FEA_CPP98
 #define FEA_CPP20 1
-#define FEA_CPP17 1
-#define FEA_CPP14 1
-#define FEA_CPP11 1
-#define FEA_CPP98 1
-#elif __cplusplus >= 201703L
+#endif
+
+#if __cplusplus >= 201703L
 #undef FEA_CPP17
-#undef FEA_CPP14
-#undef FEA_CPP11
-#undef FEA_CPP98
 #define FEA_CPP17 1
-#define FEA_CPP14 1
-#define FEA_CPP11 1
-#define FEA_CPP98 1
-#elif __cplusplus >= 201402L
+#endif
+
+#if __cplusplus >= 201402L
 #undef FEA_CPP14
-#undef FEA_CPP11
-#undef FEA_CPP98
 #define FEA_CPP14 1
-#define FEA_CPP11 1
-#define FEA_CPP98 1
-#elif __cplusplus >= 201103L
+#endif
+
+#if __cplusplus >= 201103L
 #undef FEA_CPP11
-#undef FEA_CPP98
 #define FEA_CPP11 1
-#define FEA_CPP98 1
-#else
+#endif
+
+#if __cplusplus >= 199711L
 #undef FEA_CPP98
 #define FEA_CPP98 1
 #endif
@@ -205,6 +193,21 @@ FEA_INLINE_VAR constexpr platform_t platform = platform_t::solaris;
 #define FEA_WINDOWS 1
 
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::windows;
+
+#if _MSC_VER >= 1920
+#undef FEA_VS2019
+#define FEA_VS2019 1
+#endif
+
+#if _MSC_VER >= 1910
+#undef FEA_VS2017
+#define FEA_VS2017 1
+#endif
+
+#if _MSC_VER >= 1900
+#undef FEA_VS2015
+#define FEA_VS2015 1
+#endif
 
 #else
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::count;

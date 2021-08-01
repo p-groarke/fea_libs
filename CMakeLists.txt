@@ -1,5 +1,3 @@
-# include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.conan.txt)
-
 cmake_minimum_required (VERSION 3.15)
 project(fea_libs VERSION 1.0.0 LANGUAGES CXX)
 
@@ -11,6 +9,7 @@ include(GoogleTest)
 # User options
 option(FEA_TESTS "Build and run tests." On)
 option(FEA_BENCHMARKS "Build and run bencharks, requires tests." Off)
+option(FEA_CPP17 "Use C++17 (default is C++20). CMake's detection doesn't work well." Off)
 option(FEA_CPP14 "Use C++14 (default is C++17). CMake's detection doesn't work well." Off)
 
 # Conan search paths.
@@ -35,19 +34,6 @@ set(DEPENDENCY_FOLDER "Dependencies")
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER ${DEPENDENCY_FOLDER})
 
-# IDE Folders
-function(make_pretty_source_folders BASE_PATH PREFIX_PATH REQUIRED_ARG)
-	foreach(SOURCE IN ITEMS ${REQUIRED_ARG})
-		get_filename_component(SOURCE_PATH "${SOURCE}" PATH)
-		# message("pretty source_path : ${SOURCE_PATH}")
-		file(RELATIVE_PATH SOURCE_PATH_REL "${CMAKE_CURRENT_SOURCE_DIR}/${BASE_PATH}" "${SOURCE_PATH}")
-		# message("pretty source_path_rel : ${SOURCE_PATH_REL}")
-		string(REPLACE "/" "\\" GROUP_PATH "${PREFIX_PATH}/${SOURCE_PATH_REL}")
-		# message("pretty group_path : ${GROUP_PATH}")
-		source_group("${GROUP_PATH}" FILES "${SOURCE}")
-	endforeach()
-endfunction()
-
 # Compile Options
 function(set_compile_options REQUIRED_ARG EXPOSURE)
 	if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
@@ -69,7 +55,7 @@ function(set_compile_options REQUIRED_ARG EXPOSURE)
 	endif()
 endfunction()
 
-# Installs conan dependencies.
+# Pulls conan dependencies according to platform settings.
 function(pull_conan)
 	message("Pulling conan dependencies.\n")
 
@@ -107,7 +93,10 @@ endfunction()
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/.clang-format ${CMAKE_CURRENT_BINARY_DIR}/.clang-format COPYONLY)
 
 # C++ version.
-if ("cxx_std_17" IN_LIST CMAKE_CXX_COMPILE_FEATURES AND NOT FEA_CPP14)
+if ("cxx_std_20" IN_LIST CMAKE_CXX_COMPILE_FEATURES AND NOT FEA_CPP17 AND NOT FEA_CPP14)
+	set(CMAKE_CXX_STANDARD 20)
+	message("\nEnabling C++14, C++17 and C++20 libraries.\n")
+elseif ("cxx_std_17" IN_LIST CMAKE_CXX_COMPILE_FEATURES AND NOT FEA_CPP14)
 	set(CMAKE_CXX_STANDARD 17)
 	message("\nEnabling C++14 and C++17 libraries.\n")
 else()
@@ -129,6 +118,7 @@ find_package(date CONFIG REQUIRED)
 set(INCLUDE_NAME fea)
 file(GLOB_RECURSE HEADER_FILES_CPP14 "include_cpp14/${INCLUDE_NAME}/*.hpp")
 file(GLOB_RECURSE HEADER_FILES_CPP17 "include_cpp17/${INCLUDE_NAME}/*.hpp")
+file(GLOB_RECURSE HEADER_FILES_CPP20 "include_cpp20/${INCLUDE_NAME}/*.hpp")
 add_library(${PROJECT_NAME} INTERFACE)
 set_compile_options(${PROJECT_NAME} INTERFACE)
 target_link_libraries(${PROJECT_NAME} INTERFACE TBB::TBB date::date)
@@ -145,6 +135,7 @@ target_include_directories(${PROJECT_NAME} INTERFACE
 	$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include_cpp14>
 	$<BUILD_INTERFACE:$<$<COMPILE_FEATURES:cxx_std_17>:${CMAKE_CURRENT_SOURCE_DIR}/include_cpp17>>
+	$<BUILD_INTERFACE:$<$<COMPILE_FEATURES:cxx_std_20>:${CMAKE_CURRENT_SOURCE_DIR}/include_cpp20>>
 )
 
 # source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include_cpp14 PREFIX "Header Files" FILES ${HEADER_FILES_CPP14})
@@ -165,6 +156,9 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include_cpp14/${INCLUDE_NAME}" DE
 if (${CMAKE_CXX_STANDARD} GREATER_EQUAL 17)
 	install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include_cpp17/${INCLUDE_NAME}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
 endif()
+if (${CMAKE_CXX_STANDARD} GREATER_EQUAL 20)
+	install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include_cpp20/${INCLUDE_NAME}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+endif()
 
 # Tests
 if (${FEA_TESTS})
@@ -179,17 +173,23 @@ if (${FEA_TESTS})
 
 	file(GLOB_RECURSE TEST_HEADERS_CPP14 "include_cpp14/*.hpp")
 	file(GLOB_RECURSE TEST_HEADERS_CPP17 "include_cpp17/*.hpp")
+	file(GLOB_RECURSE TEST_HEADERS_CPP20 "include_cpp20/*.hpp")
 
 	file(GLOB_RECURSE TEST_SOURCES_CPP14 "tests_cpp14/*.cpp" "tests_cpp14/*.hpp" "tests_cpp14/*.tpp")
 	file(GLOB_RECURSE TEST_SOURCES_CPP17 "tests_cpp17/*.cpp" "tests_cpp17/*.hpp" "tests_cpp17/*.tpp")
+	file(GLOB_RECURSE TEST_SOURCES_CPP20 "tests_cpp20/*.cpp" "tests_cpp20/*.hpp" "tests_cpp20/*.tpp")
 
 	add_executable(${TEST_NAME} ${TEST_SOURCES_CPP14} ${TEST_HEADERS_CPP14}
 		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_SOURCES_CPP17}>"
 		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_HEADERS_CPP17}>"
+		"$<$<COMPILE_FEATURES:cxx_std_20>:${TEST_SOURCES_CPP20}>"
+		"$<$<COMPILE_FEATURES:cxx_std_20>:${TEST_HEADERS_CPP20}>"
 	)
 	add_executable(${TEST_NAME_NOTHROW} ${TEST_SOURCES_CPP14} ${TEST_HEADERS_CPP14}
 		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_SOURCES_CPP17}>"
 		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_HEADERS_CPP17}>"
+		"$<$<COMPILE_FEATURES:cxx_std_20>:${TEST_SOURCES_CPP20}>"
+		"$<$<COMPILE_FEATURES:cxx_std_20>:${TEST_HEADERS_CPP20}>"
 	)
 
 	set_compile_options(${TEST_NAME} PRIVATE)
@@ -214,11 +214,11 @@ if (${FEA_TESTS})
 
 
 	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp14 PREFIX "Source Files" FILES ${TEST_SOURCES_CPP14})
-	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp17 PREFIX "Source Files" FILES ${TEST_SOURCES_CPP17})
 	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include_cpp14 PREFIX "Header Files" FILES ${TEST_HEADERS_CPP14})
+	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp17 PREFIX "Source Files" FILES ${TEST_SOURCES_CPP17})
 	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include_cpp17 PREFIX "Header Files" FILES ${TEST_HEADERS_CPP17})
-	# make_pretty_source_folders("tests_cpp14" "Source Files" "${TEST_SOURCES_CPP14}")
-	# make_pretty_source_folders("tests_cpp17" "Source Files" "${TEST_SOURCES_CPP17}")
+	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp20 PREFIX "Source Files" FILES ${TEST_SOURCES_CPP20})
+	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include_cpp20 PREFIX "Header Files" FILES ${TEST_HEADERS_CPP20})
 
 	if (${FEA_BENCHMARKS})
 		target_compile_definitions(${TEST_NAME} PRIVATE FEA_BENCHMARKS)

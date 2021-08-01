@@ -22,7 +22,7 @@ jobs:
         config:
           - { toolset_ver: "v142", fea_ver: "" }
           - { toolset_ver: "v141", fea_ver: "-DFEA_CPP17=On" }
-          # - { toolset_ver: "v140", fea_ver: "-DFEA_CPP14=On" } # TODO : Fix this
+          # - { toolset_ver: "v140", fea_ver: "-DFEA_CPP14=On" } # TODO : Fix this, seems like its using c++11 and not 14
 
     steps:
     - name: Git Line Endings
