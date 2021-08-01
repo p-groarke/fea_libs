@@ -232,6 +232,18 @@ void* runtime_get(size_t idx, std::tuple<Args...>& tup) {
 
 #if FEA_CPP17
 namespace detail {
+// Gcc is unhappy calling the global static_for, try here instead.
+template <class Func, size_t... I>
+constexpr void gcc_static_for_imp(Func& func, std::index_sequence<I...>) {
+	(func(std::integral_constant<size_t, I>{}), ...);
+}
+
+// Gcc is unhappy calling the global static_for, try here instead.
+template <size_t N, class Func>
+constexpr void gcc_static_for(Func&& func) {
+	gcc_static_for_imp(func, std::make_index_sequence<N>{});
+}
+
 template <size_t Idx, class FuncRet, class Func, class TupleRef>
 FuncRet unerase(Func& func, TupleRef tup) {
 	return func(std::get<Idx>(tup));
@@ -243,8 +255,8 @@ constexpr auto make_lookup() {
 	constexpr size_t tup_size = std::tuple_size_v<std::decay_t<TupleRef>>;
 
 	std::array<unerase_t, tup_size> ret{};
-	fea::static_for<tup_size>([&](auto idx) constexpr {
-		ret[idx()] = &unerase<idx(), FuncRet, Func, TupleRef>;
+	gcc_static_for<tup_size>([&](auto idx) {
+		ret[idx] = &unerase<idx, FuncRet, Func, TupleRef>;
 	});
 	return ret;
 }
