@@ -191,9 +191,9 @@ TEST(non_type_traits, enums_cpp17) {
 			static_assert(
 					answer == e2::one, "non_type_traits.cpp : test failed");
 		}
-		static_assert(fea::min_v<e2::two, e2::one, e2::three> == e2::one,
+		static_assert(e2(fea::min_v<e2::two, e2::one, e2::three>) == e2::one,
 				"non_type_traits.cpp : test failed");
-		static_assert(fea::min_v<e2::two, e2::three, e2::one> == e2::one,
+		static_assert(e2(fea::min_v<e2::two, e2::three, e2::one>) == e2::one,
 				"non_type_traits.cpp : test failed");
 
 		static_assert(fea::max_v<e2::one, e2::one, e2::one> == e2::one,

@@ -243,7 +243,7 @@ constexpr auto make_lookup() {
 
 	std::array<unerase_t, tup_size> ret{};
 	fea::static_for<tup_size>([&](auto idx) {
-		ret[idx] = &unerase<idx, FuncRet, Func, TupleRef>;
+		ret[idx] = &unerase<idx(), FuncRet, Func, TupleRef>;
 	});
 	return ret;
 }
