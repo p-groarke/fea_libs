@@ -32,6 +32,7 @@
  **/
 
 #pragma once
+#include "fea/utils/platform.hpp"
 #include "fea/utils/unused.hpp"
 
 #include <cstddef>
