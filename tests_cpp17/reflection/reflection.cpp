@@ -6,6 +6,7 @@
 #include <fea/meta/tuple.hpp>
 #include <fea/reflection/reflection.hpp>
 #include <fea/reflection/reflection_macros.hpp>
+#include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
 
 namespace {
@@ -230,6 +231,8 @@ TEST(reflection, basics) {
 		i = 0;
 		t.for_each(
 				[&](auto key, auto& v) {
+					fea::unused(v);
+
 					// static_assert(key != my_struct::var::onion,
 					//		"reflection.cpp : test failed");
 
@@ -251,6 +254,8 @@ TEST(reflection, basics) {
 		i = 0;
 		t.for_each(
 				[&](auto key, auto& v) {
+					fea::unused(v);
+
 					EXPECT_NE(key(), my_struct::var::tomato);
 
 					if constexpr (key == my_struct::var::potato) {
@@ -271,6 +276,8 @@ TEST(reflection, basics) {
 		i = 0;
 		t.for_each(
 				[&](auto key, auto& v) {
+					fea::unused(v);
+
 					EXPECT_NE(key(), my_struct::var::potato);
 					EXPECT_NE(key(), my_struct::var::tomato);
 					if constexpr (key == my_struct::var::onion) {
@@ -289,6 +296,8 @@ TEST(reflection, basics) {
 		i = 0;
 		t.for_each(
 				[&](auto key, auto& v) {
+					fea::unused(v);
+
 					EXPECT_NE(key(), my_struct::var::potato);
 					EXPECT_NE(key(), my_struct::var::onion);
 
