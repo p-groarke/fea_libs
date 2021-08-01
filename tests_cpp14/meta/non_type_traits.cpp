@@ -2,6 +2,17 @@
 #include <gtest/gtest.h>
 
 namespace {
+enum class e1 : unsigned {
+	one = 42u,
+	two,
+	three = 101u,
+};
+enum class e2 {
+	one = -42,
+	two = 0,
+	three = 42,
+};
+
 TEST(non_type_traits, basics) {
 	static_assert(fea::max_nt_v<size_t, 1, 0, 42> == 42,
 			"non_type_traits.cpp : test failed");
@@ -44,56 +55,50 @@ TEST(non_type_traits, basics) {
 
 TEST(non_type_traits, enums) {
 	{
-		enum class e : unsigned {
-			one = 42u,
-			two,
-			three = 101u,
-		};
-
-		static_assert(fea::max_nt_v<e, e::one, e::two, e::three> == e::three,
+		static_assert(
+				fea::max_nt_v<e1, e1::one, e1::two, e1::three> == e1::three,
 				"non_type_traits.cpp : test failed");
-		static_assert(fea::max_nt_v<e, e::one, e::three, e::two> == e::three,
+		static_assert(
+				fea::max_nt_v<e1, e1::one, e1::three, e1::two> == e1::three,
 				"non_type_traits.cpp : test failed");
-		static_assert(fea::max_nt_v<e, e::three, e::one, e::two> == e::three,
+		static_assert(
+				fea::max_nt_v<e1, e1::three, e1::one, e1::two> == e1::three,
 				"non_type_traits.cpp : test failed");
 
-		static_assert(fea::min_nt_v<e, e::one, e::two, e::three> == e::one,
+		static_assert(fea::min_nt_v<e1, e1::one, e1::two, e1::three> == e1::one,
 				"non_type_traits.cpp : test failed");
-		static_assert(fea::min_nt_v<e, e::two, e::one, e::three> == e::one,
+		static_assert(fea::min_nt_v<e1, e1::two, e1::one, e1::three> == e1::one,
 				"non_type_traits.cpp : test failed");
-		static_assert(fea::min_nt_v<e, e::two, e::three, e::one> == e::one,
+		static_assert(fea::min_nt_v<e1, e1::two, e1::three, e1::one> == e1::one,
 				"non_type_traits.cpp : test failed");
 
-		static_assert(fea::max_nt_v<e, e::one, e::one, e::one> == e::one,
+		static_assert(fea::max_nt_v<e1, e1::one, e1::one, e1::one> == e1::one,
 				"non_type_traits.cpp : test failed");
-		static_assert(fea::min_nt_v<e, e::one, e::one, e::one> == e::one,
+		static_assert(fea::min_nt_v<e1, e1::one, e1::one, e1::one> == e1::one,
 				"non_type_traits.cpp : test failed");
 	}
 
 	{
-		enum class e {
-			one = -42,
-			two = 0,
-			three = 42,
-		};
-
-		static_assert(fea::max_nt_v<e, e::one, e::two, e::three> == e::three,
+		static_assert(
+				fea::max_nt_v<e2, e2::one, e2::two, e2::three> == e2::three,
 				"non_type_traits.cpp : test failed");
-		static_assert(fea::max_nt_v<e, e::one, e::three, e::two> == e::three,
+		static_assert(
+				fea::max_nt_v<e2, e2::one, e2::three, e2::two> == e2::three,
 				"non_type_traits.cpp : test failed");
-		static_assert(fea::max_nt_v<e, e::three, e::one, e::two> == e::three,
+		static_assert(
+				fea::max_nt_v<e2, e2::three, e2::one, e2::two> == e2::three,
 				"non_type_traits.cpp : test failed");
 
-		static_assert(fea::min_nt_v<e, e::one, e::two, e::three> == e::one,
+		static_assert(fea::min_nt_v<e2, e2::one, e2::two, e2::three> == e2::one,
 				"non_type_traits.cpp : test failed");
-		static_assert(fea::min_nt_v<e, e::two, e::one, e::three> == e::one,
+		static_assert(fea::min_nt_v<e2, e2::two, e2::one, e2::three> == e2::one,
 				"non_type_traits.cpp : test failed");
-		static_assert(fea::min_nt_v<e, e::two, e::three, e::one> == e::one,
+		static_assert(fea::min_nt_v<e2, e2::two, e2::three, e2::one> == e2::one,
 				"non_type_traits.cpp : test failed");
 
-		static_assert(fea::max_nt_v<e, e::one, e::one, e::one> == e::one,
+		static_assert(fea::max_nt_v<e2, e2::one, e2::one, e2::one> == e2::one,
 				"non_type_traits.cpp : test failed");
-		static_assert(fea::min_nt_v<e, e::one, e::one, e::one> == e::one,
+		static_assert(fea::min_nt_v<e2, e2::one, e2::one, e2::one> == e2::one,
 				"non_type_traits.cpp : test failed");
 	}
 }
@@ -143,69 +148,57 @@ TEST(non_type_traits, basics_cpp17) {
 
 TEST(non_type_traits, enums_cpp17) {
 	{
-		enum class e : unsigned {
-			one = 42u,
-			two,
-			three = 101u,
-		};
-
-		static_assert(fea::max_v<e::one, e::two, e::three> == e::three,
+		static_assert(fea::max_v<e1::one, e1::two, e1::three> == e1::three,
 				"non_type_traits.cpp : test failed");
-		static_assert(fea::max_v<e::one, e::three, e::two> == e::three,
+		static_assert(fea::max_v<e1::one, e1::three, e1::two> == e1::three,
 				"non_type_traits.cpp : test failed");
-		static_assert(fea::max_v<e::three, e::one, e::two> == e::three,
+		static_assert(fea::max_v<e1::three, e1::one, e1::two> == e1::three,
 				"non_type_traits.cpp : test failed");
 
-		static_assert(fea::min_v<e::one, e::two, e::three> == e::one,
+		static_assert(fea::min_v<e1::one, e1::two, e1::three> == e1::one,
 				"non_type_traits.cpp : test failed");
-		static_assert(fea::min_v<e::two, e::one, e::three> == e::one,
+		static_assert(fea::min_v<e1::two, e1::one, e1::three> == e1::one,
 				"non_type_traits.cpp : test failed");
-		static_assert(fea::min_v<e::two, e::three, e::one> == e::one,
+		static_assert(fea::min_v<e1::two, e1::three, e1::one> == e1::one,
 				"non_type_traits.cpp : test failed");
 
-		static_assert(fea::max_v<e::one, e::one, e::one> == e::one,
+		static_assert(fea::max_v<e1::one, e1::one, e1::one> == e1::one,
 				"non_type_traits.cpp : test failed");
-		static_assert(fea::min_v<e::one, e::one, e::one> == e::one,
+		static_assert(fea::min_v<e1::one, e1::one, e1::one> == e1::one,
 				"non_type_traits.cpp : test failed");
 	}
 
 	{
-		enum class e : int {
-			one = -42,
-			two = 0,
-			three = 42,
-		};
-
-		static_assert(
-				std::is_enum_v<decltype(fea::max_v<e::one, e::two, e::three>)>,
+		static_assert(std::is_enum_v<decltype(
+							  fea::max_v<e2::one, e2::two, e2::three>)>,
 				"non_type_traits.cpp : test failed");
-		static_assert(
-				std::is_enum_v<decltype(fea::min_v<e::one, e::two, e::three>)>,
+		static_assert(std::is_enum_v<decltype(
+							  fea::min_v<e2::one, e2::two, e2::three>)>,
 				"non_type_traits.cpp : test failed");
 
 		{
-			constexpr e answer = e(fea::max_v<e::one, e::two, e::three>);
+			constexpr e2 answer = e2(fea::max_v<e2::one, e2::two, e2::three>);
 			static_assert(
-					answer == e::three, "non_type_traits.cpp : test failed");
+					answer == e2::three, "non_type_traits.cpp : test failed");
 		}
-		static_assert(fea::max_v<e::one, e::three, e::two> == e::three,
+		static_assert(fea::max_v<e2::one, e2::three, e2::two> == e2::three,
 				"non_type_traits.cpp : test failed");
-		static_assert(fea::max_v<e::three, e::one, e::two> == e::three,
+		static_assert(fea::max_v<e2::three, e2::one, e2::two> == e2::three,
 				"non_type_traits.cpp : test failed");
 
 		{
-			constexpr e answer = e(fea::min_v<e::one, e::two, e::three>);
+			constexpr e2 answer = e2(fea::min_v<e2::one, e2::two, e2::three>);
 			static_assert(
-					answer == e::one, "non_type_traits.cpp : test failed");
+					answer == e2::one, "non_type_traits.cpp : test failed");
 		}
-		static_assert(fea::min_v<e::two, e::one, e::three> == e::one,
+		static_assert(fea::min_v<e2::two, e2::one, e2::three> == e2::one,
 				"non_type_traits.cpp : test failed");
-		static_assert(fea::min_v<e::two, e::three, e::one> == e::one,
+		static_assert(fea::min_v<e2::two, e2::three, e2::one> == e2::one,
 				"non_type_traits.cpp : test failed");
 
-		static_assert(fea::max_v<e::one, e::one, e::one> == e::one,
+		static_assert(fea::max_v<e2::one, e2::one, e2::one> == e2::one,
 				"non_type_traits.cpp : test failed");
-		static_assert(fea::min_v<e::one, e::one, e::one> == e::one,
+		static_assert(fea::min_v<e2::one, e2::one, e2::one> == e2::one,
 				"non_type_traits.cpp : test failed");
 	}
 }
