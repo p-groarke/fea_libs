@@ -5,15 +5,15 @@
 #include <gtest/gtest.h>
 
 namespace {
-TEST(enum, traits) {
-	enum class e {
-		one,
-		two,
-		three,
-		four,
-		count,
-	};
+enum class e {
+	one,
+	two,
+	three,
+	four,
+	count,
+};
 
+TEST(enum, traits) {
 	fea::pack_nt<e::one, e::two, e::three, e::four> p
 			= fea::explode_enum<e>([](auto... cs) {
 				  using pack_t = fea::pack_nt<decltype(cs)::value...>;
@@ -51,8 +51,6 @@ TEST(enum, traits) {
 		EXPECT_EQ(visited[4], e::one);
 	}
 
-	// Broken on vs2017 and gcc
-#if FEA_CPP20
 	static_assert(fea::max_v<e::four, e::two, e::three> == e::four,
 			"enum_traits.cpp : test failed");
 	static_assert(fea::max_v<e::two, e::one, e::three> == e::three,
@@ -66,7 +64,6 @@ TEST(enum, traits) {
 			"enum_traits.cpp : test failed");
 	static_assert(fea::min_v<e::count, e::three, e::four> == e::three,
 			"enum_traits.cpp : test failed");
-#endif
 
 	{
 		constexpr std::array<size_t, 5u> lookup = fea::make_enum_lookup<e::four,
