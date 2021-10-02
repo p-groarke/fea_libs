@@ -22,7 +22,7 @@ jobs:
         config:
           - { toolset_ver: "v142", fea_ver: "" }
           - { toolset_ver: "v141", fea_ver: "-DFEA_CPP17=On" }
-          # - { toolset_ver: "v140", fea_ver: "-DFEA_CPP14=On" } # TODO : Fix this, seems like its using c++11 and not 14
+          - { toolset_ver: "v140", fea_ver: "-DFEA_CPP14=On" } # TODO : Fix this, seems like its using c++11 and not 14
 
     steps:
     - name: Git Line Endings
@@ -73,8 +73,8 @@ jobs:
       matrix:
         build_type: [Release, Debug]
         config:
-          - { xcode_ver: "12.4", fea_ver: "" }
-          - { xcode_ver: "11.7", fea_ver: "" }
+          - { xcode_ver: "12.4", fea_ver: "-DFEA_CPP17=On" }
+          - { xcode_ver: "11.7", fea_ver: "-DFEA_CPP17=On" }
           - { xcode_ver: "11.3.1", fea_ver: "-DFEA_CPP14=On" }
           - { xcode_ver: "10.3", fea_ver: "-DFEA_CPP14=On" }
 
@@ -132,8 +132,8 @@ jobs:
         build_type: [Release, Debug]
         # build_arch: [x64, x86]
         config:
-          - { os: ubuntu-20.04, gcc_ver: "10", fea_ver: "" }
-          - { os: ubuntu-20.04, gcc_ver: "9", fea_ver: "" }
+          - { os: ubuntu-20.04, gcc_ver: "10", fea_ver: "-DFEA_CPP17=On" }
+          - { os: ubuntu-20.04, gcc_ver: "9", fea_ver: "-DFEA_CPP17=On" }
           - { os: ubuntu-18.04, gcc_ver: "7", fea_ver: "-DFEA_CPP14=On" }
 
     steps:
