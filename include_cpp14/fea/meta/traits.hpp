@@ -147,6 +147,7 @@ FEA_INLINE_VAR constexpr bool is_same_nt_v2
 #endif
 
 
+// Checks whether 2 types are the same, regardless of their template params.
 template <template <class...> class, template <class...> class>
 struct is_same_template : std::false_type {};
 
@@ -156,6 +157,20 @@ struct is_same_template<T, T> : std::true_type {};
 template <template <class...> class T, template <class...> class U>
 FEA_INLINE_VAR constexpr bool is_same_template_v
 		= is_same_template<T, U>::value;
+
+
+// TODO : test
+// Checks if a type is a template template.
+template <class T>
+struct is_template_template : std::false_type {};
+
+template <template <class> class T, class... Args>
+struct is_template_template<T<Args...>> : std::true_type {};
+
+template <class T>
+FEA_INLINE_VAR constexpr bool is_template_template_v
+		= is_template_template<T>::value;
+
 
 // Removes the internal consts of a template template (like a tuple for ex).
 template <class T>

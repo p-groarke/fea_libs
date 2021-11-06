@@ -243,7 +243,7 @@ void do_runtime_get() {
 }
 #endif
 
-TEST(blog, runtime_loop) {
+TEST(playground, runtime_loop) {
 	do_runtime_get();
 }
 } // namespace

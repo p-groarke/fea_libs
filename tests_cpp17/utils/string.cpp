@@ -32,5 +32,50 @@ TEST(string, basics) {
 	capscpy = caps;
 	fea::replace_all(capscpy, "NOT", "is", true);
 	EXPECT_EQ(capscpy, "is SCREAMING");
+
+	fea::replace_all(capscpy, "is", "is not", true);
+	EXPECT_EQ(capscpy, "is not SCREAMING");
+
+	fea::replace_all(capscpy, "is", "is", true);
+	EXPECT_EQ(capscpy, "is not SCREAMING");
 }
+
+#if FEA_CPP20
+struct str {
+	str(const char* s)
+			: data(s) {
+	}
+	str() = default;
+
+	friend std::strong_ordering operator<=>(const str& lhs, const str& rhs) {
+		return fea::lexicographical_compare(lhs.data.begin(), lhs.data.end(),
+				rhs.data.begin(), rhs.data.end());
+	}
+	friend bool operator==(const str& lhs, const str& rhs) {
+		// Don't use operator<=>
+		return lhs.data == rhs.data;
+	}
+
+	std::string data;
+};
+
+TEST(string, lexicographical_compare) {
+
+	std::vector<str> vec{ "abc", "abcd", "Abc", "aBc", "ABC", "ABCD", "Bob",
+		"bobby", "0", "1", "10", "2", "22", "As", "Aster", "Astrolabe",
+		"Astronomy", "astrophysics", "At", "Ataman", "Attack", "Baa",
+		"Barnacle", "Be", "been", "Benefit", "Bent" };
+
+	const std::vector<str> answer{ "0", "1", "10", "2", "22", "abc", "Abc",
+		"aBc", "ABC", "abcd", "ABCD", "As", "Aster", "Astrolabe", "Astronomy",
+		"astrophysics", "At", "Ataman", "Attack", "Baa", "Barnacle", "Be",
+		"been", "Benefit", "Bent", "Bob", "bobby" };
+
+	std::sort(vec.begin(), vec.end());
+	// for (const auto& str : vec) {
+	//	printf("%s\n", str.data.c_str());
+	//}
+	EXPECT_EQ(answer, vec);
+}
+#endif
 } // namespace

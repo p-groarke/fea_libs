@@ -185,16 +185,15 @@ void serialize(
 	using msize_t = FEA_SERIALIZE_SIZE_T;
 	msize_t size = msize_t(std::distance(begin, end));
 
-	// Shouldn't be serializing empty containers.
-	assert(size != 0);
-
 	os.write_unvalidated(size);
-	if constexpr (std::is_trivially_copyable_v<val_t>) {
-		os.write(std::addressof(*begin), std::distance(begin, end));
-	} else {
-		using fea::serialize;
-		for (auto it = begin; it != end; ++it) {
-			serialize(*it, os);
+	if (size != 0) {
+		if constexpr (std::is_trivially_copyable_v<val_t>) {
+			os.write(std::addressof(*begin), std::distance(begin, end));
+		} else {
+			using fea::serialize;
+			for (auto it = begin; it != end; ++it) {
+				serialize(*it, os);
+			}
 		}
 	}
 	os.write_unvalidated(size);
@@ -214,24 +213,27 @@ template <class T>
 		return false;
 	}
 
-	if constexpr (fea::is_detected_v<has_resize, T>) {
-		t.resize(size_t(size));
-	} else {
-		if (size_t(std::distance(std::begin(t), std::end(t))) != size_t(size)) {
-			assert(false);
-			return false;
-		}
-	}
-
-	if constexpr (std::is_trivially_copyable_v<val_t>) {
-		if (!is.read(std::addressof(*std::begin(t)), size_t(size))) {
-			return false;
-		}
-	} else {
-		using fea::deserialize;
-		for (size_t i = 0; i < size_t(size); ++i) {
-			if (!deserialize(t[i], is)) {
+	if (size != 0) {
+		if constexpr (fea::is_detected_v<has_resize, T>) {
+			t.resize(size_t(size));
+		} else {
+			if (size_t(std::distance(std::begin(t), std::end(t)))
+					!= size_t(size)) {
+				assert(false);
 				return false;
+			}
+		}
+
+		if constexpr (std::is_trivially_copyable_v<val_t>) {
+			if (!is.read(std::addressof(*std::begin(t)), size_t(size))) {
+				return false;
+			}
+		} else {
+			using fea::deserialize;
+			for (size_t i = 0; i < size_t(size); ++i) {
+				if (!deserialize(t[i], is)) {
+					return false;
+				}
 			}
 		}
 	}

@@ -6,6 +6,10 @@
 #include <gtest/gtest.h>
 #include <random>
 
+#if defined(FEA_WINDOWS)
+#include <windows.h> // for CP_UTF8
+#endif
+
 namespace {
 std::string last_printed_string;
 std::wstring last_printed_wstring;
@@ -968,7 +972,7 @@ void add_options(fea::get_opt<CharT, PrintFunc>& opts) {
 
 TEST(fea_getopt, printing) {
 
-#if defined(_MSC_VER)
+#if defined(FEA_WINDOWS)
 	SetConsoleCP(CP_UTF8);
 	SetConsoleOutputCP(CP_UTF8);
 #endif

@@ -252,4 +252,11 @@ FEA_INLINE_VAR constexpr platform_group_t platform_group
 //#define FEA_WARNING(x) #warning x
 //#endif
 
+// Strict data packing for cross-platform/cross-compiler support.
+#if defined(FEA_WINDOWS)
+#define FEA_PACKED(class_to_pack) \
+	__pragma(pack(push, 1)) class_to_pack __pragma(pack(pop))
+#else
+#define FEA_PACKED(class_to_pack) class_to_pack __attribute__((__packed__))
+#endif
 } // namespace fea

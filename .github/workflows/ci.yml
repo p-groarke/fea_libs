@@ -20,9 +20,10 @@ jobs:
         build_type: [Release, Debug]
         build_arch: [x64, Win32]
         config:
-          - { toolset_ver: "v142", fea_ver: "" }
+          - { toolset_ver: "v142", fea_ver: "-DFEA_CPP20=On" }
           - { toolset_ver: "v141", fea_ver: "-DFEA_CPP17=On" }
-          - { toolset_ver: "v140", fea_ver: "-DFEA_CPP14=On" } # TODO : Fix this, seems like its using c++11 and not 14
+          - { toolset_ver: "v141", fea_ver: "-DFEA_CPP14=On" }
+          # v140 isn't supported (c++11 only)
 
     steps:
     - name: Git Line Endings
