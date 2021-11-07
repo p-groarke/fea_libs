@@ -135,13 +135,13 @@ void to_lower(string_t<CharT>& out, bool /*inplace*/) {
 		const std::vector<uint8_t>& str) {
 	std::vector<uint8_t> ret = str;
 	std::transform(ret.begin(), ret.end(), ret.begin(),
-			[](auto c) { return std::tolower(c, std::locale()); });
+			[](auto c) { return std::tolower(c); });
 	return ret;
 }
 
 inline void to_lower(std::vector<uint8_t>& out, bool /*inplace*/) {
 	std::transform(out.begin(), out.end(), out.begin(),
-			[](auto c) { return std::tolower(c, std::locale()); });
+			[](auto c) { return std::tolower(c); });
 }
 
 
