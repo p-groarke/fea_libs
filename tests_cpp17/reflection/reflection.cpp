@@ -33,7 +33,6 @@ struct my_descriptor {
 // your configurator.
 struct my_struct : fea::reflectable<my_descriptor> {};
 
-
 // Tests & examples.
 TEST(reflection, basics) {
 	using map_t = fea::detail::reflectable_builder<my_descriptor>::type_map;
@@ -310,4 +309,5 @@ TEST(reflection, basics) {
 		EXPECT_EQ(i, 1u);
 	}
 }
+
 } // namespace

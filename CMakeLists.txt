@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.15)
+cmake_minimum_required (VERSION 3.20)
 project(fea_libs VERSION 1.0.0 LANGUAGES CXX)
 
 include(FetchContent)
@@ -196,7 +196,7 @@ if (${FEA_TESTS})
 	set_compile_options(${TEST_NAME_NOTHROW} PRIVATE)
 
 	# Set NOTHROW and other global defines that could impact tests.
-	target_compile_definitions(${TEST_NAME_NOTHROW} PRIVATE FEA_NOTHROW -DFEA_SERIALIZE_SIZE_T=uint16_t)
+	target_compile_definitions(${TEST_NAME_NOTHROW} PRIVATE FEA_NOTHROW -DFEA_SERIALIZE_SIZE_T=uint16_t -DFEA_CODEPAGE_CONVERSIONS)
 
 	# For the extreme serialization test.
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
