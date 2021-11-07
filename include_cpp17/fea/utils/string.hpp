@@ -35,6 +35,8 @@
 #include "fea/utils/platform.hpp"
 #include "fea/utils/string_conversions.hpp"
 
+#include <cctype>
+#include <locale>
 #include <vector>
 
 // Makes a string literal of type CharType
