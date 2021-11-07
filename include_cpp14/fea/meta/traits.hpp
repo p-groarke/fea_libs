@@ -159,12 +159,11 @@ FEA_INLINE_VAR constexpr bool is_same_template_v
 		= is_same_template<T, U>::value;
 
 
-// TODO : test
 // Checks if a type is a template template.
 template <class T>
 struct is_template_template : std::false_type {};
 
-template <template <class> class T, class... Args>
+template <template <class...> class T, class... Args>
 struct is_template_template<T<Args...>> : std::true_type {};
 
 template <class T>

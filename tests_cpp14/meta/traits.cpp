@@ -131,6 +131,11 @@ TEST(traits, misc) {
 	static_assert(!fea::is_same_template_v<std::vector, std::set>,
 			"traits.cpp : test failed");
 
+	static_assert(fea::is_template_template<std::vector<int>>::value,
+			"traits.cpp : test failed");
+	static_assert(!fea::is_template_template<potato>::value,
+			"traits.cpp : test failed");
+
 	static_assert(fea::is_template_template_v<std::vector<int>>,
 			"traits.cpp : test failed");
 	static_assert(
