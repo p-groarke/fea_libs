@@ -48,7 +48,7 @@ function(set_compile_options REQUIRED_ARG EXPOSURE)
 		target_compile_definitions(${REQUIRED_ARG} ${EXPOSURE} NOMINMAX UNICODE _UNICODE
 			_SILENCE_CXX17_UNCAUGHT_EXCEPTION_DEPRECATION_WARNING)
 		target_compile_options(${REQUIRED_ARG} ${EXPOSURE} /Zc:__cplusplus /Zc:alignedNew
-			/permissive- /W4 /WX /utf-8
+			/permissive- /W4 /WX /utf-8 /MP
 			# /FAs
 		)
 		# set_target_properties(${REQUIRED_ARG} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")

@@ -23,10 +23,16 @@ TEST(traits, all_none_any) {
 						= fea::none_of_v<std::is_arithmetic<decltype(args)>...>;
 				constexpr bool any
 						= fea::any_of_v<std::is_arithmetic<decltype(args)>...>;
+				constexpr bool one
+						= fea::one_of_v<std::is_arithmetic<decltype(args)>...>;
+				constexpr bool one2
+						= fea::one_of_v<std::is_same<decltype(args), int>...>;
 
 				static_assert(all, "traits.cpp : failed test");
 				static_assert(!none, "traits.cpp : failed test");
 				static_assert(any, "traits.cpp : failed test");
+				static_assert(!one, "traits.cpp : failed test");
+				static_assert(one2, "traits.cpp : failed test");
 			},
 			all_numeric);
 
@@ -38,10 +44,13 @@ TEST(traits, all_none_any) {
 						= fea::none_of_v<std::is_arithmetic<decltype(args)>...>;
 				constexpr bool any
 						= fea::any_of_v<std::is_arithmetic<decltype(args)>...>;
+				constexpr bool one
+						= fea::one_of_v<std::is_arithmetic<decltype(args)>...>;
 
 				static_assert(!all, "traits.cpp : failed test");
 				static_assert(!none, "traits.cpp : failed test");
 				static_assert(any, "traits.cpp : failed test");
+				static_assert(one, "traits.cpp : failed test");
 			},
 			any_numeric);
 
@@ -53,10 +62,13 @@ TEST(traits, all_none_any) {
 						= fea::none_of_v<std::is_arithmetic<decltype(args)>...>;
 				constexpr bool any
 						= fea::any_of_v<std::is_arithmetic<decltype(args)>...>;
+				constexpr bool one
+						= fea::one_of_v<std::is_arithmetic<decltype(args)>...>;
 
 				static_assert(!all, "traits.cpp : failed test");
 				static_assert(none, "traits.cpp : failed test");
 				static_assert(!any, "traits.cpp : failed test");
+				static_assert(!one, "traits.cpp : failed test");
 			},
 			none_numeric);
 }

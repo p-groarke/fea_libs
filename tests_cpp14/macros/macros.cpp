@@ -1,5 +1,7 @@
 ﻿#include <array>
-#include <fea/meta/macros.hpp>
+#include <fea/macros/foreach.hpp>
+#include <fea/macros/literals.hpp>
+#include <fea/macros/macros.hpp>
 #include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
 #include <string>

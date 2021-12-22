@@ -30,14 +30,18 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+
+#if FEA_CPP20
+#include <span>
+namespace fea {
+template <class T, size_t Extent = std::dynamic_extent>
+using span = std::span<T, Extent>;
+}
+#else
 #include "fea/utils/platform.hpp"
 
 #include <cassert>
 #include <iterator>
-
-#if FEA_CPP20
-#include <span>
-#endif
 
 /*
 A very basic span type to get around until c++20.
@@ -87,6 +91,12 @@ struct span {
 		static_assert(
 				std::is_same<cat_t, std::random_access_iterator_tag>::value,
 				"fea::span : iterators must be random access");
+	}
+
+	template <template <class T, class...> class Container, class... Args>
+	constexpr span(Container<T, Args...>&& container)
+			: _data(container.data())
+			, _size(container.size()) {
 	}
 
 	/**
@@ -167,11 +177,7 @@ private:
 
 } // namespace imp
 
-#if FEA_CPP20
-template <class T, size_t Extent = std::dynamic_extent>
-using span = std::span<T, Extent>;
-#else
 template <class T>
 using span = imp::span<T>;
-#endif
 } // namespace fea
+#endif

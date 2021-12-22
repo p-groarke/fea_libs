@@ -1,4 +1,4 @@
-#include <fea/utils/string_conversions.hpp>
+#include <fea/string/conversions.hpp>
 #include <gtest/gtest.h>
 
 namespace {

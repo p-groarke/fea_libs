@@ -33,12 +33,14 @@
 
 #pragma once
 #include "fea/enum/enum_array.hpp"
+#include "fea/macros/foreach.hpp"
+#include "fea/macros/literals.hpp"
+#include "fea/macros/macros.hpp"
 #include "fea/maps/type_map.hpp"
-#include "fea/meta/macros.hpp"
 #include "fea/meta/pack.hpp"
 #include "fea/meta/traits.hpp"
+#include "fea/string/string.hpp"
 #include "fea/utils/platform.hpp"
-#include "fea/utils/string.hpp"
 
 #include <array>
 #include <string>
@@ -90,9 +92,10 @@ etc...
 // Generates an enum_array of const char* const and one of std::string.
 // The arrays are prefixed with the provided string type prefix.
 #define FEA_DETAIL_SE_ARRAYS(stringify_macro, chartype, prefix, ename, ...) \
-	[[maybe_unused]] FEA_INLINE_VAR const fea::enum_array< \
-			fea::string_t<chartype>, ename, FEA_SIZEOF_VAARGS(__VA_ARGS__)> \
-	FEA_DETAIL_SE_VARNAME(prefix, ename, strings) { \
+	[[maybe_unused]] FEA_INLINE_VAR const \
+			fea::enum_array<std::basic_string<chartype>, ename, \
+					FEA_SIZEOF_VAARGS(__VA_ARGS__)> \
+			FEA_DETAIL_SE_VARNAME(prefix, ename, strings) { \
 		{ FEA_FOR_EACH(stringify_macro, __VA_ARGS__) } \
 	}
 
@@ -119,12 +122,12 @@ etc...
 	} \
 	/* Non-type compile-time getters. */ \
 	template <ename E> \
-	[[maybe_unused]] constexpr const fea::string_t<chartype>& \
+	[[maybe_unused]] constexpr const std::basic_string<chartype>& \
 	FEA_DETAIL_SE_VARNAME(prefix, to, string)() { \
 		return FEA_DETAIL_SE_VARNAME(prefix, ename, strings).at<E>(); \
 	} \
 	/* Non-templated getters, fast O(1). */ \
-	[[maybe_unused]] inline constexpr const fea::string_t<chartype>& \
+	[[maybe_unused]] inline constexpr const std::basic_string<chartype>& \
 	FEA_DETAIL_SE_VARNAME(prefix, to, string)(ename e) { \
 		return FEA_DETAIL_SE_VARNAME(prefix, ename, strings)[e]; \
 	}

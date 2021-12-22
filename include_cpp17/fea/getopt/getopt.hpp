@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #pragma once
 #include "fea/state_machines/fsm.hpp"
-#include "fea/utils/string.hpp"
+#include "fea/string/string.hpp"
 #include "fea/utils/throw.hpp"
 
 #include <cassert>
@@ -770,7 +770,7 @@ void get_opt<CharT, PrintfT>::on_parse_longopt(fsm_t& m) {
 
 		// Were the args enclosed in quotes?
 		if (arg.find(FEA_CH(' ')) != string::npos) {
-			args = fea::split(arg, FEA_CH(' '));
+			args = fea::split(arg, FEA_ML(" "));
 			success = user_opt.multi_arg_func(std::move(args));
 		} else {
 			// Gather everything up till the end or the next '-'
@@ -913,7 +913,7 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 			str_vec.push_back(desc);
 		} else {
 			// There is '\n'
-			str_vec = fea::split(desc, FEA_CH('\n'));
+			str_vec = fea::split(desc, FEA_ML("\n"));
 		}
 
 		// Now, make sure all strings are less than output_width in *real* size.

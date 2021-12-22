@@ -32,8 +32,8 @@
  **/
 
 #pragma once
+#include "fea/string/string.hpp"
 #include "fea/utils/platform.hpp"
-#include "fea/utils/string.hpp"
 #include "fea/utils/throw.hpp"
 
 #include <cstdio>
@@ -349,7 +349,7 @@ inline bool reconstruct_text_file(const std::string& input_str,
 		std::u32string temp(count, 0);
 
 		for (size_t i = 0; i < count; ++i) {
-			temp[i] = static_cast<char32_t>(input_str[i * 4 + 3] << 0
+			temp[i] = char32_t(input_str[i * 4 + 3] << 0
 					| input_str[i * 4 + 2] << 8 | input_str[i * 4 + 1] << 16
 					| input_str[i * 4 + 0] << 24);
 		}
@@ -371,7 +371,7 @@ inline bool reconstruct_text_file(const std::string& input_str,
 		size_t count = input_str.size() / 4;
 		std::u32string temp(count, 0);
 		for (size_t i = 0; i < count; ++i) {
-			temp[i] = static_cast<char32_t>(input_str[i * 4 + 0] << 0
+			temp[i] = char32_t(input_str[i * 4 + 0] << 0
 					| input_str[i * 4 + 1] << 8 | input_str[i * 4 + 2] << 16
 					| input_str[i * 4 + 3] << 24);
 		}
@@ -392,7 +392,7 @@ inline bool reconstruct_text_file(const std::string& input_str,
 		size_t count = input_str.size() / 2;
 		std::u16string temp(count, 0);
 		for (size_t i = 0; i < count; ++i) {
-			temp[i] = static_cast<char16_t>(
+			temp[i] = char16_t(
 					input_str[i * 2 + 1] << 0 | input_str[i * 2 + 0] << 8);
 		}
 
@@ -411,7 +411,7 @@ inline bool reconstruct_text_file(const std::string& input_str,
 		size_t count = input_str.size() / 2;
 		std::u16string temp(count, 0);
 		for (size_t i = 0; i < count; ++i) {
-			temp[i] = static_cast<char16_t>(
+			temp[i] = char16_t(
 					input_str[i * 2 + 0] << 0 | input_str[i * 2 + 1] << 8);
 		}
 

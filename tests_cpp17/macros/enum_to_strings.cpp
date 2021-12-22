@@ -1,4 +1,4 @@
-﻿#include <fea/enum/enum_strings.hpp>
+﻿#include <fea/macros/enum_to_strings.hpp>
 #include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
 
