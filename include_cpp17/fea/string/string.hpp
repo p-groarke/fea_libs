@@ -52,6 +52,19 @@ TODO : Integrate std::string_view.
 */
 
 namespace fea {
+// Returns the size of a given string, string_view or c_string.
+template <template <class, class, class...> class Str, class CharT,
+		template <class> class Traits, class... Args>
+[[nodiscard]] size_t size(const Str<CharT, Traits<CharT>, Args...>& str) {
+	return str.size();
+}
+template <class CharT>
+[[nodiscard]] size_t size(const CharT* str) {
+	return std::char_traits<CharT>::length(str);
+}
+
+
+// Returns true if provided string contains 'search'.
 template <template <class, class, class...> class Str, class CharT,
 		template <class> class Traits, class... Args, class... Args2>
 [[nodiscard]] bool contains(const Str<CharT, Traits<CharT>, Args...>& str,
@@ -83,77 +96,97 @@ template <class CharT>
 }
 
 
-// template <template <class, class, class...> class Str, class CharT,
-//		template <class> class Traits, class... Args, class... Args2>
-//[[nodiscard]] bool starts_with(const Str<CharT, Traits<CharT>, Args...>& str,
-//		const Str<CharT, Traits<CharT>, Args2...>& search) {
-//	return str.size() >= search.size()
-//			&& std::char_traits<CharT>::compare(
-//					   str.data(), search.data(), search.size())
-//			== 0;
-//}
-// template <template <class, class, class...> class Str, class CharT,
-//		template <class> class Traits, class... Args>
-//[[nodiscard]] bool starts_with(
-//		const Str<CharT, Traits<CharT>, Args...>& str, const CharT* search) {
-//	return str.size() >= search.size()
-//			&& std::char_traits<CharT>::compare(
-//					   str.data(), search.data(), search.size())
-//			== 0;
-//}
-
-
-template <class CharT>
-[[nodiscard]] bool starts_with(std::basic_string_view<CharT> str,
-		std::basic_string_view<CharT> search) {
+// Returns true if provided string starts with 'search'.
+template <template <class, class, class...> class Str, class CharT,
+		template <class> class Traits, class... Args, class... Args2>
+[[nodiscard]] bool starts_with(const Str<CharT, Traits<CharT>, Args...>& str,
+		const Str<CharT, Traits<CharT>, Args2...>& search) {
 	return str.size() >= search.size()
-			&& std::char_traits<CharT>::compare(
-					   str.data(), search.data(), search.size())
+			&& Traits<CharT>::compare(str.data(), search.data(), search.size())
 			== 0;
 }
-template <class CharT>
+template <template <class, class, class...> class Str, class CharT,
+		template <class> class Traits, class... Args>
 [[nodiscard]] bool starts_with(
-		const std::basic_string<CharT>& str, const CharT* search) {
-	using strv_t = std::basic_string_view<CharT>;
-	return starts_with(strv_t{ str }, strv_t{ search });
-}
-template <class CharT>
-[[nodiscard]] bool starts_with(const std::basic_string<CharT>& str,
-		const std::basic_string<CharT>& search) {
-	using strv_t = std::basic_string_view<CharT>;
-	return starts_with(strv_t{ str }, strv_t{ search });
-}
+		const Str<CharT, Traits<CharT>, Args...>& str, const CharT* search) {
+	using sv = std::basic_string_view<CharT>;
+	sv _search = sv{ search };
 
-template <class CharT>
-[[nodiscard]] bool ends_with(std::basic_string_view<CharT> str,
-		std::basic_string_view<CharT> search) {
-	if (str.size() < search.size()) {
-		return false;
-	}
-	return std::char_traits<CharT>::compare(
-				   str.data() + (str.size() - search.size()), search.data(),
-				   search.size())
+	return str.size() >= _search.size()
+			&& Traits<CharT>::compare(
+					   str.data(), _search.data(), _search.size())
 			== 0;
 }
-template <class CharT>
-[[nodiscard]] bool ends_with(
-		const std::basic_string<CharT>& str, const CharT* search) {
-	using strv_t = std::basic_string_view<CharT>;
-	return ends_with(strv_t{ str }, strv_t{ search });
-}
-template <class CharT>
-[[nodiscard]] bool ends_with(const std::basic_string<CharT>& str,
-		const std::basic_string<CharT>& search) {
-	using strv_t = std::basic_string_view<CharT>;
-	return ends_with(strv_t{ str }, strv_t{ search });
+template <template <class, class, class...> class Str, class CharT,
+		template <class> class Traits, class... Args>
+[[nodiscard]] bool starts_with(
+		const Str<CharT, Traits<CharT>, Args...>& str, CharT search) {
+	return str.size() >= 1
+			&& Traits<CharT>::compare(str.data(), &search, 1) == 0;
 }
 
-// Constexpr character to_lower (lower case).
 template <class CharT>
-[[nodiscard]] constexpr CharT to_lower(CharT ch) {
-	return (ch >= FEA_CH('A') && ch <= FEA_CH('Z'))
-			? ch + (FEA_CH('a') - FEA_CH('A'))
-			: ch;
+[[nodiscard]] bool starts_with(const CharT* str, const CharT* search) {
+	using sv = std::basic_string_view<CharT>;
+	return starts_with(sv{ str }, search);
+}
+template <class CharT>
+[[nodiscard]] bool starts_with(const CharT* str, CharT search) {
+	using sv = std::basic_string_view<CharT>;
+	return starts_with(sv{ str }, search);
+}
+
+template <template <class, class, class...> class Str, class CharT,
+		template <class> class Traits, class... Args, class... Args2>
+[[nodiscard]] bool ends_with(const Str<CharT, Traits<CharT>, Args...>& str,
+		const Str<CharT, Traits<CharT>, Args2...>& search) {
+	return str.size() >= search.size()
+			&& Traits<CharT>::compare(str.data() + (str.size() - search.size()),
+					   search.data(), search.size())
+			== 0;
+}
+template <template <class, class, class...> class Str, class CharT,
+		template <class> class Traits, class... Args>
+[[nodiscard]] bool ends_with(
+		const Str<CharT, Traits<CharT>, Args...>& str, const CharT* search) {
+	using sv = std::basic_string_view<CharT>;
+	sv _search = sv{ search };
+
+	return str.size() >= _search.size()
+			&& Traits<CharT>::compare(
+					   str.data() + (str.size() - _search.size()),
+					   _search.data(), _search.size())
+			== 0;
+}
+template <template <class, class, class...> class Str, class CharT,
+		template <class> class Traits, class... Args>
+[[nodiscard]] bool ends_with(
+		const Str<CharT, Traits<CharT>, Args...>& str, CharT search) {
+	return str.size() >= 1
+			&& Traits<CharT>::compare(str.data() + (str.size() - 1), &search, 1)
+			== 0;
+}
+
+template <class CharT>
+[[nodiscard]] bool ends_with(const CharT* str, const CharT* search) {
+	using sv = std::basic_string_view<CharT>;
+	return ends_with(sv{ str }, search);
+}
+template <class CharT>
+[[nodiscard]] bool ends_with(const CharT* str, CharT search) {
+	using sv = std::basic_string_view<CharT>;
+	return ends_with(sv{ str }, search);
+}
+
+
+// Constexpr lower case ASCII character.
+template <class CharT>
+[[nodiscard]] constexpr CharT to_lower_ascii(CharT ch) {
+	constexpr auto diff = FEA_CH('a') - FEA_CH('A');
+	if (ch >= FEA_CH('A') && ch <= FEA_CH('Z')) {
+		return ch + diff;
+	}
+	return ch;
 }
 
 template <class CharT>
@@ -165,12 +198,6 @@ template <class CharT>
 	return ret;
 }
 
-template <class CharT>
-void to_lower(std::basic_string<CharT>& out, bool /*inplace*/) {
-	std::transform(out.begin(), out.end(), out.begin(),
-			[](auto c) { return std::tolower(c, std::locale()); });
-}
-
 [[nodiscard]] inline std::vector<uint8_t> to_lower(
 		const std::vector<uint8_t>& str) {
 	std::vector<uint8_t> ret = str;
@@ -179,7 +206,14 @@ void to_lower(std::basic_string<CharT>& out, bool /*inplace*/) {
 	return ret;
 }
 
-inline void to_lower(std::vector<uint8_t>& out, bool /*inplace*/) {
+// Lower-case passed in string.
+// No copies.
+template <class CharT>
+void to_lower_inplace(std::basic_string<CharT>& out) {
+	std::transform(out.begin(), out.end(), out.begin(),
+			[](auto c) { return std::tolower(c, std::locale()); });
+}
+inline void to_lower_inplace(std::vector<uint8_t>& out) {
 	std::transform(out.begin(), out.end(), out.begin(),
 			[](auto c) { return uint8_t(std::tolower(int(c))); });
 }
@@ -381,8 +415,8 @@ template <class InputIt1, class InputIt2>
 [[nodiscard]] constexpr std::strong_ordering lexicographical_compare(
 		InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2) {
 	for (; (first1 != last1) && (first2 != last2); ++first1, (void)++first2) {
-		auto c1 = fea::to_lower(*first1);
-		auto c2 = fea::to_lower(*first2);
+		auto c1 = fea::to_lower_ascii(*first1);
+		auto c2 = fea::to_lower_ascii(*first2);
 		if (c1 != c2) {
 			return c1 <=> c2;
 		}

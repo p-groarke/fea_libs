@@ -44,13 +44,12 @@
 
 #include <array>
 #include <string>
+#include <string_view>
 #include <tuple>
 
 /*
 FEA_STRING_ENUM creates an enum class with accompanying fea::enum_arrays of
-literals and strings, plus useful accessors.
-
-All generated data and functions live in namespace 'enu'.
+literals and string_views, plus useful accessors.
 
 Call the macro using (enum_name, enum_underlying_type, your, enum, values, ...)
 You must always provide an underlying_type.
@@ -61,7 +60,6 @@ FEA_STRING_ENUM(my_enum, unsigned, potato, tomato)
 Generates :
 enum class my_enum : unsigned { potato, tomato };
 
-namespace enu {
 constexpr fea::enum_array<const char* const, ...> my_enum_literals;
 const fea::enum_array<std::string, ...> my_enum_strings;
 
@@ -71,8 +69,6 @@ constexpr const std::string& to_string(my_enum e);
 
 template <my_enum E>
 constexpr const std::string& to_string();
-
-} // namespace enu
 
 It generates all of these for all string types :
 string, wstring, u16string, u32string.
@@ -92,24 +88,24 @@ etc...
 // Generates an enum_array of const char* const and one of std::string.
 // The arrays are prefixed with the provided string type prefix.
 #define FEA_DETAIL_SE_ARRAYS(stringify_macro, chartype, prefix, ename, ...) \
-	[[maybe_unused]] FEA_INLINE_VAR const \
-			fea::enum_array<std::basic_string<chartype>, ename, \
-					FEA_SIZEOF_VAARGS(__VA_ARGS__)> \
-			FEA_DETAIL_SE_VARNAME(prefix, ename, strings) { \
+	[[maybe_unused]] inline constexpr fea::enum_array< \
+			std::basic_string_view<chartype>, ename, \
+			FEA_SIZEOF_VAARGS(__VA_ARGS__)> \
+	FEA_DETAIL_SE_VARNAME(prefix, ename, strings) { \
 		{ FEA_FOR_EACH(stringify_macro, __VA_ARGS__) } \
 	}
 
 // Literals equivalent, currently unused.
 #define FEA_DETAIL_SE_LIT_ARRAYS( \
 		stringify_macro, chartype, prefix, ename, ...) \
-	[[maybe_unused]] FEA_INLINE_VAR constexpr fea::enum_array< \
-			const chartype* const, ename, FEA_SIZEOF_VAARGS(__VA_ARGS__)> \
+	[[maybe_unused]] inline constexpr fea::enum_array<const chartype* const, \
+			ename, FEA_SIZEOF_VAARGS(__VA_ARGS__)> \
 			FEA_DETAIL_SE_VARNAME(prefix, ename, literals){ { FEA_FOR_EACH( \
 					stringify_macro, __VA_ARGS__) } };
 
 
 // Declares and implements helper functions.
-// string<enum>(), to_string<enum::val>(), to_string(enum::val)
+// strings<enum>(), to_string<enum::val>(), to_string(enum::val)
 #define FEA_DETAIL_SE_FUNCS(chartype, prefix, ename) \
 	/* Forward declares template functions we specialize. */ \
 	template <class> \
@@ -122,12 +118,12 @@ etc...
 	} \
 	/* Non-type compile-time getters. */ \
 	template <ename E> \
-	[[maybe_unused]] constexpr const std::basic_string<chartype>& \
+	[[maybe_unused]] constexpr std::basic_string_view<chartype> \
 	FEA_DETAIL_SE_VARNAME(prefix, to, string)() { \
 		return FEA_DETAIL_SE_VARNAME(prefix, ename, strings).at<E>(); \
 	} \
 	/* Non-templated getters, fast O(1). */ \
-	[[maybe_unused]] inline constexpr const std::basic_string<chartype>& \
+	[[maybe_unused]] inline constexpr std::basic_string_view<chartype> \
 	FEA_DETAIL_SE_VARNAME(prefix, to, string)(ename e) { \
 		return FEA_DETAIL_SE_VARNAME(prefix, ename, strings)[e]; \
 	}
@@ -337,7 +333,6 @@ etc...
 #define FEA_ALLSTRINGS_ENUM_WITH_COUNT(ename, utype, ...) \
 	/* Declares your enum. Adds 'count' at the end. */ \
 	enum class ename : utype { __VA_ARGS__, count }; \
-	/* All strings and functions are declared in namespace 'enu'. */ \
 	/* char and std::string */ \
 	FEA_DETAIL_SE_ARRAYS(FEA_STRINGIFY_COMMA, char, , ename, __VA_ARGS__); \
 	FEA_DETAIL_SE_FUNCS(char, , ename) \

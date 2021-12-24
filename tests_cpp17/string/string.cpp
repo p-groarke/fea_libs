@@ -50,7 +50,7 @@ TEST(string, basics) {
 		EXPECT_NE(fea::to_lower(caps), "NOT SCREAMING");
 
 		std::string capscpy = caps;
-		fea::to_lower(capscpy, true);
+		fea::to_lower_inplace(capscpy);
 		EXPECT_EQ(capscpy, "not screaming");
 		EXPECT_NE(capscpy, "NOT SCREAMING");
 
@@ -135,6 +135,49 @@ TEST(string, basics) {
 	}
 }
 
+TEST(string, size) {
+	// constexpr std::string_view t1{ "ꝅ" };
+	// t1;
+	// constexpr const char* const t2 = "ꝅ";
+	// t2;
+	// const std::string t3{ "ꝅ" };
+	// t3;
+
+	{
+		gen_constants(tests, "");
+		constexpr size_t empty_strs_size = std::tuple_size_v<decltype(tests)>;
+
+		fea::static_for<empty_strs_size>([&](auto const_i) {
+			constexpr size_t i = const_i;
+
+			const auto& test_str = std::get<i>(tests);
+			EXPECT_EQ(0, fea::size(test_str));
+		});
+	}
+	{
+		gen_constants(tests, "\n");
+		constexpr size_t empty_strs_size = std::tuple_size_v<decltype(tests)>;
+
+		fea::static_for<empty_strs_size>([&](auto const_i) {
+			constexpr size_t i = const_i;
+
+			const auto& test_str = std::get<i>(tests);
+			EXPECT_EQ(1, fea::size(test_str));
+		});
+	}
+	{
+		gen_constants(tests, "a-t\nest");
+		constexpr size_t empty_strs_size = std::tuple_size_v<decltype(tests)>;
+
+		fea::static_for<empty_strs_size>([&](auto const_i) {
+			constexpr size_t i = const_i;
+
+			const auto& test_str = std::get<i>(tests);
+			EXPECT_EQ(7, fea::size(test_str));
+		});
+	}
+}
+
 gen_constants(alice, R"xx(CHAPTER I.
 Down the Rabbit-Hole
 
@@ -160,15 +203,16 @@ curiosity, she ran across the field after it, and fortunately was just in time
 to see it pop down a large rabbit-hole under the hedge.
 )xx");
 
+constexpr size_t alice_size = std::tuple_size_v<decltype(alice)>;
+
 TEST(string, contains) {
 	gen_tests(valid_search, "I.", "”", "Alice", "Rabbit-Hole",
 			"under the hedge.", "\n");
 
 	gen_tests(invalid_search, ">test", ">", "1potato", "/I'm a sentence");
 
-	constexpr size_t num_str_types = std::tuple_size_v<decltype(alice)>;
 
-	fea::static_for<num_str_types>([&](auto const_i) {
+	fea::static_for<alice_size>([&](auto const_i) {
 		constexpr size_t i = const_i;
 
 		const auto& test_str = std::get<i>(alice);
@@ -189,6 +233,122 @@ TEST(string, contains) {
 			EXPECT_FALSE(fea::contains(test_str, search[0]));
 			if constexpr (!std::is_pointer_v<str_t>) {
 				EXPECT_FALSE(fea::contains(test_str, search.data()));
+			}
+		}
+	});
+}
+
+gen_tests(alice_chunks, R"xx(CHAPTER I.)xx", R"xx(Down the Rabbit-Hole)xx",
+		R"xx(Alice was beginning)xx", R"xx(to get very tired of)xx",
+		R"xx(sitting by her sister on the bank,)xx",
+		R"xx(and of having nothing to do)xx",
+		R"xx(: once or twice she had peeped into)xx",
+		R"xx(the book her sister)xx", R"xx(was reading, )xx",
+		R"xx(but it had no pictures or conversations in it, )xx",
+		R"xx(“and what is the)xx", R"xx(use of a book,” )xx",
+		R"xx(thought Alice )xx", R"xx(“without pictures or conversations?”)xx");
+
+TEST(string, starts_with) {
+	gen_tests(valid_searches, "CHAP", "Down the Rabbit-", "Alice was", "to",
+			"sitting by", "and of having nothing to do", ":", "t", "was ",
+			"but", "“", "use", "thought Alice ", "“without");
+
+	gen_tests(invalid_searches, "x", " D", "Alice  was", "\n", "Sitting by",
+			"test", "!", "a", "wAs ", "butxxxx", "”", "usE", "Thought\n Alice ",
+			"without");
+
+	static_assert(std::get<0>(alice_chunks).size()
+					== std::get<0>(valid_searches).size(),
+			"Sanity check failed, you have gone off the deep end.");
+	static_assert(std::get<0>(alice_chunks).size()
+					== std::get<0>(invalid_searches).size(),
+			"Sanity check failed, you have gone off the deep end.");
+
+	fea::static_for<alice_size>([&](auto const_i) {
+		constexpr size_t i = const_i;
+
+		const auto& alice_arr = std::get<i>(alice_chunks);
+		const auto& valid_arr = std::get<i>(valid_searches);
+		const auto& invalid_arr = std::get<i>(invalid_searches);
+
+		for (size_t j = 0; j < alice_arr.size(); ++j) {
+			using str_t = std::decay_t<decltype(alice_arr[i])>;
+			EXPECT_TRUE(fea::starts_with(alice_arr[j], valid_arr[j]));
+			EXPECT_TRUE(fea::starts_with(alice_arr[j], valid_arr[j][0]));
+			if constexpr (!std::is_pointer_v<str_t>) {
+				EXPECT_TRUE(
+						fea::starts_with(alice_arr[j], valid_arr[j].data()));
+			}
+		}
+
+		for (size_t j = 0; j < alice_arr.size(); ++j) {
+			using str_t = std::decay_t<decltype(alice_arr[i])>;
+			EXPECT_FALSE(fea::starts_with(alice_arr[j], invalid_arr[j]));
+
+			if (fea::size(invalid_arr[j]) <= 2) {
+				EXPECT_FALSE(fea::starts_with(alice_arr[j], invalid_arr[j][0]));
+			}
+
+			if constexpr (!std::is_pointer_v<str_t>) {
+				// Only test chars for small cases, because we want other
+				// scenarios.
+				EXPECT_FALSE(
+						fea::starts_with(alice_arr[j], invalid_arr[j].data()));
+			}
+		}
+	});
+}
+
+TEST(string, ends_with) {
+	gen_tests(valid_searches, " I.", "Rabbit-Hole", "ng", " of", ",",
+			"and of having nothing to do", "peeped into", "sister", ", ",
+			"it, ", "is the", ",” ", "thought Alice ", " or conversations?”");
+
+	gen_tests(invalid_searches, "I,", "LE", "Alice was", "\n", "!", "test",
+			"tO", "a", "  ,", "ittttt", "”", ",“", "Thought\n Alice ", "!!");
+
+	static_assert(std::get<0>(alice_chunks).size()
+					== std::get<0>(valid_searches).size(),
+			"Sanity check failed, you have gone off the deep end.");
+	static_assert(std::get<0>(alice_chunks).size()
+					== std::get<0>(invalid_searches).size(),
+			"Sanity check failed, you have gone off the deep end.");
+
+	fea::static_for<alice_size>([&](auto const_i) {
+		constexpr size_t i = const_i;
+
+		const auto& alice_arr = std::get<i>(alice_chunks);
+		const auto& valid_arr = std::get<i>(valid_searches);
+		const auto& invalid_arr = std::get<i>(invalid_searches);
+
+		for (size_t j = 0; j < alice_arr.size(); ++j) {
+			using str_t = std::decay_t<decltype(alice_arr[i])>;
+			using char_t = std::decay_t<std::remove_pointer_t<str_t>>;
+			EXPECT_TRUE(fea::ends_with(alice_arr[j], valid_arr[j]));
+
+			size_t size = fea::size(valid_arr[j]);
+			EXPECT_TRUE(fea::ends_with(alice_arr[j], valid_arr[j][size - 1]));
+
+			if constexpr (!std::is_pointer_v<str_t>) {
+				EXPECT_TRUE(fea::ends_with(alice_arr[j], valid_arr[j].data()));
+			}
+		}
+
+		for (size_t j = 0; j < alice_arr.size(); ++j) {
+			using str_t = std::decay_t<decltype(alice_arr[i])>;
+			EXPECT_FALSE(fea::ends_with(alice_arr[j], invalid_arr[j]));
+
+			// Only test chars for small cases, because we want other
+			// scenarios.
+			size_t size = fea::size(invalid_arr[j]);
+			if (size <= 2) {
+				EXPECT_FALSE(
+						fea::ends_with(alice_arr[j], invalid_arr[j][size - 1]));
+			}
+
+			if constexpr (!std::is_pointer_v<str_t>) {
+				EXPECT_FALSE(
+						fea::ends_with(alice_arr[j], invalid_arr[j].data()));
 			}
 		}
 	});
