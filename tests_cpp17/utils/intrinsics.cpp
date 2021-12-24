@@ -6,17 +6,17 @@
 
 namespace {
 constexpr auto gen_tup(int val) {
-	return std::tuple {
-		char(val), unsigned char(val), short(val), unsigned short(val),
-				int(val), unsigned int(val), long(val), unsigned long(val),
-				long long(val), unsigned long long(val), char16_t(val),
-				char32_t(val), wchar_t(val), int8_t(val), int16_t(val),
-				int32_t(val), int64_t(val), uint8_t(val), uint16_t(val),
-				uint32_t(val), uint64_t(val),
+	return std::make_tuple(char(val), unsigned char(val), short(val),
+			unsigned short(val), int(val), unsigned int(val), long(val),
+			unsigned long(val), long long(val), unsigned long long(val),
+			char16_t(val), char32_t(val), wchar_t(val), int8_t(val),
+			int16_t(val), int32_t(val), int64_t(val), uint8_t(val),
+			uint16_t(val), uint32_t(val), uint64_t(val)
 #if FEA_CPP20
-				char8_t(val),
+												  ,
+			char8_t(val)
 #endif
-	};
+	);
 }
 
 TEST(intrinsics, make_bitmask) {

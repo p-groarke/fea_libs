@@ -6,37 +6,25 @@
 
 namespace {
 #define gen_constants(tupname, str) \
-	const auto tupname = std::tuple{ \
-		std::string_view{ str }, \
-		std::wstring_view{ L##str }, \
-		std::u16string_view{ u##str }, \
-		std::u32string_view{ U##str }, \
-		std::string{ str }, \
-		std::wstring{ L##str }, \
-		std::u16string{ u##str }, \
-		std::u32string{ U##str }, \
-		str, \
-		L##str, \
-		u##str, \
-		U##str, \
-	};
+	const auto tupname = std::make_tuple(std::string_view{ str }, \
+			std::wstring_view{ L##str }, std::u16string_view{ u##str }, \
+			std::u32string_view{ U##str }, std::string{ str }, \
+			std::wstring{ L##str }, std::u16string{ u##str }, \
+			std::u32string{ U##str }, str, L##str, u##str, U##str)
 
 
 #define gen_tests(tupname, ...) \
-	const auto tupname = std::tuple{ \
-		std::array{ FEA_VA_SV(__VA_ARGS__) }, \
-		std::array{ FEA_VA_WSV(__VA_ARGS__) }, \
-		std::array{ FEA_VA_U16SV(__VA_ARGS__) }, \
-		std::array{ FEA_VA_U32SV(__VA_ARGS__) }, \
-		std::array{ FEA_VA_S(__VA_ARGS__) }, \
-		std::array{ FEA_VA_WS(__VA_ARGS__) }, \
-		std::array{ FEA_VA_U16S(__VA_ARGS__) }, \
-		std::array{ FEA_VA_U32S(__VA_ARGS__) }, \
-		std::array{ __VA_ARGS__ }, \
-		std::array{ FEA_VA_WPREFIX(__VA_ARGS__) }, \
-		std::array{ FEA_VA_U16PREFIX(__VA_ARGS__) }, \
-		std::array{ FEA_VA_U32PREFIX(__VA_ARGS__) }, \
-	};
+	const auto tupname = std::make_tuple(std::array{ FEA_VA_SV(__VA_ARGS__) }, \
+			std::array{ FEA_VA_WSV(__VA_ARGS__) }, \
+			std::array{ FEA_VA_U16SV(__VA_ARGS__) }, \
+			std::array{ FEA_VA_U32SV(__VA_ARGS__) }, \
+			std::array{ FEA_VA_S(__VA_ARGS__) }, \
+			std::array{ FEA_VA_WS(__VA_ARGS__) }, \
+			std::array{ FEA_VA_U16S(__VA_ARGS__) }, \
+			std::array{ FEA_VA_U32S(__VA_ARGS__) }, std::array{ __VA_ARGS__ }, \
+			std::array{ FEA_VA_WPREFIX(__VA_ARGS__) }, \
+			std::array{ FEA_VA_U16PREFIX(__VA_ARGS__) }, \
+			std::array{ FEA_VA_U32PREFIX(__VA_ARGS__) })
 
 
 TEST(string, basics) {
@@ -323,7 +311,7 @@ TEST(string, ends_with) {
 
 		for (size_t j = 0; j < alice_arr.size(); ++j) {
 			using str_t = std::decay_t<decltype(alice_arr[i])>;
-			using char_t = std::decay_t<std::remove_pointer_t<str_t>>;
+			// using char_t = std::decay_t<std::remove_pointer_t<str_t>>;
 			EXPECT_TRUE(fea::ends_with(alice_arr[j], valid_arr[j]));
 
 			size_t size = fea::size(valid_arr[j]);
