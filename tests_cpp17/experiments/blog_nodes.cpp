@@ -278,7 +278,7 @@ template <class GraphDescriptor, size_t RowIdx, size_t... Idxes>
 constexpr auto num_connection_outputs(std::index_sequence<Idxes...>) {
 	static_assert(RowIdx % 2 != 0);
 	constexpr auto tup = std::get<RowIdx>(GraphDescriptor::graph);
-	using tup_t = std::decay_t<decltype(tup)>;
+	// using tup_t = std::decay_t<decltype(tup)>;
 	constexpr auto max_idxes = std::array{ std::get<Idxes>(tup).max_idx()... };
 	return *std::max_element(max_idxes.begin(), max_idxes.end()) + 1;
 }
@@ -292,7 +292,7 @@ constexpr auto compute_row() {
 	constexpr size_t num_ins = num_inputs<GraphDescriptor, RowIdx>();
 	using row_in_t = tuple_type_from_count_t<const data_type_t&, num_ins>;
 
-	[[maybe_unused]] constexpr auto compute_func = [](row_in_t input) {
+	[[maybe_unused]] constexpr auto compute_func = [](row_in_t /*input*/) {
 		// Get the information we need.
 		constexpr auto node_array = std::get<RowIdx>(GraphDescriptor::graph);
 		constexpr auto node_ic_tuple
@@ -330,14 +330,15 @@ constexpr auto compute_row() {
 	constexpr size_t num_connections = std::tuple_size_v<connections_t>;
 
 	// Make a tuple type of the this step's outputs.
-	constexpr size_t num_route_in = num_outputs<GraphDescriptor, RowIdx>();
+	[[maybe_unused]] constexpr size_t num_route_in
+			= num_outputs<GraphDescriptor, RowIdx>();
 	// using route_in_t
 	//		= tuple_type_from_count_t<const data_type_t&, num_route_in>;
 	// static_assert(num_connections == std::tuple_size_v<route_in_t>,
 	//		"Invalid number of connections.");
 
 	// Make a tuple type of the connections output (next steps input).
-	constexpr size_t num_route_out
+	[[maybe_unused]] constexpr size_t num_route_out
 			= num_connection_outputs<GraphDescriptor, RowIdx + 1>(
 					std::make_index_sequence<num_connections>{});
 	// using route_out_t = std::array<data_type_t, num_route_out>;
