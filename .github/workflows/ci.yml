@@ -136,9 +136,6 @@ jobs:
         build_type: [Release, Debug]
         # build_arch: [x64, x86]
         config:
-          - { os: ubuntu-20.04, gcc_ver: "11", fea_ver: "-DFEA_CPP20=On" }
-          - { os: ubuntu-20.04, gcc_ver: "11", fea_ver: "-DFEA_CPP17=On" }
-          - { os: ubuntu-20.04, gcc_ver: "11", fea_ver: "-DFEA_CPP14=On" }
           - { os: ubuntu-20.04, gcc_ver: "10", fea_ver: "-DFEA_CPP17=On" }
           - { os: ubuntu-20.04, gcc_ver: "10", fea_ver: "-DFEA_CPP14=On" }
           - { os: ubuntu-20.04, gcc_ver: "9", fea_ver: "-DFEA_CPP17=On" }

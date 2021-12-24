@@ -268,7 +268,7 @@ constexpr auto node_array_to_integral_constant_tuple(
 		std::index_sequence<Idxes...>) {
 	static_assert(RowIdx % 2 == 0);
 	constexpr auto arr = std::get<RowIdx>(GraphDescriptor::graph);
-	[[maybe_unused]] using arr_t = std::decay_t<decltype(arr)>;
+	// using arr_t = std::decay_t<decltype(arr)>;
 	return std::tuple{
 		std::integral_constant<size_t, size_t(std::get<Idxes>(arr))>{}...
 	};
@@ -331,8 +331,8 @@ constexpr auto compute_row() {
 
 	// Make a tuple type of the this step's outputs.
 	constexpr size_t num_route_in = num_outputs<GraphDescriptor, RowIdx>();
-	[[maybe_unused]] using route_in_t
-			= tuple_type_from_count_t<const data_type_t&, num_route_in>;
+	// using route_in_t
+	//		= tuple_type_from_count_t<const data_type_t&, num_route_in>;
 	// static_assert(num_connections == std::tuple_size_v<route_in_t>,
 	//		"Invalid number of connections.");
 
@@ -340,7 +340,7 @@ constexpr auto compute_row() {
 	constexpr size_t num_route_out
 			= num_connection_outputs<GraphDescriptor, RowIdx + 1>(
 					std::make_index_sequence<num_connections>{});
-	[[maybe_unused]] using route_out_t = std::array<data_type_t, num_route_out>;
+	// using route_out_t = std::array<data_type_t, num_route_out>;
 
 	// Make a function that accepts the output array and routes the
 	// values to an input array.

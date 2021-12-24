@@ -15,7 +15,7 @@ namespace {
 // Parses the iso 639 dataset and generates a header.
 // Expects dataset to be in bin folder, named :
 // 'iso-639-3_Code_Tables_dddddddd/'
-#if 0
+#if 0 && FEA_ARCH >= 64
 const std::string file_header = R"xx(
 /**
  * BSD 3-Clause License
@@ -51,6 +51,9 @@ const std::string file_header = R"xx(
  **/
 
 #pragma once
+#include "fea/utils/platform.hpp"
+
+#if FEA_ARCH >= 64
 #include "fea/iso_codes/language_types.hpp"
 
 #include <array>
@@ -65,6 +68,7 @@ namespace detail {
 const std::string file_footer = R"xx(
 } // namespace detail
 } // namespace fea
+#endif
 )xx";
 
 struct lang {
