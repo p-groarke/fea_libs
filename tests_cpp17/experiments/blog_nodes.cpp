@@ -5,7 +5,6 @@
 #include <tuple>
 #include <type_traits>
 
-namespace {
 // Utilities
 namespace detail {
 template <class>
@@ -269,11 +268,11 @@ constexpr auto node_array_to_integral_constant_tuple(
 		std::index_sequence<Idxes...>) {
 	static_assert(RowIdx % 2 == 0);
 	constexpr auto arr = std::get<RowIdx>(GraphDescriptor::graph);
-	using arr_t = std::decay_t<decltype(arr)>;
+	[[maybe_unused]] using arr_t = std::decay_t<decltype(arr)>;
 	return std::tuple{
 		std::integral_constant<size_t, size_t(std::get<Idxes>(arr))>{}...
 	};
-};
+}
 
 template <class GraphDescriptor, size_t RowIdx, size_t... Idxes>
 constexpr auto num_connection_outputs(std::index_sequence<Idxes...>) {
@@ -282,7 +281,7 @@ constexpr auto num_connection_outputs(std::index_sequence<Idxes...>) {
 	using tup_t = std::decay_t<decltype(tup)>;
 	constexpr auto max_idxes = std::array{ std::get<Idxes>(tup).max_idx()... };
 	return *std::max_element(max_idxes.begin(), max_idxes.end()) + 1;
-};
+}
 
 template <class GraphDescriptor, size_t RowIdx>
 constexpr auto compute_row() {
@@ -293,7 +292,7 @@ constexpr auto compute_row() {
 	constexpr size_t num_ins = num_inputs<GraphDescriptor, RowIdx>();
 	using row_in_t = tuple_type_from_count_t<const data_type_t&, num_ins>;
 
-	constexpr auto compute_func = [](row_in_t input) {
+	[[maybe_unused]] constexpr auto compute_func = [](row_in_t input) {
 		// Get the information we need.
 		constexpr auto node_array = std::get<RowIdx>(GraphDescriptor::graph);
 		constexpr auto node_ic_tuple
@@ -332,7 +331,7 @@ constexpr auto compute_row() {
 
 	// Make a tuple type of the this step's outputs.
 	constexpr size_t num_route_in = num_outputs<GraphDescriptor, RowIdx>();
-	using route_in_t
+	[[maybe_unused]] using route_in_t
 			= tuple_type_from_count_t<const data_type_t&, num_route_in>;
 	// static_assert(num_connections == std::tuple_size_v<route_in_t>,
 	//		"Invalid number of connections.");
@@ -341,7 +340,7 @@ constexpr auto compute_row() {
 	constexpr size_t num_route_out
 			= num_connection_outputs<GraphDescriptor, RowIdx + 1>(
 					std::make_index_sequence<num_connections>{});
-	using route_out_t = std::array<data_type_t, num_route_out>;
+	[[maybe_unused]] using route_out_t = std::array<data_type_t, num_route_out>;
 
 	// Make a function that accepts the output array and routes the
 	// values to an input array.
@@ -420,4 +419,3 @@ TEST(blog, nodes) {
 	static_assert(
 			std::is_same_v<expected_out_t, typename graph_t::output_tuple_t>);
 }
-} // namespace
