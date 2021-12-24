@@ -93,7 +93,7 @@ struct span {
 				"fea::span : iterators must be random access");
 	}
 
-	template <template <class T, class...> class Container, class... Args>
+	template <template <class, class...> class Container, class... Args>
 	constexpr span(Container<T, Args...>&& container)
 			: _data(container.data())
 			, _size(container.size()) {
