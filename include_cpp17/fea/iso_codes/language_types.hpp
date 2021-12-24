@@ -39,54 +39,40 @@
 #include <string_view>
 
 namespace fea {
-FEA_STRING_ENUM(
-		iso_639_scope, uint8_t, individual, macrolanguage, special, count);
+enum class iso_639_scope : uint8_t {
+	individual,
+	macrolanguage,
+	special,
+	count,
+};
 
-FEA_STRING_ENUM(iso_639_type, uint8_t, ancient, constructed, extinct,
-		historical, living, special, count);
+enum class iso_639_type : uint8_t {
+	ancient,
+	constructed,
+	extinct,
+	historical,
+	living,
+	special,
+	count,
+};
 
-FEA_STRING_ENUM(iso_639_status, uint8_t, active, deprecated, count);
+enum class iso_639_status : uint8_t {
+	active,
+	deprecated,
+	count,
+};
 
-FEA_STRING_ENUM(iso_639_deprecation_reason, uint8_t, change, duplicate,
-		non_existent, split, merge, count);
-
-// enum class iso_639_scope : uint8_t {
-//	individual,
-//	macrolanguage,
-//	special,
-//	count,
-//};
-
-// enum class iso_639_type : uint8_t {
-//	ancient,
-//	constructed,
-//	extinct,
-//	historical,
-//	living,
-//	special,
-//	count,
-//};
-
-// enum class iso_639_status : uint8_t {
-//	active,
-//	deprecated,
-//	count,
-//};
-
-// enum class iso_639_deprecation_reason : uint8_t {
-//	change,
-//	duplicate,
-//	non_existent,
-//	split,
-//	merge,
-//	count,
-//};
+enum class iso_639_deprecation_reason : uint8_t {
+	change,
+	duplicate,
+	non_existent,
+	split,
+	merge,
+	count,
+};
 
 // Runtime id type.
-struct iso_639_id_t {
-	using id_t = uint16_t;
-	id_t id = (std::numeric_limits<id_t>::max)();
-};
+using iso_639_id_t = uint16_t;
 
 // ISO 639 language description.
 struct iso_639_lang {
@@ -106,11 +92,11 @@ struct iso_639_lang {
 
 	// The runtime id of this language, for faster access.
 	// Never, ever, serialize this id.
-	iso_639_id_t runtime_id{};
+	iso_639_id_t runtime_id = (std::numeric_limits<uint16_t>::max)();
 
 	// Runtime id of parent macro-language,
 	// if applicable. Default initialized id otherwise.
-	iso_639_id_t parent_macro_id{};
+	iso_639_id_t parent_macro_id = (std::numeric_limits<uint16_t>::max)();
 
 	// Codes
 

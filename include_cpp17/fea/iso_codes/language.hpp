@@ -46,36 +46,52 @@ Codes attribution : https://www.iso639-3.sil.org
 */
 
 namespace fea {
-
-inline uint16_t compress_3char_code(std::string_view code) {
-	struct compress_t {
-		uint16_t ch1 : 5;
-		uint16_t ch2 : 5;
-		uint16_t ch3 : 5;
-		uint16_t unused : 1 = 0;
-	};
-	static_assert(sizeof(compress_t) == 2, "");
-
-	compress_t comp{
-		uint16_t(code[0] - 'a'),
-		uint16_t(code[1] - 'a'),
-		uint16_t(code[2] - 'a'),
-	};
-	return *reinterpret_cast<uint16_t*>(&comp);
+namespace detail {
+constexpr inline uint16_t compress_3char_code(std::string_view code) {
+	assert(code.size() == 3);
+	return uint16_t(code[2] - 'a') << 10 | uint16_t(code[1] - 'a') << 5
+			| uint16_t(code[0] - 'a');
 }
 
-inline uint16_t compress_2char_code(std::string_view code) {
-	struct compress_t {
-		uint16_t ch1 : 5;
-		uint16_t ch2 : 5;
-		uint16_t unused : 6 = 0;
-	};
-	static_assert(sizeof(compress_t) == 2, "");
+constexpr inline uint16_t compress_2char_code(std::string_view code) {
+	assert(code.size() == 2);
+	return uint16_t(code[1] - 'a') << 5 | uint16_t(code[0] - 'a');
+}
+} // namespace detail
 
-	compress_t comp{
-		uint16_t(code[0] - 'a'),
-		uint16_t(code[1] - 'a'),
-	};
-	return *reinterpret_cast<uint16_t*>(&comp);
+// Returns the language associated with the provided ISO 639-3 code.
+// Code must be 3 characters and lowercase.
+inline const iso_639_lang& iso_639_3_lookup(std::string_view code) {
+	uint16_t idx
+			= detail::iso_639_3_code_to_id[detail::compress_3char_code(code)];
+	assert(idx != (std::numeric_limits<uint16_t>::max)());
+	return detail::iso_639_languages[idx];
+}
+
+// Returns the language associated with the provided ISO 639-2b code.
+// Code must be 3 characters and lowercase.
+inline const iso_639_lang& iso_639_2b_lookup(std::string_view code) {
+	uint16_t idx
+			= detail::iso_639_2b_code_to_id[detail::compress_3char_code(code)];
+	assert(idx != (std::numeric_limits<uint16_t>::max)());
+	return detail::iso_639_languages[idx];
+}
+
+// Returns the language associated with the provided ISO 639-2t code.
+// Code must be 3 characters and lowercase.
+inline const iso_639_lang& iso_639_2t_lookup(std::string_view code) {
+	uint16_t idx
+			= detail::iso_639_2t_code_to_id[detail::compress_3char_code(code)];
+	assert(idx != (std::numeric_limits<uint16_t>::max)());
+	return detail::iso_639_languages[idx];
+}
+
+// Returns the language associated with the provided ISO 639-1 code.
+// Code must be 2 characters and lowercase.
+inline const iso_639_lang& iso_639_1_lookup(std::string_view code) {
+	uint16_t idx
+			= detail::iso_639_1_code_to_id[detail::compress_2char_code(code)];
+	assert(idx != (std::numeric_limits<uint16_t>::max)());
+	return detail::iso_639_languages[idx];
 }
 } // namespace fea
