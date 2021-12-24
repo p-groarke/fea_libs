@@ -1,3 +1,6 @@
+#include <version>
+#if defined(__cpp_lib_to_chars)
+
 #include <array>
 #include <charconv>
 #include <cstdio>
@@ -602,3 +605,4 @@ TEST(blog, mini_lang) {
 	runtime rt;
 	rt.run(script);
 }
+#endif
