@@ -41,9 +41,11 @@
 #include <intrin.h>
 
 #pragma intrinsic(_BitScanForward)
-#pragma intrinsic(_BitScanForward64)
 #pragma intrinsic(_BitScanReverse)
+#if FEA_ARCH == 64
+#pragma intrinsic(_BitScanForward64)
 #pragma intrinsic(_BitScanReverse64)
+#endif
 #endif
 
 /*
@@ -170,11 +172,15 @@ size_t countl_zero(T val) {
 		ret = __builtin_clzl(ulong_val);
 #endif
 	} else {
+#if FEA_ARCH == 64
 #if FEA_WINDOWS
 		_BitScanReverse64(&ret, ulong_val);
 		ret = 63 - ret;
 #else
 		ret = __builtin_clzll(ulong_val);
+#endif
+#else
+		ret = 64;
 #endif
 	}
 
@@ -205,10 +211,14 @@ size_t countr_zero(T val) {
 		ret = __builtin_ctzl(ulong_val);
 #endif
 	} else {
+#if FEA_ARCH == 64
 #if FEA_WINDOWS
 		_BitScanForward64(&ret, ulong_val);
 #else
 		ret = __builtin_ctzll(ulong_val);
+#endif
+#else
+		ret = 64;
 #endif
 	}
 

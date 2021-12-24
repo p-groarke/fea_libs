@@ -8,8 +8,16 @@
 #include <array>
 #include <cassert>
 #include <functional>
-#include <tbb/parallel_for.h>
 #include <vector>
+
+#if FEA_WINDOWS
+#pragma warning(push)
+#pragma warning(disable : 4459)
+#include <tbb/parallel_for.h>
+#pragma warning(pop)
+#else
+#include <tbb/parallel_for.h>
+#endif
 
 /*
 utility_ai stores predicates and actions as "functions" and executes the highest

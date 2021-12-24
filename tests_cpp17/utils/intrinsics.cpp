@@ -100,8 +100,10 @@ TEST(intrinsics, count_bits) {
 				[&](auto val) {
 					using T = decltype(val);
 					constexpr size_t bit_size = sizeof(T) * 8;
-					EXPECT_EQ(i, fea::countr_zero(val));
-					EXPECT_EQ(bit_size - 1 - i, fea::countl_zero(val));
+					if constexpr (bit_size <= fea::arch) {
+						EXPECT_EQ(i, fea::countr_zero(val));
+						EXPECT_EQ(bit_size - 1 - i, fea::countl_zero(val));
+					}
 				},
 				t);
 	}
@@ -114,10 +116,9 @@ TEST(intrinsics, count_bits) {
 				[&](auto val) {
 					using T = decltype(val);
 					constexpr size_t bit_size = sizeof(T) * 8;
-					EXPECT_EQ(i, fea::countr_zero(val));
-					EXPECT_EQ(bit_size - 4 - i, fea::countl_zero(val));
-					if (bit_size - 4 - i != fea::countl_zero(val)) {
-						printf("Asdf");
+					if constexpr (bit_size <= fea::arch) {
+						EXPECT_EQ(i, fea::countr_zero(val));
+						EXPECT_EQ(bit_size - 4 - i, fea::countl_zero(val));
 					}
 				},
 				t);

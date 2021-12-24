@@ -151,7 +151,7 @@ TEST(string, size) {
 			constexpr size_t i = const_i;
 
 			const auto& test_str = std::get<i>(tests);
-			EXPECT_EQ(0, fea::size(test_str));
+			EXPECT_EQ(0u, fea::size(test_str));
 		});
 	}
 	{
@@ -162,7 +162,7 @@ TEST(string, size) {
 			constexpr size_t i = const_i;
 
 			const auto& test_str = std::get<i>(tests);
-			EXPECT_EQ(1, fea::size(test_str));
+			EXPECT_EQ(1u, fea::size(test_str));
 		});
 	}
 	{
@@ -173,7 +173,7 @@ TEST(string, size) {
 			constexpr size_t i = const_i;
 
 			const auto& test_str = std::get<i>(tests);
-			EXPECT_EQ(7, fea::size(test_str));
+			EXPECT_EQ(7u, fea::size(test_str));
 		});
 	}
 }

@@ -34,15 +34,24 @@
 #pragma once
 #include "fea/maps/unsigned_map.hpp"
 #include "fea/meta/tuple.hpp"
+#include "fea/utils/platform.hpp"
 
 #include <algorithm>
 #include <cassert>
 #include <functional>
 #include <limits>
-#include <tbb/parallel_for.h>
 #include <tuple>
 #include <type_traits>
 #include <utility>
+
+#if FEA_WINDOWS
+#pragma warning(push)
+#pragma warning(disable : 4459)
+#include <tbb/parallel_for.h>
+#pragma warning(pop)
+#else
+#include <tbb/parallel_for.h>
+#endif
 
 
 /*
@@ -107,8 +116,8 @@ private:
 			fea::unsigned_map<size_t, std::function<FuncTypes>>...>;
 
 	// Stores the counters to generate ids.
-	using id_gen_tuple_t = decltype(
-			fea::make_tuple_from_count<size_t, sizeof...(FuncTypes)>());
+	using id_gen_tuple_t = decltype(fea::make_tuple_from_count<size_t,
+			sizeof...(FuncTypes)>());
 
 	// Event tuple must be size 'count'.
 	static_assert(
