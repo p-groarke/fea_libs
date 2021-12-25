@@ -40,7 +40,7 @@ TEST(intrinsics, to_unsigned) {
 		fea::tuple_for_each(
 				[](auto v) {
 					auto recieved = fea::to_unsigned(v);
-					auto recievedpack = fea::to_unsigned(v);
+					auto recievedpack = fea::to_unsigned_pack_left(v);
 
 					using orig_t = decltype(v);
 					using T = decltype(recieved);
