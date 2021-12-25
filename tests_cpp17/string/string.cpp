@@ -374,9 +374,9 @@ TEST(string, lexicographical_compare) {
 		"been", "Benefit", "Bent", "Bob", "bobby" };
 
 	std::sort(vec.begin(), vec.end());
-	// for (const auto& str : vec) {
-	//	printf("%s\n", str.data.c_str());
-	//}
+	for (const auto& str : vec) {
+		printf("%s\n", str.data.c_str());
+	}
 	EXPECT_EQ(answer, vec);
 }
 #endif
