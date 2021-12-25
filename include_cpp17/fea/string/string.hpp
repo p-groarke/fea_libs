@@ -46,6 +46,10 @@
 #include <string_view>
 #include <vector>
 
+#if FEA_CPP20
+#include <compare>
+#endif
+
 /*
 Various helper functions for strings.
 TODO : Integrate std::string_view.
