@@ -106,9 +106,9 @@ T make_bitmask(size_t bit_count, size_t lsb_pos = 0) {
 	return ret;
 }
 
-// Casts the type to fit in unsigned long or unsigned long long.
+// Casts the type to fit in uint32_t or uint64_t.
 template <class T>
-constexpr auto to_u32(T t) noexcept {
+constexpr auto to_unsigned(T t) noexcept {
 	static_assert(std::is_integral_v<T>, "to_ulong : expects integral types");
 
 	if constexpr (sizeof(T) <= 4) {
@@ -121,11 +121,11 @@ constexpr auto to_u32(T t) noexcept {
 	}
 }
 
-// Casts the type to fit in unsigned long or unsigned long long.
+// Casts the type to fit in uint32_t or uint64_t.
 // If the type size is smaller than the target long, shifts to MSB (left).
 template <class T>
-constexpr auto to_u32_packleft(T t) noexcept {
-	auto ret = to_u32(t);
+constexpr auto to_unsigned_pack_left(T t) noexcept {
+	auto ret = to_unsigned(t);
 
 	if constexpr (sizeof(T) < 4) {
 		constexpr size_t diff = 32 - sizeof(T) * 8;
@@ -162,7 +162,7 @@ size_t countl_zero(T val) {
 		return ret;
 	}
 
-	auto uval = fea::to_u32_packleft(val);
+	auto uval = fea::to_unsigned_pack_left(val);
 	unsigned long ret;
 
 	if constexpr (sizeof(uval) == 4) {
@@ -202,7 +202,7 @@ size_t countr_zero(T val) {
 		return ret;
 	}
 
-	auto uval = fea::to_u32(val);
+	auto uval = fea::to_unsigned(val);
 	unsigned long ret;
 
 	if constexpr (sizeof(uval) == 4) {

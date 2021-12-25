@@ -11,61 +11,61 @@ on:
   # BUILD_TYPE: Release, Debug
 
 jobs:
-  MSVC:
-    runs-on: windows-latest
-    strategy:
-      fail-fast: true
-      matrix:
-        # os: [windows-latest] # [ubuntu-20.04, ubuntu-18.04, windows-2019, windows-2016, macos-11, macos-10.15]
-        build_type: [Release, Debug]
-        build_arch: [x64, Win32]
-        config:
-          - { toolset_ver: "v142", fea_ver: "-DFEA_CPP20=On" }
-          - { toolset_ver: "v142", fea_ver: "-DFEA_CPP17=On" }
-          - { toolset_ver: "v142", fea_ver: "-DFEA_CPP14=On" }
-          - { toolset_ver: "v141", fea_ver: "-DFEA_CPP17=On" }
-          - { toolset_ver: "v141", fea_ver: "-DFEA_CPP14=On" }
-          # v140 isn't supported (c++11 only)
+  # MSVC:
+  #   runs-on: windows-latest
+  #   strategy:
+  #     fail-fast: true
+  #     matrix:
+  #       # os: [windows-latest] # [ubuntu-20.04, ubuntu-18.04, windows-2019, windows-2016, macos-11, macos-10.15]
+  #       build_type: [Release, Debug]
+  #       build_arch: [x64, Win32]
+  #       config:
+  #         - { toolset_ver: "v142", fea_ver: "-DFEA_CPP20=On" }
+  #         - { toolset_ver: "v142", fea_ver: "-DFEA_CPP17=On" }
+  #         - { toolset_ver: "v142", fea_ver: "-DFEA_CPP14=On" }
+  #         - { toolset_ver: "v141", fea_ver: "-DFEA_CPP17=On" }
+  #         - { toolset_ver: "v141", fea_ver: "-DFEA_CPP14=On" }
+  #         # v140 isn't supported (c++11 only)
 
-    steps:
-    - name: Git Line Endings
-      run: |
-        git config --global core.autocrlf false
+  #   steps:
+  #   - name: Git Line Endings
+  #     run: |
+  #       git config --global core.autocrlf false
 
-    - uses: actions/checkout@v2
+  #   - uses: actions/checkout@v2
 
-    - name: Install Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.7'
-        architecture: 'x64' # optional, x86
+  #   - name: Install Python
+  #     uses: actions/setup-python@v2
+  #     with:
+  #       python-version: '3.7'
+  #       architecture: 'x64' # optional, x86
 
-    - name: Install Conan
-      run: |
-        python --version
-        pip install conan
-        conan user
-        conan --version
-        conan profile new default --detect
+  #   - name: Install Conan
+  #     run: |
+  #       python --version
+  #       pip install conan
+  #       conan user
+  #       conan --version
+  #       conan profile new default --detect
 
-    - name: Configure
-      run: |
-        cd ${{github.workspace}}
-        mkdir build
-        cd build
-        cmake .. -T ${{ matrix.config.toolset_ver }} -A ${{ matrix.build_arch }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.config.fea_ver }}
+  #   - name: Configure
+  #     run: |
+  #       cd ${{github.workspace}}
+  #       mkdir build
+  #       cd build
+  #       cmake .. -T ${{ matrix.config.toolset_ver }} -A ${{ matrix.build_arch }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.config.fea_ver }}
 
-    - name: Build
-      run: |
-        cd ${{github.workspace}}/build
-        cmake --build . --config ${{ matrix.build_type }}
+  #   - name: Build
+  #     run: |
+  #       cd ${{github.workspace}}/build
+  #       cmake --build . --config ${{ matrix.build_type }}
 
-    - name: Test
-      # working-directory: ${{github.workspace}}/build
-      run: |
-        cd ${{github.workspace}}/build
-        ./bin/fea_libs_tests
-        ./bin/fea_libs_nothrow_tests
+  #   - name: Test
+  #     # working-directory: ${{github.workspace}}/build
+  #     run: |
+  #       cd ${{github.workspace}}/build
+  #       ./bin/fea_libs_tests
+  #       ./bin/fea_libs_nothrow_tests
 
 
   Clang:
@@ -76,12 +76,12 @@ jobs:
         build_type: [Release, Debug]
         config:
           - { xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP20=On" }
-          - { xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP17=On" }
-          - { xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP14=On" }
-          - { xcode_ver: "12.4", fea_ver: "-DFEA_CPP17=On" }
-          - { xcode_ver: "12.4", fea_ver: "-DFEA_CPP14=On" }
-          - { xcode_ver: "11.7", fea_ver: "-DFEA_CPP17=On" }
-          - { xcode_ver: "11.7", fea_ver: "-DFEA_CPP14=On" }
+          # - { xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP17=On" }
+          # - { xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP14=On" }
+          # - { xcode_ver: "12.4", fea_ver: "-DFEA_CPP17=On" }
+          # - { xcode_ver: "12.4", fea_ver: "-DFEA_CPP14=On" }
+          # - { xcode_ver: "11.7", fea_ver: "-DFEA_CPP17=On" }
+          # - { xcode_ver: "11.7", fea_ver: "-DFEA_CPP14=On" }
 
     steps:
     - name: Git Line Endings
@@ -128,68 +128,68 @@ jobs:
         ./bin/fea_libs_nothrow_tests
 
 
-  Gcc:
-    runs-on: ${{ matrix.config.os }}
-    strategy:
-      fail-fast: true
-      matrix:
-        build_type: [Release, Debug]
-        # build_arch: [x64, x86]
-        config:
-          - { os: ubuntu-20.04, gcc_ver: "10", fea_ver: "-DFEA_CPP17=On" }
-          - { os: ubuntu-20.04, gcc_ver: "10", fea_ver: "-DFEA_CPP14=On" }
-          - { os: ubuntu-20.04, gcc_ver: "9", fea_ver: "-DFEA_CPP17=On" }
-          - { os: ubuntu-20.04, gcc_ver: "9", fea_ver: "-DFEA_CPP14=On" }
-          - { os: ubuntu-18.04, gcc_ver: "7", fea_ver: "-DFEA_CPP14=On" }
+  # Gcc:
+  #   runs-on: ${{ matrix.config.os }}
+  #   strategy:
+  #     fail-fast: true
+  #     matrix:
+  #       build_type: [Release, Debug]
+  #       # build_arch: [x64, x86]
+  #       config:
+  #         - { os: ubuntu-20.04, gcc_ver: "10", fea_ver: "-DFEA_CPP17=On" }
+  #         - { os: ubuntu-20.04, gcc_ver: "10", fea_ver: "-DFEA_CPP14=On" }
+  #         - { os: ubuntu-20.04, gcc_ver: "9", fea_ver: "-DFEA_CPP17=On" }
+  #         - { os: ubuntu-20.04, gcc_ver: "9", fea_ver: "-DFEA_CPP14=On" }
+  #         - { os: ubuntu-18.04, gcc_ver: "7", fea_ver: "-DFEA_CPP14=On" }
 
-    steps:
-    - name: Git Line Endings
-      run: |
-        git config --global core.autocrlf false
+  #   steps:
+  #   - name: Git Line Endings
+  #     run: |
+  #       git config --global core.autocrlf false
 
-    - uses: actions/checkout@v2
+  #   - uses: actions/checkout@v2
 
-    # - name: Install Gcc
-    #   uses: egor-tensin/setup-gcc@v1
-    #   with:
-    #     version: ${{ matrix.config.gcc_ver }}
-    #     platform: ${{ matrix.build_arch }}
+  #   # - name: Install Gcc
+  #   #   uses: egor-tensin/setup-gcc@v1
+  #   #   with:
+  #   #     version: ${{ matrix.config.gcc_ver }}
+  #   #     platform: ${{ matrix.build_arch }}
 
-    - name: Install Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.7'
-        architecture: 'x64' # optional, x86
+  #   - name: Install Python
+  #     uses: actions/setup-python@v2
+  #     with:
+  #       python-version: '3.7'
+  #       architecture: 'x64' # optional, x86
 
-    - name: Install Conan
-      env:
-        CC: gcc-${{ matrix.config.gcc_ver }}
-        CXX: g++-${{ matrix.config.gcc_ver }}
-      run: |
-        python --version
-        pip install conan
-        conan user
-        conan --version
-        conan profile new default --detect
-        conan profile update settings.compiler.libcxx=libstdc++11 default
+  #   - name: Install Conan
+  #     env:
+  #       CC: gcc-${{ matrix.config.gcc_ver }}
+  #       CXX: g++-${{ matrix.config.gcc_ver }}
+  #     run: |
+  #       python --version
+  #       pip install conan
+  #       conan user
+  #       conan --version
+  #       conan profile new default --detect
+  #       conan profile update settings.compiler.libcxx=libstdc++11 default
 
-    - name: Configure
-      env:
-        CC: gcc-${{ matrix.config.gcc_ver }}
-        CXX: g++-${{ matrix.config.gcc_ver }}
-      run: |
-        cd ${{github.workspace}}
-        mkdir build
-        cd build
-        cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.config.fea_ver }}
+  #   - name: Configure
+  #     env:
+  #       CC: gcc-${{ matrix.config.gcc_ver }}
+  #       CXX: g++-${{ matrix.config.gcc_ver }}
+  #     run: |
+  #       cd ${{github.workspace}}
+  #       mkdir build
+  #       cd build
+  #       cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.config.fea_ver }}
 
-    - name: Build
-      run: |
-        cd ${{github.workspace}}/build
-        cmake --build . --config ${{ matrix.build_type }}
+  #   - name: Build
+  #     run: |
+  #       cd ${{github.workspace}}/build
+  #       cmake --build . --config ${{ matrix.build_type }}
 
-    - name: Test
-      run: |
-        cd ${{github.workspace}}/build
-        ./bin/fea_libs_tests
-        ./bin/fea_libs_nothrow_tests
+  #   - name: Test
+  #     run: |
+  #       cd ${{github.workspace}}/build
+  #       ./bin/fea_libs_tests
+  #       ./bin/fea_libs_nothrow_tests

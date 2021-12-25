@@ -33,14 +33,14 @@ TEST(intrinsics, make_bitmask) {
 			t);
 }
 
-TEST(intrinsics, to_u32) {
+TEST(intrinsics, to_unsigned) {
 	// Checks that casted types are correct.
 	{
 		constexpr auto t = gen_tup(42);
 		fea::tuple_for_each(
 				[](auto v) {
-					auto recieved = fea::to_u32(v);
-					auto recievedpack = fea::to_u32_packleft(v);
+					auto recieved = fea::to_unsigned(v);
+					auto recievedpack = fea::to_unsigned(v);
 
 					using orig_t = decltype(v);
 					using T = decltype(recieved);
