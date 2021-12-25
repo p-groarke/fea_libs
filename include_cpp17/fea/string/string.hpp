@@ -199,7 +199,7 @@ template <class CharT>
 }
 
 template <class CharT>
-[[nodiscard]] constexpr std::basic_string<CharT> to_lower(
+[[nodiscard]] std::basic_string<CharT> to_lower(
 		const std::basic_string<CharT>& str) {
 	auto ret = str;
 	std::transform(ret.begin(), ret.end(), ret.begin(),
@@ -218,18 +218,18 @@ template <class CharT>
 // Lower-case passed in string.
 // No copies.
 template <class CharT>
-constexpr void to_lower_inplace(std::basic_string<CharT>& out) {
+void to_lower_inplace(std::basic_string<CharT>& out) {
 	std::transform(out.begin(), out.end(), out.begin(),
 			[](auto c) { return std::tolower(c, std::locale()); });
 }
-inline constexpr void to_lower_inplace(std::vector<uint8_t>& out) {
+inline void to_lower_inplace(std::vector<uint8_t>& out) {
 	std::transform(out.begin(), out.end(), out.begin(),
 			[](auto c) { return uint8_t(std::tolower(int(c))); });
 }
 
 
 template <class CharT>
-[[nodiscard]] constexpr std::basic_string<CharT> to_upper(
+[[nodiscard]] std::basic_string<CharT> to_upper(
 		const std::basic_string<CharT>& str) {
 	auto ret = str;
 	std::transform(ret.begin(), ret.end(), ret.begin(),
@@ -238,7 +238,7 @@ template <class CharT>
 }
 
 template <class CharT>
-constexpr void to_upper_inplace(std::basic_string<CharT>& out) {
+void to_upper_inplace(std::basic_string<CharT>& out) {
 	std::transform(out.begin(), out.end(), out.begin(),
 			[](auto c) { return CharT(::toupper(c)); });
 }
@@ -251,7 +251,7 @@ constexpr void to_upper_inplace(std::basic_string<CharT>& out) {
 	return ret;
 }
 
-inline constexpr void to_upper_inplace(std::vector<uint8_t>& out) {
+inline void to_upper_inplace(std::vector<uint8_t>& out) {
 	std::transform(out.begin(), out.end(), out.begin(),
 			[](char c) { return char(::tolower(c)); });
 }
