@@ -68,14 +68,14 @@ struct potato {
 // In a header far-far-away.
 struct VectorPotatoDescription {
 	using container = std::vector<float>;
-	static constexpr bool stack_optim = true;
-	static constexpr size_t num_elements = 10;
+	[[maybe_unused]] static constexpr bool stack_optim = true;
+	[[maybe_unused]] static constexpr size_t num_elements = 10;
 	using some_var_args = std::tuple<int, int, float>;
 	static inline const std::string name = "vector_potato";
 };
 
 // Later on...
-potato<VectorPotatoDescription> p;
+[[maybe_unused]] potato<VectorPotatoDescription> p;
 
 TEST(playground, cpp20) {
 	// deserializer<std::vector, vec3, float, float, float> vec3_deserializer;
