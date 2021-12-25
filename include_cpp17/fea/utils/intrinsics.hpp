@@ -116,7 +116,8 @@ constexpr auto to_ulong(T t) noexcept {
 	} else if constexpr (sizeof(T) <= 8) {
 		return static_cast<unsigned long long>(t);
 	} else {
-		static_assert(false, "houston we have a problem");
+		// someday...
+		return static_cast<unsigned long long>(t);
 	}
 }
 
