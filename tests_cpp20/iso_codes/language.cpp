@@ -1,6 +1,4 @@
 #include <fea/iso_codes/language.hpp>
-
-#if FEA_ARCH >= 64
 #include <gtest/gtest.h>
 
 namespace {
@@ -36,4 +34,3 @@ TEST(language, basics) {
 	}
 }
 } // namespace
-#endif

@@ -15,7 +15,7 @@ namespace {
 // Parses the iso 639 dataset and generates a header.
 // Expects dataset to be in bin folder, named :
 // 'iso-639-3_Code_Tables_dddddddd/'
-#if 0 && FEA_ARCH >= 64
+#if 0
 const std::string file_header = R"xx(
 /**
  * BSD 3-Clause License
@@ -51,9 +51,6 @@ const std::string file_header = R"xx(
  **/
 
 #pragma once
-#include "fea/utils/platform.hpp"
-
-#if FEA_ARCH >= 64
 #include "fea/iso_codes/language_types.hpp"
 
 #include <array>
@@ -68,7 +65,6 @@ namespace detail {
 const std::string file_footer = R"xx(
 } // namespace detail
 } // namespace fea
-#endif
 )xx";
 
 struct lang {
@@ -78,8 +74,10 @@ struct lang {
 	fea::iso_639_deprecation_reason reason
 			= fea::iso_639_deprecation_reason::count;
 
-	uint16_t runtime_id = (std::numeric_limits<uint16_t>::max)();
-	uint16_t parent_macro_id = (std::numeric_limits<uint16_t>::max)();
+	fea::iso_639_id_t runtime_id
+			= (std::numeric_limits<fea::iso_639_id_t>::max)();
+	fea::iso_639_id_t parent_macro_id
+			= (std::numeric_limits<fea::iso_639_id_t>::max)();
 
 	std::string code_3;
 	std::string code_2b;
@@ -213,7 +211,7 @@ std::unordered_map<std::string, lang> parse_main(
 	std::unordered_map<std::string, lang> ret;
 	ret.reserve(10000);
 
-	uint16_t runtime_index = 0;
+	fea::iso_639_id_t runtime_index = 0;
 	fea::for_each_line(main_file, [&](const std::string& line) {
 		if (skip_first) {
 			skip_first = false;
@@ -333,7 +331,7 @@ void parse_retirements(const std::filesystem::path& path,
 	// First row is title.
 	bool skip_first = true;
 
-	uint16_t runtime_index = uint16_t(map.size());
+	fea::iso_639_id_t runtime_index = fea::iso_639_id_t(map.size());
 	fea::for_each_line(text, [&](const std::string& line) {
 		if (skip_first) {
 			skip_first = false;
@@ -580,45 +578,27 @@ void gen_header(const std::filesystem::path& path,
 		assert(size_t(langs_vec[i].runtime_id) == i);
 	}
 
-	auto output_enum = [&](auto e) {
-		std::string e_name = typeid(e).name();
-		e_name = e_name.substr(5);
-		ofs << e_name << "::" << to_string(e) << ",";
-		// ofs << "\t\t" << e_name << "::" << to_string(e) << "," << std::endl;
-	};
-
-	auto output_string = [&](const std::string& str) {
-		ofs << "\"" << str << "\",";
-		// ofs << "\t\t\"" << str << "\"," << std::endl;
-	};
-
-	auto output_id = [&](uint16_t id) {
-		static_assert(std::is_same_v<fea::iso_639_id_t, uint16_t>,
-				"Need to update this function.");
-		ofs << "uint16_t(" << std::to_string(id) << "),";
-		// ofs << "\t\tfea::iso_639_id_t(" << std::to_string(id) << "),"
-		//	<< std::endl;
-	};
-
-	std::vector<uint16_t> code3_to_id;
-	std::vector<uint16_t> code2b_to_id;
-	std::vector<uint16_t> code2t_to_id;
-	std::vector<uint16_t> code1_to_id;
+	std::vector<fea::iso_639_id_t> code3_to_id;
+	std::vector<fea::iso_639_id_t> code2b_to_id;
+	std::vector<fea::iso_639_id_t> code2t_to_id;
+	std::vector<fea::iso_639_id_t> code1_to_id;
 
 	code3_to_id.reserve(32'768);
 	code2b_to_id.reserve(32'768);
 	code2t_to_id.reserve(32'768);
 	code1_to_id.reserve(1024);
 
+	// Build id arrays.
 	for (const lang& l : langs_vec) {
 		// code3
 		{
 			uint16_t idx = fea::detail::compress_3char_code(l.code_3);
 			if (code3_to_id.size() <= size_t(idx)) {
 				code3_to_id.resize(size_t(idx) + 1,
-						(std::numeric_limits<uint16_t>::max)());
+						(std::numeric_limits<fea::iso_639_id_t>::max)());
 			}
-			assert(code3_to_id[idx] == (std::numeric_limits<uint16_t>::max)());
+			assert(code3_to_id[idx]
+					== (std::numeric_limits<fea::iso_639_id_t>::max)());
 			code3_to_id[idx] = l.runtime_id;
 		}
 
@@ -627,9 +607,10 @@ void gen_header(const std::filesystem::path& path,
 			uint16_t idx = fea::detail::compress_3char_code(l.code_2b);
 			if (code2b_to_id.size() <= size_t(idx)) {
 				code2b_to_id.resize(size_t(idx) + 1,
-						(std::numeric_limits<uint16_t>::max)());
+						(std::numeric_limits<fea::iso_639_id_t>::max)());
 			}
-			assert(code2b_to_id[idx] == (std::numeric_limits<uint16_t>::max)());
+			assert(code2b_to_id[idx]
+					== (std::numeric_limits<fea::iso_639_id_t>::max)());
 			code2b_to_id[idx] = l.runtime_id;
 		}
 
@@ -638,9 +619,10 @@ void gen_header(const std::filesystem::path& path,
 			uint16_t idx = fea::detail::compress_3char_code(l.code_2t);
 			if (code2t_to_id.size() <= size_t(idx)) {
 				code2t_to_id.resize(size_t(idx) + 1,
-						(std::numeric_limits<uint16_t>::max)());
+						(std::numeric_limits<fea::iso_639_id_t>::max)());
 			}
-			assert(code2t_to_id[idx] == (std::numeric_limits<uint16_t>::max)());
+			assert(code2t_to_id[idx]
+					== (std::numeric_limits<fea::iso_639_id_t>::max)());
 			code2t_to_id[idx] = l.runtime_id;
 		}
 
@@ -649,13 +631,46 @@ void gen_header(const std::filesystem::path& path,
 			uint16_t idx = fea::detail::compress_2char_code(l.code_1);
 			if (code1_to_id.size() <= size_t(idx)) {
 				code1_to_id.resize(size_t(idx) + 1,
-						(std::numeric_limits<uint16_t>::max)());
+						(std::numeric_limits<fea::iso_639_id_t>::max)());
 			}
-			assert(code1_to_id[idx] == (std::numeric_limits<uint16_t>::max)());
+			assert(code1_to_id[idx]
+					== (std::numeric_limits<fea::iso_639_id_t>::max)());
 			code1_to_id[idx] = l.runtime_id;
 		}
 	}
 
+
+	// Output helpers.
+	auto output_enum = [&](auto e) {
+		std::string e_name = typeid(e).name();
+		e_name = e_name.substr(10); // remove 'enum ' and 'fea::'
+		ofs << e_name << "::" << to_string(e) << ",";
+	};
+
+	auto output_string
+			= [&](const std::string& str) { ofs << "\"" << str << "\","; };
+
+	auto output_id = [&](fea::iso_639_id_t id) {
+		ofs << "" << std::to_string(id) << ",";
+		// ofs << "uint16_t(" << std::to_string(id) << "),";
+	};
+
+	auto output_id_array = [&](const std::string& arr_name,
+								   const std::vector<fea::iso_639_id_t>& vec) {
+		ofs << "inline constexpr std::array<iso_639_id_t, ";
+		ofs << std::to_string(vec.size());
+		ofs << "> " << arr_name << "{" << std::endl;
+		size_t num = 0;
+		for (fea::iso_639_id_t idx : vec) {
+			if (num == 30) {
+				ofs << std::endl;
+				num = 0;
+			}
+			output_id(idx);
+			++num;
+		}
+		ofs << std::endl << "};" << std::endl;
+	};
 
 	// Start output.
 	ofs << file_header;
@@ -666,14 +681,22 @@ void gen_header(const std::filesystem::path& path,
 	// Main language array.
 	// Indexed at runtime index.
 	constexpr size_t lang_size = sizeof(fea::iso_639_lang);
+#if FEA_ARCH == 32
+	static_assert(lang_size == 72,
+			"The object to serialize has changed size. You probably need to "
+			"update this function.");
+#else
 	static_assert(lang_size == 136,
 			"The object to serialize has changed size. You probably need to "
 			"update this function.");
+#endif
 
-	ofs << "inline constexpr auto iso_639_languages = std::array{" << std::endl;
+	ofs << "inline constexpr std::array<iso_639_lang, ";
+	ofs << std::to_string(langs_vec.size());
+	ofs << "> iso_639_languages{" << std::endl;
 	for (const lang& l : langs_vec) {
-		// const lang& l = p.second;
 		ofs << "iso_639_lang{";
+		// ofs << "{";
 
 		output_enum(l.scope);
 		output_enum(l.type);
@@ -700,36 +723,10 @@ void gen_header(const std::filesystem::path& path,
 
 
 	// 3 code to id.
-	ofs << "inline constexpr auto iso_639_3_code_to_id = std::array{"
-		<< std::endl;
-	for (uint16_t idx : code3_to_id) {
-		output_id(idx);
-	}
-	ofs << std::endl << "};" << std::endl;
-
-	// 2b code to id.
-	ofs << "inline constexpr auto iso_639_2b_code_to_id = std::array{"
-		<< std::endl;
-	for (uint16_t idx : code2b_to_id) {
-		output_id(idx);
-	}
-	ofs << std::endl << "};" << std::endl;
-
-	// 2t code to id.
-	ofs << "inline constexpr auto iso_639_2t_code_to_id = std::array{"
-		<< std::endl;
-	for (uint16_t idx : code2t_to_id) {
-		output_id(idx);
-	}
-	ofs << std::endl << "};" << std::endl;
-
-	// 1 code to id.
-	ofs << "inline constexpr auto iso_639_1_code_to_id = std::array{"
-		<< std::endl;
-	for (uint16_t idx : code1_to_id) {
-		output_id(idx);
-	}
-	ofs << std::endl << "};" << std::endl;
+	output_id_array("iso_639_3_code_to_id", code3_to_id);
+	output_id_array("iso_639_2b_code_to_id", code2b_to_id);
+	output_id_array("iso_639_2t_code_to_id", code2t_to_id);
+	output_id_array("iso_639_1_code_to_id", code1_to_id);
 
 	ofs << file_footer;
 }

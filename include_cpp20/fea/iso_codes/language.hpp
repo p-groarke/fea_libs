@@ -32,9 +32,6 @@
  **/
 
 #pragma once
-#include "fea/utils/platform.hpp"
-
-#if FEA_ARCH >= 64
 #include "fea/iso_codes/language_database.hpp"
 
 #include <array>
@@ -98,4 +95,3 @@ inline const iso_639_lang& iso_639_1_lookup(std::string_view code) {
 	return detail::iso_639_languages[idx];
 }
 } // namespace fea
-#endif
