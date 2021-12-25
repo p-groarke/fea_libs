@@ -170,7 +170,7 @@ size_t countl_zero(T val) {
 		_BitScanReverse(&ret, ulong_val);
 		ret = 31 - ret;
 #else
-		ret = __builtin_clzl(ulong_val);
+		ret = __builtin_clz(int(ulong_val));
 #endif
 	} else {
 #if FEA_ARCH == 64
@@ -209,7 +209,7 @@ size_t countr_zero(T val) {
 #if FEA_WINDOWS
 		_BitScanForward(&ret, ulong_val);
 #else
-		ret = __builtin_ctzl(ulong_val);
+		ret = __builtin_ctz(int(ulong_val));
 #endif
 	} else {
 #if FEA_ARCH == 64
