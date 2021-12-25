@@ -207,7 +207,7 @@ template <class CharT>
 	return ret;
 }
 
-[[nodiscard]] inline constexpr std::vector<uint8_t> to_lower(
+[[nodiscard]] inline std::vector<uint8_t> to_lower(
 		const std::vector<uint8_t>& str) {
 	std::vector<uint8_t> ret = str;
 	std::transform(ret.begin(), ret.end(), ret.begin(),
@@ -243,7 +243,7 @@ constexpr void to_upper_inplace(std::basic_string<CharT>& out) {
 			[](auto c) { return CharT(::toupper(c)); });
 }
 
-[[nodiscard]] inline constexpr std::vector<uint8_t> to_upper(
+[[nodiscard]] inline std::vector<uint8_t> to_upper(
 		const std::vector<uint8_t>& str) {
 	std::vector<uint8_t> ret = str;
 	std::transform(ret.begin(), ret.end(), ret.begin(),
