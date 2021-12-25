@@ -53,7 +53,7 @@ struct deserializer {
 	/* Something magical, unicorns, etc. */
 
 	ReturnContainer<std::tuple<Args...>> deserialize(
-			std::span<const char> mem) const {
+			std::span<const char>) const {
 		// Things I shall not share with you, as to prevent Punning Triggered
 		// Stress Disorder ;)
 	}
