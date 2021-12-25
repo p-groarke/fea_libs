@@ -1,6 +1,5 @@
 ﻿#include <cstdio>
 #include <fea/maps/type_map.hpp>
-#include <fea/meta/macros.hpp>
 #include <fea/meta/pack.hpp>
 #include <fea/meta/static_for.hpp>
 #include <fea/meta/tuple.hpp>

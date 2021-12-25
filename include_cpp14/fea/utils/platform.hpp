@@ -34,6 +34,8 @@
 #pragma once
 #include "fea/utils/bitmask.hpp"
 
+#include <cstdint>
+
 namespace fea {
 // Nicer way to check for C++ versions.
 #if __cplusplus >= 202002L
@@ -73,6 +75,23 @@ namespace fea {
 #else
 #undef FEA_INLINE_VAR
 #define FEA_INLINE_VAR static
+#endif
+
+// Are we building in 32 bits or 64 bits?
+#if INTPTR_MAX == INT32_MAX
+#undef FEA_ARCH
+#define FEA_ARCH 32
+FEA_INLINE_VAR constexpr size_t arch = 32;
+
+#undef FEA_32BIT
+#define FEA_32BIT 1
+#else
+#undef FEA_ARCH
+#define FEA_ARCH 64
+FEA_INLINE_VAR constexpr size_t arch = 64;
+
+#undef FEA_64BIT
+#define FEA_64BIT 1
 #endif
 
 // Disables exceptions in classes that support it.

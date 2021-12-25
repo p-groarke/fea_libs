@@ -32,8 +32,8 @@
  **/
 
 #pragma once
+#include "fea/string/string.hpp"
 #include "fea/utils/platform.hpp"
-#include "fea/utils/string.hpp"
 #include "fea/utils/throw.hpp"
 
 #include <cstdio>
@@ -336,7 +336,10 @@ enum class text_encoding {
 	count,
 };
 
-inline bool reconstruct_text_file(const std::string& input_str,
+// Converts input string with provided encoding into utf32.
+// Takes into consideration little or big endianness.
+// The output is a little-endian utf32 string.
+inline bool file_string_to_utf32(const std::string& input_str,
 		text_encoding encoding, std::u32string& output_str) {
 
 	switch (encoding) {
@@ -349,7 +352,7 @@ inline bool reconstruct_text_file(const std::string& input_str,
 		std::u32string temp(count, 0);
 
 		for (size_t i = 0; i < count; ++i) {
-			temp[i] = static_cast<char32_t>(input_str[i * 4 + 3] << 0
+			temp[i] = char32_t(input_str[i * 4 + 3] << 0
 					| input_str[i * 4 + 2] << 8 | input_str[i * 4 + 1] << 16
 					| input_str[i * 4 + 0] << 24);
 		}
@@ -371,7 +374,7 @@ inline bool reconstruct_text_file(const std::string& input_str,
 		size_t count = input_str.size() / 4;
 		std::u32string temp(count, 0);
 		for (size_t i = 0; i < count; ++i) {
-			temp[i] = static_cast<char32_t>(input_str[i * 4 + 0] << 0
+			temp[i] = char32_t(input_str[i * 4 + 0] << 0
 					| input_str[i * 4 + 1] << 8 | input_str[i * 4 + 2] << 16
 					| input_str[i * 4 + 3] << 24);
 		}
@@ -392,7 +395,7 @@ inline bool reconstruct_text_file(const std::string& input_str,
 		size_t count = input_str.size() / 2;
 		std::u16string temp(count, 0);
 		for (size_t i = 0; i < count; ++i) {
-			temp[i] = static_cast<char16_t>(
+			temp[i] = char16_t(
 					input_str[i * 2 + 1] << 0 | input_str[i * 2 + 0] << 8);
 		}
 
@@ -411,7 +414,7 @@ inline bool reconstruct_text_file(const std::string& input_str,
 		size_t count = input_str.size() / 2;
 		std::u16string temp(count, 0);
 		for (size_t i = 0; i < count; ++i) {
-			temp[i] = static_cast<char16_t>(
+			temp[i] = char16_t(
 					input_str[i * 2 + 0] << 0 | input_str[i * 2 + 1] << 8);
 		}
 
@@ -438,6 +441,7 @@ inline bool reconstruct_text_file(const std::string& input_str,
 	return true;
 }
 
+// Try to detect a string's character encoding.
 // Based on :
 // https://www.codeproject.com/Tips/672470/Simple-Character-Encoding-Detection
 inline text_encoding detect_encoding(const std::string& str) {
@@ -477,6 +481,9 @@ inline text_encoding detect_encoding(const std::string& str) {
 	// 6. The string defaults to UTF-32BE
 }
 
+// Open a utf text file.
+// Infers utf type if BOM is present.
+// If not, tries to detect encoding of the file.
 inline std::u32string open_text_file_with_bom(std::ifstream& src) {
 	if (!src.is_open()) {
 		assert(false);
@@ -507,7 +514,7 @@ inline std::u32string open_text_file_with_bom(std::ifstream& src) {
 
 		text_encoding enc = text_encoding(i);
 		buffer = buffer.substr(bom.size());
-		if (reconstruct_text_file(buffer, enc, ret)) {
+		if (file_string_to_utf32(buffer, enc, ret)) {
 			// Found bom, conversion was good, all gucci.
 			return ret;
 		}
@@ -520,7 +527,7 @@ inline std::u32string open_text_file_with_bom(std::ifstream& src) {
 		text_encoding enc = detect_encoding(buffer);
 
 		if (enc != text_encoding::count) {
-			if (reconstruct_text_file(buffer, enc, ret)) {
+			if (file_string_to_utf32(buffer, enc, ret)) {
 				// Yay.
 				return ret;
 			}
@@ -530,7 +537,7 @@ inline std::u32string open_text_file_with_bom(std::ifstream& src) {
 	// Brute force it
 	for (size_t i = 0; i < size_t(text_encoding::count); ++i) {
 		text_encoding enc = text_encoding(i);
-		if (reconstruct_text_file(buffer, enc, ret)) {
+		if (file_string_to_utf32(buffer, enc, ret)) {
 			// There is a good chance the encoding is incorrect in a lexical
 			// sense here, but programatically it is ok.
 			return ret;

@@ -90,6 +90,28 @@ struct any_of<Trait, Traits...> : std::conditional<Trait::value, std::true_type,
 template <class... Traits>
 FEA_INLINE_VAR constexpr bool any_of_v = any_of<Traits...>::value;
 
+// Checks if one of the passed in traits is true.
+template <class...>
+struct one_of : std::false_type {};
+
+namespace detail {
+template <class...>
+struct one_of_found : std::true_type {};
+
+template <class Trait, class... Traits>
+struct one_of_found<Trait, Traits...>
+		: std::conditional<Trait::value, std::false_type,
+				  one_of_found<Traits...>>::type {};
+} // namespace detail
+
+template <class Trait, class... Traits>
+struct one_of<Trait, Traits...>
+		: std::conditional<Trait::value, detail::one_of_found<Traits...>,
+				  one_of<Traits...>>::type {};
+
+// Checks if one of the passed in traits is true.
+template <class... Traits>
+FEA_INLINE_VAR constexpr bool one_of_v = one_of<Traits...>::value;
 
 // TODO : C++14 implementation
 // template <class...>
@@ -154,6 +176,7 @@ struct is_same_template : std::false_type {};
 template <template <class...> class T>
 struct is_same_template<T, T> : std::true_type {};
 
+// Checks whether 2 types are the same, regardless of their template params.
 template <template <class...> class T, template <class...> class U>
 FEA_INLINE_VAR constexpr bool is_same_template_v
 		= is_same_template<T, U>::value;

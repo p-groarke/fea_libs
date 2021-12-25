@@ -47,10 +47,6 @@
 #endif
 
 namespace fea {
-template <class CharT>
-using string_t = std::basic_string<CharT, std::char_traits<CharT>,
-		std::allocator<CharT>>;
-
 // The standard doesn't provide codecvt equivalents. Use the old
 // functionality until they do.
 #if defined(FEA_WINDOWS)
@@ -320,7 +316,7 @@ inline std::wstring utf32_to_ucs2_w(const std::u32string& s) {
 // Useful generalized conversions
 
 template <class CharT>
-std::string any_to_utf8(const string_t<CharT>& str) {
+std::string any_to_utf8(const std::basic_string<CharT>& str) {
 	if constexpr (std::is_same_v<CharT, char>) {
 		return str;
 	} else if constexpr (std::is_same_v<CharT, wchar_t>) {
@@ -335,7 +331,7 @@ std::string any_to_utf8(const string_t<CharT>& str) {
 }
 
 template <class CharT>
-string_t<CharT> utf8_to_any(const std::string& str) {
+std::basic_string<CharT> utf8_to_any(const std::string& str) {
 	if constexpr (std::is_same_v<CharT, char>) {
 		return str;
 	} else if constexpr (std::is_same_v<CharT, wchar_t>) {
@@ -350,7 +346,7 @@ string_t<CharT> utf8_to_any(const std::string& str) {
 }
 
 template <class CharT>
-std::u32string any_to_utf32(const string_t<CharT>& str) {
+std::u32string any_to_utf32(const std::basic_string<CharT>& str) {
 	if constexpr (std::is_same_v<CharT, char>) {
 		return utf8_to_utf32(str);
 	} else if constexpr (std::is_same_v<CharT, wchar_t>) {
@@ -365,7 +361,7 @@ std::u32string any_to_utf32(const string_t<CharT>& str) {
 }
 
 template <class CharT>
-string_t<CharT> utf32_to_any(const std::u32string& str) {
+std::basic_string<CharT> utf32_to_any(const std::u32string& str) {
 	if constexpr (std::is_same_v<CharT, char>) {
 		return utf32_to_utf8(str);
 	} else if constexpr (std::is_same_v<CharT, wchar_t>) {

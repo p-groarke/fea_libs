@@ -33,9 +33,11 @@
 
 #pragma once
 #include "fea/enum/enum_array.hpp"
-#include "fea/meta/macros.hpp"
+#include "fea/macros/foreach.hpp"
+#include "fea/macros/literals.hpp"
+#include "fea/macros/macros.hpp"
+#include "fea/string/string.hpp"
 #include "fea/utils/platform.hpp"
-#include "fea/utils/string.hpp"
 
 #include <array>
 #include <string>
@@ -61,13 +63,13 @@
 #define FEA_DETAIL_REFL_ARRAY(chartype, prefix, ename, ...) \
 protected: \
 	/* The array of your strings, indexed at the enum position. */ \
-	inline static const fea::enum_array<fea::string_t<chartype>, ename, \
+	inline static const fea::enum_array<std::basic_string<chartype>, ename, \
 			FEA_SIZEOF_VAARGS(__VA_ARGS__)> \
 			FEA_DETAIL_REFL_VARNAME_PRIV(prefix, ename, names){ \
 				{ FEA_FOR_EACH(FEA_STRINGIFY_COMMA, __VA_ARGS__) } \
 			}; \
 	/* A reverse-lookup map, to get the enum from a string in O(1). */ \
-	inline static const std::unordered_map<fea::string_t<chartype>, ename> \
+	inline static const std::unordered_map<std::basic_string<chartype>, ename> \
 	FEA_DETAIL_REFL_VARNAME_PRIV(prefix, ename, reverse_lookup) { \
 		FEA_FOR_EACH(FEA_REFL_STRINGIFY_MAP, __VA_ARGS__) \
 	}
@@ -84,18 +86,18 @@ public: \
 	} \
 	/* Non-type compile-time getters. */ \
 	template <ename E> \
-	[[maybe_unused]] static const fea::string_t<chartype>& \
+	[[maybe_unused]] static const std::basic_string<chartype>& \
 	FEA_DETAIL_REFL_VARNAME(prefix, ename, name)() { \
 		return FEA_DETAIL_REFL_VARNAME_PRIV(prefix, ename, names).at<E>(); \
 	} \
 	/* Non-templated getters, fast O(1). */ \
-	[[maybe_unused]] static const fea::string_t<chartype>& \
+	[[maybe_unused]] static const std::basic_string<chartype>& \
 	FEA_DETAIL_REFL_VARNAME(prefix, ename, name)(ename e) { \
 		return FEA_DETAIL_REFL_VARNAME_PRIV(prefix, ename, names)[e]; \
 	} \
 	/* Reverse lookup with string, slow O(1). */ \
 	[[maybe_unused]] static ename FEA_DETAIL_REFL_VARNAME( \
-			prefix, ename, enum)(const fea::string_t<chartype>& str) { \
+			prefix, ename, enum)(const std::basic_string<chartype>& str) { \
 		return FEA_DETAIL_REFL_VARNAME_PRIV(prefix, ename, reverse_lookup) \
 				.at(str); \
 	}

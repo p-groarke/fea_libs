@@ -30,7 +30,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
-#include "fea/meta/macros.hpp"
+#include "fea/macros/macros.hpp"
 #include "fea/meta/tuple.hpp"
 
 #include <algorithm>
@@ -431,8 +431,9 @@ struct fsm {
 		constexpr auto& to_s
 				= _states.template find<fsm_state_key<StateEnum, to_state>>();
 
-		using func_ret_t = decltype(
-				to_s.template execute_event<fsm_event::on_enter, from_state>(
+		using func_ret_t
+				= decltype(to_s.template execute_event<fsm_event::on_enter,
+						   from_state>(
 						passed_in_enter, std::forward<FuncArgs>(func_args)...));
 
 		// When triggering inside on_enter, the user must return the new fsm.

@@ -1,3 +1,5 @@
+include(${CMAKE_SOURCE_DIR}/CMakeLists.global.txt)
+
 cmake_minimum_required (VERSION 3.20)
 project(fea_libs VERSION 1.0.0 LANGUAGES CXX)
 
@@ -12,85 +14,8 @@ option(FEA_BENCHMARKS "Build and run bencharks, requires tests." Off)
 option(FEA_CPP17 "Use C++17 (default is C++20). CMake's detection doesn't work well." Off)
 option(FEA_CPP14 "Use C++14 (default is C++17). CMake's detection doesn't work well." Off)
 
-# Conan search paths.
-set(CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR} ${CMAKE_MODULE_PATH})
-set(CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR} ${CMAKE_PREFIX_PATH})
-
-# Output binary to predictable location (fixes cyclic dependency issues).
-set(BINARY_OUT_DIR ${CMAKE_BINARY_DIR}/bin)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BINARY_OUT_DIR})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${BINARY_OUT_DIR})
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${BINARY_OUT_DIR})
-
-foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
-	string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG)
-	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${BINARY_OUT_DIR})
-	set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${BINARY_OUT_DIR})
-	set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${BINARY_OUT_DIR})
-endforeach(OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES)
-
-# Organize unrelated targets to clean IDE hierarchy.
-set(DEPENDENCY_FOLDER "Dependencies")
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER ${DEPENDENCY_FOLDER})
-
-# Compile Options
-function(set_compile_options REQUIRED_ARG EXPOSURE)
-	if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-		target_compile_options(${REQUIRED_ARG} ${EXPOSURE} -Wall -Wextra -Wpedantic -Werror
-		)
-	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-		target_compile_options(${REQUIRED_ARG} ${EXPOSURE} -Wall -Wextra -Wpedantic -Werror
-		)
-	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-		# using Intel C++
-	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-		target_compile_definitions(${REQUIRED_ARG} ${EXPOSURE} NOMINMAX UNICODE _UNICODE
-			_SILENCE_CXX17_UNCAUGHT_EXCEPTION_DEPRECATION_WARNING)
-		target_compile_options(${REQUIRED_ARG} ${EXPOSURE} /Zc:__cplusplus /Zc:alignedNew
-			/permissive- /W4 /WX /utf-8
-			# /FAs
-		)
-		# set_target_properties(${REQUIRED_ARG} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-	endif()
-endfunction()
-
-# Pulls conan dependencies according to platform settings.
-function(pull_conan)
-	message("Pulling conan dependencies.\n")
-
-	# message("sizeof_void : ${CMAKE_SIZEOF_VOID_P }\n")
-	# message("host platform : ${CMAKE_HOST_SYSTEM_PROCESSOR}")
-	# message("target platform : ${CMAKE_GENERATOR_PLATFORM}\n")
-
-	# Cross-compiling to 32bits on Windows.
-	if (CMAKE_HOST_SYSTEM_PROCESSOR MATCHES AMD64 AND CMAKE_GENERATOR_PLATFORM MATCHES Win32)
-		message("Cross-compiling to 32bits.\n")
-		set(CONAN_ARCH "-s arch=x86")
-		separate_arguments(CONAN_ARCH UNIX_COMMAND "${CONAN_ARCH}")
-	else()
-		set(CONAN_ARCH)
-	endif()
-
-	if (WIN32)
-		set(CONAN_TOOLSET "-s compiler.toolset=${CMAKE_VS_PLATFORM_TOOLSET}")
-		separate_arguments(CONAN_TOOLSET UNIX_COMMAND "${CONAN_TOOLSET}")
-	else()
-		set(CONAN_TOOLSET)
-	endif()
-
-	execute_process(COMMAND conan install ${CMAKE_CURRENT_SOURCE_DIR} --build missing -s
-		build_type=Debug ${CONAN_ARCH} ${CONAN_TOOLSET}
-		COMMAND_ECHO STDOUT
-	)
-	execute_process(COMMAND conan install ${CMAKE_CURRENT_SOURCE_DIR} --build missing -s
-		build_type=Release ${CONAN_ARCH} ${CONAN_TOOLSET}
-		COMMAND_ECHO STDOUT
-	)
-endfunction()
-
-# clang-format
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/.clang-format ${CMAKE_CURRENT_BINARY_DIR}/.clang-format COPYONLY)
+# Output to predictable location.
+set_output_dir(${CMAKE_BINARY_DIR}/bin)
 
 # C++ version.
 if ("cxx_std_20" IN_LIST CMAKE_CXX_COMPILE_FEATURES AND NOT FEA_CPP17 AND NOT FEA_CPP14)
@@ -103,10 +28,6 @@ else()
 	set(CMAKE_CXX_STANDARD 14)
 	message("\nEnabling C++14 libraries.\n")
 endif()
-
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 # External dependencies.
 pull_conan()

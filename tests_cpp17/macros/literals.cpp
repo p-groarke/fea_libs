@@ -1,23 +1,14 @@
-﻿#include <array>
-#include <fea/meta/macros.hpp>
-#include <fea/utils/unused.hpp>
+#include <array>
+#include <fea/macros/literals.hpp>
+#include <fea/string/conversions.hpp>
 #include <gtest/gtest.h>
-#include <string>
-#include <utility>
-
 
 #define testme(...) \
 	std::array<std::string, 6> arr \
 			= { FEA_FOR_EACH(FEA_STRINGIFY_COMMA, __VA_ARGS__) }
 
-#define num(x) x,
-#define num_last(x) x
-
-#define nums_va(x, ...) std::array<int, 4> FEA_PASTE(arr, x){ __VA_ARGS__ };
-
 namespace {
-TEST(macros, basics) {
-
+TEST(macros_literals, basics) {
 	EXPECT_STREQ(FEA_STRINGIFY(test), "test");
 	EXPECT_STREQ(FEA_WSTRINGIFY(test), L"test");
 	EXPECT_EQ(std::u16string{ FEA_U16STRINGIFY(test) }, u"test");
@@ -42,41 +33,30 @@ TEST(macros, basics) {
 			EXPECT_EQ(arr[i], std::to_string(i));
 		}
 	}
+}
 
-	{
-		std::array<int, 4> arr{ FEA_FOR_EACH(num, 0, 1, 2, 3) };
-		for (int i = 0; i < int(arr.size()); ++i) {
-			EXPECT_EQ(arr[i], i);
-		}
-	}
+TEST(macros_literals, prefix) {
+	// If this compiles the literals are well formed.
+	std::string t1{ FEA_PREFIX("test") };
+	std::wstring t2{ FEA_WPREFIX("test") };
+	std::u16string t3{ FEA_U16PREFIX("test") };
+	std::u32string t4{ FEA_U32PREFIX("test") };
 
-	{
-		FEA_FOR_EACH_VA(nums_va, 0, 1, 2, 3)
-		for (int i = 0; i < 4; ++i) {
-			EXPECT_EQ(arr0[i], i);
-			EXPECT_EQ(arr1[i], i);
-			EXPECT_EQ(arr2[i], i);
-			EXPECT_EQ(arr3[i], i);
-		}
-	}
+	EXPECT_EQ("test", t1);
+	EXPECT_EQ(L"test", t2);
+	EXPECT_EQ(u"test", t3);
+	EXPECT_EQ(U"test", t4);
 
-	{
-		FEA_FOR_EACH_PARAM(nums_va, FEA_VA_LIST(0, 1, 2, 3), 0, 1, 2, 3)
-		for (int i = 0; i < 4; ++i) {
-			EXPECT_EQ(arr0[i], i);
-			EXPECT_EQ(arr1[i], i);
-			EXPECT_EQ(arr2[i], i);
-			EXPECT_EQ(arr3[i], i);
-		}
-	}
+	std::array<const char*, 4> arr1{ FEA_VA_PREFIX("0", "1", "2", "3") };
+	std::array<const wchar_t*, 4> arr2{ FEA_VA_WPREFIX("0", "1", "2", "3") };
+	std::array<const char16_t*, 4> arr3{ FEA_VA_U16PREFIX("0", "1", "2", "3") };
+	std::array<const char32_t*, 4> arr4{ FEA_VA_U32PREFIX("0", "1", "2", "3") };
 
-	{
-		int FEA_FOR_EACH_LAST(num, num_last, i0, i1, i2, i3);
-		i0 = 0;
-		i1 = 0;
-		i2 = 0;
-		i3 = 0;
-		fea::unused(i0, i1, i2, i3);
+	for (size_t i = 0; i < arr1.size(); ++i) {
+		EXPECT_EQ(std::to_string(i), arr1[i]);
+		EXPECT_EQ(std::to_wstring(i), arr2[i]);
+		EXPECT_EQ(fea::utf8_to_any<char16_t>(std::to_string(i)), arr3[i]);
+		EXPECT_EQ(fea::any_to_utf32(std::to_string(i)), arr4[i]);
 	}
 }
 } // namespace
