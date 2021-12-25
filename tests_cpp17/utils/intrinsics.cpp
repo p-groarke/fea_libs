@@ -33,14 +33,14 @@ TEST(intrinsics, make_bitmask) {
 			t);
 }
 
-TEST(intrinsics, to_ulong) {
+TEST(intrinsics, to_u32) {
 	// Checks that casted types are correct.
 	{
 		constexpr auto t = gen_tup(42);
 		fea::tuple_for_each(
 				[](auto v) {
-					auto recieved = fea::to_ulong(v);
-					auto recievedpack = fea::to_ulong_packleft(v);
+					auto recieved = fea::to_u32(v);
+					auto recievedpack = fea::to_u32_packleft(v);
 
 					using orig_t = decltype(v);
 					using T = decltype(recieved);
@@ -49,10 +49,10 @@ TEST(intrinsics, to_ulong) {
 							"intrinsics.cpp : unit test failed");
 
 					if constexpr (sizeof(v) <= 4) {
-						static_assert(std::is_same_v<unsigned long, T>,
+						static_assert(std::is_same_v<uint32_t, T>,
 								"intrinsics.cpp : unit test failed");
 					} else {
-						static_assert(std::is_same_v<unsigned long long, T>,
+						static_assert(std::is_same_v<uint64_t, T>,
 								"intrinsics.cpp : unit test failed");
 					}
 

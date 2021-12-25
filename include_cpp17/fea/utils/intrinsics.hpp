@@ -108,24 +108,24 @@ T make_bitmask(size_t bit_count, size_t lsb_pos = 0) {
 
 // Casts the type to fit in unsigned long or unsigned long long.
 template <class T>
-constexpr auto to_ulong(T t) noexcept {
+constexpr auto to_u32(T t) noexcept {
 	static_assert(std::is_integral_v<T>, "to_ulong : expects integral types");
 
 	if constexpr (sizeof(T) <= 4) {
-		return static_cast<unsigned long>(t);
+		return static_cast<uint32_t>(t);
 	} else if constexpr (sizeof(T) <= 8) {
-		return static_cast<unsigned long long>(t);
+		return static_cast<uint64_t>(t);
 	} else {
 		// someday...
-		return static_cast<unsigned long long>(t);
+		return static_cast<uint64_t>(t);
 	}
 }
 
 // Casts the type to fit in unsigned long or unsigned long long.
 // If the type size is smaller than the target long, shifts to MSB (left).
 template <class T>
-constexpr auto to_ulong_packleft(T t) noexcept {
-	auto ret = to_ulong(t);
+constexpr auto to_u32_packleft(T t) noexcept {
+	auto ret = to_u32(t);
 
 	if constexpr (sizeof(T) < 4) {
 		constexpr size_t diff = 32 - sizeof(T) * 8;
@@ -162,23 +162,23 @@ size_t countl_zero(T val) {
 		return ret;
 	}
 
-	auto ulong_val = fea::to_ulong_packleft(val);
+	auto uval = fea::to_u32_packleft(val);
 	unsigned long ret;
 
-	if constexpr (sizeof(ulong_val) == 4) {
+	if constexpr (sizeof(uval) == 4) {
 #if FEA_WINDOWS
-		_BitScanReverse(&ret, ulong_val);
+		_BitScanReverse(&ret, uval);
 		ret = 31 - ret;
 #else
-		ret = __builtin_clz(int(ulong_val));
+		ret = __builtin_clz(uval);
 #endif
 	} else {
 #if FEA_ARCH == 64
 #if FEA_WINDOWS
-		_BitScanReverse64(&ret, ulong_val);
+		_BitScanReverse64(&ret, uval);
 		ret = 63 - ret;
 #else
-		ret = __builtin_clzll(ulong_val);
+		ret = __builtin_clzll(uval);
 #endif
 #else
 		ret = 64;
@@ -202,21 +202,21 @@ size_t countr_zero(T val) {
 		return ret;
 	}
 
-	auto ulong_val = fea::to_ulong(val);
+	auto uval = fea::to_u32(val);
 	unsigned long ret;
 
-	if constexpr (sizeof(ulong_val) == 4) {
+	if constexpr (sizeof(uval) == 4) {
 #if FEA_WINDOWS
-		_BitScanForward(&ret, ulong_val);
+		_BitScanForward(&ret, uval);
 #else
-		ret = __builtin_ctz(int(ulong_val));
+		ret = __builtin_ctz(uval);
 #endif
 	} else {
 #if FEA_ARCH == 64
 #if FEA_WINDOWS
-		_BitScanForward64(&ret, ulong_val);
+		_BitScanForward64(&ret, uval);
 #else
-		ret = __builtin_ctzll(ulong_val);
+		ret = __builtin_ctzll(uval);
 #endif
 #else
 		ret = 64;
