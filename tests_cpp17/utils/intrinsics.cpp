@@ -77,10 +77,6 @@ TEST(intrinsics, to_ulong) {
 						constexpr size_t num_vals = 4 / orig_size;
 						orig_t* arr = reinterpret_cast<orig_t*>(&recievedpack);
 						EXPECT_EQ(42, int(arr[num_vals - 1]));
-
-						orig_t arr2[num_vals] = {};
-						memcpy(arr2, &recievedpack, sizeof(recievedpack));
-						EXPECT_EQ(42, int(arr2[num_vals - 1]));
 					}
 				},
 				t);

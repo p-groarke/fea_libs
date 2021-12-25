@@ -47,11 +47,11 @@ using wsvsub_match = std::sub_match<std::wstring_view::const_iterator>;
 using wsvregex_iterator
 		= std::regex_iterator<std::wstring_view::const_iterator>;
 
-[[nodiscard]] constexpr inline std::string_view to_sv(const svsub_match& m) {
+[[nodiscard]] inline std::string_view to_sv(const svsub_match& m) {
 	return std::string_view(&(*m.first), m.length());
 }
 
-[[nodiscard]] constexpr inline std::wstring_view to_wsv(const wsvsub_match& m) {
+[[nodiscard]] inline std::wstring_view to_wsv(const wsvsub_match& m) {
 	return std::wstring_view(&(*m.first), m.length());
 }
 
