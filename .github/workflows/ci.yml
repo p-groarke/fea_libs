@@ -75,7 +75,6 @@ jobs:
       matrix:
         build_type: [Release, Debug]
         config:
-          - { xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP20=On" }
           - { xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP17=On" }
           - { xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP14=On" }
           - { xcode_ver: "12.4", fea_ver: "-DFEA_CPP17=On" }
