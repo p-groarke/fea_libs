@@ -59,11 +59,12 @@ namespace fea {
 // Returns the size of a given string, string_view or c_string.
 template <template <class, class, class...> class Str, class CharT,
 		template <class> class Traits, class... Args>
-[[nodiscard]] size_t size(const Str<CharT, Traits<CharT>, Args...>& str) {
+[[nodiscard]] constexpr size_t size(
+		const Str<CharT, Traits<CharT>, Args...>& str) {
 	return str.size();
 }
 template <class CharT>
-[[nodiscard]] size_t size(const CharT* str) {
+[[nodiscard]] constexpr size_t size(const CharT* str) {
 	return std::char_traits<CharT>::length(str);
 }
 
@@ -71,30 +72,31 @@ template <class CharT>
 // Returns true if provided string contains 'search'.
 template <template <class, class, class...> class Str, class CharT,
 		template <class> class Traits, class... Args, class... Args2>
-[[nodiscard]] bool contains(const Str<CharT, Traits<CharT>, Args...>& str,
+[[nodiscard]] constexpr bool contains(
+		const Str<CharT, Traits<CharT>, Args...>& str,
 		const Str<CharT, Traits<CharT>, Args2...>& search) {
 	return str.find(search) != str.npos;
 }
 template <template <class, class, class...> class Str, class CharT,
 		template <class> class Traits, class... Args>
-[[nodiscard]] bool contains(
+[[nodiscard]] constexpr bool contains(
 		const Str<CharT, Traits<CharT>, Args...>& str, const CharT* search) {
 	return str.find(search) != str.npos;
 }
 template <template <class, class, class...> class Str, class CharT,
 		template <class> class Traits, class... Args>
-[[nodiscard]] bool contains(
+[[nodiscard]] constexpr bool contains(
 		const Str<CharT, Traits<CharT>, Args...>& str, CharT search) {
 	return str.find(search) != str.npos;
 }
 
 template <class CharT>
-[[nodiscard]] bool contains(const CharT* str, const CharT* search) {
+[[nodiscard]] constexpr bool contains(const CharT* str, const CharT* search) {
 	using sv = std::basic_string_view<CharT>;
 	return contains(sv{ str }, search);
 }
 template <class CharT>
-[[nodiscard]] bool contains(const CharT* str, CharT search) {
+[[nodiscard]] constexpr bool contains(const CharT* str, CharT search) {
 	using sv = std::basic_string_view<CharT>;
 	return contains(sv{ str }, search);
 }
@@ -103,7 +105,8 @@ template <class CharT>
 // Returns true if provided string starts with 'search'.
 template <template <class, class, class...> class Str, class CharT,
 		template <class> class Traits, class... Args, class... Args2>
-[[nodiscard]] bool starts_with(const Str<CharT, Traits<CharT>, Args...>& str,
+[[nodiscard]] constexpr bool starts_with(
+		const Str<CharT, Traits<CharT>, Args...>& str,
 		const Str<CharT, Traits<CharT>, Args2...>& search) {
 	return str.size() >= search.size()
 			&& Traits<CharT>::compare(str.data(), search.data(), search.size())
@@ -111,7 +114,7 @@ template <template <class, class, class...> class Str, class CharT,
 }
 template <template <class, class, class...> class Str, class CharT,
 		template <class> class Traits, class... Args>
-[[nodiscard]] bool starts_with(
+[[nodiscard]] constexpr bool starts_with(
 		const Str<CharT, Traits<CharT>, Args...>& str, const CharT* search) {
 	using sv = std::basic_string_view<CharT>;
 	sv _search = sv{ search };
@@ -123,26 +126,28 @@ template <template <class, class, class...> class Str, class CharT,
 }
 template <template <class, class, class...> class Str, class CharT,
 		template <class> class Traits, class... Args>
-[[nodiscard]] bool starts_with(
+[[nodiscard]] constexpr bool starts_with(
 		const Str<CharT, Traits<CharT>, Args...>& str, CharT search) {
 	return str.size() >= 1
 			&& Traits<CharT>::compare(str.data(), &search, 1) == 0;
 }
 
 template <class CharT>
-[[nodiscard]] bool starts_with(const CharT* str, const CharT* search) {
+[[nodiscard]] constexpr bool starts_with(
+		const CharT* str, const CharT* search) {
 	using sv = std::basic_string_view<CharT>;
 	return starts_with(sv{ str }, search);
 }
 template <class CharT>
-[[nodiscard]] bool starts_with(const CharT* str, CharT search) {
+[[nodiscard]] constexpr bool starts_with(const CharT* str, CharT search) {
 	using sv = std::basic_string_view<CharT>;
 	return starts_with(sv{ str }, search);
 }
 
 template <template <class, class, class...> class Str, class CharT,
 		template <class> class Traits, class... Args, class... Args2>
-[[nodiscard]] bool ends_with(const Str<CharT, Traits<CharT>, Args...>& str,
+[[nodiscard]] constexpr bool ends_with(
+		const Str<CharT, Traits<CharT>, Args...>& str,
 		const Str<CharT, Traits<CharT>, Args2...>& search) {
 	return str.size() >= search.size()
 			&& Traits<CharT>::compare(str.data() + (str.size() - search.size()),
@@ -151,7 +156,7 @@ template <template <class, class, class...> class Str, class CharT,
 }
 template <template <class, class, class...> class Str, class CharT,
 		template <class> class Traits, class... Args>
-[[nodiscard]] bool ends_with(
+[[nodiscard]] constexpr bool ends_with(
 		const Str<CharT, Traits<CharT>, Args...>& str, const CharT* search) {
 	using sv = std::basic_string_view<CharT>;
 	sv _search = sv{ search };
@@ -164,7 +169,7 @@ template <template <class, class, class...> class Str, class CharT,
 }
 template <template <class, class, class...> class Str, class CharT,
 		template <class> class Traits, class... Args>
-[[nodiscard]] bool ends_with(
+[[nodiscard]] constexpr bool ends_with(
 		const Str<CharT, Traits<CharT>, Args...>& str, CharT search) {
 	return str.size() >= 1
 			&& Traits<CharT>::compare(str.data() + (str.size() - 1), &search, 1)
@@ -172,12 +177,12 @@ template <template <class, class, class...> class Str, class CharT,
 }
 
 template <class CharT>
-[[nodiscard]] bool ends_with(const CharT* str, const CharT* search) {
+[[nodiscard]] constexpr bool ends_with(const CharT* str, const CharT* search) {
 	using sv = std::basic_string_view<CharT>;
 	return ends_with(sv{ str }, search);
 }
 template <class CharT>
-[[nodiscard]] bool ends_with(const CharT* str, CharT search) {
+[[nodiscard]] constexpr bool ends_with(const CharT* str, CharT search) {
 	using sv = std::basic_string_view<CharT>;
 	return ends_with(sv{ str }, search);
 }
@@ -194,7 +199,7 @@ template <class CharT>
 }
 
 template <class CharT>
-[[nodiscard]] std::basic_string<CharT> to_lower(
+[[nodiscard]] constexpr std::basic_string<CharT> to_lower(
 		const std::basic_string<CharT>& str) {
 	auto ret = str;
 	std::transform(ret.begin(), ret.end(), ret.begin(),
@@ -202,7 +207,7 @@ template <class CharT>
 	return ret;
 }
 
-[[nodiscard]] inline std::vector<uint8_t> to_lower(
+[[nodiscard]] inline constexpr std::vector<uint8_t> to_lower(
 		const std::vector<uint8_t>& str) {
 	std::vector<uint8_t> ret = str;
 	std::transform(ret.begin(), ret.end(), ret.begin(),
@@ -213,18 +218,18 @@ template <class CharT>
 // Lower-case passed in string.
 // No copies.
 template <class CharT>
-void to_lower_inplace(std::basic_string<CharT>& out) {
+constexpr void to_lower_inplace(std::basic_string<CharT>& out) {
 	std::transform(out.begin(), out.end(), out.begin(),
 			[](auto c) { return std::tolower(c, std::locale()); });
 }
-inline void to_lower_inplace(std::vector<uint8_t>& out) {
+inline constexpr void to_lower_inplace(std::vector<uint8_t>& out) {
 	std::transform(out.begin(), out.end(), out.begin(),
 			[](auto c) { return uint8_t(std::tolower(int(c))); });
 }
 
 
 template <class CharT>
-[[nodiscard]] std::basic_string<CharT> to_upper(
+[[nodiscard]] constexpr std::basic_string<CharT> to_upper(
 		const std::basic_string<CharT>& str) {
 	auto ret = str;
 	std::transform(ret.begin(), ret.end(), ret.begin(),
@@ -233,12 +238,12 @@ template <class CharT>
 }
 
 template <class CharT>
-void to_upper(std::basic_string<CharT>& out, bool /*inplace*/) {
+constexpr void to_upper_inplace(std::basic_string<CharT>& out) {
 	std::transform(out.begin(), out.end(), out.begin(),
 			[](auto c) { return CharT(::toupper(c)); });
 }
 
-[[nodiscard]] inline std::vector<uint8_t> to_upper(
+[[nodiscard]] inline constexpr std::vector<uint8_t> to_upper(
 		const std::vector<uint8_t>& str) {
 	std::vector<uint8_t> ret = str;
 	std::transform(ret.begin(), ret.end(), ret.begin(),
@@ -246,7 +251,7 @@ void to_upper(std::basic_string<CharT>& out, bool /*inplace*/) {
 	return ret;
 }
 
-inline void to_upper(std::vector<uint8_t>& out, bool /*inplace*/) {
+inline constexpr void to_upper_inplace(std::vector<uint8_t>& out) {
 	std::transform(out.begin(), out.end(), out.begin(),
 			[](char c) { return char(::tolower(c)); });
 }
@@ -414,13 +419,55 @@ template <class CharT>
 	return ret;
 }
 
+// Returns true if the character is an ascii digit.
+// std::isdigit is undefined for types that cannot by represented by unsigned
+// char.
+template <class CharT>
+[[nodiscard]] constexpr bool is_digit_ascii(CharT c) {
+	return c <= FEA_CH('9') && c >= FEA_CH('0');
+}
+
+// Returns true if the string is an ascii number.
+template <template <class, class, class...> class Str, class CharT,
+		template <class> class Traits, class... Args>
+[[nodiscard]] constexpr bool is_number_ascii(
+		const Str<CharT, Traits<CharT>, Args...>& str) {
+	for (CharT c : str) {
+		if (!is_digit_ascii(c)) {
+			return false;
+		}
+	}
+	return true;
+}
+template <class CharT>
+[[nodiscard]] constexpr bool is_number_ascii(const CharT* str) {
+	size_t i = 0;
+	while (CharT c = str[i++]) {
+		if (!is_digit_ascii(c)) {
+			return false;
+		}
+	}
+	return true;
+}
+
 #if FEA_CPP20
+// Compares ranges and sorts them lexicographically.
+// Given : a, A, aa, AA, b, B, 1
+// Produces : 1, A, AA, a, aa, B, b
 template <class InputIt1, class InputIt2>
 [[nodiscard]] constexpr std::strong_ordering lexicographical_compare(
 		InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2) {
 	for (; (first1 != last1) && (first2 != last2); ++first1, (void)++first2) {
+		// Lower check (alpha grouping).
 		auto c1 = fea::to_lower_ascii(*first1);
 		auto c2 = fea::to_lower_ascii(*first2);
+		if (c1 != c2) {
+			return c1 <=> c2;
+		}
+
+		// Upper first in identical chars.
+		c1 = *first1;
+		c2 = *first2;
 		if (c1 != c2) {
 			return c1 <=> c2;
 		}

@@ -342,6 +342,27 @@ TEST(string, ends_with) {
 	});
 }
 
+TEST(string, is_number) {
+	gen_tests(valid_search, "0", "12", "1234", "5555", "4242", "69");
+	fea::tuple_for_each(
+			[](const auto& str_tup) {
+				for (const auto& str : str_tup) {
+					EXPECT_TRUE(fea::is_number_ascii(str));
+				}
+			},
+			valid_search);
+
+	gen_tests(invalid_search, "\na", "b", "1cc", "0c1", "000000a", "+1", "-1-");
+	fea::tuple_for_each(
+			[](const auto& str_tup) {
+				for (const auto& str : str_tup) {
+					EXPECT_FALSE(fea::is_number_ascii(str));
+				}
+			},
+			invalid_search);
+}
+
+
 #if FEA_CPP20
 struct str {
 	str(const char* s)
@@ -362,21 +383,20 @@ struct str {
 };
 
 TEST(string, lexicographical_compare) {
+	std::vector<str> vec{ "abc", "abcd", "Benefit", "Abc", "ABC", "ABCD", "Bob",
+		"bobby", "0", "1", "aBc", "2", "As", "Aster", "Astrolabe", "Astronomy",
+		"10", "astrophysics", "Ataman", "Baa", "Barnacle", "Attack", "Be",
+		"been", "22", "At", "Bent" };
 
-	std::vector<str> vec{ "abc", "abcd", "Abc", "aBc", "ABC", "ABCD", "Bob",
-		"bobby", "0", "1", "10", "2", "22", "As", "Aster", "Astrolabe",
-		"Astronomy", "astrophysics", "At", "Ataman", "Attack", "Baa",
-		"Barnacle", "Be", "been", "Benefit", "Bent" };
-
-	const std::vector<str> answer{ "0", "1", "10", "2", "22", "abc", "Abc",
-		"aBc", "ABC", "abcd", "ABCD", "As", "Aster", "Astrolabe", "Astronomy",
-		"astrophysics", "At", "Ataman", "Attack", "Baa", "Barnacle", "Be",
-		"been", "Benefit", "Bent", "Bob", "bobby" };
+	const std::vector<str> answer{ "0", "1", "10", "2", "22", "ABC", "ABCD",
+		"Abc", "As", "Aster", "Astrolabe", "Astronomy", "At", "Ataman",
+		"Attack", "aBc", "abc", "abcd", "astrophysics", "Baa", "Barnacle", "Be",
+		"Benefit", "Bent", "Bob", "been", "bobby" };
 
 	std::sort(vec.begin(), vec.end());
-	for (const auto& str : vec) {
-		printf("%s\n", str.data.c_str());
-	}
+	// for (const auto& str : vec) {
+	//	printf("%s\n", str.data.c_str());
+	//}
 	EXPECT_EQ(answer, vec);
 }
 #endif
