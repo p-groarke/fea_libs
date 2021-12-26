@@ -1,7 +1,7 @@
 ﻿///**
 // * BSD 3-Clause License
 // *
-// * Copyright (c) 2020, Philippe Groarke
+// * Copyright (c) 2022, Philippe Groarke
 // * All rights reserved.
 // *
 // * Redistribution and use in source and binary forms, with or without
@@ -42,8 +42,8 @@
 //
 ///*
 // growing_array allocates a given amount of objects on the stack. If you
-// push_back too many items, it will reallocate on the heap. Allowing you to grow
-// the vector as big as you wish.
+// push_back too many items, it will reallocate on the heap. Allowing you to
+// grow the vector as big as you wish.
 //
 // You can think of it as a small object optimization vector, where you control
 // the amount of objects stored on the stack.

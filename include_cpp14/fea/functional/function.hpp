@@ -1,7 +1,7 @@
 ﻿/**
  * BSD 3-Clause License
  *
- * Copyright (c) 2020, Philippe Groarke
+ * Copyright (c) 2022, Philippe Groarke
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,8 +32,8 @@
  **/
 #pragma once
 #include <cassert>
-#include <functional>
 #include <cstdint>
+#include <functional>
 
 /*
 fea::callback is helper to accept templated invocables, all the while specifying

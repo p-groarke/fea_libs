@@ -1,10 +1,11 @@
-﻿#include <fea/meta/static_for.hpp>
+﻿#include <array>
+#include <fea/meta/static_for.hpp>
+#include <fea/meta/traits.hpp>
 #include <fea/meta/tuple.hpp>
 #include <fea/string/string.hpp>
 #include <gtest/gtest.h>
 #include <tuple>
 
-namespace {
 #define gen_constants(tupname, str) \
 	const auto tupname = std::make_tuple(std::string_view{ str }, \
 			std::wstring_view{ L##str }, std::u16string_view{ u##str }, \
@@ -27,6 +28,7 @@ namespace {
 			std::array{ FEA_VA_U32PREFIX(__VA_ARGS__) })
 
 
+namespace {
 TEST(string, basics) {
 	{
 		std::string str = "a string weeee, bang, ding, ow";
@@ -34,11 +36,11 @@ TEST(string, basics) {
 		EXPECT_FALSE(fea::contains(str, "dong"));
 
 		std::string caps = "NOT SCREAMING";
-		EXPECT_EQ(fea::to_lower(caps), "not screaming");
-		EXPECT_NE(fea::to_lower(caps), "NOT SCREAMING");
+		EXPECT_EQ(fea::to_lower_ascii(caps), "not screaming");
+		EXPECT_NE(fea::to_lower_ascii(caps), "NOT SCREAMING");
 
 		std::string capscpy = caps;
-		fea::to_lower_inplace(capscpy);
+		fea::to_lower_ascii_inplace(capscpy);
 		EXPECT_EQ(capscpy, "not screaming");
 		EXPECT_NE(capscpy, "NOT SCREAMING");
 
@@ -124,13 +126,6 @@ TEST(string, basics) {
 }
 
 TEST(string, size) {
-	// constexpr std::string_view t1{ "ꝅ" };
-	// t1;
-	// constexpr const char* const t2 = "ꝅ";
-	// t2;
-	// const std::string t3{ "ꝅ" };
-	// t3;
-
 	{
 		gen_constants(tests, "");
 		constexpr size_t empty_strs_size = std::tuple_size_v<decltype(tests)>;
@@ -337,6 +332,58 @@ TEST(string, ends_with) {
 			if constexpr (!std::is_pointer_v<str_t>) {
 				EXPECT_FALSE(
 						fea::ends_with(alice_arr[j], invalid_arr[j].data()));
+			}
+		}
+	});
+}
+
+TEST(string, to_lower_to_upper_ascii) {
+	gen_tests(
+			testcases, "A", "AA", "BcD", "BoBBy", "+-/", "\naaaAAbbBB", "bla");
+
+	gen_tests(lower_answers, "a", "aa", "bcd", "bobby", "+-/", "\naaaaabbbb",
+			"bla");
+
+	gen_tests(upper_answers, "A", "AA", "BCD", "BOBBY", "+-/", "\nAAAAABBBB",
+			"BLA");
+
+	constexpr size_t s = std::tuple_size_v<decltype(testcases)>;
+	fea::static_for<s>([&](auto const_i) {
+		constexpr size_t i = const_i;
+		const auto& test_arr = std::get<i>(testcases);
+		const auto& loanswer_arr = std::get<i>(lower_answers);
+		const auto& hianswer_arr = std::get<i>(upper_answers);
+		ASSERT_EQ(loanswer_arr.size(), hianswer_arr.size());
+
+		for (size_t j = 0; j < loanswer_arr.size(); ++j) {
+			const auto& str = test_arr[j];
+			{
+				auto new_str = fea::to_lower_ascii(str);
+				EXPECT_EQ(loanswer_arr[j], new_str);
+
+				new_str = fea::to_upper_ascii(str);
+				EXPECT_EQ(hianswer_arr[j], new_str);
+
+				new_str = fea::to_lower_ascii(str);
+				EXPECT_EQ(loanswer_arr[j], new_str);
+				new_str = fea::to_upper_ascii(str);
+				EXPECT_EQ(hianswer_arr[j], new_str);
+			}
+
+			{
+				using char_t = std::decay_t<decltype(str[0])>;
+				auto temp_str = std::basic_string<char_t>{ str };
+				fea::to_lower_ascii_inplace(temp_str);
+				EXPECT_EQ(loanswer_arr[j], temp_str);
+
+				temp_str = std::basic_string<char_t>{ str };
+				fea::to_upper_ascii_inplace(temp_str);
+				EXPECT_EQ(hianswer_arr[j], temp_str);
+
+				fea::to_lower_ascii_inplace(temp_str);
+				EXPECT_EQ(loanswer_arr[j], temp_str);
+				fea::to_upper_ascii_inplace(temp_str);
+				EXPECT_EQ(hianswer_arr[j], temp_str);
 			}
 		}
 	});

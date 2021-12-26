@@ -1,5 +1,5 @@
 ﻿/**
- * Copyright (c) 2020, Philippe Groarke <philippe.groarke@gmail.com>.
+ * Copyright (c) 2022, Philippe Groarke <philippe.groarke@gmail.com>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
