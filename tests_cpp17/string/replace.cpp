@@ -34,8 +34,8 @@ Down the Rabbit-Hole
 
 Alice was beginning to get very tired of sitting by her sister on the bank, and
 of having nothing to do: once or twice she had peeped into the book her sister
-was reading, but it had no pictures or conversations in it, ìand what is the
-use of a book,î thought Alice ìwithout pictures or conversations?î
+was reading, but it had no pictures or conversations in it, ‚Äúand what is the
+use of a book,‚Äù thought Alice ‚Äúwithout pictures or conversations?‚Äù
 
 So she was considering in her own mind (as well as she could, for the hot day
 made her feel very sleepy and stupid), whether the pleasure of making a
@@ -43,8 +43,8 @@ daisy-chain would be worth the trouble of getting up and picking the daisies,
 when suddenly a White Rabbit with pink eyes ran close by her.
 
 There was nothing so very remarkable in that; nor did Alice think it so very
-much out of the way to hear the Rabbit say to itself, ìOh dear! Oh dear! I
-shall be late!î (when she thought it over afterwards, it occurred to her that
+much out of the way to hear the Rabbit say to itself, ‚ÄúOh dear! Oh dear! I
+shall be late!‚Äù (when she thought it over afterwards, it occurred to her that
 she ought to have wondered at this, but at the time it all seemed quite
 natural); but when the Rabbit actually took a watch out of its
 waistcoat-pocket, and looked at it, and then hurried on, Alice started to her
@@ -59,8 +59,8 @@ Down potato Rabbit-Hole
 
 Alice was beginning to get very tired of sitting by her sister on potato bank, and
 of having nothing to do: once or twice she had peeped into potato book her sister
-was reading, but it had no pictures or conversations in it, ìand what is potato
-use of a book,î thought Alice ìwithout pictures or conversations?î
+was reading, but it had no pictures or conversations in it, ‚Äúand what is potato
+use of a book,‚Äù thought Alice ‚Äúwithout pictures or conversations?‚Äù
 
 So she was considering in her own mind (as well as she could, for potato hot day
 made her feel very sleepy and stupid), whepotator potato pleasure of making a
@@ -68,8 +68,8 @@ daisy-chain would be worth potato trouble of getting up and picking potato daisi
 when suddenly a White Rabbit with pink eyes ran close by her.
 
 There was nothing so very remarkable in that; nor did Alice think it so very
-much out of potato way to hear potato Rabbit say to itself, ìOh dear! Oh dear! I
-shall be late!î (when she thought it over afterwards, it occurred to her that
+much out of potato way to hear potato Rabbit say to itself, ‚ÄúOh dear! Oh dear! I
+shall be late!‚Äù (when she thought it over afterwards, it occurred to her that
 she ought to have wondered at this, but at potato time it all seemed quite
 natural); but when potato Rabbit actually took a watch out of its
 waistcoat-pocket, and looked at it, and potaton hurried on, Alice started to her
@@ -79,7 +79,7 @@ curiosity, she ran across potato field after it, and fortunately was just in tim
 to see it pop down a large rabbit-hole under potato hedge.
 )xx");
 
-TEST(string, replace_all) {
+TEST(string_replace, replace_all) {
 	gen_tests(the_test, "the", "potato");
 
 	constexpr size_t s = std::tuple_size_v<decltype(alice)>;
@@ -87,11 +87,28 @@ TEST(string, replace_all) {
 		constexpr size_t i = const_i;
 		const auto& str = std::get<i>(alice);
 		const auto& answer = std::get<i>(alice_answer);
-		const auto& search = std::get<i>(the_test)[0];
-		const auto& replace = std::get<i>(the_test)[1];
+		{
+			const auto& search = std::get<i>(the_test)[0];
+			const auto& replace = std::get<i>(the_test)[1];
 
-		auto new_str = fea::replace_all(str, search, replace);
-		EXPECT_EQ(answer, new_str);
+			auto new_str = fea::replace_all(str, search, replace);
+			EXPECT_EQ(answer, new_str);
+		}
+
+		fea::static_for<s>([&](auto const_j) {
+			constexpr size_t j = const_j;
+			const auto& search = std::get<j>(the_test)[0];
+
+			using alice_char_t = std::decay_t<decltype(str[0])>;
+			using search_char_t = std::decay_t<decltype(search[0])>;
+
+			if constexpr (std::is_same_v<alice_char_t, search_char_t>) {
+				const auto& replace = std::get<j>(the_test)[1];
+
+				auto new_str = fea::replace_all(str, search, replace);
+				EXPECT_EQ(answer, new_str);
+			}
+		});
 	});
 }
 } // namespace

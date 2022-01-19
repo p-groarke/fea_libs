@@ -36,6 +36,77 @@
 #include <string_view>
 
 namespace fea {
+namespace detail {
+// template <class, class>
+// struct str_const_ref;
+//
+// template <class CharT>
+// struct str_const_ref<const CharT*, std::char_traits<CharT>> {
+//	str_const_ref(const CharT* str)
+//			: sview(str) {
+//	}
+//
+//	std::basic_string_view<CharT, std::char_traits<CharT>> sview;
+//};
+
+template <class CharT, class Traits>
+struct str_const_ref {
+	str_const_ref(const CharT* str)
+			: sview(str) {
+	}
+
+	// str_const_ref(const std::basic_string_view<CharT, Traits<CharT>>& str)
+	//		: sview(str) {
+	//}
+
+	// template <class... Args>
+	// str_const_ref(const std::basic_string<CharT, Traits<CharT>, Args...>&
+	// str) 		: sview(str) {
+	//}
+
+	template <template <class, class, class...> class Str, class C,
+			template <class> class T, class... Args>
+	constexpr str_const_ref(const Str<C, T<C>, Args...>& str)
+			: sview(str) {
+	}
+
+	std::basic_string_view<CharT, Traits> sview;
+};
+
+// deduction guides
+template <class CharT>
+str_const_ref(const CharT*) -> str_const_ref<CharT, std::char_traits<CharT>>;
+
+// template <template <class, class> class Str, class CharT,
+//		template <class> class Traits>
+// str_const_ref(const Str<CharT, Traits<CharT>>& str)
+//		-> str_const_ref<CharT, Traits<CharT>>;
+
+template <template <class, class, class...> class Str, class CharT,
+		template <class> class Traits, class... Args>
+str_const_ref(const Str<CharT, Traits<CharT>, Args...>&)
+		-> str_const_ref<CharT, Traits<CharT>>;
+
+
+// template <class CharT, template <class> class Traits>
+// struct str_const_ref {
+//	str_const_ref(const CharT* str, Traits<CharT>)
+//			: sview(str) {
+//	}
+//
+//	str_const_ref(const CharT* str)
+//			: str_const_ref(str, std::char_traits<CharT>{}) {
+//	}
+//
+//	template <template <class, class, class...> class Str, class... Args>
+//	str_const_ref(const Str<CharT, Traits<CharT>, Args...>& str)
+//			: sview(str) {
+//	}
+//
+//	std::basic_string_view<CharT, Traits<CharT>> sview;
+//};
+
+} // namespace detail
 
 // Replaces all 'search' occurences with 'replace'.
 // Modifies string out.
@@ -86,58 +157,80 @@ void replace_all_inplace(std::basic_string<CharT, Traits<CharT>, Args...>& out,
 
 // Replaces all 'search' occurences with 'replace'.
 // Returns modified string.
-template <template <class, class, class...> class Str,
-		template <class, class, class...> class Str2,
-		template <class, class, class...> class Str3, class CharT,
-		template <class> class Traits, class... Args, class... Args2,
-		class... Args3>
-[[nodiscard]] std::basic_string<CharT, Traits<CharT>, Args...> replace_all(
-		const Str<CharT, Traits<CharT>, Args...>& str,
-		const Str2<CharT, Traits<CharT>, Args2...>& search,
-		const Str3<CharT, Traits<CharT>, Args3...>& replace) {
-	std::basic_string<CharT, Traits<CharT>, Args...> ret{ str };
+template <class CharT, template <class> class Traits = std::char_traits>
+[[nodiscard]] std::basic_string<CharT, Traits<CharT>> replace_all(
+		detail::str_const_ref<CharT, Traits<CharT>> str,
+		detail::str_const_ref<CharT, Traits<CharT>> search,
+		detail::str_const_ref<CharT, Traits<CharT>> replace) {
+	std::basic_string<CharT, Traits<CharT>> ret{ str };
 	replace_all_inplace(ret, search, replace);
 	return ret;
 }
 
-// Replaces all 'search' occurences with 'replace'.
-// Returns modified string.
-template <template <class, class, class...> class Str, class CharT,
-		template <class> class Traits, class... Args>
-[[nodiscard]] std::basic_string<CharT, Traits<CharT>, Args...> replace_all(
-		const Str<CharT, Traits<CharT>, Args...>& str, const CharT* search,
-		const CharT* replace) {
-	std::basic_string<CharT, Traits<CharT>, Args...> ret{ str };
-	replace_all_inplace(ret, search, replace);
-	return ret;
-}
-
-// Replaces all 'search' occurences with 'replace'.
-// Returns modified string.
-template <template <class, class, class...> class Str,
-		template <class, class, class...> class Str2, class CharT,
-		template <class> class Traits, class... Args, class... Args2>
-[[nodiscard]] std::basic_string<CharT, Traits<CharT>, Args...> replace_all(
-		const Str<CharT, Traits<CharT>, Args...>& str,
-		const Str2<CharT, Traits<CharT>, Args2...>& search,
-		const CharT* replace) {
-	std::basic_string<CharT, Traits<CharT>, Args...> ret{ str };
-	replace_all_inplace(ret, search, replace);
-	return ret;
-}
-
-// Replaces all 'search' occurences with 'replace'.
-// Returns modified string.
-template <template <class, class, class...> class Str,
-		template <class, class, class...> class Str2, class CharT,
-		template <class> class Traits, class... Args, class... Args2>
-[[nodiscard]] std::basic_string<CharT, Traits<CharT>, Args...> replace_all(
-		const Str<CharT, Traits<CharT>, Args...>& str, const CharT* search,
-		const Str2<CharT, Traits<CharT>, Args2...>& replace) {
-	std::basic_string<CharT, Traits<CharT>, Args...> ret{ str };
-	replace_all_inplace(ret, search, replace);
-	return ret;
-}
+//// Replaces all 'search' occurences with 'replace'.
+//// Returns modified string.
+// template <template <class, class, class...> class Str,
+//		template <class, class, class...> class Str2,
+//		template <class, class, class...> class Str3, class CharT,
+//		template <class> class Traits, class... Args, class... Args2,
+//		class... Args3>
+//[[nodiscard]] std::basic_string<CharT, Traits<CharT>, Args...> replace_all(
+//		const Str<CharT, Traits<CharT>, Args...>& str,
+//		const Str2<CharT, Traits<CharT>, Args2...>& search,
+//		const Str3<CharT, Traits<CharT>, Args3...>& replace) {
+//	std::basic_string<CharT, Traits<CharT>, Args...> ret{ str };
+//	replace_all_inplace(ret, search, replace);
+//	return ret;
+//}
+//
+//// Replaces all 'search' occurences with 'replace'.
+//// Returns modified string.
+// template <template <class, class, class...> class Str, class CharT,
+//		template <class> class Traits, class... Args>
+//[[nodiscard]] std::basic_string<CharT, Traits<CharT>, Args...> replace_all(
+//		const Str<CharT, Traits<CharT>, Args...>& str, const CharT* search,
+//		const CharT* replace) {
+//	std::basic_string<CharT, Traits<CharT>, Args...> ret{ str };
+//	replace_all_inplace(ret, search, replace);
+//	return ret;
+//}
+//
+//// Replaces all 'search' occurences with 'replace'.
+//// Returns modified string.
+// template <class CharT>
+//[[nodiscard]] std::basic_string<CharT> replace_all(
+//		const CharT* str, const CharT* search, const CharT* replace) {
+//	std::basic_string<CharT> ret{ str };
+//	replace_all_inplace(ret, search, replace);
+//	return ret;
+//}
+//
+//// Replaces all 'search' occurences with 'replace'.
+//// Returns modified string.
+// template <template <class, class, class...> class Str,
+//		template <class, class, class...> class Str2, class CharT,
+//		template <class> class Traits, class... Args, class... Args2>
+//[[nodiscard]] std::basic_string<CharT, Traits<CharT>, Args...> replace_all(
+//		const Str<CharT, Traits<CharT>, Args...>& str,
+//		const Str2<CharT, Traits<CharT>, Args2...>& search,
+//		const CharT* replace) {
+//	std::basic_string<CharT, Traits<CharT>, Args...> ret{ str };
+//	replace_all_inplace(ret, search, replace);
+//	return ret;
+//}
+//
+//// Replaces all 'search' occurences with 'replace'.
+//// Returns modified string.
+// template <template <class, class, class...> class Str,
+//		template <class, class, class...> class Str2, class CharT,
+//		template <class> class Traits, class... Args, class... Args2>
+//[[nodiscard]] std::basic_string<CharT, Traits<CharT>, Args...> replace_all(
+//		const Str<CharT, Traits<CharT>, Args...>& str, const CharT* search,
+//		const Str2<CharT, Traits<CharT>, Args2...>& replace) {
+//	std::basic_string<CharT, Traits<CharT>, Args...> ret{ str };
+//	replace_all_inplace(ret, search, replace);
+//	return ret;
+//}
 
 
 } // namespace fea
