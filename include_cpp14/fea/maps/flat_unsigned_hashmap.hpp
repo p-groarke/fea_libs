@@ -759,8 +759,7 @@ private:
 			++swap_right_idx;
 		}
 
-		// Something went horribly wrong.
-		assert(false);
+		// We fall through if erasing the last valid element.
 	}
 
 	template <class M>
