@@ -1,4 +1,4 @@
-include(${CMAKE_SOURCE_DIR}/CMakeLists.global.txt)
+include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.global.txt)
 
 cmake_minimum_required (VERSION 3.20)
 project(fea_libs VERSION 1.0.0 LANGUAGES CXX)
