@@ -715,8 +715,6 @@ private:
 					return search.idx == idx_sentinel();
 				});
 
-		assert(it != end);
-
 		return it;
 	}
 
