@@ -61,7 +61,6 @@ Its special characteristics are :
 		iterators are on value_type, not pair<key_type, value_type>.
 */
 
-
 namespace fea {
 namespace detail {
 // https://stackoverflow.com/questions/30052316/find-next-prime-number-algorithm
@@ -91,7 +90,10 @@ bool is_prime(T number) {
 template <class T>
 T next_prime(T a) {
 	switch (a) {
-	case 7: {
+	case 3: {
+		return 3;
+	} break;
+	case 6: {
 		return 7;
 	} break;
 	case 14: {
@@ -596,7 +598,7 @@ public:
 		}
 		assert(detail::is_prime(count));
 
-		std::vector<lookup_data, lookup_allocator_type> new_lookup(count);
+		std::vector<lookup_data, lookup_allocator_type> new_lookup(count * 2);
 
 		for (const lookup_data& lookup : _lookup) {
 			if (lookup.idx == idx_sentinel()) {
@@ -609,7 +611,12 @@ public:
 					new_lookup.begin(), new_lookup.end(), new_bucket_pos);
 
 			if (it == new_lookup.end()) {
-				size_type idx = new_lookup.size();
+				// Expand the lookup past the end.
+
+				// Make sure collisions are odd slots.
+				size_type idx = new_lookup.size() + 1;
+				assert(idx % 2 != 0);
+
 				new_lookup.resize(size_type(idx * _lookup_trailing_amount));
 				it = new_lookup.begin() + idx;
 			}
@@ -638,7 +645,6 @@ private:
 	size_type hash_max() const {
 		assert(detail::is_prime(_hash_max) || _hash_max == 0);
 		return _hash_max;
-		// return _lookup.size();
 	}
 
 	size_type key_to_index(key_type key) const {
@@ -647,8 +653,7 @@ private:
 		return ret;
 	}
 	static constexpr size_type key_to_index(key_type key, size_type h_max) {
-		// return (size_type(key) % h_max) * 2;
-		return size_type(key) % h_max;
+		return (size_type(key) % h_max) * 2;
 	}
 
 	static constexpr key_type key_sentinel() noexcept {
@@ -660,20 +665,32 @@ private:
 
 	static constexpr size_type init_count() noexcept {
 		// return 14; // 7 * 2, hash_max == 7
-		return 7;
+		return 3;
 	}
 
 	// Custom find_if.
 	// todo : benchmark simd search
 	template <class Iter, class Func>
 	static auto find_slot(Iter start, Iter end, Func func) {
-		for (auto it = start; it < end; ++it) {
+		// Test first.
+		if (func(*start)) {
+			return start;
+		}
+
+		// Now test "holes" (collisions) in-between keys.
+		// Collisions are stored in odd slots only.
+		for (auto it = start + 1; it < end;) {
+			assert(std::distance(start, it) % 2 != 0);
 			if (func(*it)) {
 				return it;
 			}
+
+			if (it == end - 1) {
+				break;
+			}
+			it += 2;
 		}
 
-		// Didn't find anything.
 		return end;
 	}
 
@@ -729,10 +746,18 @@ private:
 		size_type swap_left_idx = hole_idx;
 		size_type swap_right_idx = hole_idx + 1;
 
+		// Only test odd slots, since that's where collisions are stored.
+		if (swap_right_idx % 2 == 0) {
+			// This can happen if the hole was actually a collision.
+			++swap_right_idx;
+		}
+
 		// Sort the collisions.
 		// Do this until you find a hole. The container must guarantee
 		// collisions are packed in a first serve manner.
 		while (swap_right_idx < _lookup.size()) {
+			assert(swap_right_idx % 2 != 0); // only odds
+
 			if (_lookup[swap_right_idx].idx == idx_sentinel()) {
 				// We are done, have reached the end of this collision "group".
 				return;
@@ -745,7 +770,7 @@ private:
 			size_type candidate_idx = key_to_index(_lookup[swap_right_idx].key);
 			if (candidate_idx > swap_left_idx) {
 				// Continue searching for swappable collisions.
-				++swap_right_idx;
+				swap_right_idx += 2;
 				continue;
 			}
 
@@ -754,7 +779,7 @@ private:
 			right = {}; // Invalidate in case it is the last.
 
 			swap_left_idx = swap_right_idx;
-			++swap_right_idx;
+			swap_right_idx += 2;
 		}
 
 		// We fall through if erasing the last valid element.
