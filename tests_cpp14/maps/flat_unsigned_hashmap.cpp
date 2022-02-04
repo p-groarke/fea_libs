@@ -523,4 +523,33 @@ TEST(flat_unsigned_hashmap, fuzzing) {
 	do_fuzz_test<uint64_t>();
 }
 
+TEST(flat_unsigned_hashmap, trailing_holes) {
+	fea::flat_unsigned_hashmap<size_t, size_t> map;
+
+	// 10 will grow to hash 17, size 34.
+	constexpr size_t num = 10;
+
+	auto get_key = [](size_t i) {
+		size_t key = 16 * i; // 17 - 1
+		while (key % 17 != 16) {
+			key += 1;
+		}
+		return key;
+	};
+
+	// Attack the trailing collision holes.
+	for (size_t i = 1; i < num; ++i) {
+		size_t key = get_key(i);
+		map.insert(key, key);
+		EXPECT_TRUE(map.contains(key));
+		EXPECT_EQ(map.at(key), key);
+	}
+
+	for (size_t i = 1; i < num; ++i) {
+		size_t key = get_key(i);
+		EXPECT_TRUE(map.contains(key));
+		EXPECT_EQ(map.at(key), key);
+	}
+}
+
 } // namespace
