@@ -13,6 +13,7 @@ option(FEA_TESTS "Build and run tests." On)
 option(FEA_BENCHMARKS "Build and run bencharks, requires tests." Off)
 option(FEA_CPP17 "Use C++17 (default is C++20). CMake's detection doesn't work well." Off)
 option(FEA_CPP14 "Use C++14 (default is C++17). CMake's detection doesn't work well." Off)
+option(FEA_PULL_CONAN "Executes conan install from cmake." On)
 
 # Output to predictable location.
 set_output_dir(${CMAKE_BINARY_DIR}/bin)
@@ -30,7 +31,9 @@ else()
 endif()
 
 # External dependencies.
-pull_conan()
+if (${FEA_PULL_CONAN})
+	pull_conan()
+endif()
 find_package(TBB CONFIG REQUIRED QUIET)
 find_package(date CONFIG REQUIRED QUIET)
 
