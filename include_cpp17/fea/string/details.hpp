@@ -67,15 +67,27 @@ struct str_view_base {
 
 	template <class InStr>
 	[[nodiscard]] constexpr size_t find(
-			str_view<InStr> search, size_t pos = 0) const noexcept;
+			str_view<InStr> search, size_t pos /*= 0*/) const noexcept {
+		return _sv.find(search.sv(), pos);
+	}
 
 	template <class InStr>
 	[[nodiscard]] constexpr bool starts_with(
-			str_view<InStr> search) const noexcept;
+			str_view<InStr> search) const noexcept {
+		return size() >= search.size()
+				&& traits_type::compare(data(), search.data(), search.size())
+				== 0;
+	}
 
 	template <class InStr>
 	[[nodiscard]] constexpr bool ends_with(
-			str_view<InStr> search) const noexcept;
+			str_view<InStr> search) const noexcept {
+		return size() >= search.size()
+				&& traits_type::compare(data() + (size() - search.size()),
+						   search.data(), search.size())
+				== 0;
+	}
+
 
 protected:
 	std::basic_string_view<char_type, traits_type> _sv;
@@ -185,32 +197,6 @@ struct str_view<Str<CharT, Traits<CharT>, Extra...>>
 			: str_view_base<CharT, Traits<CharT>>(str) {
 	}
 };
-
-template <class CharT, class Traits>
-template <class InStr>
-constexpr size_t str_view_base<CharT, Traits>::find(
-		str_view<InStr> search, size_t pos /*= 0*/) const noexcept {
-	return _sv.find(search.sv(), pos);
-}
-
-template <class CharT, class Traits>
-template <class InStr>
-constexpr bool str_view_base<CharT, Traits>::starts_with(
-		str_view<InStr> search) const noexcept {
-	return size() >= search.size()
-			&& traits_type::compare(data(), search.data(), search.size()) == 0;
-}
-
-
-template <class CharT, class Traits>
-template <class InStr>
-constexpr bool str_view_base<CharT, Traits>::ends_with(
-		str_view<InStr> search) const noexcept {
-	return size() >= search.size()
-			&& traits_type::compare(data() + (size() - search.size()),
-					   search.data(), search.size())
-			== 0;
-}
 
 } // namespace detail
 } // namespace fea

@@ -60,26 +60,28 @@ namespace fea {
 // Returns the size of a given string, string_view or c_string.
 template <class Str>
 [[nodiscard]] constexpr size_t size(const Str& str) {
-	return detail::str_view{ str }.size();
+	return detail::str_view<Str>{ str }.size();
 }
 
 // Returns true if provided string 'str' contains 'search'.
 template <class Str1, class Str2>
 [[nodiscard]] constexpr bool contains(const Str1& str, const Str2& search) {
-	return detail::str_view{ str }.find(detail::str_view{ search })
+	return detail::str_view<Str1>{ str }.find(detail::str_view<Str2>{ search })
 			!= detail::str_view<Str1>::npos;
 }
 
 // Returns true if provided string 'str' starts with 'search'.
 template <class Str1, class Str2>
 [[nodiscard]] constexpr bool starts_with(const Str1& str, const Str2& search) {
-	return detail::str_view{ str }.starts_with(detail::str_view{ search });
+	return detail::str_view<Str1>{ str }.starts_with(
+			detail::str_view<Str2>{ search });
 }
 
 // Returns true if provided string 'str' ends with 'search'.
 template <class Str1, class Str2>
 [[nodiscard]] constexpr bool ends_with(const Str1& str, const Str2& search) {
-	return detail::str_view{ str }.ends_with(detail::str_view{ search });
+	return detail::str_view<Str1>{ str }.ends_with(
+			detail::str_view<Str2>{ search });
 }
 
 // Replaces all 'search' occurences with 'replace'.
@@ -88,8 +90,8 @@ template <template <class, class, class...> class Str, class CharT,
 		template <class> class Traits, class... Args, class Str2, class Str3>
 void replace_all_inplace(Str<CharT, Traits<CharT>, Args...>& out,
 		const Str2& search, const Str3& replace) {
-	auto search_v = detail::str_view{ search };
-	auto replace_v = detail::str_view{ replace };
+	auto search_v = detail::str_view<Str2>{ search };
+	auto replace_v = detail::str_view<Str3>{ replace };
 
 	auto pos = out.find(search_v.data(), 0, search_v.size());
 	while (pos != out.npos) {
