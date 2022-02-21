@@ -31,7 +31,9 @@ else()
 endif()
 
 # External dependencies.
-pull_conan()
+if (${FEA_PULL_CONAN})
+	pull_conan()
+endif()
 find_package(TBB CONFIG REQUIRED QUIET)
 find_package(date CONFIG REQUIRED QUIET)
 
