@@ -127,7 +127,7 @@ struct str_view {
 
 		// Maybe drop pos here?
 		if (size() >= search.size()
-				&& Traits<CharT>::compare(
+				&& traits_type::compare(
 						   data() + pos, search.data(), search.size())
 						== 0) {
 			return 0;
@@ -168,7 +168,6 @@ struct str_view<CharT[N]> : str_view_base<CharT, std::char_traits<CharT>> {
 	}
 
 	[[nodiscard]] constexpr size_t size() const noexcept {
-		// assert(N == str_view_base<CharT>::_sv.size());
 		assert(N == this->_sv.size());
 		return N;
 	}

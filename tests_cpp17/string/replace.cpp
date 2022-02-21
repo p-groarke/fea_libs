@@ -79,7 +79,7 @@ curiosity, she ran across potato field after it, and fortunately was just in tim
 to see it pop down a large rabbit-hole under potato hedge.
 )xx");
 
-TEST(string_replace, replace_all) {
+TEST(string, replace_all) {
 	gen_tests(the_test, "the", "potato");
 
 	static_assert(
