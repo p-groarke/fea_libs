@@ -88,7 +88,6 @@ struct str_view_base {
 				== 0;
 	}
 
-
 protected:
 	std::basic_string_view<char_type, traits_type> _sv;
 };
@@ -127,10 +126,7 @@ struct str_view {
 		assert(pos == 0);
 
 		// Maybe drop pos here?
-		if (size() >= search.size()
-				&& traits_type::compare(
-						   data() + pos, search.data(), search.size())
-						== 0) {
+		if (size() >= search.size() && _char == search.data()[0]) {
 			return 0;
 		}
 		return std::basic_string_view<char_type, traits_type>::npos;
@@ -139,11 +135,14 @@ struct str_view {
 	template <class InStr>
 	[[nodiscard]] constexpr bool starts_with(
 			str_view<InStr> search) const noexcept {
-		return size() >= search.size()
-				&& traits_type::compare(data(), search.data(), search.size())
-				== 0;
+		return size() >= search.size() && _char == search.data()[0];
 	}
 
+	template <class InStr>
+	[[nodiscard]] constexpr bool ends_with(
+			str_view<InStr> search) const noexcept {
+		return size() >= search.size() && _char == search.data()[0];
+	}
 
 private:
 	CharT _char;
@@ -166,11 +165,6 @@ struct str_view<CharT[N]> : str_view_base<CharT, std::char_traits<CharT>> {
 
 	constexpr str_view(const CharT str[N]) noexcept
 			: str_view_base<CharT, std::char_traits<CharT>>(str) {
-	}
-
-	[[nodiscard]] constexpr size_t size() const noexcept {
-		assert(N == this->_sv.size());
-		return N;
 	}
 };
 
