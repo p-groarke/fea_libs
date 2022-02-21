@@ -77,6 +77,8 @@ TEST(string, basics) {
 		EXPECT_TRUE(fea::starts_with(test_str, "test"));
 		EXPECT_TRUE(fea::starts_with(test_str, "tes"));
 		EXPECT_TRUE(fea::starts_with(test_str, "t"));
+		EXPECT_TRUE(fea::starts_with(test_str, 't'));
+		EXPECT_FALSE(fea::starts_with(test_str, 'a'));
 		EXPECT_FALSE(fea::starts_with(test_str, std::string{ "test1" }));
 		EXPECT_FALSE(fea::starts_with(test_str, std::string{ "1test" }));
 		EXPECT_TRUE(fea::starts_with(test_str, std::string{ "\0" }));
@@ -90,6 +92,8 @@ TEST(string, basics) {
 		EXPECT_TRUE(fea::starts_with(wtest_str, L"test"));
 		EXPECT_TRUE(fea::starts_with(wtest_str, L"tes"));
 		EXPECT_TRUE(fea::starts_with(wtest_str, L"t"));
+		EXPECT_TRUE(fea::starts_with(wtest_str, L't'));
+		EXPECT_FALSE(fea::starts_with(wtest_str, L'a'));
 		EXPECT_FALSE(fea::starts_with(wtest_str, std::wstring{ L"test1" }));
 		EXPECT_FALSE(fea::starts_with(wtest_str, std::wstring{ L"1test" }));
 		EXPECT_TRUE(fea::starts_with(wtest_str, std::wstring{ L"\0" }));
@@ -103,6 +107,8 @@ TEST(string, basics) {
 		EXPECT_TRUE(fea::ends_with(test_str, "test"));
 		EXPECT_TRUE(fea::ends_with(test_str, "est"));
 		EXPECT_TRUE(fea::ends_with(test_str, "t"));
+		EXPECT_TRUE(fea::ends_with(test_str, 't'));
+		EXPECT_FALSE(fea::ends_with(test_str, 'e'));
 		EXPECT_FALSE(fea::ends_with(test_str, std::string{ "test1" }));
 		EXPECT_FALSE(fea::ends_with(test_str, std::string{ "1test" }));
 		EXPECT_TRUE(fea::ends_with(test_str, std::string{ "\0" }));
@@ -116,6 +122,8 @@ TEST(string, basics) {
 		EXPECT_TRUE(fea::ends_with(wtest_str, L"test"));
 		EXPECT_TRUE(fea::ends_with(wtest_str, L"est"));
 		EXPECT_TRUE(fea::ends_with(wtest_str, L"t"));
+		EXPECT_TRUE(fea::ends_with(wtest_str, L't'));
+		EXPECT_FALSE(fea::ends_with(wtest_str, L'e'));
 		EXPECT_FALSE(fea::ends_with(wtest_str, std::wstring{ L"test1" }));
 		EXPECT_FALSE(fea::ends_with(wtest_str, std::wstring{ L"1test" }));
 		EXPECT_TRUE(fea::ends_with(wtest_str, std::wstring{ L"\0" }));
