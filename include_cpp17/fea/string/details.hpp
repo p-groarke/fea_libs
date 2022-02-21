@@ -67,7 +67,7 @@ struct str_view_base {
 
 	template <class InStr>
 	[[nodiscard]] constexpr size_t find(
-			str_view<InStr> search, size_t pos /*= 0*/) const noexcept {
+			str_view<InStr> search, size_t pos = 0) const noexcept {
 		return _sv.find(search.sv(), pos);
 	}
 
