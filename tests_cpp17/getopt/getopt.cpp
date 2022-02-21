@@ -87,11 +87,11 @@ struct option_tester {
 		_data[size_t(opt_type::arg0)].push_back({
 				opt_type::arg0,
 				true,
-				FEA_ML("tool.exe"),
+				FEA_LIT("tool.exe"),
 				{},
-				FEA_ML("tool.exe"),
+				FEA_LIT("tool.exe"),
 				false,
-				FEA_ML(""),
+				FEA_LIT(""),
 		});
 	}
 
@@ -104,7 +104,7 @@ struct option_tester {
 				{},
 				std::move(option_and_expected),
 				false,
-				FEA_ML(""),
+				FEA_LIT(""),
 		});
 	}
 	void add_test(
@@ -117,7 +117,7 @@ struct option_tester {
 				{},
 				std::move(expected_data),
 				false,
-				FEA_ML(""),
+				FEA_LIT(""),
 		});
 	}
 	void add_test(opt_type test_type, string_t&& option,
@@ -131,7 +131,7 @@ struct option_tester {
 				std::move(arguments),
 				std::move(expected_data),
 				false,
-				FEA_ML(""),
+				FEA_LIT(""),
 		});
 	}
 
@@ -246,7 +246,7 @@ struct option_tester {
 		it->was_recieved = true;
 
 		if (it->type == opt_type::concat) {
-			it->recieved_data += std::move(recieved_str) + FEA_ML(" ");
+			it->recieved_data += std::move(recieved_str) + FEA_LIT(" ");
 		} else {
 			it->recieved_data = std::move(recieved_str);
 		}
@@ -256,13 +256,13 @@ struct option_tester {
 		for (const test_case& t : _test_cases) {
 			EXPECT_EQ(t.was_recieved, t.expected);
 			if (!t.expected) {
-				EXPECT_EQ(t.recieved_data, FEA_ML(""));
+				EXPECT_EQ(t.recieved_data, FEA_LIT(""));
 				continue;
 			}
 
 			string_t test_str = t.recieved_data;
 
-			if (!test_str.empty() && fea::ends_with(test_str, FEA_ML(" "))) {
+			if (!test_str.empty() && fea::ends_with(test_str, FEA_LIT(" "))) {
 				test_str.pop_back();
 			}
 			EXPECT_EQ(test_str, t.expected_data);
@@ -338,23 +338,23 @@ test_scenario<CharT> test_all_help() {
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(
-			option_tester<CharT>::opt_type::help, FEA_ML("-h"), FEA_ML(""));
+			option_tester<CharT>::opt_type::help, FEA_LIT("-h"), FEA_LIT(""));
+
+	ret.tests.push_back({});
+	ret.tests.back().add_test(option_tester<CharT>::opt_type::help,
+			FEA_LIT("--help"), FEA_LIT(""));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(
-			option_tester<CharT>::opt_type::help, FEA_ML("--help"), FEA_ML(""));
+			option_tester<CharT>::opt_type::help, FEA_LIT("/h"), FEA_LIT(""));
+
+	ret.tests.push_back({});
+	ret.tests.back().add_test(option_tester<CharT>::opt_type::help,
+			FEA_LIT("/help"), FEA_LIT(""));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(
-			option_tester<CharT>::opt_type::help, FEA_ML("/h"), FEA_ML(""));
-
-	ret.tests.push_back({});
-	ret.tests.back().add_test(
-			option_tester<CharT>::opt_type::help, FEA_ML("/help"), FEA_ML(""));
-
-	ret.tests.push_back({});
-	ret.tests.back().add_test(
-			option_tester<CharT>::opt_type::help, FEA_ML("/?"), FEA_ML(""));
+			option_tester<CharT>::opt_type::help, FEA_LIT("/?"), FEA_LIT(""));
 
 	return ret;
 }
@@ -366,17 +366,17 @@ test_scenario<CharT> test_raw() {
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(
-			option_tester<CharT>::opt_type::raw, FEA_ML("raw arg 1"));
+			option_tester<CharT>::opt_type::raw, FEA_LIT("raw arg 1"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(
-			option_tester<CharT>::opt_type::raw, FEA_ML("raw arg 2"));
+			option_tester<CharT>::opt_type::raw, FEA_LIT("raw arg 2"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(
-			option_tester<CharT>::opt_type::raw, FEA_ML("raw arg 1"));
+			option_tester<CharT>::opt_type::raw, FEA_LIT("raw arg 1"));
 	ret.tests.back().add_test(
-			option_tester<CharT>::opt_type::raw, FEA_ML("raw arg 2"));
+			option_tester<CharT>::opt_type::raw, FEA_LIT("raw arg 2"));
 
 	return ret;
 }
@@ -387,37 +387,37 @@ test_scenario<CharT> test_flags_and_concat() {
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(
-			option_tester<CharT>::opt_type::flag, FEA_ML("-f"));
+			option_tester<CharT>::opt_type::flag, FEA_LIT("-f"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(
-			option_tester<CharT>::opt_type::flag, FEA_ML("--flag2"));
+			option_tester<CharT>::opt_type::flag, FEA_LIT("--flag2"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(
-			option_tester<CharT>::opt_type::flag, FEA_ML("--flag3"));
+			option_tester<CharT>::opt_type::flag, FEA_LIT("--flag3"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(
-			option_tester<CharT>::opt_type::flag, FEA_ML("--flag4"));
+			option_tester<CharT>::opt_type::flag, FEA_LIT("--flag4"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(
-			option_tester<CharT>::opt_type::flag, FEA_ML("--flag5"));
+			option_tester<CharT>::opt_type::flag, FEA_LIT("--flag5"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(
-			option_tester<CharT>::opt_type::flag, FEA_ML("-f"));
+			option_tester<CharT>::opt_type::flag, FEA_LIT("-f"));
 	ret.tests.back().add_test(
-			option_tester<CharT>::opt_type::flag, FEA_ML("--flag2"));
+			option_tester<CharT>::opt_type::flag, FEA_LIT("--flag2"));
 	ret.tests.back().add_test(
-			option_tester<CharT>::opt_type::flag, FEA_ML("--flag3"));
+			option_tester<CharT>::opt_type::flag, FEA_LIT("--flag3"));
 	ret.tests.back().add_test(
-			option_tester<CharT>::opt_type::flag, FEA_ML("--flag4"));
+			option_tester<CharT>::opt_type::flag, FEA_LIT("--flag4"));
 	ret.tests.back().add_test(
-			option_tester<CharT>::opt_type::flag, FEA_ML("--flag5"));
-	ret.tests.back().add_test(
-			option_tester<CharT>::opt_type::help, FEA_ML("--help"), FEA_ML(""));
+			option_tester<CharT>::opt_type::flag, FEA_LIT("--flag5"));
+	ret.tests.back().add_test(option_tester<CharT>::opt_type::help,
+			FEA_LIT("--help"), FEA_LIT(""));
 
 	ret.tests.push_back(ret.tests.back());
 	ret.tests.push_back(ret.tests.back());
@@ -426,23 +426,23 @@ test_scenario<CharT> test_flags_and_concat() {
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::concat,
-			FEA_ML("-faAbB"), FEA_ML("-f --flag2 --flag3 --flag4 --flag5"));
+			FEA_LIT("-faAbB"), FEA_LIT("-f --flag2 --flag3 --flag4 --flag5"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::concat,
-			FEA_ML("-fab"), FEA_ML("-f --flag2 --flag4"));
+			FEA_LIT("-fab"), FEA_LIT("-f --flag2 --flag4"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::concat,
-			FEA_ML("-fAB"), FEA_ML("-f --flag3 --flag5"));
+			FEA_LIT("-fAB"), FEA_LIT("-f --flag3 --flag5"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::concat,
-			FEA_ML("-Bb"), FEA_ML("--flag5 --flag4"));
+			FEA_LIT("-Bb"), FEA_LIT("--flag5 --flag4"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::concat,
-			FEA_ML("-abAB"), FEA_ML("--flag2 --flag4 --flag3 --flag5"));
+			FEA_LIT("-abAB"), FEA_LIT("--flag2 --flag4 --flag3 --flag5"));
 
 	return ret;
 }
@@ -453,57 +453,64 @@ test_scenario<CharT> test_default_arg() {
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::default_arg,
-			FEA_ML("--default1"), FEA_ML("d_val1"));
+			FEA_LIT("--default1"), FEA_LIT("d_val1"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::default_arg,
-			FEA_ML("-d"), FEA_ML("d_val1"));
+			FEA_LIT("-d"), FEA_LIT("d_val1"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::default_arg,
-			FEA_ML("--default2"), FEA_ML("d_val2"));
+			FEA_LIT("--default2"), FEA_LIT("d_val2"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::default_arg,
-			FEA_ML("--default1"), { FEA_ML("someval") }, FEA_ML("someval"));
+			FEA_LIT("--default1"), { FEA_LIT("someval") }, FEA_LIT("someval"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::default_arg,
-			FEA_ML("-d"), { FEA_ML("someval2") }, FEA_ML("someval2"));
+			FEA_LIT("-d"), { FEA_LIT("someval2") }, FEA_LIT("someval2"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::default_arg,
-			FEA_ML("--default2"), { FEA_ML("someval3") }, FEA_ML("someval3"));
+			FEA_LIT("--default2"), { FEA_LIT("someval3") },
+			FEA_LIT("someval3"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::default_arg,
-			FEA_ML("--default1"), FEA_ML("d_val1"));
+			FEA_LIT("--default1"), FEA_LIT("d_val1"));
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::default_arg,
-			FEA_ML("--default2"), FEA_ML("d_val2"));
+			FEA_LIT("--default2"), FEA_LIT("d_val2"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::default_arg,
-			FEA_ML("--default1"), { FEA_ML("someval1") }, FEA_ML("someval1"));
+			FEA_LIT("--default1"), { FEA_LIT("someval1") },
+			FEA_LIT("someval1"));
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::default_arg,
-			FEA_ML("--default2"), FEA_ML("d_val2"));
+			FEA_LIT("--default2"), FEA_LIT("d_val2"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::default_arg,
-			FEA_ML("--default2"), FEA_ML("d_val2"));
+			FEA_LIT("--default2"), FEA_LIT("d_val2"));
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::default_arg,
-			FEA_ML("--default1"), { FEA_ML("someval1") }, FEA_ML("someval1"));
+			FEA_LIT("--default1"), { FEA_LIT("someval1") },
+			FEA_LIT("someval1"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::default_arg,
-			FEA_ML("--default2"), { FEA_ML("someval2") }, FEA_ML("someval2"));
+			FEA_LIT("--default2"), { FEA_LIT("someval2") },
+			FEA_LIT("someval2"));
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::default_arg,
-			FEA_ML("--default1"), { FEA_ML("someval1") }, FEA_ML("someval1"));
+			FEA_LIT("--default1"), { FEA_LIT("someval1") },
+			FEA_LIT("someval1"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::default_arg,
-			FEA_ML("--default1"), { FEA_ML("someval1") }, FEA_ML("someval1"));
+			FEA_LIT("--default1"), { FEA_LIT("someval1") },
+			FEA_LIT("someval1"));
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::default_arg,
-			FEA_ML("--default2"), { FEA_ML("someval2") }, FEA_ML("someval2"));
+			FEA_LIT("--default2"), { FEA_LIT("someval2") },
+			FEA_LIT("someval2"));
 
 	return ret;
 }
@@ -514,27 +521,27 @@ test_scenario<CharT> test_optional_arg() {
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::optional,
-			FEA_ML("--optional1"), { FEA_ML("opt") }, FEA_ML("opt"));
+			FEA_LIT("--optional1"), { FEA_LIT("opt") }, FEA_LIT("opt"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::optional,
-			FEA_ML("--optional1"), FEA_ML(""));
-
-	ret.tests.push_back({});
-	ret.tests.back().add_test(
-			option_tester<CharT>::opt_type::optional, FEA_ML("-o"), FEA_ML(""));
+			FEA_LIT("--optional1"), FEA_LIT(""));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::optional,
-			FEA_ML("-o"), { FEA_ML("optshort") }, FEA_ML("optshort"));
+			FEA_LIT("-o"), FEA_LIT(""));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::optional,
-			FEA_ML("-o"), { FEA_ML("opt1") }, FEA_ML("opt1"));
+			FEA_LIT("-o"), { FEA_LIT("optshort") }, FEA_LIT("optshort"));
+
+	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::optional,
-			FEA_ML("--optional2"), { FEA_ML("opt2") }, FEA_ML("opt2"));
+			FEA_LIT("-o"), { FEA_LIT("opt1") }, FEA_LIT("opt1"));
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::optional,
-			FEA_ML("--optional3"), FEA_ML(""));
+			FEA_LIT("--optional2"), { FEA_LIT("opt2") }, FEA_LIT("opt2"));
+	ret.tests.back().add_test(option_tester<CharT>::opt_type::optional,
+			FEA_LIT("--optional3"), FEA_LIT(""));
 
 	ret.tests.push_back(ret.tests.back());
 	ret.tests.push_back(ret.tests.back());
@@ -549,27 +556,27 @@ test_scenario<CharT> test_required_arg() {
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::required,
-			FEA_ML("--required1"), { FEA_ML("req") }, FEA_ML("req"));
+			FEA_LIT("--required1"), { FEA_LIT("req") }, FEA_LIT("req"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::required,
-			FEA_ML("-r"), { FEA_ML("reqshort") }, FEA_ML("reqshort"));
+			FEA_LIT("-r"), { FEA_LIT("reqshort") }, FEA_LIT("reqshort"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::required,
-			FEA_ML("--required2"), { FEA_ML("req2") }, FEA_ML("req2"));
+			FEA_LIT("--required2"), { FEA_LIT("req2") }, FEA_LIT("req2"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::required,
-			FEA_ML("--required3"), { FEA_ML("req3") }, FEA_ML("req3"));
+			FEA_LIT("--required3"), { FEA_LIT("req3") }, FEA_LIT("req3"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::required,
-			FEA_ML("-r"), { FEA_ML("reqshort2") }, FEA_ML("reqshort2"));
+			FEA_LIT("-r"), { FEA_LIT("reqshort2") }, FEA_LIT("reqshort2"));
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::required,
-			FEA_ML("--required2"), { FEA_ML("req2-2") }, FEA_ML("req2-2"));
+			FEA_LIT("--required2"), { FEA_LIT("req2-2") }, FEA_LIT("req2-2"));
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::required,
-			FEA_ML("--required3"), { FEA_ML("req3-3") }, FEA_ML("req3-3"));
+			FEA_LIT("--required3"), { FEA_LIT("req3-3") }, FEA_LIT("req3-3"));
 
 	ret.tests.push_back(ret.tests.back());
 	ret.tests.push_back(ret.tests.back());
@@ -584,129 +591,135 @@ test_scenario<CharT> test_multi_arg() {
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
-			FEA_ML("--multi1"), { FEA_ML("a") }, FEA_ML("a"));
+			FEA_LIT("--multi1"), { FEA_LIT("a") }, FEA_LIT("a"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
-			FEA_ML("--multi1"), { FEA_ML("a2 b2 c2 d2") },
-			FEA_ML("a2 b2 c2 d2"));
+			FEA_LIT("--multi1"), { FEA_LIT("a2 b2 c2 d2") },
+			FEA_LIT("a2 b2 c2 d2"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
-			FEA_ML("--multi1"),
-			{ FEA_ML("a3"), FEA_ML("b3"), FEA_ML("c3"), FEA_ML("d3") },
-			FEA_ML("a3 b3 c3 d3"));
+			FEA_LIT("--multi1"),
+			{ FEA_LIT("a3"), FEA_LIT("b3"), FEA_LIT("c3"), FEA_LIT("d3") },
+			FEA_LIT("a3 b3 c3 d3"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
-			FEA_ML("-m"), { FEA_ML("a4") }, FEA_ML("a4"));
+			FEA_LIT("-m"), { FEA_LIT("a4") }, FEA_LIT("a4"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
-			FEA_ML("-m"), { FEA_ML("a5 b5 c5 d5") }, FEA_ML("a5 b5 c5 d5"));
+			FEA_LIT("-m"), { FEA_LIT("a5 b5 c5 d5") }, FEA_LIT("a5 b5 c5 d5"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
-			FEA_ML("-m"),
-			{ FEA_ML("a6"), FEA_ML("b6"), FEA_ML("c6"), FEA_ML("d6") },
-			FEA_ML("a6 b6 c6 d6"));
+			FEA_LIT("-m"),
+			{ FEA_LIT("a6"), FEA_LIT("b6"), FEA_LIT("c6"), FEA_LIT("d6") },
+			FEA_LIT("a6 b6 c6 d6"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
-			FEA_ML("--multi2"), { FEA_ML("a7"), FEA_ML("b7"), FEA_ML("c7") },
-			FEA_ML("a7 b7 c7"));
+			FEA_LIT("--multi2"),
+			{ FEA_LIT("a7"), FEA_LIT("b7"), FEA_LIT("c7") },
+			FEA_LIT("a7 b7 c7"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
-			FEA_ML("--multi2"),
-			{ FEA_ML("a8 b8 c8 d8 e8 f8 g8 h8 i8 j8 k8 l8 m8 n8 o8 p8 q8 r8 s8 "
-					 "t8 u8 v8 w8 x8 y8 z8") },
-			FEA_ML("a8 b8 c8 d8 e8 f8 g8 h8 i8 j8 k8 l8 m8 n8 o8 p8 q8 r8 s8 "
-				   "t8 u8 v8 w8 x8 y8 z8"));
+			FEA_LIT("--multi2"),
+			{ FEA_LIT(
+					"a8 b8 c8 d8 e8 f8 g8 h8 i8 j8 k8 l8 m8 n8 o8 p8 q8 r8 s8 "
+					"t8 u8 v8 w8 x8 y8 z8") },
+			FEA_LIT("a8 b8 c8 d8 e8 f8 g8 h8 i8 j8 k8 l8 m8 n8 o8 p8 q8 r8 s8 "
+					"t8 u8 v8 w8 x8 y8 z8"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
-			FEA_ML("--multi2"),
-			{ FEA_ML("a8"), FEA_ML("b8"), FEA_ML("c8"), FEA_ML("d8"),
-					FEA_ML("e8"), FEA_ML("f8"), FEA_ML("g8"), FEA_ML("h8"),
-					FEA_ML("i8"), FEA_ML("j8"), FEA_ML("k8"), FEA_ML("l8"),
-					FEA_ML("m8"), FEA_ML("n8"), FEA_ML("o8"), FEA_ML("p8"),
-					FEA_ML("q8"), FEA_ML("r8"), FEA_ML("s8"), FEA_ML("t8"),
-					FEA_ML("u8"), FEA_ML("v8"), FEA_ML("w8"), FEA_ML("x8"),
-					FEA_ML("y8"), FEA_ML("z8") },
-			FEA_ML("a8 b8 c8 d8 e8 f8 g8 h8 i8 j8 k8 l8 m8 n8 o8 p8 q8 r8 s8 "
-				   "t8 u8 v8 w8 x8 y8 z8"));
+			FEA_LIT("--multi2"),
+			{ FEA_LIT("a8"), FEA_LIT("b8"), FEA_LIT("c8"), FEA_LIT("d8"),
+					FEA_LIT("e8"), FEA_LIT("f8"), FEA_LIT("g8"), FEA_LIT("h8"),
+					FEA_LIT("i8"), FEA_LIT("j8"), FEA_LIT("k8"), FEA_LIT("l8"),
+					FEA_LIT("m8"), FEA_LIT("n8"), FEA_LIT("o8"), FEA_LIT("p8"),
+					FEA_LIT("q8"), FEA_LIT("r8"), FEA_LIT("s8"), FEA_LIT("t8"),
+					FEA_LIT("u8"), FEA_LIT("v8"), FEA_LIT("w8"), FEA_LIT("x8"),
+					FEA_LIT("y8"), FEA_LIT("z8") },
+			FEA_LIT("a8 b8 c8 d8 e8 f8 g8 h8 i8 j8 k8 l8 m8 n8 o8 p8 q8 r8 s8 "
+					"t8 u8 v8 w8 x8 y8 z8"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
-			FEA_ML("--multi1"), { FEA_ML("a") }, FEA_ML("a"));
+			FEA_LIT("--multi1"), { FEA_LIT("a") }, FEA_LIT("a"));
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
-			FEA_ML("--multi2"), { FEA_ML("a7"), FEA_ML("b7"), FEA_ML("c7") },
-			FEA_ML("a7 b7 c7"));
+			FEA_LIT("--multi2"),
+			{ FEA_LIT("a7"), FEA_LIT("b7"), FEA_LIT("c7") },
+			FEA_LIT("a7 b7 c7"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
-			FEA_ML("--multi1"), { FEA_ML("a2 b2 c2 d2") },
-			FEA_ML("a2 b2 c2 d2"));
+			FEA_LIT("--multi1"), { FEA_LIT("a2 b2 c2 d2") },
+			FEA_LIT("a2 b2 c2 d2"));
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
-			FEA_ML("--multi2"),
-			{ FEA_ML("a8 b8 c8 d8 e8 f8 g8 h8 i8 j8 k8 l8 m8 n8 o8 p8 q8 r8 s8 "
-					 "t8 u8 v8 w8 x8 y8 z8") },
-			FEA_ML("a8 b8 c8 d8 e8 f8 g8 h8 i8 j8 k8 l8 m8 n8 o8 p8 q8 r8 s8 "
-				   "t8 u8 v8 w8 x8 y8 z8"));
+			FEA_LIT("--multi2"),
+			{ FEA_LIT(
+					"a8 b8 c8 d8 e8 f8 g8 h8 i8 j8 k8 l8 m8 n8 o8 p8 q8 r8 s8 "
+					"t8 u8 v8 w8 x8 y8 z8") },
+			FEA_LIT("a8 b8 c8 d8 e8 f8 g8 h8 i8 j8 k8 l8 m8 n8 o8 p8 q8 r8 s8 "
+					"t8 u8 v8 w8 x8 y8 z8"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
-			FEA_ML("--multi1"),
-			{ FEA_ML("a3"), FEA_ML("b3"), FEA_ML("c3"), FEA_ML("d3") },
-			FEA_ML("a3 b3 c3 d3"));
+			FEA_LIT("--multi1"),
+			{ FEA_LIT("a3"), FEA_LIT("b3"), FEA_LIT("c3"), FEA_LIT("d3") },
+			FEA_LIT("a3 b3 c3 d3"));
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
-			FEA_ML("--multi2"),
-			{ FEA_ML("a8"), FEA_ML("b8"), FEA_ML("c8"), FEA_ML("d8"),
-					FEA_ML("e8"), FEA_ML("f8"), FEA_ML("g8"), FEA_ML("h8"),
-					FEA_ML("i8"), FEA_ML("j8"), FEA_ML("k8"), FEA_ML("l8"),
-					FEA_ML("m8"), FEA_ML("n8"), FEA_ML("o8"), FEA_ML("p8"),
-					FEA_ML("q8"), FEA_ML("r8"), FEA_ML("s8"), FEA_ML("t8"),
-					FEA_ML("u8"), FEA_ML("v8"), FEA_ML("w8"), FEA_ML("x8"),
-					FEA_ML("y8"), FEA_ML("z8") },
-			FEA_ML("a8 b8 c8 d8 e8 f8 g8 h8 i8 j8 k8 l8 m8 n8 o8 p8 q8 r8 s8 "
-				   "t8 u8 v8 w8 x8 y8 z8"));
+			FEA_LIT("--multi2"),
+			{ FEA_LIT("a8"), FEA_LIT("b8"), FEA_LIT("c8"), FEA_LIT("d8"),
+					FEA_LIT("e8"), FEA_LIT("f8"), FEA_LIT("g8"), FEA_LIT("h8"),
+					FEA_LIT("i8"), FEA_LIT("j8"), FEA_LIT("k8"), FEA_LIT("l8"),
+					FEA_LIT("m8"), FEA_LIT("n8"), FEA_LIT("o8"), FEA_LIT("p8"),
+					FEA_LIT("q8"), FEA_LIT("r8"), FEA_LIT("s8"), FEA_LIT("t8"),
+					FEA_LIT("u8"), FEA_LIT("v8"), FEA_LIT("w8"), FEA_LIT("x8"),
+					FEA_LIT("y8"), FEA_LIT("z8") },
+			FEA_LIT("a8 b8 c8 d8 e8 f8 g8 h8 i8 j8 k8 l8 m8 n8 o8 p8 q8 r8 s8 "
+					"t8 u8 v8 w8 x8 y8 z8"));
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
-			FEA_ML("-m"), { FEA_ML("a4") }, FEA_ML("a4"));
+			FEA_LIT("-m"), { FEA_LIT("a4") }, FEA_LIT("a4"));
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
-			FEA_ML("--multi2"), { FEA_ML("a7"), FEA_ML("b7"), FEA_ML("c7") },
-			FEA_ML("a7 b7 c7"));
-
-
-	ret.tests.push_back({});
-	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
-			FEA_ML("-m"), { FEA_ML("a5 b5 c5 d5") }, FEA_ML("a5 b5 c5 d5"));
-	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
-			FEA_ML("--multi2"),
-			{ FEA_ML("a8 b8 c8 d8 e8 f8 g8 h8 i8 j8 k8 l8 m8 n8 o8 p8 q8 r8 s8 "
-					 "t8 u8 v8 w8 x8 y8 z8") },
-			FEA_ML("a8 b8 c8 d8 e8 f8 g8 h8 i8 j8 k8 l8 m8 n8 o8 p8 q8 r8 s8 "
-				   "t8 u8 v8 w8 x8 y8 z8"));
+			FEA_LIT("--multi2"),
+			{ FEA_LIT("a7"), FEA_LIT("b7"), FEA_LIT("c7") },
+			FEA_LIT("a7 b7 c7"));
 
 
 	ret.tests.push_back({});
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
-			FEA_ML("-m"),
-			{ FEA_ML("a6"), FEA_ML("b6"), FEA_ML("c6"), FEA_ML("d6") },
-			FEA_ML("a6 b6 c6 d6"));
+			FEA_LIT("-m"), { FEA_LIT("a5 b5 c5 d5") }, FEA_LIT("a5 b5 c5 d5"));
 	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
-			FEA_ML("--multi2"),
-			{ FEA_ML("a8"), FEA_ML("b8"), FEA_ML("c8"), FEA_ML("d8"),
-					FEA_ML("e8"), FEA_ML("f8"), FEA_ML("g8"), FEA_ML("h8"),
-					FEA_ML("i8"), FEA_ML("j8"), FEA_ML("k8"), FEA_ML("l8"),
-					FEA_ML("m8"), FEA_ML("n8"), FEA_ML("o8"), FEA_ML("p8"),
-					FEA_ML("q8"), FEA_ML("r8"), FEA_ML("s8"), FEA_ML("t8"),
-					FEA_ML("u8"), FEA_ML("v8"), FEA_ML("w8"), FEA_ML("x8"),
-					FEA_ML("y8"), FEA_ML("z8") },
-			FEA_ML("a8 b8 c8 d8 e8 f8 g8 h8 i8 j8 k8 l8 m8 n8 o8 p8 q8 r8 s8 "
-				   "t8 u8 v8 w8 x8 y8 z8"));
+			FEA_LIT("--multi2"),
+			{ FEA_LIT(
+					"a8 b8 c8 d8 e8 f8 g8 h8 i8 j8 k8 l8 m8 n8 o8 p8 q8 r8 s8 "
+					"t8 u8 v8 w8 x8 y8 z8") },
+			FEA_LIT("a8 b8 c8 d8 e8 f8 g8 h8 i8 j8 k8 l8 m8 n8 o8 p8 q8 r8 s8 "
+					"t8 u8 v8 w8 x8 y8 z8"));
+
+
+	ret.tests.push_back({});
+	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
+			FEA_LIT("-m"),
+			{ FEA_LIT("a6"), FEA_LIT("b6"), FEA_LIT("c6"), FEA_LIT("d6") },
+			FEA_LIT("a6 b6 c6 d6"));
+	ret.tests.back().add_test(option_tester<CharT>::opt_type::multi,
+			FEA_LIT("--multi2"),
+			{ FEA_LIT("a8"), FEA_LIT("b8"), FEA_LIT("c8"), FEA_LIT("d8"),
+					FEA_LIT("e8"), FEA_LIT("f8"), FEA_LIT("g8"), FEA_LIT("h8"),
+					FEA_LIT("i8"), FEA_LIT("j8"), FEA_LIT("k8"), FEA_LIT("l8"),
+					FEA_LIT("m8"), FEA_LIT("n8"), FEA_LIT("o8"), FEA_LIT("p8"),
+					FEA_LIT("q8"), FEA_LIT("r8"), FEA_LIT("s8"), FEA_LIT("t8"),
+					FEA_LIT("u8"), FEA_LIT("v8"), FEA_LIT("w8"), FEA_LIT("x8"),
+					FEA_LIT("y8"), FEA_LIT("z8") },
+			FEA_LIT("a8 b8 c8 d8 e8 f8 g8 h8 i8 j8 k8 l8 m8 n8 o8 p8 q8 r8 s8 "
+					"t8 u8 v8 w8 x8 y8 z8"));
 
 	return ret;
 }
@@ -746,11 +759,11 @@ void add_options(fea::get_opt<CharT, PrintFunc>& opts) {
 	opts.add_help_callback([]() {
 		using opt_test = option_tester<CharT>;
 		opt_test& t = get_global_tester<CharT>();
-		t.recieved(opt_test::opt_type::help, FEA_ML(""));
+		t.recieved(opt_test::opt_type::help, FEA_LIT(""));
 	});
 
 	opts.add_raw_option(
-			FEA_ML("filename"),
+			FEA_LIT("filename"),
 			[](string_t&& str) {
 				static_assert(
 						std::is_same_v<typename string_t::value_type, CharT>,
@@ -763,11 +776,12 @@ void add_options(fea::get_opt<CharT, PrintFunc>& opts) {
 
 				return true;
 			},
-			FEA_ML("File to process.\nThis is a second indented string.\nAnd a "
-				   "third."));
+			FEA_LIT("File to process.\nThis is a second indented string.\nAnd "
+					"a "
+					"third."));
 
 	opts.add_raw_option(
-			FEA_ML("other_raw_opt"),
+			FEA_LIT("other_raw_opt"),
 			[](string_t&& str) {
 				static_assert(
 						std::is_same_v<typename string_t::value_type, CharT>,
@@ -780,68 +794,68 @@ void add_options(fea::get_opt<CharT, PrintFunc>& opts) {
 
 				return true;
 			},
-			FEA_ML("Some looooooooong string that should be cut off by the "
-				   "library and reindented appropriately. Hopefully without "
-				   "splitting inside a word and making everything super nice "
-				   "for users that can even add backslash n if they want to "
-				   "start another sentence at the right indentantation like "
-				   "this following sentence.\nI am a sentence that should "
-				   "start at a newline, but still be split appropriately if I "
-				   "am too long because that would be unfortunate wouldn't it "
-				   "now."));
+			FEA_LIT("Some looooooooong string that should be cut off by the "
+					"library and reindented appropriately. Hopefully without "
+					"splitting inside a word and making everything super nice "
+					"for users that can even add backslash n if they want to "
+					"start another sentence at the right indentantation like "
+					"this following sentence.\nI am a sentence that should "
+					"start at a newline, but still be split appropriately if I "
+					"am too long because that would be unfortunate wouldn't it "
+					"now."));
 
 	opts.add_flag_option(
-			FEA_ML("flag1"),
+			FEA_LIT("flag1"),
 			[]() {
 				using opt_test = option_tester<CharT>;
 				opt_test& t = get_global_tester<CharT>();
-				t.recieved(opt_test::opt_type::flag, { FEA_ML("-f") });
+				t.recieved(opt_test::opt_type::flag, { FEA_LIT("-f") });
 				return true;
 			},
-			FEA_ML("A simple flag."), FEA_CH('f'));
+			FEA_LIT("A simple flag."), FEA_CH('f'));
 
 	opts.add_flag_option(
-			FEA_ML("flag2"),
+			FEA_LIT("flag2"),
 			[]() {
 				using opt_test = option_tester<CharT>;
 				opt_test& t = get_global_tester<CharT>();
-				t.recieved(opt_test::opt_type::flag, { FEA_ML("--flag2") });
+				t.recieved(opt_test::opt_type::flag, { FEA_LIT("--flag2") });
 				return true;
 			},
-			FEA_ML("A simple flag."), FEA_CH('a'));
+			FEA_LIT("A simple flag."), FEA_CH('a'));
 
 	opts.add_flag_option(
-			FEA_ML("flag3"),
+			FEA_LIT("flag3"),
 			[]() {
 				using opt_test = option_tester<CharT>;
 				opt_test& t = get_global_tester<CharT>();
-				t.recieved(opt_test::opt_type::flag, { FEA_ML("--flag3") });
+				t.recieved(opt_test::opt_type::flag, { FEA_LIT("--flag3") });
 				return true;
 			},
-			FEA_ML("A simple flag."), FEA_CH('A'));
+			FEA_LIT("A simple flag."), FEA_CH('A'));
 
 	opts.add_flag_option(
-			FEA_ML("flag4"),
+			FEA_LIT("flag4"),
 			[]() {
 				using opt_test = option_tester<CharT>;
 				opt_test& t = get_global_tester<CharT>();
-				t.recieved(opt_test::opt_type::flag, { FEA_ML("--flag4") });
+				t.recieved(opt_test::opt_type::flag, { FEA_LIT("--flag4") });
 				return true;
 			},
-			FEA_ML("A simple flag."), FEA_CH('b'));
+			FEA_LIT("A simple flag."), FEA_CH('b'));
 
 	opts.add_flag_option(
-			FEA_ML("flag5"),
+			FEA_LIT("flag5"),
 			[]() {
 				using opt_test = option_tester<CharT>;
 				opt_test& t = get_global_tester<CharT>();
-				t.recieved(opt_test::opt_type::flag, { FEA_ML("--flag5") });
+				t.recieved(opt_test::opt_type::flag, { FEA_LIT("--flag5") });
 				return true;
 			},
-			FEA_ML("A simple flag."), FEA_CH('B'));
+			FEA_LIT("A simple flag."), FEA_CH('B'));
 
 	opts.add_default_arg_option(
-			FEA_ML("default1"),
+			FEA_LIT("default1"),
 			[](string_t&& str) {
 				static_assert(
 						std::is_same_v<typename string_t::value_type, CharT>,
@@ -853,82 +867,82 @@ void add_options(fea::get_opt<CharT, PrintFunc>& opts) {
 				t.recieved(opt_test::opt_type::default_arg, std::move(str));
 				return true;
 			},
-			FEA_ML("Some looooooooong string that should be cut off by the "
-				   "library and reindented appropriately. Hopefully without "
-				   "splitting inside a word and making everything super nice "
-				   "for users that can even add backslash n if they want to "
-				   "start another sentence at the right indentantation like "
-				   "this following sentence.\nI am a sentence that should "
-				   "start at a newline, but still be split appropriately if I "
-				   "am too long because that would be unfortunate wouldn't it "
-				   "now."),
-			FEA_ML("d_val1"), FEA_CH('d'));
+			FEA_LIT("Some looooooooong string that should be cut off by the "
+					"library and reindented appropriately. Hopefully without "
+					"splitting inside a word and making everything super nice "
+					"for users that can even add backslash n if they want to "
+					"start another sentence at the right indentantation like "
+					"this following sentence.\nI am a sentence that should "
+					"start at a newline, but still be split appropriately if I "
+					"am too long because that would be unfortunate wouldn't it "
+					"now."),
+			FEA_LIT("d_val1"), FEA_CH('d'));
 
 	opts.add_default_arg_option(
-			FEA_ML("default2"),
+			FEA_LIT("default2"),
 			[](string_t&& str) {
 				using opt_test = option_tester<CharT>;
 				opt_test& t = get_global_tester<CharT>();
 				t.recieved(opt_test::opt_type::default_arg, std::move(str));
 				return true;
 			},
-			FEA_ML("A default option."), FEA_ML("d_val2"));
+			FEA_LIT("A default option."), FEA_LIT("d_val2"));
 	opts.add_optional_arg_option(
-			FEA_ML("optional1"),
+			FEA_LIT("optional1"),
 			[](string_t&& str) {
 				using opt_test = option_tester<CharT>;
 				opt_test& t = get_global_tester<CharT>();
 				t.recieved(opt_test::opt_type::optional, std::move(str));
 				return true;
 			},
-			FEA_ML("An option with optional arg."), FEA_CH('o'));
+			FEA_LIT("An option with optional arg."), FEA_CH('o'));
 	opts.add_optional_arg_option(
-			FEA_ML("optional2"),
+			FEA_LIT("optional2"),
 			[](string_t&& str) {
 				using opt_test = option_tester<CharT>;
 				opt_test& t = get_global_tester<CharT>();
 				t.recieved(opt_test::opt_type::optional, std::move(str));
 				return true;
 			},
-			FEA_ML("An option with optional arg."));
+			FEA_LIT("An option with optional arg."));
 	opts.add_optional_arg_option(
-			FEA_ML("optional3"),
+			FEA_LIT("optional3"),
 			[](string_t&& str) {
 				using opt_test = option_tester<CharT>;
 				opt_test& t = get_global_tester<CharT>();
 				t.recieved(opt_test::opt_type::optional, std::move(str));
 				return true;
 			},
-			FEA_ML("An option with optional arg."));
+			FEA_LIT("An option with optional arg."));
 	opts.add_required_arg_option(
-			FEA_ML("required1"),
+			FEA_LIT("required1"),
 			[](string_t&& str) {
 				using opt_test = option_tester<CharT>;
 				opt_test& t = get_global_tester<CharT>();
 				t.recieved(opt_test::opt_type::required, std::move(str));
 				return true;
 			},
-			FEA_ML("An option with a required arg."), FEA_CH('r'));
+			FEA_LIT("An option with a required arg."), FEA_CH('r'));
 	opts.add_required_arg_option(
-			FEA_ML("required2"),
+			FEA_LIT("required2"),
 			[](string_t&& str) {
 				using opt_test = option_tester<CharT>;
 				opt_test& t = get_global_tester<CharT>();
 				t.recieved(opt_test::opt_type::required, std::move(str));
 				return true;
 			},
-			FEA_ML("An option with a required arg."));
+			FEA_LIT("An option with a required arg."));
 	opts.add_required_arg_option(
-			FEA_ML("required3"),
+			FEA_LIT("required3"),
 			[](string_t&& str) {
 				using opt_test = option_tester<CharT>;
 				opt_test& t = get_global_tester<CharT>();
 				t.recieved(opt_test::opt_type::required, std::move(str));
 				return true;
 			},
-			FEA_ML("An option with a required arg."));
+			FEA_LIT("An option with a required arg."));
 	opts.add_multi_arg_option(
-			FEA_ML("multi1"),
+			FEA_LIT("multi1"),
 			[](std::vector<string_t>&& vec) {
 				using opt_test = option_tester<CharT>;
 				opt_test& t = get_global_tester<CharT>();
@@ -936,7 +950,7 @@ void add_options(fea::get_opt<CharT, PrintFunc>& opts) {
 				string_t recieved;
 
 				for (const string_t& str : vec) {
-					recieved += str + FEA_ML(" ");
+					recieved += str + FEA_LIT(" ");
 				}
 
 				if (!recieved.empty()) {
@@ -947,16 +961,16 @@ void add_options(fea::get_opt<CharT, PrintFunc>& opts) {
 				t.recieved(opt_test::opt_type::multi, std::move(recieved));
 				return true;
 			},
-			FEA_ML("An option wich accepts multiple args."), FEA_CH('m'));
+			FEA_LIT("An option wich accepts multiple args."), FEA_CH('m'));
 	opts.add_multi_arg_option(
-			FEA_ML("multi2"),
+			FEA_LIT("multi2"),
 			[](std::vector<string_t>&& vec) {
 				using opt_test = option_tester<CharT>;
 				opt_test& t = get_global_tester<CharT>();
 				string_t recieved;
 
 				for (const string_t& str : vec) {
-					recieved += str + FEA_ML(" ");
+					recieved += str + FEA_LIT(" ");
 				}
 
 				if (!recieved.empty()) {
@@ -967,7 +981,7 @@ void add_options(fea::get_opt<CharT, PrintFunc>& opts) {
 				t.recieved(opt_test::opt_type::multi, std::move(recieved));
 				return true;
 			},
-			FEA_ML("An option wich accepts multiple args."));
+			FEA_LIT("An option wich accepts multiple args."));
 }
 
 TEST(fea_getopt, printing) {

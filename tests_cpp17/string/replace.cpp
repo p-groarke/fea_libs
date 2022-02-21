@@ -1,13 +1,12 @@
 #include <array>
 #include <fea/meta/static_for.hpp>
 #include <fea/meta/tuple.hpp>
-#include <fea/string/replace.hpp>
 #include <fea/string/string.hpp>
 #include <gtest/gtest.h>
 #include <tuple>
 
 #define gen_constants(tupname, str) \
-	const auto tupname = std::make_tuple(std::string_view{ str }, \
+	static const auto tupname = std::make_tuple(std::string_view{ str }, \
 			std::wstring_view{ L##str }, std::u16string_view{ u##str }, \
 			std::u32string_view{ U##str }, std::string{ str }, \
 			std::wstring{ L##str }, std::u16string{ u##str }, \
@@ -15,7 +14,8 @@
 
 
 #define gen_tests(tupname, ...) \
-	const auto tupname = std::make_tuple(std::array{ FEA_VA_SV(__VA_ARGS__) }, \
+	static const auto tupname = std::make_tuple( \
+			std::array{ FEA_VA_SV(__VA_ARGS__) }, \
 			std::array{ FEA_VA_WSV(__VA_ARGS__) }, \
 			std::array{ FEA_VA_U16SV(__VA_ARGS__) }, \
 			std::array{ FEA_VA_U32SV(__VA_ARGS__) }, \
@@ -82,9 +82,14 @@ to see it pop down a large rabbit-hole under potato hedge.
 TEST(string_replace, replace_all) {
 	gen_tests(the_test, "the", "potato");
 
-	constexpr size_t s = std::tuple_size_v<decltype(alice)>;
-	fea::static_for<s>([&](auto const_i) {
-		constexpr size_t i = const_i;
+	static_assert(
+			std::tuple_size_v<
+					decltype(alice)> == std::tuple_size_v<decltype(the_test)>,
+			"replace.cpp : Unit test failed.");
+
+	static constexpr size_t s = std::tuple_size_v<decltype(alice)>;
+	fea::static_for<s>([](auto const_i) {
+		static constexpr size_t i = const_i;
 		const auto& str = std::get<i>(alice);
 		const auto& answer = std::get<i>(alice_answer);
 		{
@@ -95,8 +100,10 @@ TEST(string_replace, replace_all) {
 			EXPECT_EQ(answer, new_str);
 		}
 
-		fea::static_for<s>([&](auto const_j) {
+		fea::static_for<s>([](auto const_j) {
 			constexpr size_t j = const_j;
+			const auto& str = std::get<i>(alice);
+			const auto& answer = std::get<i>(alice_answer);
 			const auto& search = std::get<j>(the_test)[0];
 
 			using alice_char_t = std::decay_t<decltype(str[0])>;

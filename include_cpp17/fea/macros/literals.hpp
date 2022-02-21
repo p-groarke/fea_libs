@@ -131,7 +131,7 @@ Helpers for string literals.
 
 // These are shortcuts if you use CharT as an alias or template.
 #define FEA_MAKE_LITERAL(str) FEA_MAKE_LITERAL_T(CharT, str)
-#define FEA_ML(str) FEA_MAKE_LITERAL_T(CharT, str)
+#define FEA_LIT(str) FEA_MAKE_LITERAL_T(CharT, str)
 
 
 // Makes a character literal of type CharType
