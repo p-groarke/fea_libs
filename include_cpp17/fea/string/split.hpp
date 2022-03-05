@@ -141,6 +141,7 @@ template <class Str1, class Str2>
 	return split_to_str<split_delim_opt::remove>(str, delimiters);
 }
 
+// Note : Removed for time being, probably makes more sense to use span.
 //// Split and return results in std::array.
 //// Fills up array with tokens, then exits.
 //// If keep_delims is true, tokens start with delimiters.

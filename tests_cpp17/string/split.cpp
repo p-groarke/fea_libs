@@ -43,14 +43,14 @@ thought Alice “without pictures or conversations?”
 )xx");
 
 template <class T1, class T2, class T3, class T4>
-void test_all_splits(const T1& src, const T2& rem_results,
+void test_all_splits_period(const T1& src, const T2& rem_results,
 		const T3& app_results, const T4& pre_results) {
 	static constexpr size_t s = std::tuple_size_v<std::decay_t<decltype(src)>>;
 	fea::static_for<s>([&](auto const_i) {
 		static constexpr size_t i = const_i;
 		const auto& str = std::get<i>(src);
 
-		// No delims.
+		// Remove delims.
 		{
 			const auto& answer_arr = std::get<i>(rem_results);
 			using CharT = std::decay_t<decltype(str[0])>;
@@ -194,7 +194,7 @@ TEST(string_split, basics) {
 		gen_tests(app, ".", "Please.", "split.", "this.", "string.");
 		gen_tests(pre, ".Please", ".split", ".this", ".string", ".");
 
-		test_all_splits(split_src, rem, app, pre);
+		test_all_splits_period(split_src, rem, app, pre);
 	}
 	{
 		gen_constants(split_src, "..Please.split.this.string..");
@@ -203,7 +203,7 @@ TEST(string_split, basics) {
 		gen_tests(app, ".", ".", "Please.", "split.", "this.", "string.", ".");
 		gen_tests(pre, ".", ".Please", ".split", ".this", ".string", ".", ".");
 
-		test_all_splits(split_src, rem, app, pre);
+		test_all_splits_period(split_src, rem, app, pre);
 	}
 	{
 		gen_constants(split_src, "...Please.split.this.string...");
@@ -214,7 +214,7 @@ TEST(string_split, basics) {
 		gen_tests(pre, ".", ".", ".Please", ".split", ".this", ".string", ".",
 				".", ".");
 
-		test_all_splits(split_src, rem, app, pre);
+		test_all_splits_period(split_src, rem, app, pre);
 	}
 	{
 		gen_constants(split_src, "word");
@@ -223,7 +223,7 @@ TEST(string_split, basics) {
 		gen_tests(app, "word");
 		gen_tests(pre, "word");
 
-		test_all_splits(split_src, rem, app, pre);
+		test_all_splits_period(split_src, rem, app, pre);
 	}
 	{
 		gen_constants(split_src, "...");
@@ -232,7 +232,7 @@ TEST(string_split, basics) {
 		gen_tests(app, ".", ".", ".");
 		gen_tests(pre, ".", ".", ".");
 
-		test_all_splits(split_src, rem, app, pre);
+		test_all_splits_period(split_src, rem, app, pre);
 	}
 	{
 		gen_constants(split_src, "");
@@ -241,7 +241,7 @@ TEST(string_split, basics) {
 		gen_tests(app, "");
 		gen_tests(pre, "");
 
-		test_all_splits(split_src, rem, app, pre);
+		test_all_splits_period(split_src, rem, app, pre);
 	}
 	{
 		gen_constants(split_src, ".");
@@ -250,7 +250,156 @@ TEST(string_split, basics) {
 		gen_tests(app, ".");
 		gen_tests(pre, ".");
 
-		test_all_splits(split_src, rem, app, pre);
+		test_all_splits_period(split_src, rem, app, pre);
+	}
+}
+
+template <class T1, class T2, class T3, class T4>
+void test_all_splits_multi(const T1& src, const T2& rem_results,
+		const T3& app_results, const T4& pre_results) {
+	static constexpr size_t s = std::tuple_size_v<std::decay_t<decltype(src)>>;
+	fea::static_for<s>([&](auto const_i) {
+		static constexpr size_t i = const_i;
+		const auto& str = std::get<i>(src);
+
+		// No delims.
+		{
+			const auto& answer_arr = std::get<i>(rem_results);
+			using CharT = std::decay_t<decltype(str[0])>;
+
+			auto split_vec = fea::split(str, FEA_LIT(".,-"));
+			auto split_str_vec = fea::split_to_str(str, FEA_LIT(".,-"));
+
+			if (answer_arr.size() == 1 && answer_arr[0] == FEA_STR("")) {
+				// Empty case.
+				EXPECT_EQ(split_vec.size(), 0);
+				EXPECT_EQ(split_str_vec.size(), 0);
+			} else {
+				EXPECT_EQ(split_vec.size(), answer_arr.size());
+				for (size_t j = 0; j < split_vec.size(); ++j) {
+					const auto& answer_str = answer_arr[j];
+					const auto& test_str = split_vec[j];
+					EXPECT_EQ(answer_str, test_str);
+
+					const auto& test_str2 = split_str_vec[j];
+					EXPECT_EQ(answer_str, test_str2);
+				}
+			}
+
+			auto split_vec2 = fea::split(str, FEA_STRV(".,-"));
+			EXPECT_EQ(split_vec, split_vec2);
+			auto split_vec3 = fea::split(str, FEA_STR(".,-"));
+			EXPECT_EQ(split_vec, split_vec3);
+		}
+
+		// Append delims.
+		{
+			const auto& answer_arr = std::get<i>(app_results);
+			using CharT = std::decay_t<decltype(str[0])>;
+
+			auto split_vec = fea::split<fea::split_delim_opt::append>(
+					str, FEA_LIT(".,-"));
+			auto split_str_vec = fea::split<fea::split_delim_opt::append>(
+					str, FEA_LIT(".,-"));
+
+			if (answer_arr.size() == 1 && answer_arr[0] == FEA_STR("")) {
+				// Empty case.
+				EXPECT_EQ(split_vec.size(), 0);
+				EXPECT_EQ(split_str_vec.size(), 0);
+			} else {
+				EXPECT_EQ(split_vec.size(), answer_arr.size());
+				for (size_t j = 0; j < split_vec.size(); ++j) {
+					const auto& answer_str = answer_arr[j];
+					const auto& test_str = split_vec[j];
+					EXPECT_EQ(answer_str, test_str);
+
+					const auto& test_str2 = split_str_vec[j];
+					EXPECT_EQ(answer_str, test_str2);
+				}
+			}
+
+			auto split_vec2 = fea::split<fea::split_delim_opt::append>(
+					str, FEA_STRV(".,-"));
+			EXPECT_EQ(split_vec, split_vec2);
+			auto split_vec3 = fea::split<fea::split_delim_opt::append>(
+					str, FEA_STR(".,-"));
+			EXPECT_EQ(split_vec, split_vec3);
+		}
+
+		// Prepend delims.
+		{
+			const auto& answer_arr = std::get<i>(pre_results);
+			using CharT = std::decay_t<decltype(str[0])>;
+
+			auto split_vec = fea::split<fea::split_delim_opt::prepend>(
+					str, FEA_LIT(".,-"));
+			auto split_str_vec = fea::split<fea::split_delim_opt::prepend>(
+					str, FEA_LIT(".,-"));
+
+			if (answer_arr.size() == 1 && answer_arr[0] == FEA_STR("")) {
+				// Empty case.
+				EXPECT_EQ(split_vec.size(), 0);
+				EXPECT_EQ(split_str_vec.size(), 0);
+			} else {
+				EXPECT_EQ(split_vec.size(), answer_arr.size());
+				for (size_t j = 0; j < split_vec.size(); ++j) {
+					const auto& answer_str = answer_arr[j];
+					const auto& test_str = split_vec[j];
+					EXPECT_EQ(answer_str, test_str);
+
+					const auto& test_str2 = split_str_vec[j];
+					EXPECT_EQ(answer_str, test_str2);
+				}
+			}
+
+			auto split_vec2 = fea::split<fea::split_delim_opt::prepend>(
+					str, FEA_STRV(".,-"));
+			EXPECT_EQ(split_vec, split_vec2);
+			auto split_vec3 = fea::split<fea::split_delim_opt::prepend>(
+					str, FEA_STR(".,-"));
+			EXPECT_EQ(split_vec, split_vec3);
+		}
+	});
+}
+
+TEST(string_split, multi_delimiters) {
+	{
+		gen_constants(split_src, ",-.Please,,,-.split,-.this,-.string,-.");
+
+		gen_tests(rem, "Please", "split", "this", "string");
+		gen_tests(app, ",", "-", ".", "Please,", ",", ",", "-", ".", "split,",
+				"-", ".", "this,", "-", ".", "string,", "-", ".");
+		gen_tests(pre, ",", "-", ".Please", ",", ",", ",", "-", ".split", ",",
+				"-", ".this", ",", "-", ".string", ",", "-", ".");
+
+		test_all_splits_multi(split_src, rem, app, pre);
+	}
+	{
+		gen_constants(split_src, ".Please,split-this.string,");
+
+		gen_tests(rem, "Please", "split", "this", "string");
+		gen_tests(app, ".", "Please,", "split-", "this.", "string,");
+		gen_tests(pre, ".Please", ",split", "-this", ".string", ",");
+
+		test_all_splits_multi(split_src, rem, app, pre);
+	}
+	{
+		gen_constants(split_src, ",,,...---");
+
+		gen_tests(rem, "");
+		gen_tests(app, ",", ",", ",", ".", ".", ".", "-", "-", "-");
+		gen_tests(pre, ",", ",", ",", ".", ".", ".", "-", "-", "-");
+
+		test_all_splits_multi(split_src, rem, app, pre);
+	}
+	{
+		gen_constants(split_src, ",.-");
+
+		gen_tests(rem, "");
+		gen_tests(app, ",", ".", "-");
+		gen_tests(pre, ",", ".", "-");
+
+		test_all_splits_multi(split_src, rem, app, pre);
 	}
 }
 } // namespace
