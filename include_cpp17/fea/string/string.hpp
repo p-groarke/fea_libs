@@ -90,8 +90,8 @@ template <template <class, class, class...> class Str, class CharT,
 		template <class> class Traits, class... Args, class Str2, class Str3>
 void replace_all_inplace(Str<CharT, Traits<CharT>, Args...>& out,
 		const Str2& search, const Str3& replace) {
-	auto search_v = detail::str_view<Str2>{ search };
-	auto replace_v = detail::str_view<Str3>{ replace };
+	detail::str_view<Str2> search_v{ search };
+	detail::str_view<Str3> replace_v{ replace };
 
 	auto pos = out.find(search_v.data(), 0, search_v.size());
 	while (pos != out.npos) {

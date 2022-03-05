@@ -45,8 +45,8 @@ TEST(string, basics) {
 		EXPECT_NE(capscpy, "NOT SCREAMING");
 
 		auto vec = fea::split(str, ",");
-		std::vector<std::string> vec_answer{ "a string weeee", " bang", " ding",
-			" ow" };
+		std::vector<std::string_view> vec_answer{ "a string weeee", " bang",
+			" ding", " ow" };
 		EXPECT_EQ(vec.size(), 4u);
 		EXPECT_EQ(vec, vec_answer);
 

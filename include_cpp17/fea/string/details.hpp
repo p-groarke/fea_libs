@@ -53,6 +53,20 @@ struct str_view_base {
 			: _sv(in) {
 	}
 
+	[[nodiscard]] constexpr const auto begin() const noexcept {
+		return _sv.begin();
+	}
+	[[nodiscard]] constexpr const auto cbegin() const noexcept {
+		return _sv.begin();
+	}
+
+	[[nodiscard]] constexpr const auto end() const noexcept {
+		return _sv.end();
+	}
+	[[nodiscard]] constexpr const auto cend() const noexcept {
+		return _sv.end();
+	}
+
 	[[nodiscard]] constexpr const CharT* data() const noexcept {
 		return _sv.data();
 	}
@@ -69,6 +83,12 @@ struct str_view_base {
 	[[nodiscard]] constexpr size_t find(
 			str_view<InStr> search, size_t pos = 0) const noexcept {
 		return _sv.find(search.sv(), pos);
+	}
+
+	template <class InStr>
+	[[nodiscard]] constexpr size_t find_first_of(
+			str_view<InStr> search, size_t pos = 0) const noexcept {
+		return _sv.find_first_of(search.sv(), pos);
 	}
 
 	template <class InStr>
@@ -107,6 +127,20 @@ struct str_view {
 			: _char(ch) {
 	}
 
+	[[nodiscard]] constexpr const CharT* begin() const noexcept {
+		return data();
+	}
+	[[nodiscard]] constexpr const CharT* cbegin() const noexcept {
+		return data();
+	}
+
+	[[nodiscard]] constexpr const CharT* end() const noexcept {
+		return begin() + 1;
+	}
+	[[nodiscard]] constexpr const CharT* cend() const noexcept {
+		return cbegin() + 1;
+	}
+
 	[[nodiscard]] constexpr const CharT* data() const noexcept {
 		return &_char;
 	}
@@ -125,11 +159,21 @@ struct str_view {
 		// This is a char, only valid pos is 0.
 		assert(pos == 0);
 
-		// Maybe drop pos here?
 		if (size() >= search.size() && _char == search.data()[0]) {
 			return 0;
 		}
-		return std::basic_string_view<char_type, traits_type>::npos;
+		return npos;
+	}
+
+	template <class InStr>
+	[[nodiscard]] constexpr size_t find_first_of(
+			str_view<InStr> search, size_t pos = 0) const noexcept {
+		for (auto c : search) {
+			if (_char == c) {
+				return 0;
+			}
+		}
+		return npos;
 	}
 
 	template <class InStr>

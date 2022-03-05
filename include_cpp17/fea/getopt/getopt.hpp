@@ -770,7 +770,7 @@ void get_opt<CharT, PrintfT>::on_parse_longopt(fsm_t& m) {
 
 		// Were the args enclosed in quotes?
 		if (arg.find(FEA_CH(' ')) != string::npos) {
-			args = fea::split(arg, FEA_LIT(" "));
+			args = fea::split_to_str(arg, FEA_LIT(" "));
 			success = user_opt.multi_arg_func(std::move(args));
 		} else {
 			// Gather everything up till the end or the next '-'
@@ -913,7 +913,7 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 			str_vec.push_back(desc);
 		} else {
 			// There is '\n'
-			str_vec = fea::split(desc, FEA_LIT("\n"));
+			str_vec = fea::split_to_str(desc, FEA_LIT("\n"));
 		}
 
 		// Now, make sure all strings are less than output_width in *real* size.
