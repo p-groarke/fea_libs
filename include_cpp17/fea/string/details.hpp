@@ -53,17 +53,17 @@ struct str_view_base {
 			: _sv(in) {
 	}
 
-	[[nodiscard]] constexpr const auto begin() const noexcept {
+	[[nodiscard]] constexpr auto begin() const noexcept {
 		return _sv.begin();
 	}
-	[[nodiscard]] constexpr const auto cbegin() const noexcept {
+	[[nodiscard]] constexpr auto cbegin() const noexcept {
 		return _sv.begin();
 	}
 
-	[[nodiscard]] constexpr const auto end() const noexcept {
+	[[nodiscard]] constexpr auto end() const noexcept {
 		return _sv.end();
 	}
-	[[nodiscard]] constexpr const auto cend() const noexcept {
+	[[nodiscard]] constexpr auto cend() const noexcept {
 		return _sv.end();
 	}
 
