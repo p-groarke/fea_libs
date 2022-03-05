@@ -89,7 +89,7 @@ TEST(string, replace_all) {
 
 	static constexpr size_t s = std::tuple_size_v<decltype(alice)>;
 	fea::static_for<s>([](auto const_i) {
-		static constexpr size_t i = const_i;
+		constexpr size_t i = const_i;
 		const auto& str = std::get<i>(alice);
 		const auto& answer = std::get<i>(alice_answer);
 		{
@@ -100,7 +100,8 @@ TEST(string, replace_all) {
 			EXPECT_EQ(answer, new_str);
 		}
 
-		fea::static_for<s>([](auto const_j) {
+		fea::static_for<s>([const_i](auto const_j) {
+			constexpr size_t i = decltype(const_i)::value;
 			constexpr size_t j = const_j;
 			const auto& str = std::get<i>(alice);
 			const auto& answer = std::get<i>(alice_answer);

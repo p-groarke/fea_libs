@@ -81,7 +81,7 @@ template <split_delim_opt Opt, class Str1, class Str2>
 			prev = pos + 1;
 		} else {
 			assert(false);
-			return {};
+			return tokens;
 		}
 	}
 
@@ -103,7 +103,6 @@ template <split_delim_opt Opt, class Str1, class Str2>
 		}
 	} else {
 		assert(false);
-		return {};
 	}
 
 	return tokens;
