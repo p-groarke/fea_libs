@@ -104,7 +104,7 @@ TEST(string, replace_all) {
 			constexpr size_t i = decltype(const_i)::value;
 			constexpr size_t j = const_j;
 			const auto& str = std::get<i>(alice);
-			const auto& answer = std::get<i>(alice_answer);
+			[[maybe_unused]] const auto& answer = std::get<i>(alice_answer);
 			const auto& search = std::get<j>(the_test)[0];
 
 			using alice_char_t = std::decay_t<decltype(str[0])>;
