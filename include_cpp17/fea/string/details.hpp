@@ -155,10 +155,8 @@ struct str_view {
 
 	template <class InStr>
 	[[nodiscard]] constexpr size_t find(
-			str_view<InStr> search, size_t pos = 0) const noexcept {
+			str_view<InStr> search, size_t) const noexcept {
 		// This is a char, only valid pos is 0.
-		assert(pos == 0);
-
 		if (size() >= search.size() && _char == search.data()[0]) {
 			return 0;
 		}
