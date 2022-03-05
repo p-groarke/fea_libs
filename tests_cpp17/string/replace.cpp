@@ -100,7 +100,7 @@ TEST(string, replace_all) {
 			EXPECT_EQ(answer, new_str);
 		}
 
-		fea::static_for<s>([const_i](auto const_j) {
+		fea::static_for<s>([](auto const_j) {
 			constexpr size_t i = decltype(const_i)::value;
 			constexpr size_t j = const_j;
 			const auto& str = std::get<i>(alice);
