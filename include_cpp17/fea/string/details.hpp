@@ -155,8 +155,12 @@ struct str_view {
 
 	template <class InStr>
 	[[nodiscard]] constexpr size_t find(
-			str_view<InStr> search, size_t) const noexcept {
+			str_view<InStr> search, size_t pos = 0) const noexcept {
 		// This is a char, only valid pos is 0.
+		if (pos != 0) {
+			return npos;
+		}
+
 		if (size() >= search.size() && _char == search.data()[0]) {
 			return 0;
 		}
@@ -166,6 +170,10 @@ struct str_view {
 	template <class InStr>
 	[[nodiscard]] constexpr size_t find_first_of(
 			str_view<InStr> search, size_t pos = 0) const noexcept {
+		if (pos != 0) {
+			return npos;
+		}
+
 		for (auto c : search) {
 			if (_char == c) {
 				return 0;
