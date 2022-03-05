@@ -272,8 +272,8 @@ void test_all_splits_multi(const T1& src, const T2& rem_results,
 
 			if (answer_arr.size() == 1 && answer_arr[0] == FEA_STR("")) {
 				// Empty case.
-				EXPECT_EQ(split_vec.size(), 0);
-				EXPECT_EQ(split_str_vec.size(), 0);
+				EXPECT_EQ(split_vec.size(), 0u);
+				EXPECT_EQ(split_str_vec.size(), 0u);
 			} else {
 				EXPECT_EQ(split_vec.size(), answer_arr.size());
 				for (size_t j = 0; j < split_vec.size(); ++j) {
@@ -304,8 +304,8 @@ void test_all_splits_multi(const T1& src, const T2& rem_results,
 
 			if (answer_arr.size() == 1 && answer_arr[0] == FEA_STR("")) {
 				// Empty case.
-				EXPECT_EQ(split_vec.size(), 0);
-				EXPECT_EQ(split_str_vec.size(), 0);
+				EXPECT_EQ(split_vec.size(), 0u);
+				EXPECT_EQ(split_str_vec.size(), 0u);
 			} else {
 				EXPECT_EQ(split_vec.size(), answer_arr.size());
 				for (size_t j = 0; j < split_vec.size(); ++j) {
@@ -338,8 +338,8 @@ void test_all_splits_multi(const T1& src, const T2& rem_results,
 
 			if (answer_arr.size() == 1 && answer_arr[0] == FEA_STR("")) {
 				// Empty case.
-				EXPECT_EQ(split_vec.size(), 0);
-				EXPECT_EQ(split_str_vec.size(), 0);
+				EXPECT_EQ(split_vec.size(), 0u);
+				EXPECT_EQ(split_str_vec.size(), 0u);
 			} else {
 				EXPECT_EQ(split_vec.size(), answer_arr.size());
 				for (size_t j = 0; j < split_vec.size(); ++j) {
