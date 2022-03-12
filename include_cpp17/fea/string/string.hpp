@@ -1,7 +1,7 @@
 ﻿/**
  * BSD 3-Clause License
  *
- * Copyright (c) 2020, Philippe Groarke
+ * Copyright (c) 2022, Philippe Groarke
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,7 @@
 #include "fea/containers/span.hpp"
 #include "fea/macros/literals.hpp"
 #include "fea/string/conversions.hpp"
+#include "fea/string/details.hpp"
 #include "fea/string/split.hpp"
 #include "fea/utils/platform.hpp"
 
@@ -57,262 +58,132 @@ TODO : Integrate std::string_view.
 
 namespace fea {
 // Returns the size of a given string, string_view or c_string.
+template <class Str>
+[[nodiscard]] constexpr size_t size(const Str& str) {
+	return detail::str_view<Str>{ str }.size();
+}
+
+// Returns true if provided string 'str' contains 'search'.
+template <class Str1, class Str2>
+[[nodiscard]] constexpr bool contains(const Str1& str, const Str2& search) {
+	return detail::str_view<Str1>{ str }.find(detail::str_view<Str2>{ search })
+			!= detail::str_view<Str1>::npos;
+}
+
+// Returns true if provided string 'str' starts with 'search'.
+template <class Str1, class Str2>
+[[nodiscard]] constexpr bool starts_with(const Str1& str, const Str2& search) {
+	return detail::str_view<Str1>{ str }.starts_with(
+			detail::str_view<Str2>{ search });
+}
+
+// Returns true if provided string 'str' ends with 'search'.
+template <class Str1, class Str2>
+[[nodiscard]] constexpr bool ends_with(const Str1& str, const Str2& search) {
+	return detail::str_view<Str1>{ str }.ends_with(
+			detail::str_view<Str2>{ search });
+}
+
+// Replaces all 'search' occurences with 'replace'.
+// Modifies std::string 'out' in place (no copies).
 template <template <class, class, class...> class Str, class CharT,
-		template <class> class Traits, class... Args>
-[[nodiscard]] constexpr size_t size(
-		const Str<CharT, Traits<CharT>, Args...>& str) {
-	return str.size();
-}
-template <class CharT>
-[[nodiscard]] constexpr size_t size(const CharT* str) {
-	return std::char_traits<CharT>::length(str);
+		template <class> class Traits, class... Args, class Str2, class Str3>
+void replace_all_inplace(Str<CharT, Traits<CharT>, Args...>& out,
+		const Str2& search, const Str3& replace) {
+	detail::str_view<Str2> search_v{ search };
+	detail::str_view<Str3> replace_v{ replace };
+
+	auto pos = out.find(search_v.data(), 0, search_v.size());
+	while (pos != out.npos) {
+		out.replace(pos, search_v.size(), replace_v.data(), replace_v.size());
+		pos = out.find(
+				search_v.data(), pos + replace_v.size(), search_v.size());
+	}
 }
 
+// Replaces all 'search' occurences with 'replace'.
+// Returns new modified std::string.
+template <class Str1, class Str2, class Str3>
+[[nodiscard]] auto replace_all(
+		const Str1& str, const Str2& search, const Str3& replace) {
+	using CharT = typename detail::str_view<Str1>::char_type;
+	using Traits = typename detail::str_view<Str1>::traits_type;
+	std::basic_string<CharT, Traits> ret{ str };
 
-// Returns true if provided string contains 'search'.
-template <template <class, class, class...> class Str, class CharT,
-		template <class> class Traits, class... Args, class... Args2>
-[[nodiscard]] constexpr bool contains(
-		const Str<CharT, Traits<CharT>, Args...>& str,
-		const Str<CharT, Traits<CharT>, Args2...>& search) {
-	return str.find(search) != str.npos;
-}
-template <template <class, class, class...> class Str, class CharT,
-		template <class> class Traits, class... Args>
-[[nodiscard]] constexpr bool contains(
-		const Str<CharT, Traits<CharT>, Args...>& str, const CharT* search) {
-	return str.find(search) != str.npos;
-}
-template <template <class, class, class...> class Str, class CharT,
-		template <class> class Traits, class... Args>
-[[nodiscard]] constexpr bool contains(
-		const Str<CharT, Traits<CharT>, Args...>& str, CharT search) {
-	return str.find(search) != str.npos;
+	replace_all_inplace(ret, search, replace);
+	return ret;
 }
 
-template <class CharT>
-[[nodiscard]] constexpr bool contains(const CharT* str, const CharT* search) {
-	using sv = std::basic_string_view<CharT>;
-	return contains(sv{ str }, search);
-}
-template <class CharT>
-[[nodiscard]] constexpr bool contains(const CharT* str, CharT search) {
-	using sv = std::basic_string_view<CharT>;
-	return contains(sv{ str }, search);
-}
-
-
-// Returns true if provided string starts with 'search'.
-template <template <class, class, class...> class Str, class CharT,
-		template <class> class Traits, class... Args, class... Args2>
-[[nodiscard]] constexpr bool starts_with(
-		const Str<CharT, Traits<CharT>, Args...>& str,
-		const Str<CharT, Traits<CharT>, Args2...>& search) {
-	return str.size() >= search.size()
-			&& Traits<CharT>::compare(str.data(), search.data(), search.size())
-			== 0;
-}
-template <template <class, class, class...> class Str, class CharT,
-		template <class> class Traits, class... Args>
-[[nodiscard]] constexpr bool starts_with(
-		const Str<CharT, Traits<CharT>, Args...>& str, const CharT* search) {
-	using sv = std::basic_string_view<CharT>;
-	sv _search = sv{ search };
-
-	return str.size() >= _search.size()
-			&& Traits<CharT>::compare(
-					   str.data(), _search.data(), _search.size())
-			== 0;
-}
-template <template <class, class, class...> class Str, class CharT,
-		template <class> class Traits, class... Args>
-[[nodiscard]] constexpr bool starts_with(
-		const Str<CharT, Traits<CharT>, Args...>& str, CharT search) {
-	return str.size() >= 1
-			&& Traits<CharT>::compare(str.data(), &search, 1) == 0;
-}
-
-template <class CharT>
-[[nodiscard]] constexpr bool starts_with(
-		const CharT* str, const CharT* search) {
-	using sv = std::basic_string_view<CharT>;
-	return starts_with(sv{ str }, search);
-}
-template <class CharT>
-[[nodiscard]] constexpr bool starts_with(const CharT* str, CharT search) {
-	using sv = std::basic_string_view<CharT>;
-	return starts_with(sv{ str }, search);
-}
-
-template <template <class, class, class...> class Str, class CharT,
-		template <class> class Traits, class... Args, class... Args2>
-[[nodiscard]] constexpr bool ends_with(
-		const Str<CharT, Traits<CharT>, Args...>& str,
-		const Str<CharT, Traits<CharT>, Args2...>& search) {
-	return str.size() >= search.size()
-			&& Traits<CharT>::compare(str.data() + (str.size() - search.size()),
-					   search.data(), search.size())
-			== 0;
-}
-template <template <class, class, class...> class Str, class CharT,
-		template <class> class Traits, class... Args>
-[[nodiscard]] constexpr bool ends_with(
-		const Str<CharT, Traits<CharT>, Args...>& str, const CharT* search) {
-	using sv = std::basic_string_view<CharT>;
-	sv _search = sv{ search };
-
-	return str.size() >= _search.size()
-			&& Traits<CharT>::compare(
-					   str.data() + (str.size() - _search.size()),
-					   _search.data(), _search.size())
-			== 0;
-}
-template <template <class, class, class...> class Str, class CharT,
-		template <class> class Traits, class... Args>
-[[nodiscard]] constexpr bool ends_with(
-		const Str<CharT, Traits<CharT>, Args...>& str, CharT search) {
-	return str.size() >= 1
-			&& Traits<CharT>::compare(str.data() + (str.size() - 1), &search, 1)
-			== 0;
-}
-
-template <class CharT>
-[[nodiscard]] constexpr bool ends_with(const CharT* str, const CharT* search) {
-	using sv = std::basic_string_view<CharT>;
-	return ends_with(sv{ str }, search);
-}
-template <class CharT>
-[[nodiscard]] constexpr bool ends_with(const CharT* str, CharT search) {
-	using sv = std::basic_string_view<CharT>;
-	return ends_with(sv{ str }, search);
-}
-
-
-// Constexpr lower case ASCII character.
-template <class CharT>
+// Lower case ASCII character.
+// C's tolower(int) is undefined for characters unrepresentable by unsigned
+// char.
+template <class CharT, class = std::enable_if_t<std::is_integral_v<CharT>>>
 [[nodiscard]] constexpr CharT to_lower_ascii(CharT ch) {
 	constexpr auto diff = FEA_CH('a') - FEA_CH('A');
-	if (ch >= FEA_CH('A') && ch <= FEA_CH('Z')) {
+	if (ch <= FEA_CH('Z') && ch >= FEA_CH('A')) {
 		return ch + diff;
 	}
 	return ch;
 }
 
-template <class CharT>
-[[nodiscard]] std::basic_string<CharT> to_lower(
-		const std::basic_string<CharT>& str) {
-	auto ret = str;
-	std::transform(ret.begin(), ret.end(), ret.begin(),
-			[](auto c) { return std::tolower(c, std::locale()); });
-	return ret;
-}
-
-[[nodiscard]] inline std::vector<uint8_t> to_lower(
-		const std::vector<uint8_t>& str) {
-	std::vector<uint8_t> ret = str;
-	std::transform(ret.begin(), ret.end(), ret.begin(),
-			[](auto c) { return uint8_t(std::tolower(int(c))); });
-	return ret;
-}
-
-// Lower-case passed in string.
-// No copies.
-template <class CharT>
-void to_lower_inplace(std::basic_string<CharT>& out) {
-	std::transform(out.begin(), out.end(), out.begin(),
-			[](auto c) { return std::tolower(c, std::locale()); });
-}
-inline void to_lower_inplace(std::vector<uint8_t>& out) {
-	std::transform(out.begin(), out.end(), out.begin(),
-			[](auto c) { return uint8_t(std::tolower(int(c))); });
-}
-
-
-template <class CharT>
-[[nodiscard]] std::basic_string<CharT> to_upper(
-		const std::basic_string<CharT>& str) {
-	auto ret = str;
-	std::transform(ret.begin(), ret.end(), ret.begin(),
-			[](auto c) { return CharT(::toupper(c)); });
-	return ret;
-}
-
-template <class CharT>
-void to_upper_inplace(std::basic_string<CharT>& out) {
-	std::transform(out.begin(), out.end(), out.begin(),
-			[](auto c) { return CharT(::toupper(c)); });
-}
-
-[[nodiscard]] inline std::vector<uint8_t> to_upper(
-		const std::vector<uint8_t>& str) {
-	std::vector<uint8_t> ret = str;
-	std::transform(ret.begin(), ret.end(), ret.begin(),
-			[](char c) { return char(::toupper(c)); });
-	return ret;
-}
-
-inline void to_upper_inplace(std::vector<uint8_t>& out) {
-	std::transform(out.begin(), out.end(), out.begin(),
-			[](char c) { return char(::tolower(c)); });
-}
-
-
-// Replaces all 'search' occurences with 'replace'.
-// Modifies string out.
-template <class CharT>
-void replace_all_inplace(std::basic_string<CharT>& out,
-		const std::basic_string<CharT>& search,
-		const std::basic_string<CharT>& replace) {
-	size_t pos = out.find(search);
-	while (pos != std::basic_string<CharT>::npos) {
-		out.replace(pos, search.size(), replace);
-		pos = out.find(search, pos + replace.size());
+// Lower case ASCII string (without copying).
+template <template <class, class, class...> class Str, class CharT,
+		template <class> class Traits, class... Args>
+constexpr void to_lower_ascii_inplace(Str<CharT, Traits<CharT>, Args...>& out) {
+	for (CharT& c : out) {
+		c = to_lower_ascii(c);
 	}
 }
 
-// Replaces all 'search' occurences with 'replace'.
-// Modifies 'out' string.
-template <class CharT>
-void replace_all_inplace(std::basic_string<CharT>& out, const CharT* search,
-		const CharT* replace) {
-	// TODO : This should be the base function.
-	replace_all_inplace(out, std::basic_string<CharT>{ search },
-			std::basic_string<CharT>{ replace });
-}
+// Lower case ASCII string, returns new modified std::string.
+template <class Str, class = std::enable_if_t<!std::is_integral_v<Str>>>
+[[nodiscard]] auto to_lower_ascii(const Str& str) {
+	using CharT = typename detail::str_view<Str>::char_type;
+	using Traits = typename detail::str_view<Str>::traits_type;
+	std::basic_string<CharT, Traits> ret{ str };
 
-// Replaces all 'search' occurences with 'replace'.
-// Returns modified string.
-template <class CharT>
-[[nodiscard]] std::basic_string<CharT> replace_all(
-		const std::basic_string<CharT>& str, const CharT* search,
-		const CharT* replace) {
-	std::basic_string<CharT> ret = str;
-	replace_all_inplace(ret, search, replace);
+	to_lower_ascii_inplace(ret);
 	return ret;
 }
 
-// Replaces all 'search' occurences with 'replace'.
-// Returns modified string.
-template <class CharT>
-[[nodiscard]] std::basic_string<CharT> replace_all(
-		const std::basic_string<CharT>& str,
-		const std::basic_string<CharT>& search,
-		const std::basic_string<CharT>& replace) {
-	return replace_all(str, search.c_str(), replace.c_str());
+/* TODO : Real utf to_lower, forget std::locale. */
+
+// Upper case ASCII character.
+// C's toupper(int) is undefined for characters unrepresentable by unsigned
+// char.
+template <class CharT, class = std::enable_if_t<std::is_integral_v<CharT>>>
+[[nodiscard]] constexpr CharT to_upper_ascii(CharT ch) {
+	constexpr auto diff = FEA_CH('a') - FEA_CH('A');
+	if (ch >= FEA_CH('a') && ch <= FEA_CH('z')) {
+		return ch - diff;
+	}
+	return ch;
 }
 
-
-// Iterates input string line by line and calls your function with each line.
-template <class CharT, class Func>
-void for_each_line(const std::basic_string<CharT>& str, Func&& func) {
-	std::basic_istringstream iss(str);
-	std::basic_string<CharT> line;
-	while (std::getline(iss, line)) {
-		std::forward<Func>(func)(line);
+// Upper case ASCII string without copying.
+template <template <class, class, class...> class Str, class CharT,
+		template <class> class Traits, class... Args>
+constexpr void to_upper_ascii_inplace(Str<CharT, Traits<CharT>, Args...>& out) {
+	for (CharT& c : out) {
+		c = to_upper_ascii(c);
 	}
 }
 
-// Removes all leading trim_chars.
+// Upper case ASCII string.
+template <class Str, class = std::enable_if_t<!std::is_integral_v<Str>>>
+[[nodiscard]] auto to_upper_ascii(const Str& str) {
+	using CharT = typename detail::str_view<Str>::char_type;
+	using Traits = typename detail::str_view<Str>::traits_type;
+	std::basic_string<CharT, Traits> ret{ str };
+
+	to_upper_ascii_inplace(ret);
+	return ret;
+}
+
+/* TODO : Real utf to_upper. */
+
+
+// Removes any of the leading trim_chars.
 template <class CharT>
 [[nodiscard]] std::basic_string<CharT> trim_leading(
 		const std::basic_string<CharT>& str, const CharT* trim_chars) {
@@ -323,7 +194,7 @@ template <class CharT>
 	return str.substr(new_begin);
 }
 
-// Removes all leading characters and returns an appropriately sized
+// Removes any of the leading characters and returns an appropriately sized
 // string_view.
 template <class CharT>
 [[nodiscard]] std::basic_string_view<CharT> trim_leading(
@@ -358,6 +229,17 @@ template <class CharT>
 	return { str.begin(), str.begin() + new_end + 1 };
 }
 
+
+// Iterates input string line by line and calls your function with each line.
+template <class CharT, class Func>
+void for_each_line(const std::basic_string<CharT>& str, Func&& func) {
+	std::basic_istringstream iss(str);
+	std::basic_string<CharT> line;
+	while (std::getline(iss, line)) {
+		std::forward<Func>(func)(line);
+	}
+}
+
 // Replaces conflicting html characters with entities.
 template <class CharT>
 [[nodiscard]] std::basic_string<CharT> html_escape(
@@ -367,19 +249,19 @@ template <class CharT>
 	for (size_t i = 0; i < str.size(); ++i) {
 		switch (str[i]) {
 		case FEA_CH('&'): {
-			ret.append(FEA_ML("&amp;"));
+			ret.append(FEA_LIT("&amp;"));
 		} break;
 		case FEA_CH('\"'): {
-			ret.append(FEA_ML("&quot;"));
+			ret.append(FEA_LIT("&quot;"));
 		} break;
 		case FEA_CH('\''): {
-			ret.append(FEA_ML("&apos;"));
+			ret.append(FEA_LIT("&apos;"));
 		} break;
 		case FEA_CH('<'): {
-			ret.append(FEA_ML("&lt;"));
+			ret.append(FEA_LIT("&lt;"));
 		} break;
 		case FEA_CH('>'): {
-			ret.append(FEA_ML("&gt;"));
+			ret.append(FEA_LIT("&gt;"));
 		} break;
 		default: {
 			ret.push_back(str[i]);

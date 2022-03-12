@@ -32,106 +32,155 @@
  **/
 
 #pragma once
+#include "fea/containers/span.hpp"
+#include "fea/string/details.hpp"
+
 #include <array>
-#include <fea/containers/span.hpp>
 #include <string>
 #include <string_view>
 #include <vector>
 
 namespace fea {
+enum class split_delim_opt : unsigned {
+	remove, // the default
+	prepend, // places delimiter at start of token
+	append, // places delimiter at end of token
+	count,
+};
+
 // Split string using any of the provided delimiters.
-// Returns std::vector of tokens.
-// If keep_delims is true, tokens start with delimiters.
-template <class CharT>
-[[nodiscard]] std::vector<std::basic_string_view<CharT>> split(
-		std::basic_string_view<CharT> str, const CharT* delimiters,
-		bool keep_delims = false) {
+// Returns std::vector of string_view tokens.
+// Pass in options to modify the delimiter behavior.
+template <split_delim_opt Opt, class Str1, class Str2>
+[[nodiscard]] auto split(const Str1& str, const Str2& delimiters) {
+	using CharT = typename detail::str_view<Str1>::char_type;
+
+	detail::str_view<Str1> str_v{ str };
+	detail::str_view<Str2> delim_v{ delimiters };
+	// using Traits = typename detail::str_view<Str>::traits_type;
+
 	std::vector<std::basic_string_view<CharT>> tokens;
 	size_t prev = 0;
 	size_t pos;
 
-	while ((pos = str.find_first_of(delimiters, prev))
-			!= std::basic_string_view<CharT>::npos) {
-		if (pos > prev) {
-			if (keep_delims && prev != 0) {
-				tokens.push_back(str.substr(prev - 1, pos - prev));
-			} else {
-				tokens.push_back(str.substr(prev, pos - prev));
+	while ((pos = str_v.find_first_of(delim_v, prev)) != str_v.npos) {
+		if constexpr (Opt == split_delim_opt::remove) {
+			if (pos > prev) {
+				tokens.push_back(str_v.sv().substr(prev, pos - prev));
 			}
+			prev = pos + 1;
+		} else if constexpr (Opt == split_delim_opt::append) {
+			if (pos >= prev) {
+				tokens.push_back(str_v.sv().substr(prev, pos - prev + 1));
+			}
+			prev = pos + 1;
+		} else if constexpr (Opt == split_delim_opt::prepend) {
+			if (pos >= prev && prev != 0) {
+				tokens.push_back(str_v.sv().substr(prev - 1, pos - prev + 1));
+			}
+			prev = pos + 1;
+		} else {
+			assert(false);
+			return tokens;
 		}
-		prev = pos + 1;
 	}
 
-	if (prev < str.length()) {
-		if (keep_delims && prev != 0) {
-			tokens.push_back(
-					str.substr(prev - 1, std::basic_string_view<CharT>::npos));
-		} else {
-			tokens.push_back(
-					str.substr(prev, std::basic_string_view<CharT>::npos));
+	if constexpr (Opt == split_delim_opt::remove) {
+		if (prev < str_v.size()) {
+			tokens.push_back(str_v.sv().substr(prev, str_v.npos));
 		}
+	} else if constexpr (Opt == split_delim_opt::append) {
+		if (prev < str_v.size()) {
+			tokens.push_back(str_v.sv().substr(prev, str_v.npos));
+		}
+	} else if constexpr (Opt == split_delim_opt::prepend) {
+		if (prev <= str_v.size()) {
+			if (prev != 0) {
+				tokens.push_back(str_v.sv().substr(prev - 1, str_v.npos));
+			} else if (str_v.size() != 0) {
+				tokens.push_back(str_v.sv().substr(prev, str_v.npos));
+			}
+		}
+	} else {
+		assert(false);
 	}
 
 	return tokens;
 }
 
-// Overload for string.
-// Calls the string view version and converts back to string.
-template <class CharT>
-[[nodiscard]] std::vector<std::basic_string<CharT>> split(
-		const std::basic_string<CharT>& str, const CharT* delimiters,
-		bool keep_delims = false) {
-	std::vector<std::basic_string_view<CharT>> views = fea::split(
-			std::basic_string_view<CharT>{ str }, delimiters, keep_delims);
+// Split string using any of the provided delimiters.
+// Returns std::vector of string_view tokens.
+// Removes delimiters from output.
+template <class Str1, class Str2>
+[[nodiscard]] auto split(const Str1& str, const Str2& delimiters) {
+	return split<split_delim_opt::remove>(str, delimiters);
+}
 
-	std::vector<std::basic_string<CharT>> ret;
+// Overload that returns new vector of strings.
+// Calls the string view version and converts back to string.
+template <split_delim_opt Opt, class Str1, class Str2>
+[[nodiscard]] auto split_to_str(const Str1& str, const Str2& delimiters) {
+	auto views = fea::split<Opt>(str, delimiters);
+
+	using CharT = typename detail::str_view<Str1>::char_type;
+	using Traits = typename detail::str_view<Str1>::traits_type;
+
+	std::vector<std::basic_string<CharT, Traits>> ret;
 	ret.reserve(views.size());
 	for (auto v : views) {
-		ret.push_back(std::basic_string<CharT>{ v });
+		ret.push_back(std::basic_string<CharT, Traits>{ v });
 	}
 	return ret;
 }
 
-// Split and return results in std::array.
-// Fills up array with tokens, then exits.
-// If keep_delims is true, tokens start with delimiters.
-template <size_t N, class CharT>
-[[nodiscard]] std::array<std::basic_string<CharT>, N> split(
-		const std::basic_string<CharT>& str, const CharT* delimiters,
-		bool keep_delims = false) {
-	static_assert(N != 0, "split : array must be bigger than 0");
-
-	std::array<std::basic_string<CharT>, N> tokens;
-	size_t idx = 0;
-	size_t prev = 0;
-	size_t pos;
-
-	while ((pos = str.find_first_of(delimiters, prev))
-			!= std::basic_string<CharT>::npos) {
-		if (pos > prev) {
-			if (keep_delims && prev != 0) {
-				tokens[idx++] = str.substr(prev - 1, pos - prev);
-			} else {
-				tokens[idx++] = str.substr(prev, pos - prev);
-			}
-
-			if (idx >= N) {
-				break;
-			}
-		}
-		prev = pos + 1;
-	}
-
-	if (prev < str.length() && idx < N) {
-		if (keep_delims && prev != 0) {
-			tokens[idx++]
-					= str.substr(prev - 1, std::basic_string<CharT>::npos);
-		} else {
-			tokens[idx++] = str.substr(prev, std::basic_string<CharT>::npos);
-		}
-	}
-	return tokens;
+// Overload that returns new vector of strings.
+// Calls the string view version and converts back to string.
+template <class Str1, class Str2>
+[[nodiscard]] auto split_to_str(const Str1& str, const Str2& delimiters) {
+	return split_to_str<split_delim_opt::remove>(str, delimiters);
 }
+
+// Note : Removed for time being, probably makes more sense to use span.
+//// Split and return results in std::array.
+//// Fills up array with tokens, then exits.
+//// If keep_delims is true, tokens start with delimiters.
+// template <size_t N, class CharT>
+//[[nodiscard]] std::array<std::basic_string<CharT>, N> split(
+//		const std::basic_string<CharT>& str, const CharT* delimiters,
+//		bool keep_delims = false) {
+//	static_assert(N != 0, "split : array must be bigger than 0");
+//
+//	std::array<std::basic_string<CharT>, N> tokens;
+//	size_t idx = 0;
+//	size_t prev = 0;
+//	size_t pos;
+//
+//	while ((pos = str.find_first_of(delimiters, prev))
+//			!= std::basic_string<CharT>::npos) {
+//		if (pos > prev) {
+//			if (keep_delims && prev != 0) {
+//				tokens[idx++] = str.substr(prev - 1, pos - prev);
+//			} else {
+//				tokens[idx++] = str.substr(prev, pos - prev);
+//			}
+//
+//			if (idx >= N) {
+//				break;
+//			}
+//		}
+//		prev = pos + 1;
+//	}
+//
+//	if (prev < str.length() && idx < N) {
+//		if (keep_delims && prev != 0) {
+//			tokens[idx++]
+//					= str.substr(prev - 1, std::basic_string<CharT>::npos);
+//		} else {
+//			tokens[idx++] = str.substr(prev, std::basic_string<CharT>::npos);
+//		}
+//	}
+//	return tokens;
+//}
 
 
 // Split string using any of the provided words.

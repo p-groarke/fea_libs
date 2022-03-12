@@ -1,7 +1,7 @@
 ﻿/**
  * BSD 3-Clause License
  *
- * Copyright (c) 2020, Philippe Groarke
+ * Copyright (c) 2022, Philippe Groarke
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -123,9 +123,9 @@ struct event_system {
 
 private:
 	// Stores the channel stacks.
-	using channel_tuple_t = decltype(
-			fea::make_tuple_from_count<event_stack<EventEnum, FuncTypes...>,
-					size_t(ChannelEnum::count)>());
+	using channel_tuple_t = decltype(fea::make_tuple_from_count<
+			event_stack<EventEnum, FuncTypes...>,
+			size_t(ChannelEnum::count)>());
 
 	// Channel tuple must be size 'ChannelEnum::count'.
 	static_assert(std::tuple_size<channel_tuple_t>::value

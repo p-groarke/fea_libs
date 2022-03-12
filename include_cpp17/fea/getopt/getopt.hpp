@@ -1,7 +1,7 @@
 ﻿/*
 BSD 3-Clause License
 
-Copyright (c) 2020, Philippe Groarke
+Copyright (c) 2022, Philippe Groarke
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -356,7 +356,7 @@ void get_opt<CharT, PrintfT>::add_raw_option(
 	}
 
 	_raw_opts.push_back(user_option<CharT>{
-			std::move(FEA_ML("\"") + name + FEA_ML("\"")),
+			std::move(FEA_LIT("\"") + name + FEA_LIT("\"")),
 			FEA_CH('\0'),
 			user_option_e::raw_arg,
 			std::move(func),
@@ -661,24 +661,24 @@ void get_opt<CharT, PrintfT>::on_parse_next_enter(fsm_t& m) {
 	string& first = _parser_args.front();
 
 	// help
-	if (first == FEA_ML("-h") || first == FEA_ML("--help")
-			|| first == FEA_ML("/?") || first == FEA_ML("/help")
-			|| first == FEA_ML("/h")) {
+	if (first == FEA_LIT("-h") || first == FEA_LIT("--help")
+			|| first == FEA_LIT("/?") || first == FEA_LIT("/help")
+			|| first == FEA_LIT("/h")) {
 		return m.template trigger<transition::help>(this);
 	}
 
 	// A single short arg, ex : '-d'
-	if (fea::starts_with(first, FEA_ML("-")) && first.size() == 2) {
+	if (fea::starts_with(first, FEA_LIT("-")) && first.size() == 2) {
 		return m.template trigger<transition::do_shortarg>(this);
 	}
 
 	// A long arg, ex '--something'
-	if (fea::starts_with(first, FEA_ML("--"))) {
+	if (fea::starts_with(first, FEA_LIT("--"))) {
 		return m.template trigger<transition::do_longarg>(this);
 	}
 
 	// Concatenated short args, ex '-abdsc'
-	if (fea::starts_with(first, FEA_ML("-"))) {
+	if (fea::starts_with(first, FEA_LIT("-"))) {
 		return m.template trigger<transition::do_concat>(this);
 	}
 
@@ -692,19 +692,19 @@ void get_opt<CharT, PrintfT>::on_parse_longopt(fsm_t& m) {
 	string opt_str = _parser_args.front();
 	_parser_args.pop_front();
 
-	size_t new_beg = opt_str.find_first_not_of(FEA_ML("-"));
+	size_t new_beg = opt_str.find_first_not_of(FEA_LIT("-"));
 	opt_str = opt_str.substr(new_beg);
 
 	if (_long_opt_to_user_opt.count(opt_str) == 0) {
-		print(FEA_ML("Could not parse : '") + opt_str + FEA_ML("'\n"));
-		print(FEA_ML("Option doesn't exist.\n"));
+		print(FEA_LIT("Could not parse : '") + opt_str + FEA_LIT("'\n"));
+		print(FEA_LIT("Option doesn't exist.\n"));
 		return m.template trigger<transition::error>(this);
 	}
 
 	user_option<CharT>& user_opt = _long_opt_to_user_opt.at(opt_str);
 
 	if (user_opt.has_been_parsed) {
-		print(FEA_ML("'") + opt_str + FEA_ML("' already parsed.\n"));
+		print(FEA_LIT("'") + opt_str + FEA_LIT("' already parsed.\n"));
 		return m.template trigger<transition::error>(this);
 	}
 	user_opt.has_been_parsed = true;
@@ -725,9 +725,9 @@ void get_opt<CharT, PrintfT>::on_parse_longopt(fsm_t& m) {
 		// An option that requires one argument.
 
 		if (_parser_args.empty()
-				|| fea::starts_with(_parser_args.front(), FEA_ML("-"))) {
-			print(FEA_ML("Could not parse : '") + opt_str + FEA_ML("'\n"));
-			print(FEA_ML("Option requires an argument, none was provided.\n"));
+				|| fea::starts_with(_parser_args.front(), FEA_LIT("-"))) {
+			print(FEA_LIT("Could not parse : '") + opt_str + FEA_LIT("'\n"));
+			print(FEA_LIT("Option requires an argument, none was provided.\n"));
 			return m.template trigger<transition::error>(this);
 		}
 
@@ -737,13 +737,13 @@ void get_opt<CharT, PrintfT>::on_parse_longopt(fsm_t& m) {
 		success = user_opt.one_arg_func(std::move(arg));
 	} break;
 	case user_option_e::optional_arg: {
-		default_val = FEA_ML(""); // Reset the default val to nothing.
+		default_val = FEA_LIT(""); // Reset the default val to nothing.
 		// Parsing is the same as default.
 	}
 		[[fallthrough]];
 	case user_option_e::default_arg: {
 		if (_parser_args.empty()
-				|| fea::starts_with(_parser_args.front(), FEA_ML("-"))) {
+				|| fea::starts_with(_parser_args.front(), FEA_LIT("-"))) {
 			success = user_opt.one_arg_func(std::move(default_val));
 		} else {
 			string arg = _parser_args.front();
@@ -756,10 +756,10 @@ void get_opt<CharT, PrintfT>::on_parse_longopt(fsm_t& m) {
 
 		// Needs at least 1 arg.
 		if (_parser_args.empty()
-				|| fea::starts_with(_parser_args.front(), FEA_ML("-"))) {
-			print(FEA_ML("Could not parse : '") + opt_str + FEA_ML("'\n"));
-			print(FEA_ML("Option requires at minimum 1 argument, none was "
-						 "provided.\n"));
+				|| fea::starts_with(_parser_args.front(), FEA_LIT("-"))) {
+			print(FEA_LIT("Could not parse : '") + opt_str + FEA_LIT("'\n"));
+			print(FEA_LIT("Option requires at minimum 1 argument, none was "
+						  "provided.\n"));
 			return m.template trigger<transition::error>(this);
 		}
 
@@ -770,14 +770,14 @@ void get_opt<CharT, PrintfT>::on_parse_longopt(fsm_t& m) {
 
 		// Were the args enclosed in quotes?
 		if (arg.find(FEA_CH(' ')) != string::npos) {
-			args = fea::split(arg, FEA_ML(" "));
+			args = fea::split_to_str(arg, FEA_LIT(" "));
 			success = user_opt.multi_arg_func(std::move(args));
 		} else {
 			// Gather everything up till the end or the next '-'
 			args.push_back(std::move(arg));
 
 			while (!_parser_args.empty()
-					&& !fea::starts_with(_parser_args.front(), FEA_ML("-"))) {
+					&& !fea::starts_with(_parser_args.front(), FEA_LIT("-"))) {
 				args.push_back(std::move(_parser_args.front()));
 				_parser_args.pop_front();
 			}
@@ -787,15 +787,15 @@ void get_opt<CharT, PrintfT>::on_parse_longopt(fsm_t& m) {
 	} break;
 	default: {
 		assert(false);
-		print(FEA_ML(
+		print(FEA_LIT(
 				"Something went horribly wrong, please report this bug <3\n"));
 		return m.template trigger<transition::error>(this);
 	} break;
 	}
 
 	if (!success) {
-		print(FEA_ML("'") + _parser_args.front()
-				+ FEA_ML("' problem parsing argument.\n"));
+		print(FEA_LIT("'") + _parser_args.front()
+				+ FEA_LIT("' problem parsing argument.\n"));
 		return m.template trigger<transition::error>(this);
 	}
 
@@ -809,7 +809,7 @@ void get_opt<CharT, PrintfT>::on_parse_shortopt(fsm_t& m) {
 	string arg = _parser_args.front();
 	_parser_args.pop_front();
 
-	size_t new_beg = arg.find_first_not_of(FEA_ML("-"));
+	size_t new_beg = arg.find_first_not_of(FEA_LIT("-"));
 	arg = arg.substr(new_beg);
 
 	assert(arg.size() == 1);
@@ -817,13 +817,13 @@ void get_opt<CharT, PrintfT>::on_parse_shortopt(fsm_t& m) {
 	CharT short_opt = arg[0];
 
 	if (_short_opt_to_long_opt.count(short_opt) == 0) {
-		print(FEA_ML("Could not parse : '") + arg + FEA_ML("'\n"));
-		print(FEA_ML("Option not recognized.\n"));
+		print(FEA_LIT("Could not parse : '") + arg + FEA_LIT("'\n"));
+		print(FEA_LIT("Option not recognized.\n"));
 		return m.template trigger<transition::error>(this);
 	}
 
 	_parser_args.push_front(
-			FEA_ML("--") + _short_opt_to_long_opt.at(short_opt));
+			FEA_LIT("--") + _short_opt_to_long_opt.at(short_opt));
 	return m.template trigger<transition::do_longarg>(this);
 }
 
@@ -832,20 +832,20 @@ void get_opt<CharT, PrintfT>::on_parse_concat(fsm_t& m) {
 	string arg = _parser_args.front();
 	_parser_args.pop_front();
 
-	size_t new_beg = arg.find_first_not_of(FEA_ML("-"));
+	size_t new_beg = arg.find_first_not_of(FEA_LIT("-"));
 	arg = arg.substr(new_beg);
 
 	std::vector<string> long_args;
 	for (CharT short_opt : arg) {
 		if (_short_opt_to_long_opt.count(short_opt) == 0) {
-			print(FEA_ML("Could not parse : '") + string{ short_opt }
-					+ FEA_ML("'\n"));
-			print(FEA_ML("Option not recognized.\n"));
+			print(FEA_LIT("Could not parse : '") + string{ short_opt }
+					+ FEA_LIT("'\n"));
+			print(FEA_LIT("Option not recognized.\n"));
 			return m.template trigger<transition::error>(this);
 		}
 
 		long_args.push_back(
-				FEA_ML("--") + _short_opt_to_long_opt.at(short_opt));
+				FEA_LIT("--") + _short_opt_to_long_opt.at(short_opt));
 	}
 
 	_parser_args.insert(
@@ -862,9 +862,9 @@ void get_opt<CharT, PrintfT>::on_parse_raw(fsm_t& m) {
 
 	// We've parsed all raw options, user provided options are curropted.
 	if (next_rawopt == _raw_opts.end()) {
-		print(FEA_ML("Could not parse : '") + _parser_args.front()
-				+ FEA_ML("'\n"));
-		print(FEA_ML("All arguments have previously been parsed.\n"));
+		print(FEA_LIT("Could not parse : '") + _parser_args.front()
+				+ FEA_LIT("'\n"));
+		print(FEA_LIT("All arguments have previously been parsed.\n"));
 		return m.template trigger<transition::error>(this);
 	}
 
@@ -872,8 +872,8 @@ void get_opt<CharT, PrintfT>::on_parse_raw(fsm_t& m) {
 	next_rawopt->has_been_parsed = true;
 
 	if (!success) {
-		print(FEA_ML("'") + _parser_args.front()
-				+ FEA_ML("' problem parsing argument.\n"));
+		print(FEA_LIT("'") + _parser_args.front()
+				+ FEA_LIT("' problem parsing argument.\n"));
 		return m.template trigger<transition::error>(this);
 	}
 
@@ -887,7 +887,7 @@ template <class CharT, class PrintfT>
 void get_opt<CharT, PrintfT>::on_print_error(fsm_t& m) {
 	// print(FEA_ML("problem parsing provided options :\n"));
 	// print(_error_message);
-	print(FEA_ML("\n\n"));
+	print(FEA_LIT("\n\n"));
 	m.template trigger<transition::help>(this);
 }
 
@@ -913,7 +913,7 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 			str_vec.push_back(desc);
 		} else {
 			// There is '\n'
-			str_vec = fea::split(desc, FEA_ML("\n"));
+			str_vec = fea::split_to_str(desc, FEA_LIT("\n"));
 		}
 
 		// Now, make sure all strings are less than output_width in *real* size.
@@ -966,7 +966,7 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 		// Finally, print everything at the right indentation.
 		for (size_t i = 0; i < out_str_vec.size(); ++i) {
 			const string& substr = out_str_vec[i];
-			print(substr + FEA_ML("\n"));
+			print(substr + FEA_LIT("\n"));
 
 			// Print the indentation for the next string if there is one.
 			if (i + 1 < out_str_vec.size()) {
@@ -981,26 +981,26 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 	constexpr size_t longopt_space = 2;
 	constexpr size_t longopt_width_max = 30;
 	constexpr size_t rawopt_help_indent = 4;
-	const string opt_str = FEA_ML(" <optional>");
-	const string req_str = FEA_ML(" <value>");
-	const string multi_str = FEA_ML(" <multiple>");
-	const string default_beg = FEA_ML(" <=");
-	const string default_end = FEA_ML(">");
+	const string opt_str = FEA_LIT(" <optional>");
+	const string req_str = FEA_LIT(" <value>");
+	const string multi_str = FEA_LIT(" <multiple>");
+	const string default_beg = FEA_LIT(" <=");
+	const string default_end = FEA_LIT(">");
 
 	if (!_help_intro.empty()) {
-		print(_help_intro + FEA_ML("\n"));
+		print(_help_intro + FEA_LIT("\n"));
 	}
 
 	// Usage
 	{
 		string out_str;
 		for (const user_option<CharT>& raw_opt : _raw_opts) {
-			out_str += FEA_ML(" ");
+			out_str += FEA_LIT(" ");
 			out_str += raw_opt.long_name;
 		}
 
-		print(FEA_ML("\nUsage: ") + _all_args.front() + out_str
-				+ FEA_ML(" [options]\n\n"));
+		print(FEA_LIT("\nUsage: ") + _all_args.front() + out_str
+				+ FEA_LIT(" [options]\n\n"));
 	}
 
 	// Raw Options
@@ -1014,7 +1014,7 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 		}
 
 		// Print section header.
-		print(FEA_ML("Arguments:\n"));
+		print(FEA_LIT("Arguments:\n"));
 
 		// Now, print the raw option help.
 		for (const user_option<CharT>& raw_opt : _raw_opts) {
@@ -1031,12 +1031,12 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 			// wide, or if the user used '\n' in his message.
 			print_description(raw_opt.description, indent + max_name_width);
 		}
-		print(FEA_ML("\n"));
+		print(FEA_LIT("\n"));
 	}
 
 	// All Other Options
 	{
-		print(FEA_ML("Options:\n"));
+		print(FEA_LIT("Options:\n"));
 
 		// First, compute the maximum width of long options.
 		size_t longopt_width = 0;
@@ -1078,9 +1078,9 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 			// If the option has a shortarg, print that.
 			if (opt.short_name != FEA_CH('\0')) {
 				string shortopt_str;
-				shortopt_str += FEA_ML("-");
+				shortopt_str += FEA_LIT("-");
 				shortopt_str += opt.short_name;
-				shortopt_str += FEA_ML(",");
+				shortopt_str += FEA_LIT(",");
 				string out = shortopt_str;
 				out.resize(shortopt_width, FEA_CH(' '));
 				print(out);
@@ -1090,7 +1090,7 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 
 			// Build the longopt string.
 			string longopt_str;
-			longopt_str += FEA_ML("--");
+			longopt_str += FEA_LIT("--");
 			longopt_str += long_opt_str;
 
 			// Add the specific "instructions" for each type of arg.
@@ -1114,7 +1114,7 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 			// If it was bigger than the max width, the description will be
 			// printed on the next line, indented up to the right position.
 			if (longopt_str.size() >= longopt_width) {
-				print(FEA_ML("\n"));
+				print(FEA_LIT("\n"));
 				print(string(
 						longopt_width + shortopt_total_width, FEA_CH(' ')));
 			}
@@ -1129,18 +1129,18 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 			longopt_width = 2 + 4 + longopt_space;
 
 		// Print the help command help.
-		string short_help = FEA_ML("-h,");
+		string short_help = FEA_LIT("-h,");
 		short_help.resize(shortopt_width, FEA_CH(' '));
 
-		string long_help = FEA_ML("--help");
+		string long_help = FEA_LIT("--help");
 		long_help.resize(longopt_width, FEA_CH(' '));
 
 		print(string(indent, FEA_CH(' ')) + short_help + long_help
-				+ FEA_ML("Print this help\n"));
+				+ FEA_LIT("Print this help\n"));
 
 		// Print user outro.
 		if (!_help_outro.empty()) {
-			print(FEA_ML("\n") + _help_outro + FEA_ML("\n"));
+			print(FEA_LIT("\n") + _help_outro + FEA_LIT("\n"));
 		}
 
 		// Finally, if the user had passed in a callback to be notified when

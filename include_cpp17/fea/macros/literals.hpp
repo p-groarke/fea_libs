@@ -115,6 +115,43 @@ Helpers for string literals.
 #define FEA_VA_U16SV(...) FEA_FOR_EACH(FEA_U16SV_COMMA, __VA_ARGS__)
 #define FEA_VA_U32SV(...) FEA_FOR_EACH(FEA_U32SV_COMMA, __VA_ARGS__)
 
+
+// Makes a string from literal of type CharType
+#define FEA_MAKE_STRING_T(CharType, str) \
+	[]() { \
+		if constexpr (std::is_same_v<CharType, char>) { \
+			return std::string{ str }; \
+		} else if constexpr (std::is_same_v<CharType, wchar_t>) { \
+			return std::wstring{ L##str }; \
+		} else if constexpr (std::is_same_v<CharType, char16_t>) { \
+			return std::u16string{ u##str }; \
+		} else if constexpr (std::is_same_v<CharType, char32_t>) { \
+			return std::u32string{ U##str }; \
+		} \
+	}()
+
+// These are shortcuts if you use CharT as an alias or template.
+#define FEA_MAKE_STRING(str) FEA_MAKE_STRING_T(CharT, str)
+#define FEA_STR(str) FEA_MAKE_STRING_T(CharT, str)
+
+// Makes a string_view from literal of type CharType
+#define FEA_MAKE_STRING_VIEW_T(CharType, str) \
+	[]() { \
+		if constexpr (std::is_same_v<CharType, char>) { \
+			return std::string_view{ str }; \
+		} else if constexpr (std::is_same_v<CharType, wchar_t>) { \
+			return std::wstring_view{ L##str }; \
+		} else if constexpr (std::is_same_v<CharType, char16_t>) { \
+			return std::u16string_view{ u##str }; \
+		} else if constexpr (std::is_same_v<CharType, char32_t>) { \
+			return std::u32string_view{ U##str }; \
+		} \
+	}()
+
+// These are shortcuts if you use CharT as an alias or template.
+#define FEA_MAKE_STRING_VIEW(str) FEA_MAKE_STRING_VIEW_T(CharT, str)
+#define FEA_STRV(str) FEA_MAKE_STRING_VIEW_T(CharT, str)
+
 // Makes a string literal of type CharType
 #define FEA_MAKE_LITERAL_T(CharType, str) \
 	[]() { \
@@ -131,7 +168,7 @@ Helpers for string literals.
 
 // These are shortcuts if you use CharT as an alias or template.
 #define FEA_MAKE_LITERAL(str) FEA_MAKE_LITERAL_T(CharT, str)
-#define FEA_ML(str) FEA_MAKE_LITERAL_T(CharT, str)
+#define FEA_LIT(str) FEA_MAKE_LITERAL_T(CharT, str)
 
 
 // Makes a character literal of type CharType

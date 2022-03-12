@@ -1,7 +1,7 @@
 ﻿/**
  * BSD 3-Clause License
  *
- * Copyright (c) 2020, Philippe Groarke
+ * Copyright (c) 2022, Philippe Groarke
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -182,13 +182,13 @@ FEA_INLINE_VAR constexpr bool is_same_template_v
 		= is_same_template<T, U>::value;
 
 
-// Checks if a type is a template template.
 template <class T>
 struct is_template_template : std::false_type {};
 
 template <template <class...> class T, class... Args>
 struct is_template_template<T<Args...>> : std::true_type {};
 
+// Checks if a type is a template template.
 template <class T>
 FEA_INLINE_VAR constexpr bool is_template_template_v
 		= is_template_template<T>::value;
