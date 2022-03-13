@@ -44,23 +44,6 @@
 #include <utility>
 
 namespace fea {
-namespace detail {
-template <size_t, class T>
-using accept_idx = T;
-
-template <class T, size_t... Is>
-auto make_tuple_from_count(std::index_sequence<Is...>) {
-	return std::tuple<accept_idx<Is, T>...>{};
-}
-} // namespace detail
-
-// Create a tuple using type T and count N.
-template <class T, size_t N>
-auto make_tuple_from_count() {
-	return detail::make_tuple_from_count<T>(std::make_index_sequence<N>{});
-}
-
-
 // Get the index of type T in Tuple.
 template <class T, class Tuple>
 struct tuple_idx {
@@ -112,7 +95,6 @@ template <class Func, class Tuple, size_t... I>
 constexpr void tuple_foreach(
 		Func&& func, Tuple&& tup, std::index_sequence<I...>) {
 #if FEA_CPP17
-	// TODO : test it.
 	(func(std::get<I>(tup)), ...);
 #else
 	char dummy[] = { (void(func(std::get<I>(tup))), '0')... };
@@ -163,6 +145,31 @@ struct tuple_type_cat<std::tuple<First...>, std::tuple<Second...>> {
 
 template <class... Args>
 using tuple_type_cat_t = typename tuple_type_cat<Args...>::type;
+
+
+namespace detail {
+template <size_t, class T>
+using accept_idx = T;
+
+template <class T, size_t... Is>
+constexpr auto make_tuple_from_count(std::index_sequence<Is...>) {
+	return std::tuple<accept_idx<Is, T>...>{};
+}
+} // namespace detail
+
+// Create a tuple using type T and count N.
+template <class T, size_t N>
+constexpr auto make_tuple_from_count() {
+	return detail::make_tuple_from_count<T>(std::make_index_sequence<N>{});
+}
+
+// Create a tuple using type T, count N, initialized at provided value.
+template <class T, size_t N>
+constexpr auto make_tuple_from_count(const T& t) {
+	auto ret = detail::make_tuple_from_count<T>(std::make_index_sequence<N>{});
+	fea::tuple_for_each([&](auto& val) { val = t; }, ret);
+	return ret;
+}
 
 
 /*

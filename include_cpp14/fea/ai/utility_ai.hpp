@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include "fea/containers/span.hpp"
 #include "fea/functional/function.hpp"
 #include "fea/meta/static_for.hpp"
 #include "fea/utils/platform.hpp"
@@ -35,19 +36,25 @@ completely, or should it still compute average.
 
 When creating a utility_ai, you must provide your action and predicate
 arguments as you would to a std::function. The return type must be float for
-predicates. Specify the action signature first, then the predicate signature.
+predicates.
 For example,
 
-enum class utility_function {
+enum class function {
 	eat,
 	sleep,
 	count // count is mandatory
 };
 
-fea::utility_ai<utility_function, void(int&, double), float(int)> ai;
+enum class predicate {
+	wants_to_eat,
+	wants_to_sleep,
+	count // count is mandatory
+};
 
-The action signature is : void(int&, double)
+fea::utility_ai<function, predicate, float(int), void(int&, double)> ai;
+
 The predicate signature is : float(int)
+The action signature is : void(int&, double)
 
 When evaluating the utility_ai and triggering an action, provide action
 arguments first and then the predicate arguments. For example :
@@ -64,15 +71,91 @@ fea::utility_ai_cl<utility_function, void(int&, double), float(int)> ai;
 */
 
 namespace fea {
-template <class, class, class>
+template <class, class, class, class>
 struct utility_ai;
+template <class, class, class, class>
+struct utility_ai_function;
 
-template <class FunctionEnum, class ActionReturn, class... ActionArgs,
-		class PredReturn, class... PredArgs>
-struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
-		PredReturn(PredArgs...)> {
+template <class FunctionEnum, class PredicateEnum, class... PredArgs,
+		class ActionReturn, class... ActionArgs>
+struct utility_ai_function<FunctionEnum, PredicateEnum, float(PredArgs...),
+		ActionReturn(ActionArgs...)> {
+
 	using action_t = std::function<ActionReturn(ActionArgs...)>;
-	using predicate_t = std::function<PredReturn(ActionArgs...)>;
+
+	utility_ai_function() {
+		_predicates.fill(PredicateEnum::count);
+	}
+
+	// Enables the provided predicates on this utility function.
+	void add_predicates(fea::span<const PredicateEnum> preds) {
+		if (preds.size() + _size > _predicates.size()) {
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"Too many predicates provided, do you have duplicates?");
+		}
+		std::copy(preds.begin(), preds.end(), _predicates.begin() + _size);
+	}
+
+	// Enables the provided predicates on this utility function.
+	void add_predicates(std::initializer_list<PredicateEnum>&& preds) {
+		add_predicates({ preds.begin(), preds.end() });
+	}
+
+	// Enables the provided predicate on this utility function.
+	void add_predicate(PredicateEnum pred) {
+		if (_size + 1 > _predicates.size()) {
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"Too many predicates provided, do you have duplicates?");
+		}
+		_predicates[_size] = pred;
+		++_size;
+	}
+
+	// Adds an action to execute.
+	template <class ActionFunc>
+	void add_action(ActionFunc&& func) {
+		_action = std::forward<ActionFunc>(func);
+		assert(has_action());
+	}
+
+	// The predicates to use.
+	fea::span<const PredicateEnum> predicates() const {
+		return { _predicates.data(), _size };
+	}
+
+	// Has an action.
+	bool has_action() const {
+		return bool(_action);
+	}
+
+	// Number of predicates.
+	size_t size() const {
+		return _size;
+	}
+
+	ActionReturn execute(ActionArgs... args) const {
+		assert(has_action());
+		return _action(std::forward<ActionArgs>(args)...);
+	}
+
+private:
+	static constexpr size_t _predicate_count = size_t(PredicateEnum::count);
+
+	std::array<PredicateEnum, _predicate_count> _predicates;
+	size_t _size = 0;
+	action_t _action;
+};
+
+
+template <class FunctionEnum, class PredicateEnum, class... PredArgs,
+		class ActionReturn, class... ActionArgs>
+struct utility_ai<FunctionEnum, PredicateEnum, float(PredArgs...),
+		ActionReturn(ActionArgs...)> {
+
+	using utility_func_t = utility_ai_function<FunctionEnum, PredicateEnum,
+			float(PredArgs...), ActionReturn(ActionArgs...)>;
+	using action_t = typename utility_func_t::action_t;
+	using predicate_func_t = std::function<float(PredArgs...)>;
 
 	utility_ai() = default;
 	utility_ai(const utility_ai&) = default;
@@ -80,81 +163,37 @@ struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
 	utility_ai& operator=(const utility_ai&) = default;
 	utility_ai& operator=(utility_ai&&) = default;
 
-	// Create the utility function F.
-	// You must provide a predicate and an action. The signatures must match the
-	// created struct.
-	// Remember predicates always return float.
-	template <FunctionEnum F, class ActionFunc, class... PredFuncs>
-	void create_function(
-			ActionFunc&& action_func, PredFuncs&&... predicate_funcs) {
-		static_assert(sizeof...(PredFuncs) != 0,
-				"fea::utility_ai : must provide at least 1 predicate for "
-				"utility function");
 
-		std::get<size_t(F)>(_utility_functions) = { F,
-			std::vector<predicate_t>{
-					std::forward<PredFuncs>(predicate_funcs)... },
-			std::forward<ActionFunc>(action_func) };
+	// Helper so you don't have to type all the template parameters.
+	// Returns a new state to be filled in and later re-added through add_state.
+	static constexpr auto make_function() {
+		return utility_func_t{};
 	}
 
-	// Add multiple predicates to an existing utility function.
-	// You must have created the function before calling this.
-	template <FunctionEnum F, class... PredFuncs>
-	void add_predicates(PredFuncs&&... predicate_functions) {
-		utility_function& u_func = std::get<size_t(F)>(_utility_functions);
-		if (u_func.id != F) {
+	// Adds the utility function F.
+	// Must be configured appropriately, with at minimum 1 predicate and an
+	// action.
+	template <FunctionEnum F>
+	void add_function(utility_func_t&& utility_function) {
+		if (utility_function.size() == 0 || !utility_function.has_action()) {
 			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
-					" : Adding predicate to non-initialized utility function."
-					" Remember to call create_function before adding extra "
-					"predicates.");
+					"Misconfigured utility function provided.");
 		}
 
-		fold(
-				[&](auto&& f) {
-					u_func.predicates.push_back(std::forward<decltype(f)>(f));
-				},
-				std::forward<PredFuncs>(predicate_functions)...);
+		assert(!utility_function.predicates().empty());
+		std::get<size_t(F)>(_utility_functions) = std::move(utility_function);
 	}
 
-	// Add a predicate to an existing utility function.
-	// You must have created the function before calling this.
-	template <FunctionEnum F, class PredFunc>
-	void add_predicate(PredFunc&& predicate_function) {
-		add_predicates<F>(std::forward<PredFunc>(predicate_function));
+	// Adds the given predicate and assigns it to provided enum value.
+	template <PredicateEnum P, class PredFunc>
+	void add_predicate(PredFunc&& pred) {
+		std::get<size_t(P)>(_predicates) = std::forward<PredFunc>(pred);
 	}
 
-	// The first time execute is called, a somewhat heavy verification step is
-	// executed. You can call this step manually if you with to control when
-	// the validation happens.
-	void validate() {
-		if (_validated) {
-			return;
-		}
-
-		for (const utility_function& u_func : _utility_functions) {
-			if (u_func.id == FunctionEnum::count) {
-				fea::maybe_throw(__FUNCTION__, __LINE__,
-						" : One or more utility functions are uninitialized.");
-			}
-			if (u_func.predicates.empty()) {
-				fea::maybe_throw(__FUNCTION__, __LINE__,
-						" : One or more utility function has no predicates.");
-			}
-			if (!u_func.action) {
-				fea::maybe_throw(__FUNCTION__, __LINE__,
-						" : One or more utility function has no action.");
-			}
-		}
-
-		_validated = true;
-	}
-
-	// Evaluates all utility functions, picks the function with the highest
-	// predicate score and executes it.
+	// Evaluates all utility functions, picks the function with the
+	// highest predicate score and executes it.
 	ActionReturn trigger(
 			ActionArgs... action_args, PredArgs... predicate_args) {
-
-		validate();
 
 		// Don't use std::max_element, it would compute score twice for each
 		// utility func.
@@ -165,7 +204,9 @@ struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
 		for (size_t i = 0; i < size_t(FunctionEnum::count); ++i) {
 			// predicate_args are not forwarded, as they are used for multiple
 			// predicates.
-			float score = evaluate_score(i, predicate_args...);
+			fea::span<const PredicateEnum> preds
+					= _utility_functions[i].predicates();
+			float score = evaluate_score(preds, predicate_args...);
 
 			// TODO : What happens when predicates return negative, should
 			// guarantee skip?
@@ -177,7 +218,7 @@ struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
 
 		// Something went horribly wrong.
 		assert(winner_idx != (std::numeric_limits<size_t>::max)());
-		return _utility_functions[winner_idx].action(
+		return _utility_functions[winner_idx].execute(
 				std::forward<ActionArgs>(action_args)...);
 	}
 
@@ -187,14 +228,14 @@ struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
 	ActionReturn trigger_mt(
 			ActionArgs... action_args, PredArgs... predicate_args) {
 
-		validate();
-
 		std::array<float, size_t(FunctionEnum::count)> scores;
 		tbb::parallel_for(
 				tbb::blocked_range<size_t>{ 0, size_t(FunctionEnum::count) },
 				[&, this](const tbb::blocked_range<size_t>& range) {
 					for (size_t i = range.begin(); i < range.end(); ++i) {
-						scores[i] = evaluate_score(i, predicate_args...);
+						fea::span<const PredicateEnum> preds
+								= _utility_functions[i].predicates();
+						scores[i] = evaluate_score(preds, predicate_args...);
 					}
 				});
 
@@ -212,13 +253,11 @@ struct utility_ai<FunctionEnum, ActionReturn(ActionArgs...),
 
 		// Something went horribly wrong.
 		assert(winner_idx != (std::numeric_limits<size_t>::max)());
-		return _utility_functions[winner_idx].action(
+		return _utility_functions[winner_idx].execute(
 				std::forward<ActionArgs>(action_args)...);
 	}
 
 private:
-	static_assert(std::is_same<PredReturn, float>::value,
-			"fea::utility_ai : Predicate return type must be float.");
 	static_assert(std::is_enum<FunctionEnum>::value,
 			"fea::utility_ai : The first template parameter must be an enum of "
 			"your functions. The enum must end with the member 'count'.");
@@ -226,52 +265,26 @@ private:
 			"fea::utility_ai : You must provide a 'count' member in your "
 			"function enum, and it must not be equal to 0.");
 
-	struct utility_function {
-		// utility_function() = default;
-		// utility_function(FunctionEnum id_,
-		//		std::vector<predicate_t>&& predicates_, action_t&& action_)
-		//		: id(id_)
-		//		, predicates(std::move(predicates_))
-		//		, action(std::move(action_)) {
-		//}
+	float evaluate_score(
+			fea::span<const PredicateEnum> preds, PredArgs... pred_args) const {
 
-		FunctionEnum id = FunctionEnum::count;
-		std::vector<predicate_t> predicates{};
-		action_t action{};
-	};
-
-	float evaluate_score(size_t i, PredArgs... pred_args) const {
-		const utility_function& u_func = _utility_functions[i];
-
-		// These are just sanity checks, everything should have been verified
-		// before.
-		assert(!u_func.predicates.empty());
-		assert(u_func.id == FunctionEnum(i));
-		assert(bool(u_func.action));
+		assert(!preds.empty());
 
 		// Compute the functions score and average it.
 		float ret = 0.f;
-		for (const predicate_t& pred : u_func.predicates) {
-			ret += pred(pred_args...);
+		for (PredicateEnum pred : preds) {
+			ret += _predicates[size_t(pred)](pred_args...);
 		}
-		return ret / float(u_func.predicates.size());
+		return ret / float(preds.size());
 	}
 
 	// The utility functions.
-	std::array<utility_function, size_t(FunctionEnum::count)>
+	std::array<utility_func_t, size_t(FunctionEnum::count)>
 			_utility_functions{};
 
-	// Did we run the validation step?
-	bool _validated = false;
+	// The predicates.
+	std::array<predicate_func_t, size_t(PredicateEnum::count)> _predicates{};
 };
 
 
-// TODO
-//// Alias for captureless utility_ai.
-//// Captureless versions of classes do not use std::function, they store
-//// callbacks as raw function pointers.
-// template <class UtilityFunctionEnum, class ActionSignature,
-//		class PredicateSignature>
-// using utility_ai_cl = utility_ai<UtilityFunctionEnum, ActionSignature,
-//		PredicateSignature, true>;
 } // namespace fea

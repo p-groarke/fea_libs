@@ -32,13 +32,203 @@
  **/
 
 #pragma once
+#include "fea/meta/traits.hpp"
+#include "fea/meta/tuple.hpp"
+#include "fea/utils/throw.hpp"
+
+#include <array>
+#include <functional>
+#include <initializer_list>
+
+/*
+A Hierarchical Task Network planner.
+An htn contains tasks, methods and actions. Some of these use predicates and
+operators. At a high level, tasks are a simple "container" of other things. They
+represent the instructions to achieve a particular goal. Methods are pure
+predicates, which contain actions or other tasks. Actions are the "simplest
+and smallest" executable behavior. An htn will in the end, be decomposed into a
+list of actions to execute.
+
+Tasks can be triggered by the user or nested in other tasks or methods. Tasks do
+not have a predicate, and their immediate children must be methods.
+
+A method contains actions, methods or tasks. The main goal of a method is to be
+a predicate for a collection of behaviors. The method will only execute if its
+predicate returns true. Multiple methods are considered and prioritized in order
+of (TODO : addition?).
+
+An action is a simple operation which applies an effect to your "World". Actions
+have optional predicates, which will return true if this action can be taken.
+Actions must contain an operator, which is your function to execute. The htn
+hierarchy must always end with primitive tasks, so it can be decomposed into a
+plan.
+
+A plan is a simple ordered list (vector) of actions to execute sequentially.
+
+Specifics
+This htn implementation will require you provided enums to represent these
+various structures. All enums must allways end with the 'count' value, which
+represents the number of values for that enum.
+
+*/
 
 namespace fea {
+namespace detail {
+template <class T, size_t N>
+constexpr auto make_filled_array(const T& t) {
+	std::array<T, N> ret;
+	ret.fill(t);
+	return ret;
+}
+} // namespace detail
 
-// An
-template <class T>
-struct htn {};
+template <class, class, class, class, class, class>
+struct htn;
 
+template <class, class, class, class, class, class>
+struct htn_builder;
+
+// A task contains methods, nothing else.
+template <class TaskEnum, class MethodEnum, class ActionEnum,
+		class OperatorEnum, class WorldState, class... OperatorArgs>
+struct htn_task {
+	size_t size() const {
+		return _size;
+	}
+
+private:
+	static constexpr size_t _method_count = size_t(MethodEnum::count);
+
+	std::array<MethodEnum, _method_count> _methods
+			= detail::make_filled_array<MethodEnum, _method_count>(
+					MethodEnum::count);
+	size_t _size = 0;
+};
+
+template <class TaskEnum, class ActionEnum>
+struct htn_task_or_action {
+	constexpr htn_task_or_action() = default;
+
+	constexpr htn_task_or_action(TaskEnum t)
+			: _task(t) {
+		assert(!is_action());
+	}
+	constexpr htn_task_or_action(ActionEnum a)
+			: _action(a) {
+		assert(!is_task());
+	}
+
+	constexpr bool is_task() const {
+		return _task != TaskEnum::count;
+	}
+	constexpr bool is_action() const {
+		return _action != ActionEnum::count;
+	}
+
+	constexpr TaskEnum task() const {
+		return _task;
+	}
+	constexpr ActionEnum action() const {
+		return _action;
+	}
+
+private:
+	TaskEnum _task = TaskEnum::count;
+	ActionEnum _action = ActionEnum::count;
+};
+
+// A method contains a predicate + tasks and/or actions.
+template <class TaskEnum, class ActionEnum, class WorldState>
+struct htn_method {
+	using predicate_func_t = std::function<bool(const WorldState&)>;
+	using task_or_action_t = htn_task_or_action<TaskEnum, ActionEnum>;
+
+	template <class PredFunc>
+	htn_method(std::initializer_list<task_or_action_t>&& tasks_or_actions,
+			PredFunc pred)
+			: _pred(pred)
+			, _size(tasks_or_actions.size()) {
+
+		if (tasks_or_actions.size() > _sub_tasks.size()) {
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"Too many tasks and actions. Maybe you have duplicate sub-"
+					"tasks?");
+		}
+
+		std::copy(tasks_or_actions.begin(), tasks_or_actions.end(),
+				_sub_tasks.begin());
+	}
+
+	bool satisfied(const WorldState& ws) const {
+		return _pred(ws);
+	}
+
+	size_t size() const {
+		return _size;
+	}
+
+private:
+	static constexpr size_t _max_subtasks
+			= size_t(TaskEnum::count) + size_t(ActionEnum::count);
+
+	predicate_func_t _pred = nullptr;
+	std::array<task_or_action_t, _max_subtasks> _sub_tasks;
+	size_t _size = 0;
+};
+
+// An htn planner and plan runner.
+//
+// Provide enums of : tasks, methods, actions and operators.
+// All enums must end with 'count' and use the same underlying type.
+//
+// The 'WorldState' is the template type we will be inquiring and acting upon
+// (T). It should be as small of a structure as possible, since it will be
+// copied when planning.
+//
+// You must provide the arguments for your Operator callback.
+// Operators must return a bool : true if finished, false if not. Once
+// an operator ends, its effects are applied on the WorldState.
+template <class TaskEnum, class MethodEnum, class ActionEnum,
+		class OperatorEnum, class WorldState, class... OperatorArgs>
+struct htn<TaskEnum, MethodEnum, ActionEnum, OperatorEnum, WorldState,
+		bool(OperatorArgs...)> {
+	using operator_func_t = std::function<bool(OperatorArgs...)>;
+	using predicate_func_t = std::function<bool(const WorldState&)>;
+	using effects_func_t = std::function<void(WorldState&)>;
+
+private:
+	static_assert(
+			std::is_enum_v<TaskEnum>, "htn : TaskEnum must be an enum class");
+	static_assert(std::is_enum_v<MethodEnum>,
+			"htn : MethodEnum must be an enum class");
+	static_assert(std::is_enum_v<ActionEnum>,
+			"htn : ActionEnum must be an enum class");
+	static_assert(std::is_enum_v<OperatorEnum>,
+			"htn : OperatorEnum must be an enum class");
+
+	static_assert(fea::all_of_v<std::is_same<std::underlying_type_t<TaskEnum>,
+										std::underlying_type_t<MethodEnum>>,
+						  std::is_same<std::underlying_type_t<TaskEnum>,
+								  std::underlying_type_t<ActionEnum>>,
+						  std::is_same<std::underlying_type_t<TaskEnum>,
+								  std::underlying_type_t<OperatorEnum>>>,
+			"htn : all enum classes must use the same underlying type");
+
+	static constexpr size_t _task_count = size_t(TaskEnum::count);
+	static constexpr size_t _method_count = size_t(MethodEnum::count);
+	static constexpr size_t _action_count = size_t(ActionEnum::count);
+	static constexpr size_t _operator_count = size_t(OperatorEnum::count);
+};
+
+template <class TaskEnum, class MethodEnum, class ActionEnum,
+		class OperatorEnum, class WorldState, class... OperatorArgs>
+struct htn_builder<TaskEnum, MethodEnum, ActionEnum, OperatorEnum, WorldState,
+		bool(OperatorArgs...)> {
+	static constexpr auto make_htn() {
+		return htn<TaskEnum, MethodEnum, ActionEnum, OperatorEnum, WorldState,
+				bool(OperatorArgs...)>{};
+	}
+};
 
 // template <class T>
 // struct itask {
