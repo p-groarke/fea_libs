@@ -89,11 +89,12 @@ struct utility_ai_function<FunctionEnum, PredicateEnum, float(PredArgs...),
 
 	// Enables the provided predicates on this utility function.
 	void add_predicates(fea::span<const PredicateEnum> preds) {
-		if (preds.size() + _size > _predicates.size()) {
+		if (preds.size() + _predicate_size > _predicates.size()) {
 			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
 					"Too many predicates provided, do you have duplicates?");
 		}
-		std::copy(preds.begin(), preds.end(), _predicates.begin() + _size);
+		std::copy(preds.begin(), preds.end(),
+				_predicates.begin() + _predicate_size);
 	}
 
 	// Enables the provided predicates on this utility function.
@@ -103,12 +104,12 @@ struct utility_ai_function<FunctionEnum, PredicateEnum, float(PredArgs...),
 
 	// Enables the provided predicate on this utility function.
 	void add_predicate(PredicateEnum pred) {
-		if (_size + 1 > _predicates.size()) {
+		if (_predicate_size + 1 > _predicates.size()) {
 			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
 					"Too many predicates provided, do you have duplicates?");
 		}
-		_predicates[_size] = pred;
-		++_size;
+		_predicates[_predicate_size] = pred;
+		++_predicate_size;
 	}
 
 	// Adds an action to execute.
@@ -120,7 +121,7 @@ struct utility_ai_function<FunctionEnum, PredicateEnum, float(PredArgs...),
 
 	// The predicates to use.
 	fea::span<const PredicateEnum> predicates() const {
-		return { _predicates.data(), _size };
+		return { _predicates.data(), _predicate_size };
 	}
 
 	// Has an action.
@@ -130,7 +131,7 @@ struct utility_ai_function<FunctionEnum, PredicateEnum, float(PredArgs...),
 
 	// Number of predicates.
 	size_t size() const {
-		return _size;
+		return _predicate_size;
 	}
 
 	ActionReturn execute(ActionArgs... args) const {
@@ -142,7 +143,7 @@ private:
 	static constexpr size_t _predicate_count = size_t(PredicateEnum::count);
 
 	std::array<PredicateEnum, _predicate_count> _predicates;
-	size_t _size = 0;
+	size_t _predicate_size = 0;
 	action_t _action;
 };
 

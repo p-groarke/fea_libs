@@ -23,6 +23,7 @@ TEST(utility_ai, basics) {
 
 	// Create a utility ai with :
 	// - utility functions ufunc
+	// - predicates upred
 	// - action signature void()
 	// - predicate signature float()
 	fea::utility_ai<ufunc, upred, float(), void()> ai;
@@ -31,7 +32,7 @@ TEST(utility_ai, basics) {
 	ai.add_predicate<upred::always_true>([]() { return 1.f; });
 	ai.add_predicate<upred::always_false>([]() { return 0.f; });
 
-	// Create a function and setup.
+	// Create a function and set it up.
 	{
 		auto pass_func = ai.make_function();
 		EXPECT_EQ(pass_func.size(), 0u);
@@ -141,7 +142,7 @@ struct cat {
 	void update_mt(fea::dseconds dt) {
 		awake_hours += dt * 60.f * 60.f;
 
-		print();
+		// print();
 
 		ai.trigger_mt(this, this);
 	}

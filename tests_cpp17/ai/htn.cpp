@@ -41,23 +41,22 @@ TEST(htn, basics) {
 	enum class task { exist, count };
 	enum class method { heal, chill, count };
 	enum class action { heal, count };
-	enum class op { heal, count };
+	enum class predicate { low_hp, always_true, always_false, count };
+	enum class operators { heal, count };
 
 	ennemy my_ennemy;
 
-	fea::htn_builder<task, method, action, op, ennemy::htn_state, bool(ennemy*)>
-			builder;
-
-	auto htn = builder.make_htn();
+	fea::htn<task, method, action, operators, predicate, ennemy::htn_state,
+			bool(ennemy*)>
+			htn;
 	htn;
 
 	// Simple method test.
 	{
-		fea::htn_method<task, action, ennemy::htn_state> meth(
-				{ task::exist, action::heal },
-				[](const ennemy::htn_state&) { return false; });
-		EXPECT_EQ(meth.size(), 2);
-		EXPECT_FALSE(meth.satisfied(my_ennemy.state));
+		fea::htn_method<task, action, predicate, ennemy::htn_state> meth(
+				{ predicate::always_false }, { task::exist, action::heal });
+		EXPECT_EQ(meth.subtask_size(), 2u);
+		// EXPECT_FALSE(meth.satisfied(my_ennemy.state));
 	}
 }
 } // namespace

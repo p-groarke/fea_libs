@@ -66,11 +66,6 @@ struct span {
 	using iterator = pointer;
 	using reverse_iterator = std::reverse_iterator<iterator>;
 
-	// span(T* data, size_type size)
-	//		: _data(data)
-	//		, _size(size) {
-	//}
-
 	constexpr span() = default;
 
 	template <class It>
