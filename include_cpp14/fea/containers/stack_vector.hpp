@@ -31,7 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
-#include <fea/utils/throw.hpp>
+#include "fea/meta/traits.hpp"
+#include "fea/utils/throw.hpp"
 
 #include <array>
 #include <cassert>
@@ -96,6 +97,14 @@ struct stack_vector {
 			: _size(init.size()) {
 		assert(init.size() <= StackSize);
 		std::copy(init.begin(), init.end(), _data.begin());
+	}
+
+	template <class InputIt,
+			class = std::enable_if_t<fea::is_iterator<InputIt>::value>>
+	constexpr stack_vector(InputIt start, InputIt stop)
+			: _size(std::distance(start, stop)) {
+		assert(std::distance(start, stop) <= StackSize);
+		std::copy(start, stop, _data.begin());
 	}
 
 	/**

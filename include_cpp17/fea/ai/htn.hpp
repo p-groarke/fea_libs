@@ -38,6 +38,7 @@
 #include "fea/meta/tuple.hpp"
 #include "fea/utils/throw.hpp"
 
+#include <algorithm>
 #include <array>
 #include <functional>
 #include <initializer_list>
@@ -57,11 +58,13 @@ not have a predicate, and their immediate children must be methods.
 A method contains actions, methods or tasks. The main goal of a method is to be
 a predicate for a collection of behaviors. The method will only execute if its
 predicate returns true. Multiple methods are considered and prioritized in order
-of (TODO : addition?).
+of addition.
 
-An action is a simple operation which applies an effect to your "World". Actions
+An action is a basic operation which applies an effect to your "World". Actions
 have optional predicates, which will return true if this action can be taken.
-Actions must contain an operator, which is your function to execute. The htn
+Actions must also contain an operator, which is a function to execute to
+"achieve" the effects. The operator is your actual game behavior, and once it
+is done executing, the action effects are applied on the state. The htn
 hierarchy must always end with primitive tasks, so it can be decomposed into a
 plan.
 
@@ -72,38 +75,157 @@ This htn implementation will require you provided enums to represent these
 various structures. All enums must allways end with the 'count' value, which
 represents the number of values for that enum.
 
+The callbacks signatures are as followed :
+- Predicates : bool(const YourWorldState*);
+- Effects : void(YourWorldState*);
+- Operators : bool(UserDefinedT*);
+
+The operator return value is true if operator is done, false if not (applicable
+during plan running). By using pointers, the htn can call member functions on
+your objects.
+
 */
 
 namespace fea {
+namespace detail {
+template <size_t N, class T>
+bool has_duplicates(fea::span<const T> spn) {
+	fea::stack_vector<T, N> cpy(spn.begin(), spn.end());
+	std::sort(cpy.begin(), cpy.end());
+	if (std::adjacent_find(cpy.begin(), cpy.end()) != cpy.end()) {
+		return true;
+	}
+	return false;
+}
+} // namespace detail
 
-template <class, class, class, class, class, class, class>
+template <class, class, class, class, class, class, class, class>
 struct htn;
 
+template <class PredicateEnum, class OperatorEnum, class WorldState>
+struct htn_action {
+	using effects_func_t = std::function<void(WorldState*)>;
+	using expected_effects_func_t = effects_func_t;
 
-// A task contains methods, nothing else.
-template <class TaskEnum, class MethodEnum, class ActionEnum,
-		class OperatorEnum, class WorldState, class... OperatorArgs>
-struct htn_task {
+	// Add operators to this action.
+	// Operators are your game behavior functions, which lead up to the effects
+	// later applied.
+	void add_operators(fea::span<const OperatorEnum> ops) {
+		if (ops.size() + _operators.size() > _max_ops) {
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"Too many operators provided, do you have duplicates?");
+		}
+		_operators.insert(_operators.end(), ops.begin(), ops.end());
+	}
 
-	[[nodiscard]] size_t size() const {
-		return _methods.size();
+	// Add operators to this action.
+	// Operators are your game behavior functions, which lead up to the effects
+	// later applied.
+	void add_operators(std::initializer_list<OperatorEnum>&& ops) {
+		add_operators({ ops.begin(), ops.end() });
+	}
+
+	// Add an operator to this action.
+	// Operators are your game behavior functions, which lead up to the effects
+	// later applied.
+	void add_operator(OperatorEnum op) {
+		if (_operators.size() + 1 > _max_ops) {
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"Too many operators provided, do you have duplicates?");
+		}
+		_operators.push_back(op);
+	}
+
+	// Add the effects function of this action.
+	// Effects are applied on the world state, after operator execution.
+	template <class EffectFunc>
+	void add_effect(EffectFunc&& eff_func) {
+		_effects = std::forward<EffectFunc>(eff_func);
+	}
+
+	// Add the expected effects function of this action.
+	// Expected effects are a way to trick the network into planning further in
+	// the future. Expected effects are only applied when planning, not when
+	// executing the operators.
+	template <class EffectFunc>
+	void add_expected_effect(EffectFunc&& eff_func) {
+		_expected_effects = std::forward<EffectFunc>(eff_func);
+	}
+
+	// Add predicates to this action, optional.
+	// This will contribute to method selection.
+	void add_predicates(fea::span<const PredicateEnum> preds) {
+		if (preds.size() + _predicates.size() > _max_preds) {
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"Too many predicates provided, do you have duplicates?");
+		}
+		_predicates.insert(_predicates.end(), preds.begin(), preds.end());
+	}
+
+	// Add predicates to this action, optional.
+	// This will contribute to method selection.
+	void add_predicates(std::initializer_list<PredicateEnum>&& preds) {
+		add_predicates({ preds.begin(), preds.end() });
+	}
+
+	// Add a predicate to this action, optional.
+	// This will contribute to method selection.
+	void add_predicate(PredicateEnum pred) {
+		if (_predicates.size() + 1 > _max_preds) {
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"Too many predicates provided, do you have duplicates?");
+		}
+		_predicates.push_back(pred);
+	}
+
+	// Used internally to apply effects and expected effects.
+	void apply_effects_and_expected(WorldState& w) const {
+		_effects(&w);
+
+		if (_expected_effects) {
+			_expected_effects(&w);
+		}
+	}
+
+	// Used internally to apply effects only (while running plan).
+	void apply_effects(WorldState& w) const {
+		_effects(&w);
+	}
+
+	[[nodiscard]] bool has_effects() const {
+		return bool(_effects);
+	}
+
+	// This action's predicates.
+	[[nodiscard]] fea::span<const PredicateEnum> predicates() const {
+		return { _predicates.begin(), _predicates.end() };
+	}
+
+	// This action's operators.
+	[[nodiscard]] fea::span<const OperatorEnum> operators() const {
+		return { _operators.begin(), _operators.end() };
 	}
 
 private:
-	static constexpr size_t _method_count = size_t(MethodEnum::count);
+	static constexpr size_t _max_preds = size_t(PredicateEnum::count);
+	static constexpr size_t _max_ops = size_t(OperatorEnum::count);
 
-	fea::stack_vector<MethodEnum, _method_count> _methods;
+	fea::stack_vector<PredicateEnum, _max_preds> _predicates;
+	fea::stack_vector<OperatorEnum, _max_ops> _operators;
+	effects_func_t _effects{};
+	expected_effects_func_t _expected_effects{};
 };
 
+// A subtask can be either a high level task, or a basic action.
 template <class TaskEnum, class ActionEnum>
-struct htn_task_or_action {
-	constexpr htn_task_or_action() = default;
+struct htn_subtask {
+	constexpr htn_subtask() = default;
 
-	constexpr htn_task_or_action(TaskEnum t)
+	constexpr htn_subtask(TaskEnum t)
 			: _task(t) {
 		assert(!is_action());
 	}
-	constexpr htn_task_or_action(ActionEnum a)
+	constexpr htn_subtask(ActionEnum a)
 			: _action(a) {
 		assert(!is_task());
 	}
@@ -122,82 +244,120 @@ struct htn_task_or_action {
 		return _action;
 	}
 
+	template <class T, class A>
+	friend constexpr bool operator==(
+			const htn_subtask<T, A>& lhs, const htn_subtask<T, A>& rhs);
+	template <class T, class A>
+	friend constexpr bool operator!=(
+			const htn_subtask<T, A>& lhs, const htn_subtask<T, A>& rhs);
+
+	template <class T, class A>
+	friend constexpr bool operator<(
+			const htn_subtask<T, A>& lhs, const htn_subtask<T, A>& rhs);
+
 private:
 	TaskEnum _task = TaskEnum::count;
 	ActionEnum _action = ActionEnum::count;
 };
 
+template <class T, class A>
+constexpr bool operator==(
+		const htn_subtask<T, A>& lhs, const htn_subtask<T, A>& rhs) {
+	return lhs._task == rhs._task && lhs._action == rhs._action;
+}
+template <class T, class A>
+constexpr bool operator!=(
+		const htn_subtask<T, A>& lhs, const htn_subtask<T, A>& rhs) {
+	return !(lhs == rhs);
+}
+
+template <class T, class A>
+constexpr bool operator<(
+		const htn_subtask<T, A>& lhs, const htn_subtask<T, A>& rhs) {
+	if (lhs._task == rhs._task) {
+		return lhs._action < rhs._action;
+	}
+	return lhs._task < rhs._task;
+}
+
 // A method contains a predicate + tasks and/or actions.
-template <class TaskEnum, class ActionEnum, class PredicateEnum,
-		class WorldState>
+template <class TaskEnum, class ActionEnum, class PredicateEnum>
 struct htn_method {
-	using predicate_func_t = std::function<bool(const WorldState&)>;
-	using task_or_action_t = htn_task_or_action<TaskEnum, ActionEnum>;
+	using subtask_t = htn_subtask<TaskEnum, ActionEnum>;
 
 	htn_method() = default;
 
-	htn_method(std::initializer_list<PredicateEnum>&& preds,
-			std::initializer_list<task_or_action_t>&& tasks_or_actions) {
-
-		if (preds.size() > _max_preds) {
+	// Add predicates to this method.
+	// If these evaluate to true, this method will be chosen.
+	void add_predicates(fea::span<const PredicateEnum> preds) {
+		if (preds.size() + _predicates.size() > _max_preds) {
 			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
-					"Too many predicates. Maybe you have duplicates?");
+					"Too many predicates provided, do you have duplicates?");
 		}
-
-		if (tasks_or_actions.size() > _max_subtasks) {
-			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
-					"Too many tasks and actions. Maybe you have duplicate sub-"
-					"tasks?");
-		}
-
-		std::copy(preds.begin(), preds.end(), _predicates.begin());
-		std::copy(tasks_or_actions.begin(), tasks_or_actions.end(),
-				_sub_tasks.begin());
+		_predicates.insert(_predicates.end(), preds.begin(), preds.end());
 	}
 
-	//// Add predicates of this method.
-	//// If these evaluate to true, this method will be chosen.
-	// void add_predicates(fea::span < const PredicateEnum)
+	// Add predicates to this method.
+	// If these evaluate to true, this method will be chosen.
+	void add_predicates(std::initializer_list<PredicateEnum>&& preds) {
+		add_predicates({ preds.begin(), preds.end() });
+	}
 
-	//		// Enables the provided predicates on this utility function.
-	//		void add_predicates(fea::span<const PredicateEnum> preds) {
-	//	if (preds.size() + _predicate_size > _predicates.size()) {
-	//		fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
-	//				"Too many predicates provided, do you have duplicates?");
-	//	}
-	//	std::copy(preds.begin(), preds.end(),
-	//			_predicates.begin() + _predicate_size);
-	//}
+	// Add a predicates to this method.
+	// If the predicates evaluate to true, this method will be chosen.
+	void add_predicate(PredicateEnum pred) {
+		if (_predicates.size() + 1 > _max_preds) {
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"Too many predicates provided, do you have duplicates?");
+		}
+		_predicates.push_back(pred);
+	}
 
-	//// Enables the provided predicates on this utility function.
-	// void add_predicates(std::initializer_list<PredicateEnum>&& preds) {
-	//	add_predicates({ preds.begin(), preds.end() });
-	//}
+	// Add subtasks to this method.
+	// These tasks will be executed in order of addition.
+	// You may provide any combination of "tasks" or "actions".
+	void add_subtasks(fea::span<const subtask_t> subtasks) {
+		if (subtasks.size() + _subtasks.size() > _max_subtasks) {
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"Too many subtasks provided, do you have duplicates?");
+		}
+		_subtasks.insert(_subtasks.end(), subtasks.begin(), subtasks.end());
+	}
 
-	//// Enables the provided predicate on this utility function.
-	// void add_predicate(PredicateEnum pred) {
-	//	if (_predicate_size + 1 > _predicates.size()) {
-	//		fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
-	//				"Too many predicates provided, do you have duplicates?");
-	//	}
-	//	_predicates[_predicate_size] = pred;
-	//	++_predicate_size;
-	//}
+	// Add subtasks to this method.
+	// These tasks will be executed in order of addition.
+	// You may provide any combination of "tasks" or "actions".
+	void add_subtasks(std::initializer_list<subtask_t>&& subtasks) {
+		add_subtasks({ subtasks.begin(), subtasks.end() });
+	}
+
+	// Add a subtask to this method.
+	// The tasks are executed in order of addition.
+	// You may provide any combination of "tasks" or "actions".
+	void add_subtask(subtask_t subtask) {
+		if (_subtasks.size() + 1 > _max_subtasks) {
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"Too many subtasks provided, do you have duplicates?");
+		}
+		_subtasks.push_back(subtask);
+	}
+
+	// Add a predicates to this method.
+	// If the predicates evaluate to true, this method will be chosen.
+	void add_subtasks(subtask_t subtask) {
+		if (_subtasks.size() + 1 > _max_subtasks) {
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"Too many subtasks provided, do you have duplicates?");
+		}
+		_subtasks.push_back(subtask);
+	}
 
 	[[nodiscard]] fea::span<const PredicateEnum> predicates() const {
 		return { _predicates.begin(), _predicates.end() };
 	}
 
-	//[[nodiscard]] bool satisfied(const WorldState& ws) const {
-	//	return _pred(ws);
-	//}
-
-	[[nodiscard]] size_t predicate_size() const {
-		return _predicates.size();
-	}
-
-	[[nodiscard]] size_t subtask_size() const {
-		return _sub_tasks.size();
+	[[nodiscard]] fea::span<const subtask_t> subtasks() const {
+		return { _subtasks.begin(), _subtasks.end() };
 	}
 
 private:
@@ -206,8 +366,54 @@ private:
 	static constexpr size_t _max_preds = size_t(PredicateEnum::count);
 
 	fea::stack_vector<PredicateEnum, _max_preds> _predicates;
-	fea::stack_vector<task_or_action_t, _max_subtasks> _sub_tasks;
+	fea::stack_vector<subtask_t, _max_subtasks> _subtasks;
 };
+
+
+// A task contains methods, nothing else.
+template <class MethodEnum>
+struct htn_task {
+
+	// Adds methods to this task.
+	// Methods that evaluate to true will be chosen, prioritized by order of
+	// addition.
+	void add_methods(fea::span<const MethodEnum> methods) {
+		if (methods.size() + _methods.size() > _max_methods) {
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"Too many methods. Maybe you have duplicates?");
+		}
+
+		_methods.insert(_methods.end(), methods.begin(), methods.end());
+	}
+
+	// Adds methods to this task.
+	// Methods that evaluate to true will be chosen, prioritized by order of
+	// addition.
+	void add_methods(std::initializer_list<MethodEnum>&& methods) {
+		add_methods({ methods.begin(), methods.end() });
+	}
+
+	// Add a method to this task.
+	// Methods that evaluate to true will be chosen, prioritized by order of
+	// addition.
+	void add_method(MethodEnum method) {
+		if (_methods.size() + 1 > _max_methods) {
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"Too many methods. Maybe you have duplicates?");
+		}
+		_methods.push_back(method);
+	}
+
+	[[nodiscard]] fea::span<const MethodEnum> methods() const {
+		return { _methods.begin(), _methods.end() };
+	}
+
+private:
+	static constexpr size_t _max_methods = size_t(MethodEnum::count);
+
+	fea::stack_vector<MethodEnum, _max_methods> _methods;
+};
+
 
 // An htn planner and plan runner.
 //
@@ -225,12 +431,279 @@ template <class TaskEnum, class MethodEnum, class ActionEnum,
 		class PredicateEnum, class OperatorEnum, class WorldState,
 		class... OperatorArgs>
 struct htn<TaskEnum, MethodEnum, ActionEnum, PredicateEnum, OperatorEnum,
-		WorldState, bool(OperatorArgs...)> {
+		bool(const WorldState*), bool(OperatorArgs...), void(WorldState*)> {
+	using task_t = htn_task<MethodEnum>;
+	using method_t = htn_method<TaskEnum, ActionEnum, PredicateEnum>;
+	using subtask_t = htn_subtask<TaskEnum, ActionEnum>;
+	using action_t = htn_action<PredicateEnum, OperatorEnum, WorldState>;
+	using predicate_func_t = std::function<bool(const WorldState*)>;
 	using operator_func_t = std::function<bool(OperatorArgs...)>;
-	using predicate_func_t = std::function<bool(const WorldState&)>;
-	using effects_func_t = std::function<void(WorldState&)>;
+
+	// Helpers so you don't have to type the templates manually.
+	static constexpr auto make_task() {
+		return task_t{};
+	}
+	static constexpr auto make_method() {
+		return method_t{};
+	}
+	static constexpr auto make_action() {
+		return action_t{};
+	}
+
+	// Add a task to the network.
+	template <TaskEnum E>
+	void add_task(task_t&& t) {
+		validate<E>(t);
+		std::get<size_t(E)>(_tasks) = std::move(t);
+	}
+
+	// Add a method to the network.
+	template <MethodEnum E>
+	void add_method(method_t&& m) {
+		std::get<size_t(E)>(_methods) = std::move(m);
+	}
+
+	// Add an action to the network.
+	template <ActionEnum E>
+	void add_action(action_t&& a) {
+		std::get<size_t(E)>(_actions) = std::move(a);
+	}
+
+	// Add a predicate function to the network.
+	template <PredicateEnum E, class PredFunc>
+	void add_predicate(PredFunc&& pred_func) {
+		std::get<size_t(E)>(_predicates) = std::forward<PredFunc>(pred_func);
+	}
+
+	// Add an operator function to the network.
+	template <OperatorEnum E, class OpFunc>
+	void add_operator(OpFunc&& op_func) {
+		std::get<size_t(E)>(_operators) = std::forward<OpFunc>(op_func);
+	}
+
+	// Computes and stores a new plan to execute task.
+	// Returns true on success, false on failure to plan.
+	// Warning : Make sure your WorldState is small enough, it will be copied
+	// throughout.
+	[[nodiscard]] bool make_plan(TaskEnum root_task, WorldState w) {
+		_plan.clear();
+		_plan_runner_op_idx = 0;
+		return make_plan(root_task, w, _plan);
+	}
+
+	// Run a step in the computed plan (does nothing if no plan).
+	// This executes whichever action is next in the plan, once.
+	// Once the action completes (its operators all return true), applies the
+	// action effects to the world state. If the plan and reality get desynced
+	// and the plan needs to be recomputed, returns true without executing.
+	[[nodiscard]] bool run_next_action(OperatorArgs... op_args, WorldState& w) {
+		if (_plan.empty()) {
+			return true;
+		}
+
+		ActionEnum a = _plan.front();
+		if (!satisfied(a, w)) {
+			return true;
+		}
+
+		const action_t& act = _actions[size_t(a)];
+		fea::span<const OperatorEnum> ops = act.operators();
+		assert(_plan_runner_op_idx < ops.size());
+		OperatorEnum current_op = ops[size_t(_plan_runner_op_idx)];
+
+		// If op returns true, we are done with current op.
+		if (!_operators[size_t(current_op)](
+					std::forward<OperatorArgs>(op_args)...)) {
+			return false;
+		}
+
+		// Apply effects and move on to next op.
+		act.apply_effects(w);
+		++_plan_runner_op_idx;
+
+		if (_plan_runner_op_idx >= ops.size()) {
+			// We have no more ops. Pop action and reset op idx.
+			_plan_runner_op_idx = 0;
+
+			// TODO : benchmark and consider reversing vector for pop_back.
+			_plan.erase(_plan.begin());
+
+			if (_plan.empty()) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+
+	// Returns the computed plan (empty if no plan).
+	// Do not store onto the span long-term, as memory will get
+	// invalidated.
+	[[nodiscard]] fea::span<const ActionEnum> plan() const {
+		return { _plan.begin(), _plan.end() };
+	}
 
 private:
+	// Task overload
+	// Returns true on success.
+	bool make_plan(
+			TaskEnum t, WorldState& w, std::vector<ActionEnum>& plan) const {
+		fea::span<const MethodEnum> methods = _tasks[size_t(t)].methods();
+		for (MethodEnum m : methods) {
+			if (!satisfied(m, w)) {
+				continue;
+			}
+
+			if (make_plan(m, w, plan)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// Method overload
+	// Returns true on success, returns false if any children is non-executable.
+	bool make_plan(
+			MethodEnum m, WorldState& w, std::vector<ActionEnum>& plan) const {
+
+		size_t undo_plan_size = plan.size();
+		WorldState undo_state = w;
+		fea::span<const subtask_t> subtasks = _methods[size_t(m)].subtasks();
+
+		for (subtask_t s : subtasks) {
+			if (s.is_task()) {
+				if (!make_plan(s.task(), w, plan)) {
+					return false;
+				}
+			} else {
+				if (!make_plan(s.action(), w, plan)) {
+					plan.resize(undo_plan_size);
+					w = undo_state;
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	// Action overload
+	// Returns true on success, returns false if any children is non-executable.
+	bool make_plan(
+			ActionEnum a, WorldState& w, std::vector<ActionEnum>& plan) const {
+		if (!satisfied(a, w)) {
+			return false;
+		}
+
+		_actions[size_t(a)].apply_effects_and_expected(w);
+		plan.push_back(a);
+		return true;
+	}
+
+	bool satisfied(
+			fea::span<const PredicateEnum> preds, const WorldState& w) const {
+		for (PredicateEnum p : preds) {
+			if (!_predicates[size_t(p)](&w)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	bool satisfied(MethodEnum m, const WorldState& w) const {
+		fea::span<const PredicateEnum> preds = _methods[size_t(m)].predicates();
+		return satisfied(preds, w);
+	}
+
+	bool satisfied(ActionEnum a, const WorldState& w) const {
+		fea::span<const PredicateEnum> preds = _actions[size_t(a)].predicates();
+		return satisfied(preds, w);
+	}
+
+	// Validates the added task and everything it uses.
+	template <TaskEnum E>
+	void validate(const task_t& t) const {
+		fea::span<const MethodEnum> methods = t.methods();
+
+		{
+			if (methods.empty()) {
+				fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+						"Task requires at least one method.");
+			}
+			if (detail::has_duplicates<_method_count>(methods)) {
+				fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+						"Task methods should not contain duplicates.");
+			}
+		}
+
+		for (MethodEnum m : methods) {
+			if (m == MethodEnum::count) {
+				fea::maybe_throw<std::invalid_argument>(
+						__FUNCTION__, __LINE__, "Invalid method in task.");
+			}
+
+			fea::span<const PredicateEnum> preds
+					= _methods[size_t(m)].predicates();
+
+			if (preds.empty()) {
+				fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+						"Method requires at least one predicate.");
+			}
+			if (detail::has_duplicates<_pred_count>(preds)) {
+				fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+						"Method predicates should not contain duplicates.");
+			}
+
+			fea::span<const subtask_t> subtasks
+					= _methods[size_t(m)].subtasks();
+
+			if (subtasks.empty()) {
+				fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+						"Method requires at least one subtask.");
+			}
+			if (detail::has_duplicates<_task_count + _action_count>(subtasks)) {
+				fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+						"Method subtasks should not contain duplicates.");
+			}
+
+			for (subtask_t s : subtasks) {
+				if (!s.is_task() && !s.is_action()) {
+					fea::maybe_throw<std::invalid_argument>(__FUNCTION__,
+							__LINE__, "Invalid subtask in method.");
+				}
+
+				if (s.is_action()) {
+					const action_t& act = _actions[size_t(s.action())];
+
+					if (!act.has_effects()) {
+						fea::maybe_throw<std::invalid_argument>(__FUNCTION__,
+								__LINE__, "Action missing effect.");
+					}
+
+					if (detail::has_duplicates<_pred_count>(act.predicates())) {
+						fea::maybe_throw<std::invalid_argument>(__FUNCTION__,
+								__LINE__,
+								"Action predicates should not contain "
+								"duplicates.");
+					}
+
+					if (detail::has_duplicates<_operator_count>(
+								act.operators())) {
+						fea::maybe_throw<std::invalid_argument>(__FUNCTION__,
+								__LINE__,
+								"Action operators should not contain "
+								"duplicates.");
+					}
+				} else {
+					// if (_tasks[size_t(s.task())] == task_t{}) {
+					//	fea::maybe_throw<std::invalid_argument>(
+					//			__FUNCTION__, __LINE__, "Method task invalid.");
+					//}
+				}
+			}
+		}
+	}
+
 	static_assert(
 			std::is_enum_v<TaskEnum>, "htn : TaskEnum must be an enum class");
 	static_assert(std::is_enum_v<MethodEnum>,
@@ -242,21 +715,22 @@ private:
 	static_assert(std::is_enum_v<OperatorEnum>,
 			"htn : OperatorEnum must be an enum class");
 
-	// maybe not required
-	// static_assert(fea::all_of_v<std::is_same<std::underlying_type_t<TaskEnum>,
-	//									std::underlying_type_t<MethodEnum>>,
-	//					  std::is_same<std::underlying_type_t<TaskEnum>,
-	//							  std::underlying_type_t<ActionEnum>>,
-	//					  std::is_same<std::underlying_type_t<TaskEnum>,
-	//							  std::underlying_type_t<PredicateEnum>>,
-	//					  std::is_same<std::underlying_type_t<TaskEnum>,
-	//							  std::underlying_type_t<OperatorEnum>>>,
-	//		"htn : all enum classes must use the same underlying type");
-
 	static constexpr size_t _task_count = size_t(TaskEnum::count);
 	static constexpr size_t _method_count = size_t(MethodEnum::count);
 	static constexpr size_t _action_count = size_t(ActionEnum::count);
+	static constexpr size_t _pred_count = size_t(PredicateEnum::count);
 	static constexpr size_t _operator_count = size_t(OperatorEnum::count);
+
+	// We store everything here, to minimize duplication.
+	std::array<task_t, _task_count> _tasks{};
+	std::array<method_t, _method_count> _methods{};
+	std::array<action_t, _action_count> _actions{};
+	std::array<predicate_func_t, _pred_count> _predicates{};
+	std::array<operator_func_t, _operator_count> _operators{};
+
+	std::vector<ActionEnum> _plan;
+	// The index of the currently in-progress operator.
+	size_t _plan_runner_op_idx = 0;
 };
 
 // template <class TaskEnum, class MethodEnum, class ActionEnum,

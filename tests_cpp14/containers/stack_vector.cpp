@@ -202,5 +202,18 @@ TEST(stack_vector, insert) {
 		const fea::stack_vector<int, 5> answer{ 0, 42, -42, 101, 1 };
 		EXPECT_EQ(v, answer);
 	}
+
+	v.clear();
+	EXPECT_EQ(v.size(), 0u);
+	EXPECT_TRUE(v.empty());
+
+	it = v.insert(v.end(), { 0, 1, 2, 3, 4 });
+	EXPECT_EQ(v.size(), 5u);
+	EXPECT_EQ(*it, 0);
+	EXPECT_EQ(std::distance(v.begin(), it), 0);
+	{
+		const fea::stack_vector<int, 5> answer{ 0, 1, 2, 3, 4 };
+		EXPECT_EQ(v, answer);
+	}
 }
 } // namespace fea

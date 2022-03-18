@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "fea/containers/span.hpp"
+#include "fea/containers/stack_vector.hpp"
 #include "fea/functional/function.hpp"
 #include "fea/meta/static_for.hpp"
 #include "fea/utils/platform.hpp"
@@ -83,18 +84,15 @@ struct utility_ai_function<FunctionEnum, PredicateEnum, float(PredArgs...),
 
 	using action_t = std::function<ActionReturn(ActionArgs...)>;
 
-	utility_ai_function() {
-		_predicates.fill(PredicateEnum::count);
-	}
+	utility_ai_function() = default;
 
 	// Enables the provided predicates on this utility function.
 	void add_predicates(fea::span<const PredicateEnum> preds) {
-		if (preds.size() + _predicate_size > _predicates.size()) {
+		if (preds.size() + _predicates.size() > _max_predicates) {
 			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
 					"Too many predicates provided, do you have duplicates?");
 		}
-		std::copy(preds.begin(), preds.end(),
-				_predicates.begin() + _predicate_size);
+		_predicates.insert(_predicates.end(), preds.begin(), preds.end());
 	}
 
 	// Enables the provided predicates on this utility function.
@@ -104,12 +102,11 @@ struct utility_ai_function<FunctionEnum, PredicateEnum, float(PredArgs...),
 
 	// Enables the provided predicate on this utility function.
 	void add_predicate(PredicateEnum pred) {
-		if (_predicate_size + 1 > _predicates.size()) {
+		if (_predicates.size() + 1 > _max_predicates) {
 			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
 					"Too many predicates provided, do you have duplicates?");
 		}
-		_predicates[_predicate_size] = pred;
-		++_predicate_size;
+		_predicates.push_back(pred);
 	}
 
 	// Adds an action to execute.
@@ -121,7 +118,7 @@ struct utility_ai_function<FunctionEnum, PredicateEnum, float(PredArgs...),
 
 	// The predicates to use.
 	fea::span<const PredicateEnum> predicates() const {
-		return { _predicates.data(), _predicate_size };
+		return { _predicates.begin(), _predicates.end() };
 	}
 
 	// Has an action.
@@ -131,7 +128,7 @@ struct utility_ai_function<FunctionEnum, PredicateEnum, float(PredArgs...),
 
 	// Number of predicates.
 	size_t size() const {
-		return _predicate_size;
+		return _predicates.size();
 	}
 
 	ActionReturn execute(ActionArgs... args) const {
@@ -140,10 +137,9 @@ struct utility_ai_function<FunctionEnum, PredicateEnum, float(PredArgs...),
 	}
 
 private:
-	static constexpr size_t _predicate_count = size_t(PredicateEnum::count);
+	static constexpr size_t _max_predicates = size_t(PredicateEnum::count);
 
-	std::array<PredicateEnum, _predicate_count> _predicates;
-	size_t _predicate_size = 0;
+	fea::stack_vector<PredicateEnum, _max_predicates> _predicates;
 	action_t _action;
 };
 
