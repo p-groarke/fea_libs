@@ -169,8 +169,6 @@ TEST(htn, example) {
 }
 
 TEST(htn, basics) {
-	ennemy my_ennemy;
-
 	fea::htn<task, method, action, predicate, operators,
 			bool(const ennemy::htn_state*), bool(ennemy*),
 			void(ennemy::htn_state*)>
@@ -535,7 +533,7 @@ public:
 					[](auto& smachine, dude& d) {
 						++d._chill_anim_counter;
 						if (d._chill_anim_counter > 2) {
-							smachine.trigger<transition::do_idle>(d);
+							smachine.template trigger<transition::do_idle>(d);
 						}
 					});
 			chill_state.add_event<fea::hfsm_event::on_exit>(
@@ -558,7 +556,7 @@ public:
 					[](auto& machine, dude& d) {
 						++d._attack_anim_counter;
 						if (d._attack_anim_counter > 6) {
-							machine.trigger<transition::do_idle>(d);
+							machine.template trigger<transition::do_idle>(d);
 						}
 					});
 			attack_state.add_event<fea::hfsm_event::on_exit>(
@@ -582,7 +580,7 @@ public:
 					});
 			quick_attack_state.add_event<fea::hfsm_event::on_update>(
 					[](auto& machine, dude& d) {
-						machine.trigger<transition::do_idle>(d);
+						machine.template trigger<transition::do_idle>(d);
 					});
 			quick_attack_state.add_event<fea::hfsm_event::on_exit>(
 					[](auto&, dude& d) { d._htn.notify_finished(d.ai_data); });
@@ -664,13 +662,13 @@ public:
 	}
 
 	void quick_attack() {
-		_smachine.trigger<transition::do_quick_attack>(*this);
+		_smachine.template trigger<transition::do_quick_attack>(*this);
 	}
 	void attack() {
-		_smachine.trigger<transition::do_attack>(*this);
+		_smachine.template trigger<transition::do_attack>(*this);
 	}
 	void chill() {
-		_smachine.trigger<transition::do_chill>(*this);
+		_smachine.template trigger<transition::do_chill>(*this);
 	}
 
 

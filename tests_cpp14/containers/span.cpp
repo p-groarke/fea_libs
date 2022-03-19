@@ -67,7 +67,7 @@ TEST(span, empty) {
 		std::vector<size_t> v;
 		fea::span<const size_t> s(v.begin(), v.end());
 		EXPECT_TRUE(s.empty());
-		EXPECT_EQ(s.size(), 0);
+		EXPECT_EQ(s.size(), 0u);
 		EXPECT_EQ(s.data(), nullptr);
 	}
 }

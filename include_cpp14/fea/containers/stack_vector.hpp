@@ -104,7 +104,7 @@ struct stack_vector {
 			class = std::enable_if_t<fea::is_iterator<InputIt>::value>>
 	constexpr stack_vector(InputIt start, InputIt stop)
 			: _size(std::distance(start, stop)) {
-		assert(std::distance(start, stop) <= StackSize);
+		assert(size_t(std::distance(start, stop)) <= StackSize);
 		std::copy(start, stop, _data.begin());
 	}
 
@@ -245,7 +245,7 @@ struct stack_vector {
 
 	iterator insert(const_iterator pos, const_reference value) {
 		assert(_size < _data.size());
-		size_type dist = std::distance(cbegin(), pos);
+		size_type dist = size_type(std::distance(cbegin(), pos));
 		auto start_it = begin() + dist;
 		std::copy_backward(start_it, end(), end() + 1);
 		*start_it = value;
@@ -255,7 +255,7 @@ struct stack_vector {
 
 	iterator insert(const_iterator pos, value_type&& value) {
 		assert(_size < _data.size());
-		size_type dist = std::distance(cbegin(), pos);
+		size_type dist = size_type(std::distance(cbegin(), pos));
 		auto start_it = begin() + dist;
 		std::move_backward(start_it, end(), end() + 1);
 		*start_it = std::move(value);
@@ -266,7 +266,7 @@ struct stack_vector {
 	iterator insert(
 			const_iterator pos, size_type count, const_reference value) {
 		assert(_size <= _data.size() - count);
-		size_type dist = std::distance(cbegin(), pos);
+		size_type dist = size_type(std::distance(cbegin(), pos));
 		if (count == 0) {
 			return begin() + dist;
 		}
@@ -283,8 +283,8 @@ struct stack_vector {
 					typename std::iterator_traits<InputIt>::iterator_category>::
 							value>>
 	iterator insert(const_iterator pos, InputIt first, InputIt last) {
-		size_type count = std::distance(first, last);
-		size_type dist = std::distance(cbegin(), pos);
+		size_type count = size_type(std::distance(first, last));
+		size_type dist = size_type(std::distance(cbegin(), pos));
 		if (count == 0) {
 			return begin() + dist;
 		}
