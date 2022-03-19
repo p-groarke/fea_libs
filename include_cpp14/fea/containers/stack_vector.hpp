@@ -34,6 +34,7 @@
 #include "fea/meta/traits.hpp"
 #include "fea/utils/throw.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 

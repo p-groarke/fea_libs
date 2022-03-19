@@ -40,6 +40,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <functional>
 #include <initializer_list>
 
@@ -70,6 +71,21 @@ plan.
 
 A plan is a simple ordered list (vector) of actions to execute sequentially.
 
+Plan Runner
+The plan runner portion of the htn can run the plan 2 ways, synchronously or
+asynchronously. You choose between these by returning either void or bool from
+your operator callback signature.
+
+If your operators return bool, the plan runner executes synchronously. Actions
+run until they return true. At that point, the action will be popped and the
+next call will execute a new action, until the plan is over.
+
+If on the other hand, your operators return void, the plan runner executes
+asynchronously. The runner delegates the responsibility of notifying it
+when actions are over. In this mode, you must notify the htn when an operator is
+done (by calling notify_finished). An operator callback is also only ever called
+once to trigger it. This mode integrates well with state machines.
+
 Specifics
 This htn implementation will require you provided enums to represent these
 various structures. All enums must allways end with the 'count' value, which
@@ -78,7 +94,17 @@ represents the number of values for that enum.
 The callbacks signatures are as followed :
 - Predicates : bool(const YourWorldState*);
 - Effects : void(YourWorldState*);
-- Operators : bool(UserDefinedT*);
+- Operators : bool(UserDefinedT...);
+	or void(UserDefinedT...);
+
+The callback signature can also have an appropriate enum at the end.
+If they do, the called from value will be passed on to your callback.
+You may mix-and-match which callback signatures you need.
+- Predicates : bool(const YourWorldState*, PredicateEnum);
+- Effects : void(YourWorldState*, ActionEnum);
+- Operators : bool(UserDefinedT..., OperatorEnum)
+	or void(UserDefinedT..., OperatorEnum);
+
 
 The operator return value is true if operator is done, false if not (applicable
 during plan running). By using pointers, the htn can call member functions on
@@ -102,38 +128,18 @@ bool has_duplicates(fea::span<const T> spn) {
 template <class, class, class, class, class, class, class, class>
 struct htn;
 
-template <class PredicateEnum, class OperatorEnum, class WorldState>
+template <class PredicateEnum, class OperatorEnum, class WorldState,
+		class... EffectArgs>
 struct htn_action {
-	using effects_func_t = std::function<void(WorldState*)>;
+	using effects_func_t = std::function<void(WorldState*, EffectArgs...)>;
 	using expected_effects_func_t = effects_func_t;
-
-	// Add operators to this action.
-	// Operators are your game behavior functions, which lead up to the effects
-	// later applied.
-	void add_operators(fea::span<const OperatorEnum> ops) {
-		if (ops.size() + _operators.size() > _max_ops) {
-			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
-					"Too many operators provided, do you have duplicates?");
-		}
-		_operators.insert(_operators.end(), ops.begin(), ops.end());
-	}
-
-	// Add operators to this action.
-	// Operators are your game behavior functions, which lead up to the effects
-	// later applied.
-	void add_operators(std::initializer_list<OperatorEnum>&& ops) {
-		add_operators({ ops.begin(), ops.end() });
-	}
 
 	// Add an operator to this action.
 	// Operators are your game behavior functions, which lead up to the effects
 	// later applied.
 	void add_operator(OperatorEnum op) {
-		if (_operators.size() + 1 > _max_ops) {
-			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
-					"Too many operators provided, do you have duplicates?");
-		}
-		_operators.push_back(op);
+		assert(op != OperatorEnum::count);
+		_operator = op;
 	}
 
 	// Add the effects function of this action.
@@ -179,21 +185,29 @@ struct htn_action {
 	}
 
 	// Used internally to apply effects and expected effects.
-	void apply_effects_and_expected(WorldState& w) const {
-		_effects(&w);
+	void apply_effects_and_expected(WorldState& w, EffectArgs... args) const {
+		_effects(&w, std::forward<EffectArgs>(args)...);
 
 		if (_expected_effects) {
-			_expected_effects(&w);
+			_expected_effects(&w, std::forward<EffectArgs>(args)...);
 		}
 	}
 
 	// Used internally to apply effects only (while running plan).
-	void apply_effects(WorldState& w) const {
-		_effects(&w);
+	void apply_effects(WorldState& w, EffectArgs... args) const {
+		_effects(&w, std::forward<EffectArgs>(args)...);
 	}
 
 	[[nodiscard]] bool has_effects() const {
 		return bool(_effects);
+	}
+
+	[[nodiscard]] bool has_expected_effects() const {
+		return bool(_expected_effects);
+	}
+
+	[[nodiscard]] bool has_operator() const {
+		return _operator != OperatorEnum::count;
 	}
 
 	// This action's predicates.
@@ -201,9 +215,30 @@ struct htn_action {
 		return { _predicates.begin(), _predicates.end() };
 	}
 
-	// This action's operators.
-	[[nodiscard]] fea::span<const OperatorEnum> operators() const {
-		return { _operators.begin(), _operators.end() };
+	// This action's operator.
+	// Cannot be named 'operator'.
+	[[nodiscard]] OperatorEnum operator_e() const {
+		return _operator;
+	}
+
+	// Throws (or dies) when invalid.
+	// Checked when adding tasks that use action.
+	void validate() const {
+		if (!has_effects()) {
+			fea::maybe_throw<std::invalid_argument>(
+					__FUNCTION__, __LINE__, "Action missing effect.");
+		}
+
+		if (!has_operator()) {
+			fea::maybe_throw<std::invalid_argument>(
+					__FUNCTION__, __LINE__, "Action missing operator.");
+		}
+
+		if (detail::has_duplicates<_max_preds>(predicates())) {
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"Action predicates should not contain "
+					"duplicates.");
+		}
 	}
 
 private:
@@ -211,7 +246,7 @@ private:
 	static constexpr size_t _max_ops = size_t(OperatorEnum::count);
 
 	fea::stack_vector<PredicateEnum, _max_preds> _predicates;
-	fea::stack_vector<OperatorEnum, _max_ops> _operators;
+	OperatorEnum _operator = OperatorEnum::count;
 	effects_func_t _effects{};
 	expected_effects_func_t _expected_effects{};
 };
@@ -360,9 +395,28 @@ struct htn_method {
 		return { _subtasks.begin(), _subtasks.end() };
 	}
 
+	// Throws on invalid method.
+	// Called when adding tasks.
+	void validate() const {
+		if (_predicates.empty()) {
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"Method requires at least one predicate.");
+		}
+		if (detail::has_duplicates<_max_preds>(predicates())) {
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"Method predicates should not contain duplicates.");
+		}
+
+		if (_subtasks.empty()) {
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"Method requires at least one subtask.");
+		}
+		// subtasks can have duplicates
+	}
+
 private:
 	static constexpr size_t _max_subtasks
-			= size_t(TaskEnum::count) + size_t(ActionEnum::count);
+			= (size_t(TaskEnum::count) + size_t(ActionEnum::count)) * 2;
 	static constexpr size_t _max_preds = size_t(PredicateEnum::count);
 
 	fea::stack_vector<PredicateEnum, _max_preds> _predicates;
@@ -429,15 +483,19 @@ private:
 // an operator ends, its effects are applied on the WorldState.
 template <class TaskEnum, class MethodEnum, class ActionEnum,
 		class PredicateEnum, class OperatorEnum, class WorldState,
-		class... OperatorArgs>
+		class... PredicateArgs, class OperatorRet, class... OperatorArgs,
+		class... EffectArgs>
 struct htn<TaskEnum, MethodEnum, ActionEnum, PredicateEnum, OperatorEnum,
-		bool(const WorldState*), bool(OperatorArgs...), void(WorldState*)> {
+		bool(const WorldState*, PredicateArgs...), OperatorRet(OperatorArgs...),
+		void(WorldState*, EffectArgs...)> {
 	using task_t = htn_task<MethodEnum>;
 	using method_t = htn_method<TaskEnum, ActionEnum, PredicateEnum>;
 	using subtask_t = htn_subtask<TaskEnum, ActionEnum>;
-	using action_t = htn_action<PredicateEnum, OperatorEnum, WorldState>;
-	using predicate_func_t = std::function<bool(const WorldState*)>;
-	using operator_func_t = std::function<bool(OperatorArgs...)>;
+	using action_t = htn_action<PredicateEnum, OperatorEnum, WorldState,
+			EffectArgs...>;
+	using predicate_func_t
+			= std::function<bool(const WorldState*, PredicateArgs...)>;
+	using operator_func_t = std::function<OperatorRet(OperatorArgs...)>;
 
 	// Helpers so you don't have to type the templates manually.
 	static constexpr auto make_task() {
@@ -453,7 +511,7 @@ struct htn<TaskEnum, MethodEnum, ActionEnum, PredicateEnum, OperatorEnum,
 	// Add a task to the network.
 	template <TaskEnum E>
 	void add_task(task_t&& t) {
-		validate<E>(t);
+		validate(E, t);
 		std::get<size_t(E)>(_tasks) = std::move(t);
 	}
 
@@ -487,142 +545,65 @@ struct htn<TaskEnum, MethodEnum, ActionEnum, PredicateEnum, OperatorEnum,
 	// throughout.
 	[[nodiscard]] bool make_plan(TaskEnum root_task, WorldState w) {
 		_plan.clear();
-		_plan_runner_op_idx = 0;
-		return make_plan(root_task, w, _plan);
+		return make_plan_imp(root_task, w);
 	}
 
 	// Run a step in the computed plan (does nothing if no plan).
 	// This executes whichever action is next in the plan, once.
-	// Once the action completes (its operators all return true), applies the
-	// action effects to the world state. If the plan and reality get desynced
-	// and the plan needs to be recomputed, returns true without executing.
-	[[nodiscard]] bool run_next_action(OperatorArgs... op_args, WorldState& w) {
+	// If the action completes (its operator has returned true), applies
+	// the action effects to the world state. If the plan and reality get
+	// desynced and the plan needs to be recomputed, returns true without
+	// executing. If the plan is done or empty, also returns true (to
+	// recompute).
+	template <class... OpArgs>
+	[[nodiscard]] bool run_plan(WorldState& w, OpArgs... op_args) {
 		if (_plan.empty()) {
 			return true;
 		}
 
-		ActionEnum a = _plan.front();
-		if (!satisfied(a, w)) {
-			return true;
+		if constexpr (_provide_enum_to_operators) {
+			static_assert(sizeof...(OpArgs) == sizeof...(OperatorArgs) - 1,
+					"htn : Too many operator arguments provided");
+		} else {
+			static_assert(fea::all_of_v<std::is_same<OpArgs, OperatorArgs>...>,
+					"htn : Mismatch between provided arguments and "
+					"expected operator callback arguments");
 		}
 
-		const action_t& act = _actions[size_t(a)];
-		fea::span<const OperatorEnum> ops = act.operators();
-		assert(_plan_runner_op_idx < ops.size());
-		OperatorEnum current_op = ops[size_t(_plan_runner_op_idx)];
-
-		// If op returns true, we are done with current op.
-		if (!_operators[size_t(current_op)](
-					std::forward<OperatorArgs>(op_args)...)) {
-			return false;
+		if constexpr (std::is_same_v<OperatorRet, void>) {
+			return run_plan_async(w, std::forward<OpArgs>(op_args)...);
+		} else {
+			return run_plan_sync(w, std::forward<OpArgs>(op_args)...);
 		}
-
-		// Apply effects and move on to next op.
-		act.apply_effects(w);
-		++_plan_runner_op_idx;
-
-		if (_plan_runner_op_idx >= ops.size()) {
-			// We have no more ops. Pop action and reset op idx.
-			_plan_runner_op_idx = 0;
-
-			// TODO : benchmark and consider reversing vector for pop_back.
-			_plan.erase(_plan.begin());
-
-			if (_plan.empty()) {
-				return true;
-			}
-		}
-
-		return false;
 	}
 
+	// When running the htn using the notification runner, you must call this
+	// function when your operator is done.
+	// It will apply its effects and advance the plan.
+	void notify_finished(WorldState& w) {
+		assert(_current_action != ActionEnum::count);
+		const action_t& act = _actions[size_t(_current_action)];
+
+		if constexpr (_provide_enum_to_effects) {
+			act.apply_effects(w, _current_action);
+		} else {
+			act.apply_effects(w);
+		}
+
+		// TODO : benchmark and consider reversing vector for pop_back.
+		_plan.erase(_plan.begin());
+		_current_action = ActionEnum::count;
+	}
 
 	// Returns the computed plan (empty if no plan).
-	// Do not store onto the span long-term, as memory will get
+	// Do not hold on to the span long-term, as memory will get
 	// invalidated.
 	[[nodiscard]] fea::span<const ActionEnum> plan() const {
 		return { _plan.begin(), _plan.end() };
 	}
 
-private:
-	// Task overload
-	// Returns true on success.
-	bool make_plan(
-			TaskEnum t, WorldState& w, std::vector<ActionEnum>& plan) const {
-		fea::span<const MethodEnum> methods = _tasks[size_t(t)].methods();
-		for (MethodEnum m : methods) {
-			if (!satisfied(m, w)) {
-				continue;
-			}
-
-			if (make_plan(m, w, plan)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	// Method overload
-	// Returns true on success, returns false if any children is non-executable.
-	bool make_plan(
-			MethodEnum m, WorldState& w, std::vector<ActionEnum>& plan) const {
-
-		size_t undo_plan_size = plan.size();
-		WorldState undo_state = w;
-		fea::span<const subtask_t> subtasks = _methods[size_t(m)].subtasks();
-
-		for (subtask_t s : subtasks) {
-			if (s.is_task()) {
-				if (!make_plan(s.task(), w, plan)) {
-					return false;
-				}
-			} else {
-				if (!make_plan(s.action(), w, plan)) {
-					plan.resize(undo_plan_size);
-					w = undo_state;
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-
-	// Action overload
-	// Returns true on success, returns false if any children is non-executable.
-	bool make_plan(
-			ActionEnum a, WorldState& w, std::vector<ActionEnum>& plan) const {
-		if (!satisfied(a, w)) {
-			return false;
-		}
-
-		_actions[size_t(a)].apply_effects_and_expected(w);
-		plan.push_back(a);
-		return true;
-	}
-
-	bool satisfied(
-			fea::span<const PredicateEnum> preds, const WorldState& w) const {
-		for (PredicateEnum p : preds) {
-			if (!_predicates[size_t(p)](&w)) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	bool satisfied(MethodEnum m, const WorldState& w) const {
-		fea::span<const PredicateEnum> preds = _methods[size_t(m)].predicates();
-		return satisfied(preds, w);
-	}
-
-	bool satisfied(ActionEnum a, const WorldState& w) const {
-		fea::span<const PredicateEnum> preds = _actions[size_t(a)].predicates();
-		return satisfied(preds, w);
-	}
-
 	// Validates the added task and everything it uses.
-	template <TaskEnum E>
-	void validate(const task_t& t) const {
+	void validate(TaskEnum task_e, const task_t& t) const {
 		fea::span<const MethodEnum> methods = t.methods();
 
 		{
@@ -641,30 +622,10 @@ private:
 				fea::maybe_throw<std::invalid_argument>(
 						__FUNCTION__, __LINE__, "Invalid method in task.");
 			}
-
-			fea::span<const PredicateEnum> preds
-					= _methods[size_t(m)].predicates();
-
-			if (preds.empty()) {
-				fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
-						"Method requires at least one predicate.");
-			}
-			if (detail::has_duplicates<_pred_count>(preds)) {
-				fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
-						"Method predicates should not contain duplicates.");
-			}
+			_methods[size_t(m)].validate();
 
 			fea::span<const subtask_t> subtasks
 					= _methods[size_t(m)].subtasks();
-
-			if (subtasks.empty()) {
-				fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
-						"Method requires at least one subtask.");
-			}
-			if (detail::has_duplicates<_task_count + _action_count>(subtasks)) {
-				fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
-						"Method subtasks should not contain duplicates.");
-			}
 
 			for (subtask_t s : subtasks) {
 				if (!s.is_task() && !s.is_action()) {
@@ -673,35 +634,163 @@ private:
 				}
 
 				if (s.is_action()) {
-					const action_t& act = _actions[size_t(s.action())];
-
-					if (!act.has_effects()) {
-						fea::maybe_throw<std::invalid_argument>(__FUNCTION__,
-								__LINE__, "Action missing effect.");
-					}
-
-					if (detail::has_duplicates<_pred_count>(act.predicates())) {
-						fea::maybe_throw<std::invalid_argument>(__FUNCTION__,
-								__LINE__,
-								"Action predicates should not contain "
-								"duplicates.");
-					}
-
-					if (detail::has_duplicates<_operator_count>(
-								act.operators())) {
-						fea::maybe_throw<std::invalid_argument>(__FUNCTION__,
-								__LINE__,
-								"Action operators should not contain "
-								"duplicates.");
-					}
+					_actions[size_t(s.action())].validate();
 				} else {
-					// if (_tasks[size_t(s.task())] == task_t{}) {
-					//	fea::maybe_throw<std::invalid_argument>(
-					//			__FUNCTION__, __LINE__, "Method task invalid.");
-					//}
+					if (s.task() == task_e) {
+						fea::maybe_throw<std::invalid_argument>(__FUNCTION__,
+								__LINE__, "Tasks cannot contain themselves.");
+					}
+					validate(s.task(), _tasks[size_t(s.task())]);
 				}
 			}
 		}
+	}
+
+private:
+	template <class... OpArgs>
+	[[nodiscard]] bool run_plan_async(WorldState& w, OpArgs... op_args) {
+		// Operator should be called only once, and we wait for a
+		// notification when we are done with it.
+
+		if (_current_action != ActionEnum::count) {
+			// Maybe needs replanning.
+			return !satisfied(_current_action, w);
+		}
+
+		_current_action = _plan.front();
+		if (!satisfied(_current_action, w)) {
+			return true;
+		}
+
+		const action_t& act = _actions[size_t(_current_action)];
+		OperatorEnum current_op = act.operator_e();
+
+		if constexpr (_provide_enum_to_operators) {
+			_operators[size_t(current_op)](
+					std::forward<OpArgs>(op_args)..., current_op);
+		} else {
+			_operators[size_t(current_op)](std::forward<OpArgs>(op_args)...);
+		}
+
+		return false;
+	}
+
+	template <class... OpArgs>
+	[[nodiscard]] bool run_plan_sync(WorldState& w, OpArgs... op_args) {
+		_current_action = _plan.front();
+		if (!satisfied(_current_action, w)) {
+			return true;
+		}
+
+		const action_t& act = _actions[size_t(_current_action)];
+		OperatorEnum current_op = act.operator_e();
+
+		if constexpr (_provide_enum_to_operators) {
+			if (!_operators[size_t(current_op)](
+						std::forward<OpArgs>(op_args)..., current_op)) {
+				// Not done.
+				return false;
+			}
+		} else {
+			if (!_operators[size_t(current_op)](
+						std::forward<OpArgs>(op_args)...)) {
+				// Not done.
+				return false;
+			}
+		}
+
+		// If op returns true, we are done with current op.
+		// Apply effects and move on to next op.
+		notify_finished(w);
+
+		if (_plan.empty()) {
+			return true;
+		}
+		return false;
+	}
+
+	// Task overload
+	// Returns true on success.
+	bool make_plan_imp(TaskEnum t, WorldState& w) {
+		fea::span<const MethodEnum> methods = _tasks[size_t(t)].methods();
+		for (MethodEnum m : methods) {
+			if (!satisfied(m, w)) {
+				continue;
+			}
+
+			if (make_plan_imp(m, w)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	// Method overload
+	// Returns true on success, returns false if any children is non-executable.
+	bool make_plan_imp(MethodEnum m, WorldState& w) {
+		size_t undo_plan_size = _plan.size();
+		WorldState undo_state = w;
+		fea::span<const subtask_t> subtasks = _methods[size_t(m)].subtasks();
+
+		for (subtask_t s : subtasks) {
+			if (s.is_task()) {
+				if (!make_plan_imp(s.task(), w)) {
+					_plan.resize(undo_plan_size);
+					w = undo_state;
+					return false;
+				}
+			} else {
+				if (!make_plan_imp(s.action(), w)) {
+					_plan.resize(undo_plan_size);
+					w = undo_state;
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	// Action overload
+	// Returns true on success, returns false if any children is non-executable.
+	bool make_plan_imp(ActionEnum a, WorldState& w) {
+		if (!satisfied(a, w)) {
+			return false;
+		}
+
+		if constexpr (_provide_enum_to_effects) {
+			_actions[size_t(a)].apply_effects_and_expected(w, a);
+		} else {
+			_actions[size_t(a)].apply_effects_and_expected(w);
+		}
+
+		_plan.push_back(a);
+		return true;
+	}
+
+	bool satisfied(
+			fea::span<const PredicateEnum> preds, const WorldState& w) const {
+		for (PredicateEnum p : preds) {
+			if constexpr (_provide_enum_to_predicates) {
+				if (!_predicates[size_t(p)](&w, p)) {
+					return false;
+				}
+			} else {
+				if (!_predicates[size_t(p)](&w)) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	bool satisfied(MethodEnum m, const WorldState& w) const {
+		fea::span<const PredicateEnum> preds = _methods[size_t(m)].predicates();
+		return satisfied(preds, w);
+	}
+
+	bool satisfied(ActionEnum a, const WorldState& w) const {
+		fea::span<const PredicateEnum> preds = _actions[size_t(a)].predicates();
+		return satisfied(preds, w);
 	}
 
 	static_assert(
@@ -715,11 +804,66 @@ private:
 	static_assert(std::is_enum_v<OperatorEnum>,
 			"htn : OperatorEnum must be an enum class");
 
+	static_assert(
+			sizeof...(PredicateArgs) == 1 || sizeof...(PredicateArgs) == 0,
+			"htn : Predicate signature must either contain a single enum at "
+			"the end, or nothing");
+	static_assert(sizeof...(EffectArgs) == 1 || sizeof...(EffectArgs) == 0,
+			"htn : Effects signature must either contain a single enum at "
+			"the end, or nothing");
+	static_assert(std::is_same_v<OperatorRet,
+						  void> || std::is_same_v<OperatorRet, bool>,
+			"htn : Incorrect operator return value, must be 'void' or 'bool'");
+
 	static constexpr size_t _task_count = size_t(TaskEnum::count);
 	static constexpr size_t _method_count = size_t(MethodEnum::count);
 	static constexpr size_t _action_count = size_t(ActionEnum::count);
 	static constexpr size_t _pred_count = size_t(PredicateEnum::count);
 	static constexpr size_t _operator_count = size_t(OperatorEnum::count);
+
+	// Do we need to pass on enums to the callbacks?
+	static constexpr bool needs_predicate_enum() {
+		if constexpr (sizeof...(PredicateArgs) == 0) {
+			return false;
+		} else {
+			static_assert(sizeof...(PredicateArgs) == 1,
+					"htn : Too many arguments in predicate callback.");
+			static_assert(std::is_same_v<fea::front_t<PredicateArgs...>,
+								  PredicateEnum>,
+					"htn : Invalid predicate enum type provided in callback "
+					"signature.");
+			return true;
+		}
+	}
+	static constexpr bool needs_effect_enum() {
+		if constexpr (sizeof...(EffectArgs) == 0) {
+			return false;
+		} else {
+			static_assert(sizeof...(EffectArgs) == 1,
+					"htn : Too many arguments in effects callback.");
+			static_assert(
+					std::is_same_v<fea::front_t<EffectArgs...>, ActionEnum>,
+					"htn : Invalid effects enum type provided in callback "
+					"signature.");
+			return true;
+		}
+	}
+	static constexpr bool needs_operator_enum() {
+		if constexpr (sizeof...(OperatorArgs) == 0) {
+			return false;
+		} else {
+			using last_t = fea::back_t<OperatorArgs...>;
+			if constexpr (std::is_same_v<last_t, OperatorEnum>) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+	}
+
+	static constexpr bool _provide_enum_to_predicates = needs_predicate_enum();
+	static constexpr bool _provide_enum_to_effects = needs_effect_enum();
+	static constexpr bool _provide_enum_to_operators = needs_operator_enum();
 
 	// We store everything here, to minimize duplication.
 	std::array<task_t, _task_count> _tasks{};
@@ -729,328 +873,7 @@ private:
 	std::array<operator_func_t, _operator_count> _operators{};
 
 	std::vector<ActionEnum> _plan;
-	// The index of the currently in-progress operator.
-	size_t _plan_runner_op_idx = 0;
+	ActionEnum _current_action = ActionEnum::count;
 };
-
-// template <class TaskEnum, class MethodEnum, class ActionEnum,
-//		class OperatorEnum, class WorldState, class... OperatorArgs>
-// struct htn_builder<TaskEnum, MethodEnum, ActionEnum, OperatorEnum,
-// WorldState, 		bool(OperatorArgs...)> { 	static constexpr auto make_htn()
-// { return htn<TaskEnum, MethodEnum, ActionEnum, OperatorEnum, WorldState,
-//				bool(OperatorArgs...)>{};
-//	}
-//};
-
-// template <class T>
-// struct itask {
-//	virtual bool is_compound() const = 0;
-//	virtual std::tuple<bool, size_t> satisfied(
-//			const T& t, size_t start_idx = 0) const = 0;
-//	virtual const char* name() const = 0;
-//};
-//
-// template <class T>
-// struct primitive_task : itask<T> {
-//	template <class FuncCond, class FuncOp, class FuncEffect>
-//	primitive_task(const char* name, FuncCond&& condition, FuncOp&& operator_,
-//			FuncEffect&& effect)
-//			: _name(name)
-//			, _condition(std::forward<FuncCond>(condition))
-//			, _operator(std::forward<FuncOp>(operator_))
-//			, _effect(std::forward<FuncEffect>(effect)) {
-//	}
-//
-//	bool is_compound() const override {
-//		return false;
-//	}
-//
-//	std::tuple<bool, size_t> satisfied(const T& t, size_t = 0) const override {
-//		return { std::invoke(_condition, t), 0 };
-//	}
-//
-//	// returns finished
-//	void execute_task(T& t) const {
-//		std::invoke(_operator, t);
-//	}
-//
-//	void execute_effect(T& t) const {
-//		std::invoke(_effect, t);
-//	}
-//
-//	// get/set
-//	const char* name() const override {
-//		return _name;
-//	}
-//
-// private:
-//	const char* _name{ "" };
-//	stdext::inplace_function<bool(const T&)> _condition{};
-//	stdext::inplace_function<void(T&)> _operator{};
-//	stdext::inplace_function<void(T&)> _effect{};
-//};
-// FEA_FULFILLS_RULE_OF_5(primitive_task<int>);
-//// FEA_FULFILLS_FAST_VECTOR(primitive_task<int>); // inplace_function
-//
-// template <class T>
-// struct method {
-//	template <class FuncCond>
-//	method(const char* name, FuncCond&& condition,
-//			std::vector<itask<T>*>&& sub_tasks)
-//			: _name(name)
-//			, _condition(std::forward<FuncCond>(condition))
-//			, _sub_tasks(std::move(sub_tasks)) {
-//	}
-//
-//	bool satisfied(const T& t) const {
-//		return std::invoke(_condition, t);
-//	}
-//
-//	const std::vector<itask<T>*>& sub_tasks() const {
-//		return _sub_tasks;
-//	}
-//
-//
-// private:
-//	const char* _name{ "" };
-//	stdext::inplace_function<bool(const T&)> _condition{};
-//	std::vector<itask<T>*> _sub_tasks{};
-//};
-// FEA_FULFILLS_RULE_OF_5(method<int>);
-//
-// template <class T>
-// struct compound_task : itask<T> {
-//	compound_task(const char* name, std::vector<method<T>>&& methods)
-//			: _name(name)
-//			, _methods(std::move(methods)) {
-//	}
-//
-//	bool is_compound() const override {
-//		return true;
-//	}
-//
-//	std::tuple<bool, size_t> satisfied(
-//			const T& t, size_t start_idx = 0) const override {
-//		for (size_t i = start_idx; i < _methods.size(); ++i) {
-//			if (_methods[i].satisfied(t))
-//				return { true, i };
-//		}
-//		return { false, 0 };
-//	}
-//
-//	const std::vector<itask<T>*>& sub_tasks(size_t method_idx) const {
-//		return _methods[method_idx].sub_tasks();
-//	}
-//
-//	// get/set
-//	const char* name() const override {
-//		return _name;
-//	}
-//
-// private:
-//	const char* _name{ "" };
-//	std::vector<method<T>> _methods{};
-//};
-// FEA_FULFILLS_RULE_OF_5(compound_task<int>);
-// FEA_FULFILLS_FAST_VECTOR(compound_task<int>);
-//
-// template <class T>
-// struct plan_runner {
-//	plan_runner(std::vector<primitive_task<T>>&& plan)
-//			: _tasks(std::move(plan)) {
-//
-//		fsm_state<transition, state, plan_runner&, T&> running_state;
-//		running_state.add_event<fsm_event::on_enter>(
-//				[](auto&, plan_runner& p, T& t) {
-//					if (p.invalid())
-//						return;
-//
-//					auto tup = p._tasks[p._current_task].satisfied(t);
-//					if (!std::get<0>(tup)) {
-//						p._invalid = true;
-//						return;
-//					}
-//					p._world_copy = t;
-//					p._tasks[p._current_task].execute_task(t);
-//				});
-//		running_state.add_event<fsm_event::on_update>(
-//				[](auto&, plan_runner&, T&) {
-//					// T cpy = p._world_copy;
-//					// p._tasks[p._current_task].execute_effect(cpy);
-//					// if (cpy == t) {
-//					//	++p._current_task;
-//					//	p._world_copy = t;
-//					//	machine.trigger<transition::do_running>(p, t);
-//					//}
-//				});
-//		running_state.add_event<fsm_event::on_exit>(
-//				[](auto&, plan_runner& p, T& t) {
-//					p._tasks[p._current_task].execute_effect(t);
-//					++p._current_task;
-//				});
-//		running_state.add_transition<transition::do_running, state::running>();
-//		_smachine.add_state<state::running>(std::move(running_state));
-//	}
-//	plan_runner()
-//			: plan_runner(std::vector<primitive_task<T>>{}) {
-//	}
-//
-//	// returns success
-//	bool update(T& t) {
-//		if (invalid())
-//			return false;
-//
-//		_smachine.update(*this, t);
-//
-//		return !invalid();
-//	}
-//
-//	void finish_current_task() {
-//		_smachine.delayed_trigger<transition::do_running>();
-//	}
-//
-//	void print() const {
-//		printf("Plan\n");
-//		for (const auto r : _tasks) {
-//			printf("  '%s'\n", r.name());
-//		}
-//	}
-//
-//	// invalidated or done, replan
-//	bool invalid() const {
-//		return _invalid || _current_task >= _tasks.size() || _tasks.empty();
-//	}
-//
-//	// get/set
-//	const std::vector<primitive_task<T>>& tasks() const {
-//		return _tasks;
-//	}
-//
-// private:
-//	enum class transition : unsigned {
-//		do_running,
-//		count,
-//	};
-//	enum class state : unsigned {
-//		running,
-//		count,
-//	};
-//	std::vector<primitive_task<T>> _tasks{};
-//	fsm<transition, state, plan_runner&, T&> _smachine;
-//	T _world_copy;
-//	size_t _current_task{ 0 };
-//	bool _invalid{ false };
-//};
-//
-// template <class T>
-// struct undoer {
-//	size_t to_eval_start_idx{ 0 };
-//	size_t plan_start_idx{ 0 };
-//	size_t plan_end_idx{ 0 };
-//	T world_backup;
-//	// Used to try other methods if current method fails during evaluation.
-//	const compound_task<T>* last_compound{ nullptr };
-//	size_t last_satisfied_idx{ 0 };
-//};
-//
-// template <class T>
-// inline plan_runner<T> create_plan(T world, const itask<T>* root_task) {
-//	assert(root_task != nullptr);
-//
-//	std::vector<primitive_task<T>> plan{};
-//	std::vector<const itask<T>*> tasks_to_evaluate({ root_task });
-//	std::vector<undoer<T>> undo_vec{};
-//	size_t next_method_idx = std::numeric_limits<size_t>::max();
-//
-//	// Evaluate hierarchy, decompose compounds and methods into primitive tasks,
-//	// push those into final plan.
-//	while (tasks_to_evaluate.size() > 0) {
-//		const itask<T>* current_t = tasks_to_evaluate.back();
-//		tasks_to_evaluate.pop_back();
-//
-//		bool satisfied = false;
-//		size_t idx = 0;
-//
-//		if (next_method_idx == std::numeric_limits<size_t>::max()) {
-//			std::tie(satisfied, idx) = current_t->satisfied(world);
-//		} else {
-//			// If next_method_idx is set, we are processing more satisfied
-// methods
-//			// from a previous compound.
-//			assert(current_t->is_compound());
-//
-//			satisfied = true;
-//			idx = next_method_idx;
-//
-//			// No need to recheck method.
-//			// std::tie(satisfied, idx)
-//			// 		= current_t->satisfied(world, next_method_idx);
-//			next_method_idx = std::numeric_limits<size_t>::max();
-//		}
-//
-//		// Method or task wasn't satisfied. Reset plan, eval stack and world to
-// last undo state. 		if (!satisfied) { 			const undoer<T>& u =
-// undo_vec.back();
-//
-//			assert(u.to_eval_start_idx <= tasks_to_evaluate.size()
-//					&& "something went horribly wrong");
-//
-//			tasks_to_evaluate.erase(
-//					tasks_to_evaluate.begin() + u.to_eval_start_idx,
-//					tasks_to_evaluate.end());
-//
-//			// We store both plan chunk begin and end, since decomposing
-// compounds
-//			// may require to pop multiple nested compounds (which aren't always
-// at the end). 			plan.erase(plan.begin() + u.plan_start_idx,
-// plan.begin() + u.plan_end_idx);
-//
-//			world = u.world_backup;
-//
-//			// Look into the undo stack. If we are processing a compound,
-//			// try to find another method which is satisfied.
-//			// If found, we will pop it and process it next.
-//			if (u.last_compound) {
-//				std::tie(satisfied, idx) = u.last_compound->satisfied(
-//						world, u.last_satisfied_idx + 1);
-//
-//				// Found other method to consider.
-//				if (satisfied) {
-//					tasks_to_evaluate.push_back(u.last_compound);
-//					next_method_idx = idx;
-//				}
-//			}
-//
-//			undo_vec.pop_back();
-//			continue;
-//		}
-//
-//		if (current_t->is_compound()) {
-//			// If we are a compound, decompose our tasks to evaluate.
-//			// Push an undo operation in case things aren't satisfied.
-//			const compound_task<T>* compt
-//					= static_cast<const compound_task<T>*>(current_t);
-//
-//			// undoer<T> u;
-//			undo_vec.push_back({ tasks_to_evaluate.size(), plan.size(),
-//					plan.size(), world, compt, idx });
-//
-//			tasks_to_evaluate.insert(tasks_to_evaluate.end(),
-//					compt->sub_tasks(idx).rbegin(),
-//					compt->sub_tasks(idx).rend());
-//
-//		} else {
-//			// We have found a candidate.
-//			// Apply effects on world, add task to plan and increment the
-// compound
-//"plan chunk size". 			const primitive_task<T>* primt =
-// static_cast<const primitive_task<T>*>(current_t);
-// primt->execute_effect(world); 			plan.push_back(*primt);
-//			undo_vec.back().plan_end_idx = plan.size();
-//		}
-//	}
-//
-//	return plan_runner<T>{ std::move(plan) };
-//}
 
 } // namespace fea

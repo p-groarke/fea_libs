@@ -40,6 +40,7 @@ using span = std::span<T, Extent>;
 #else
 #include "fea/utils/platform.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <iterator>
 
@@ -70,28 +71,38 @@ struct span {
 
 	template <class It>
 	constexpr span(It first, size_t count)
-			: _data(&(*first))
-			, _size(count) {
+			: _size(count) {
 		using cat_t = typename std::iterator_traits<It>::iterator_category;
 		static_assert(
 				std::is_same<cat_t, std::random_access_iterator_tag>::value,
 				"fea::span : iterators must be random access");
+
+		if (_size != 0) {
+			_data = &(*first);
+		}
 	}
 
 	template <class It>
 	constexpr span(It first, It last)
-			: _data(&(*first))
-			, _size(size_t(last - first)) {
+			: _size(size_t(last - first)) {
 		using cat_t = typename std::iterator_traits<It>::iterator_category;
 		static_assert(
 				std::is_same<cat_t, std::random_access_iterator_tag>::value,
 				"fea::span : iterators must be random access");
+
+		if (_size != 0) {
+			_data = &(*first);
+		}
 	}
 
 	template <template <class, class...> class Container, class... Args>
-	constexpr span(Container<T, Args...>&& container)
+	constexpr span(const Container<std::decay_t<T>, Args...>& container)
 			: _data(container.data())
 			, _size(container.size()) {
+	}
+	template <template <class, class...> class Container, class... Args>
+	constexpr span(Container<std::decay_t<T>, Args...>&& container)
+			: span(container) {
 	}
 
 	/**
@@ -165,11 +176,32 @@ struct span {
 		return _size == 0;
 	}
 
+	/**
+	 * Operators
+	 */
+	template <class U>
+	friend bool operator==(span<U> lhs, span<U> rhs);
+	template <class U>
+	friend bool operator!=(span<U> lhs, span<U> rhs);
+
 private:
 	pointer _data = nullptr;
 	size_type _size = 0;
 };
 
+template <class U>
+bool operator==(span<U> lhs, span<U> rhs) {
+	if (lhs.size() != rhs.size()) {
+		return false;
+	}
+
+	return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+}
+
+template <class U>
+bool operator!=(span<U> lhs, span<U> rhs) {
+	return !(lhs == rhs);
+}
 } // namespace imp
 
 template <class T>

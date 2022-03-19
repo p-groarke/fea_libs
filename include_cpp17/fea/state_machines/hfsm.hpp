@@ -30,7 +30,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/meta/static_for.hpp"
 #include "fea/utils/platform.hpp"
+#include "fea/utils/scope.hpp"
 #include "fea/utils/throw.hpp"
 
 #include <algorithm>
@@ -94,33 +96,6 @@ Notes :
 		debugging much faster and easier.
 
 */
-
-
-namespace detail {
-template <class Func, size_t... I>
-constexpr void static_for(Func func, std::index_sequence<I...>) {
-	(std::invoke(func, std::integral_constant<size_t, I>{}), ...);
-}
-
-template <size_t N, class Func>
-constexpr void static_for(Func func) {
-	static_for(func, std::make_index_sequence<N>());
-}
-
-template <class Func>
-struct on_exit {
-	on_exit(Func func)
-			: _func(func) {
-	}
-
-	~on_exit() {
-		std::invoke(_func);
-	}
-
-private:
-	Func _func;
-};
-} // namespace detail
 
 
 template <class, class, class...>
@@ -713,7 +688,7 @@ struct hfsm {
 	void trigger(FuncArgs... func_args) {
 		static_assert(Transition != TransitionEnum::count,
 				"hfsm : invalid transition");
-		auto g = detail::on_exit{ [this]() { _in_transition_guard = false; } };
+		auto g = fea::on_exit{ [this]() { _in_transition_guard = false; } };
 
 		maybe_init(func_args...);
 
@@ -790,7 +765,7 @@ struct hfsm {
 
 		for (auto& sub : _parallel_machines) {
 			sub._in_parallel = true;
-			auto g = detail::on_exit{ [&]() { sub._in_parallel = false; } };
+			auto g = fea::on_exit{ [&]() { sub._in_parallel = false; } };
 			sub.update(func_args...);
 		}
 	}
@@ -899,7 +874,7 @@ private:
 			const auto_t_guard_arr& t_guards, FuncArgs... func_args) {
 		bool found = false;
 
-		detail::static_for<size_t(TransitionEnum::count)>([&](auto idx) {
+		fea::static_for<size_t(TransitionEnum::count)>([&](auto idx) {
 			if (found)
 				return;
 
