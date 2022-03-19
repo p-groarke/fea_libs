@@ -45,27 +45,6 @@
 #include <initializer_list>
 #include <vector>
 
-#if FEA_LINUX
-#include <execinfo.h>
-#include <stdio.h>
-
-void print_trace() {
-	char** strings;
-	size_t i, size;
-	enum Constexpr { MAX_SIZE = 1024 };
-	void* array[MAX_SIZE];
-	size = backtrace(array, MAX_SIZE);
-	strings = backtrace_symbols(array, size);
-	for (i = 0; i < size; i++)
-		printf("%s\n", strings[i]);
-	puts("");
-	free(strings);
-}
-#else
-void print_trace() {
-}
-#endif
-
 /*
 A Hierarchical Task Network planner.
 An htn contains tasks, methods and actions. Some of these use predicates and
@@ -649,11 +628,6 @@ struct htn<TaskEnum, MethodEnum, ActionEnum, PredicateEnum, OperatorEnum,
 					= _methods[size_t(m)].subtasks();
 			for (subtask_t s : subtasks) {
 				if (!s.is_task() && !s.is_action()) {
-					printf("\nwtf\n");
-					print_trace();
-
-					fprintf(stderr, "\ttask : %d\n\tmethod : %d\n", int(task_e),
-							int(m));
 					fea::maybe_throw<std::invalid_argument>(__FUNCTION__,
 							__LINE__, "Invalid subtask in method.");
 				}
