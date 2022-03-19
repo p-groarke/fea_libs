@@ -168,7 +168,6 @@ TEST(htn, example) {
 	}
 }
 
-#pragma optimize("", off)
 TEST(htn, basics) {
 	fea::htn<task, method, action, predicate, operators,
 			bool(const ennemy::htn_state*), bool(ennemy*),
@@ -298,7 +297,6 @@ TEST(htn, basics) {
 		htn.add_task<task::exist>(std::move(task));
 	}
 }
-#pragma optimize("", on)
 } // namespace test1
 
 namespace test2 {
