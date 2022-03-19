@@ -168,6 +168,7 @@ TEST(htn, example) {
 	}
 }
 
+#pragma optimize("", off)
 TEST(htn, basics) {
 	fea::htn<task, method, action, predicate, operators,
 			bool(const ennemy::htn_state*), bool(ennemy*),
@@ -283,18 +284,21 @@ TEST(htn, basics) {
 		fea::htn_task<method> task;
 		EXPECT_EQ(task.methods().size(), 0u);
 #if defined(FEA_NOTHROW) || defined(FEA_DEBUG)
-		EXPECT_DEATH(htn.validate(task::exist, task), "");
+		EXPECT_DEATH(htn.validate(task::exist), "");
+		EXPECT_DEATH(task.validate(), "");
 #else
-		EXPECT_THROW(htn.validate(task::exist, task), std::invalid_argument);
+		EXPECT_THROW(htn.validate(task::exist), std::invalid_argument);
+		EXPECT_THROW(task.validate(), std::invalid_argument);
 #endif
 
 		task.add_methods({ method::heal, method::idle });
 		EXPECT_EQ(task.methods().size(), 2u);
-		htn.validate(task::exist, task); // shouldn't throw or die
+		task.validate(); // shouldn't throw or die
 
 		htn.add_task<task::exist>(std::move(task));
 	}
 }
+#pragma optimize("", on)
 } // namespace test1
 
 namespace test2 {

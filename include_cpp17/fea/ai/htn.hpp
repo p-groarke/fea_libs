@@ -462,6 +462,19 @@ struct htn_task {
 		return { _methods.begin(), _methods.end() };
 	}
 
+	// Throws on invalid task.
+	// Checked when adding tasks.
+	void validate() const {
+		if (_methods.empty()) {
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"Task requires at least one method.");
+		}
+		if (detail::has_duplicates<_max_methods>(methods())) {
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"Task methods should not contain duplicates.");
+		}
+	}
+
 private:
 	static constexpr size_t _max_methods = size_t(MethodEnum::count);
 
@@ -511,8 +524,8 @@ struct htn<TaskEnum, MethodEnum, ActionEnum, PredicateEnum, OperatorEnum,
 	// Add a task to the network.
 	template <TaskEnum E>
 	void add_task(task_t&& t) {
-		validate(E, t);
 		std::get<size_t(E)>(_tasks) = std::move(t);
+		validate(E);
 	}
 
 	// Add a method to the network.
@@ -603,20 +616,16 @@ struct htn<TaskEnum, MethodEnum, ActionEnum, PredicateEnum, OperatorEnum,
 	}
 
 	// Validates the added task and everything it uses.
-	void validate(TaskEnum task_e, const task_t& t) const {
-		fea::span<const MethodEnum> methods = t.methods();
-
-		{
-			if (methods.empty()) {
-				fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
-						"Task requires at least one method.");
-			}
-			if (detail::has_duplicates<_method_count>(methods)) {
-				fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
-						"Task methods should not contain duplicates.");
-			}
+	void validate(TaskEnum task_e) const {
+		if (task_e == TaskEnum::count) {
+			fea::maybe_throw<std::invalid_argument>(
+					__FUNCTION__, __LINE__, "Invalid task.");
 		}
 
+		const task_t& t = _tasks[size_t(task_e)];
+		t.validate();
+
+		fea::span<const MethodEnum> methods = t.methods();
 		for (MethodEnum m : methods) {
 			if (m == MethodEnum::count) {
 				fea::maybe_throw<std::invalid_argument>(
@@ -626,7 +635,6 @@ struct htn<TaskEnum, MethodEnum, ActionEnum, PredicateEnum, OperatorEnum,
 
 			fea::span<const subtask_t> subtasks
 					= _methods[size_t(m)].subtasks();
-
 			for (subtask_t s : subtasks) {
 				if (!s.is_task() && !s.is_action()) {
 					fea::maybe_throw<std::invalid_argument>(__FUNCTION__,
@@ -640,7 +648,7 @@ struct htn<TaskEnum, MethodEnum, ActionEnum, PredicateEnum, OperatorEnum,
 						fea::maybe_throw<std::invalid_argument>(__FUNCTION__,
 								__LINE__, "Tasks cannot contain themselves.");
 					}
-					validate(s.task(), _tasks[size_t(s.task())]);
+					validate(s.task());
 				}
 			}
 		}
