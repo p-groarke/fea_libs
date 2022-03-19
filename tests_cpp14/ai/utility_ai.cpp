@@ -67,7 +67,7 @@ TEST(utility_ai, basics) {
 	}
 
 	// Should throw or assert, missing 1 utility function.
-#if FEA_DEBUG || defined(FEA_NOTHROW)
+#if FEA_DEBUG
 	EXPECT_DEATH(ai.trigger(), "");
 	EXPECT_DEATH(ai.trigger_mt(), "");
 #endif
