@@ -637,10 +637,10 @@ struct htn<TaskEnum, MethodEnum, ActionEnum, PredicateEnum, OperatorEnum,
 					= _methods[size_t(m)].subtasks();
 			for (subtask_t s : subtasks) {
 				if (!s.is_task() && !s.is_action()) {
-					fea::maybe_throw<std::invalid_argument>(__FUNCTION__,
-							__LINE__, "Invalid subtask in method.");
 					fprintf(stderr, "\ttask : %d\n\tmethod : %d\n", int(task_e),
 							int(m));
+					fea::maybe_throw<std::invalid_argument>(__FUNCTION__,
+							__LINE__, "Invalid subtask in method.");
 				}
 
 				if (s.is_action()) {
