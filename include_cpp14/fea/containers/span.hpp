@@ -191,6 +191,10 @@ bool operator==(span<U> lhs, span<U> rhs) {
 		return false;
 	}
 
+	if (lhs.data() == rhs.data()) {
+		return true;
+	}
+
 	return std::equal(lhs.begin(), lhs.end(), rhs.begin());
 }
 

@@ -70,9 +70,6 @@ TEST(utility_ai, basics) {
 #if FEA_DEBUG || defined(FEA_NOTHROW)
 	EXPECT_DEATH(ai.trigger(), "");
 	EXPECT_DEATH(ai.trigger_mt(), "");
-#else
-	EXPECT_THROW(ai.trigger(), std::runtime_error);
-	EXPECT_THROW(ai.trigger_mt(), std::runtime_error);
 #endif
 
 	{

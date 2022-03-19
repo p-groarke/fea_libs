@@ -140,7 +140,7 @@ TEST(htn, example) {
 		// The htn can run the plan for you, or you can get the plan and run it
 		// yourself.
 		fea::span<const action> teh_plan = htn.plan();
-		EXPECT_EQ(teh_plan.size(), 1);
+		EXPECT_EQ(teh_plan.size(), 1u);
 		EXPECT_EQ(teh_plan[0], action::idle);
 
 		// Every call to run_next_action executes the current operator in the
@@ -156,7 +156,7 @@ TEST(htn, example) {
 
 		// Plan should now include heal.
 		teh_plan = htn.plan();
-		EXPECT_EQ(teh_plan.size(), 2);
+		EXPECT_EQ(teh_plan.size(), 2u);
 		EXPECT_EQ(teh_plan[0], action::heal);
 		EXPECT_EQ(teh_plan[1], action::idle);
 
@@ -204,7 +204,7 @@ TEST(htn, basics) {
 		maction.add_operator(operators::idle_anim);
 		maction.add_predicate(predicate::always_false);
 
-		EXPECT_EQ(maction.predicates().size(), 1);
+		EXPECT_EQ(maction.predicates().size(), 1u);
 		EXPECT_TRUE(maction.has_operator());
 		EXPECT_EQ(maction.operator_e(), operators::idle_anim);
 		EXPECT_TRUE(maction.has_effects());
@@ -732,8 +732,8 @@ TEST(htn, hfsm_basics) {
 		// printf("\n");
 		EXPECT_FALSE(baddie.create_plan());
 
-		EXPECT_EQ(3, hero.plan().size());
-		EXPECT_EQ(0, baddie.plan().size());
+		EXPECT_EQ(hero.plan().size(), 3u);
+		EXPECT_EQ(baddie.plan().size(), 0u);
 
 		while (!hero.update()) {
 		}
@@ -758,18 +758,10 @@ TEST(htn, multi_plan) {
 		// printf("\n");
 		baddie.create_plan();
 
-		EXPECT_EQ(8, hero.plan().size());
-		EXPECT_EQ(0, baddie.plan().size());
+		EXPECT_EQ(hero.plan().size(), 8u);
+		EXPECT_EQ(baddie.plan().size(), 0u);
 
 		while (!hero.update()) {
-
-			//// create plans until baddie ded
-			// if (hero.plan().invalid()) {
-			//	hero.create_plan();
-			//	printf("\n");
-			//	hero.plan().print();
-			//	printf("\n");
-			//}
 		}
 	}
 }
