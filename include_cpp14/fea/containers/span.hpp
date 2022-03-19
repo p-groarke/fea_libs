@@ -100,10 +100,6 @@ struct span {
 			: _data(container.data())
 			, _size(container.size()) {
 	}
-	template <template <class, class...> class Container, class... Args>
-	constexpr span(Container<std::decay_t<T>, Args...>&& container)
-			: span(container) {
-	}
 
 	/**
 	 * Iterators
