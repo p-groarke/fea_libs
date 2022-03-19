@@ -13,7 +13,7 @@ TEST(span, basics) {
 		EXPECT_EQ(s[2], vec[2]);
 
 		fea::span<const size_t> s2{ std::vector<size_t>{ 0u, 1u, 2u } };
-		EXPECT_EQ(s2.size(), 3);
+		EXPECT_EQ(s2.size(), 3u);
 		EXPECT_EQ(s2[0], 0u);
 		EXPECT_EQ(s2[1], 1u);
 		EXPECT_EQ(s2[2], 2u);
