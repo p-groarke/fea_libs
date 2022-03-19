@@ -639,6 +639,8 @@ struct htn<TaskEnum, MethodEnum, ActionEnum, PredicateEnum, OperatorEnum,
 				if (!s.is_task() && !s.is_action()) {
 					fea::maybe_throw<std::invalid_argument>(__FUNCTION__,
 							__LINE__, "Invalid subtask in method.");
+					fprintf(stderr, "\ttask : %d\n\tmethod : %d\n", int(task_e),
+							int(m));
 				}
 
 				if (s.is_action()) {
