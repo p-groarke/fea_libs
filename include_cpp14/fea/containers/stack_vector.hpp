@@ -247,7 +247,7 @@ struct stack_vector {
 		assert(_size < _data.size());
 		size_type dist = std::distance(cbegin(), pos);
 		auto start_it = begin() + dist;
-		std::copy_backward(start_it, end(), ++end());
+		std::copy_backward(start_it, end(), end() + 1);
 		*start_it = value;
 		++_size;
 		return start_it;
@@ -257,7 +257,7 @@ struct stack_vector {
 		assert(_size < _data.size());
 		size_type dist = std::distance(cbegin(), pos);
 		auto start_it = begin() + dist;
-		std::move_backward(start_it, end(), ++end());
+		std::move_backward(start_it, end(), end() + 1);
 		*start_it = std::move(value);
 		++_size;
 		return start_it;
