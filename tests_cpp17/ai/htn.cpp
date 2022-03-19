@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstdint>
 #include <fea/ai/htn.hpp>
 #include <fea/state_machines/hfsm.hpp>
 #include <gtest/gtest.h>
@@ -6,11 +7,17 @@
 namespace {
 namespace test1 {
 
-enum class task { exist, task1, count };
-enum class method { heal, idle, count };
-enum class action { heal, idle, count };
-enum class predicate { low_hp, can_heal, always_true, always_false, count };
-enum class operators { heal_anim, idle_anim, count };
+enum class task : uint8_t { exist, task1, count };
+enum class method : uint8_t { heal, idle, count };
+enum class action : uint8_t { heal, idle, count };
+enum class predicate : uint8_t {
+	low_hp,
+	can_heal,
+	always_true,
+	always_false,
+	count
+};
+enum class operators : uint8_t { heal_anim, idle_anim, count };
 
 struct ennemy {
 	struct htn_state {
@@ -301,11 +308,11 @@ TEST(htn, basics) {
 
 namespace test2 {
 
-enum class task { t1, t_true, t_false, count };
-enum class meth { m_true, m_true2, m_false, m_false2, count };
-enum class act { a_true, a_false, no_pred, count };
-enum class pred { always_true, always_false, count };
-enum class op { o_true, o_false, no_pred, count };
+enum class task : uint8_t { t1, t_true, t_false, count };
+enum class meth : uint8_t { m_true, m_true2, m_false, m_false2, count };
+enum class act : uint8_t { a_true, a_false, no_pred, count };
+enum class pred : uint8_t { always_true, always_false, count };
+enum class op : uint8_t { o_true, o_false, no_pred, count };
 
 struct test_state {
 	bool op_func(op o) {
@@ -454,23 +461,23 @@ private:
 		count,
 	};
 
-	enum class task { attack, root, count };
-	enum class method {
+	enum class task : uint8_t { attack, root, count };
+	enum class method : uint8_t {
 		normal_attack,
 		double_attack,
 		multi_attack,
 		chill,
 		count
 	};
-	enum class action { quick_attack, attack, chill, count };
-	enum class predicate {
+	enum class action : uint8_t { quick_attack, attack, chill, count };
+	enum class predicate : uint8_t {
 		can_attack,
 		can_chill,
 		can_double_attack,
 		always_true,
 		count
 	};
-	enum class operators { quick_attack, attack, chill, count };
+	enum class operators : uint8_t { quick_attack, attack, chill, count };
 
 public:
 	struct htn_data {

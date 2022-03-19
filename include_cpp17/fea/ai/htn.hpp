@@ -43,8 +43,9 @@
 #include <cassert>
 #include <functional>
 #include <initializer_list>
+#include <vector>
 
-// gcc debugging
+#if FEA_LINUX
 #include <execinfo.h>
 #include <stdio.h>
 
@@ -60,6 +61,10 @@ void print_trace() {
 	puts("");
 	free(strings);
 }
+#else
+void print_trace() {
+}
+#endif
 
 /*
 A Hierarchical Task Network planner.
@@ -134,6 +139,16 @@ namespace detail {
 template <size_t N, class T>
 bool has_duplicates(fea::span<const T> spn) {
 	fea::stack_vector<T, N> cpy(spn.begin(), spn.end());
+	std::sort(cpy.begin(), cpy.end());
+	if (std::adjacent_find(cpy.begin(), cpy.end()) != cpy.end()) {
+		return true;
+	}
+	return false;
+}
+
+template <class T>
+bool has_duplicates(fea::span<const T> spn) {
+	std::vector<T> cpy(spn.begin(), spn.end());
 	std::sort(cpy.begin(), cpy.end());
 	if (std::adjacent_find(cpy.begin(), cpy.end()) != cpy.end()) {
 		return true;
@@ -369,10 +384,6 @@ struct htn_method {
 	// These tasks will be executed in order of addition.
 	// You may provide any combination of "tasks" or "actions".
 	void add_subtasks(fea::span<const subtask_t> subtasks) {
-		if (subtasks.size() + _subtasks.size() > _max_subtasks) {
-			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
-					"Too many subtasks provided, do you have duplicates?");
-		}
 		_subtasks.insert(_subtasks.end(), subtasks.begin(), subtasks.end());
 	}
 
@@ -387,20 +398,6 @@ struct htn_method {
 	// The tasks are executed in order of addition.
 	// You may provide any combination of "tasks" or "actions".
 	void add_subtask(subtask_t subtask) {
-		if (_subtasks.size() + 1 > _max_subtasks) {
-			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
-					"Too many subtasks provided, do you have duplicates?");
-		}
-		_subtasks.push_back(subtask);
-	}
-
-	// Add a predicates to this method.
-	// If the predicates evaluate to true, this method will be chosen.
-	void add_subtasks(subtask_t subtask) {
-		if (_subtasks.size() + 1 > _max_subtasks) {
-			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
-					"Too many subtasks provided, do you have duplicates?");
-		}
 		_subtasks.push_back(subtask);
 	}
 
@@ -432,12 +429,10 @@ struct htn_method {
 	}
 
 private:
-	static constexpr size_t _max_subtasks
-			= (size_t(TaskEnum::count) + size_t(ActionEnum::count)) * 2;
 	static constexpr size_t _max_preds = size_t(PredicateEnum::count);
 
 	fea::stack_vector<PredicateEnum, _max_preds> _predicates;
-	fea::stack_vector<subtask_t, _max_subtasks> _subtasks;
+	std::vector<subtask_t> _subtasks;
 };
 
 
