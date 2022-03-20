@@ -5,6 +5,14 @@ namespace {
 TEST(span, basics) {
 
 	std::vector<size_t> vec{ 0u, 1u, 2u };
+	{
+		fea::span<const size_t> s{ vec }; // test const from non-const vec
+		EXPECT_EQ(s.size(), vec.size());
+		EXPECT_EQ(s[0], vec[0]);
+		EXPECT_EQ(s[1], vec[1]);
+		EXPECT_EQ(s[2], vec[2]);
+	}
+
 	fea::span<const size_t> s{ vec.data(), vec.size() };
 	EXPECT_EQ(s.size(), vec.size());
 	EXPECT_EQ(s.size_bytes(), vec.size() * sizeof(size_t));
@@ -38,13 +46,23 @@ TEST(span, basics) {
 }
 
 TEST(span, empty) {
-	fea::span<const size_t> s;
-	EXPECT_EQ(s.size(), 0u);
-	EXPECT_EQ(s.size_bytes(), 0u);
-	EXPECT_TRUE(s.empty());
-	EXPECT_EQ(s.data(), nullptr);
+	{
+		fea::span<const size_t> s;
+		EXPECT_EQ(s.size(), 0u);
+		EXPECT_EQ(s.size_bytes(), 0u);
+		EXPECT_TRUE(s.empty());
+		EXPECT_EQ(s.data(), nullptr);
 
-	EXPECT_EQ(size_t(std::distance(s.begin(), s.end())), 0u);
-	EXPECT_EQ(size_t(std::distance(s.rbegin(), s.rend())), 0u);
+		EXPECT_EQ(size_t(std::distance(s.begin(), s.end())), 0u);
+		EXPECT_EQ(size_t(std::distance(s.rbegin(), s.rend())), 0u);
+	}
+
+	{
+		std::vector<size_t> v;
+		fea::span<const size_t> s(v.begin(), v.end());
+		EXPECT_TRUE(s.empty());
+		EXPECT_EQ(s.size(), 0u);
+		EXPECT_EQ(s.data(), nullptr);
+	}
 }
 } // namespace

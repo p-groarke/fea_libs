@@ -229,6 +229,22 @@ template <class T>
 FEA_INLINE_VAR constexpr bool is_pair_v = is_pair<T>::value;
 
 
+template <class T>
+using iterator_category_t = typename std::iterator_traits<T>::iterator_category;
+
+template <class T, class = void>
+struct is_iterator {
+	static constexpr bool value = false;
+};
+template <class T>
+struct is_iterator<T, detail::void_t<iterator_category_t<T>>> {
+	static constexpr bool value = true;
+};
+
+template <class T>
+FEA_INLINE_VAR constexpr bool is_iterator_v = is_iterator<T>::value;
+
+
 /**
  * Useful is_detected checkers
  */
@@ -268,6 +284,7 @@ FEA_INLINE_VAR constexpr bool is_tuple_like_v = fea::is_detected_v<has_get, T>;
 template <class T>
 FEA_INLINE_VAR constexpr bool is_contiguous_v
 		= fea::is_detected_v<has_data, T>&& fea::is_detected_v<has_size, T>;
+
 
 /**
  * First and last types in a parameter pack.

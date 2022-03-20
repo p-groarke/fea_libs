@@ -32,7 +32,7 @@ TEST(fsm, example) {
 	// Create your states.
 	// Walk
 	{
-		auto walk_state = builder.make_state();
+		auto walk_state = machine.make_state();
 
 		// Add allowed transitions.
 		walk_state.add_transition<transition::do_run, state::run>();

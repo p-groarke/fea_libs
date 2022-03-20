@@ -31,8 +31,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
-#include <fea/utils/throw.hpp>
+#include "fea/meta/traits.hpp"
+#include "fea/utils/throw.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 
@@ -43,6 +45,26 @@ stack_vector is a pre-allocated array, on which you can "push back" elements.
 namespace fea {
 template <class T, size_t StackSize>
 struct stack_vector {
+	/**
+	 * Aliases
+	 */
+	using value_type = T;
+	using size_type = std::size_t;
+	using difference_type = std::ptrdiff_t;
+	using reference = value_type&;
+	using const_reference = const value_type&;
+	using pointer = value_type*;
+	using const_pointer = const value_type*;
+	using iterator = typename std::array<T, StackSize>::iterator;
+	using const_iterator = typename std::array<T, StackSize>::const_iterator;
+	using reverse_iterator =
+			typename std::array<T, StackSize>::reverse_iterator;
+	using const_reverse_iterator =
+			typename std::array<T, StackSize>::const_reverse_iterator;
+
+	/**
+	 * Ctors
+	 */
 	constexpr stack_vector() = default;
 
 	template <size_t InSize>
@@ -61,28 +83,42 @@ struct stack_vector {
 		std::move(arr.begin(), arr.end(), _data.begin());
 	}
 
-	constexpr stack_vector(size_t count, const T& value)
+	constexpr stack_vector(size_type count, const_reference value)
 			: _size(count) {
-		assert(_size < StackSize);
+		assert(_size <= StackSize);
 
 		std::fill_n(_data.begin(), _size, value);
 	}
 
-	constexpr stack_vector(size_t count)
-			: stack_vector(count, T{}) {
+	constexpr stack_vector(size_type count)
+			: stack_vector(count, value_type{}) {
+	}
+
+	constexpr stack_vector(std::initializer_list<value_type> init)
+			: _size(init.size()) {
+		assert(init.size() <= StackSize);
+		std::copy(init.begin(), init.end(), _data.begin());
+	}
+
+	template <class InputIt,
+			class = std::enable_if_t<fea::is_iterator<InputIt>::value>>
+	constexpr stack_vector(InputIt start, InputIt stop)
+			: _size(std::distance(start, stop)) {
+		assert(size_t(std::distance(start, stop)) <= StackSize);
+		std::copy(start, stop, _data.begin());
 	}
 
 	/**
 	 * Element access
 	 */
-	const T& at(size_t i) const {
+	const_reference at(size_type i) const {
 		if (i >= _size) {
 			fea::maybe_throw(
 					__FUNCTION__, __LINE__, "accessing out-of-range element");
 		}
 		return _data.at(i);
 	}
-	T& at(size_t i) {
+	reference at(size_type i) {
 		if (i >= _size) {
 			fea::maybe_throw(
 					__FUNCTION__, __LINE__, "accessing out-of-range element");
@@ -90,38 +126,38 @@ struct stack_vector {
 		return _data.at(i);
 	}
 
-	const T& operator[](size_t i) const noexcept {
+	const_reference operator[](size_type i) const noexcept {
 		assert(i < _size);
 		return _data[i];
 	}
-	T& operator[](size_t i) noexcept {
+	reference operator[](size_type i) noexcept {
 		assert(i < _size);
 		return _data[i];
 	}
 
-	const T& front() const noexcept {
+	const_reference front() const noexcept {
 		assert(_size > 0);
 		return _data.front();
 	}
-	T& front() noexcept {
+	reference front() noexcept {
 		assert(_size > 0);
 		return _data.front();
 	}
 
-	const T& back() const noexcept {
+	const_reference back() const noexcept {
 		assert(_size > 0);
 		return _data[_size - 1];
 	}
-	T& back() noexcept {
+	reference back() noexcept {
 		assert(_size > 0);
 		return _data[_size - 1];
 	}
 
-	const T* data() const noexcept {
+	const_pointer data() const noexcept {
 		assert(_size > 0);
 		return _data.data();
 	}
-	T* data() noexcept {
+	pointer data() noexcept {
 		assert(_size > 0);
 		return _data.data();
 	}
@@ -129,45 +165,45 @@ struct stack_vector {
 	/**
 	 * Iterators
 	 */
-	auto begin() const noexcept {
+	const_iterator begin() const noexcept {
 		return _data.begin();
 	}
-	auto begin() noexcept {
+	iterator begin() noexcept {
 		return _data.begin();
 	}
 
-	auto end() const noexcept {
+	const_iterator end() const noexcept {
 		return _data.begin() + _size;
 	}
-	auto end() noexcept {
+	iterator end() noexcept {
 		return _data.begin() + _size;
 	}
 
-	auto rbegin() const noexcept {
+	const_reverse_iterator rbegin() const noexcept {
 		return std::make_reverse_iterator(end());
 	}
-	auto rbegin() noexcept {
+	reverse_iterator rbegin() noexcept {
 		return std::make_reverse_iterator(end());
 	}
 
-	auto rend() const noexcept {
+	const_reverse_iterator rend() const noexcept {
 		return std::make_reverse_iterator(begin());
 	}
-	auto rend() noexcept {
+	reverse_iterator rend() noexcept {
 		return std::make_reverse_iterator(begin());
 	}
 
-	auto cbegin() const noexcept {
+	const_iterator cbegin() const noexcept {
 		return begin();
 	}
-	auto cend() const noexcept {
+	const_iterator cend() const noexcept {
 		return end();
 	}
 
-	auto crbegin() const noexcept {
+	const_reverse_iterator crbegin() const noexcept {
 		return rbegin();
 	}
-	auto crend() const noexcept {
+	const_reverse_iterator crend() const noexcept {
 		return rend();
 	}
 
@@ -178,19 +214,19 @@ struct stack_vector {
 		return _size == 0;
 	}
 
-	size_t size() const noexcept {
+	size_type size() const noexcept {
 		return _size;
 	}
 
-	size_t max_size() const noexcept {
+	size_type max_size() const noexcept {
 		return StackSize;
 	}
 
-	void reserve(size_t) noexcept {
+	void reserve(size_type) noexcept {
 		// Provided to match std::vector api.
 	}
 
-	constexpr size_t capacity() const noexcept {
+	constexpr size_type capacity() const noexcept {
 		return StackSize;
 	}
 
@@ -200,11 +236,70 @@ struct stack_vector {
 
 	/**
 	 * Modifiers
-	 * TODO : insert, erase
+	 * TODO : erase
 	 */
 	void clear() {
 		destroy_range(0, _size, std::is_trivially_destructible<T>{});
 		_size = 0;
+	}
+
+	iterator insert(const_iterator pos, const_reference value) {
+		assert(_size < _data.size());
+		size_type dist = size_type(std::distance(cbegin(), pos));
+		auto start_it = begin() + dist;
+		std::copy_backward(start_it, end(), end() + 1);
+		*start_it = value;
+		++_size;
+		return start_it;
+	}
+
+	iterator insert(const_iterator pos, value_type&& value) {
+		assert(_size < _data.size());
+		size_type dist = size_type(std::distance(cbegin(), pos));
+		auto start_it = begin() + dist;
+		std::move_backward(start_it, end(), end() + 1);
+		*start_it = std::move(value);
+		++_size;
+		return start_it;
+	}
+
+	iterator insert(
+			const_iterator pos, size_type count, const_reference value) {
+		assert(_size <= _data.size() - count);
+		size_type dist = size_type(std::distance(cbegin(), pos));
+		if (count == 0) {
+			return begin() + dist;
+		}
+
+		auto start_it = begin() + dist;
+		std::copy_backward(start_it, end(), end() + count);
+		std::fill_n(start_it, count, value);
+		_size += count;
+		return start_it;
+	}
+
+	template <class InputIt,
+			class = std::enable_if_t<std::is_base_of<std::input_iterator_tag,
+					typename std::iterator_traits<InputIt>::iterator_category>::
+							value>>
+	iterator insert(const_iterator pos, InputIt first, InputIt last) {
+		size_type count = size_type(std::distance(first, last));
+		size_type dist = size_type(std::distance(cbegin(), pos));
+		if (count == 0) {
+			return begin() + dist;
+		}
+
+		assert(_size <= _data.size() - count);
+		auto start_it = begin() + dist;
+		std::copy_backward(start_it, end(), end() + count);
+		std::copy(first, last, start_it);
+		_size += count;
+		return start_it;
+	}
+
+	iterator insert(
+			const_iterator pos, std::initializer_list<value_type> ilist) {
+		return insert(pos, ilist.begin(), ilist.end());
 	}
 
 	void push_back(const T& value) {
@@ -222,11 +317,11 @@ struct stack_vector {
 		--_size;
 	}
 
-	void resize(size_t new_size) {
+	void resize(size_type new_size) {
 		resize(new_size, T{});
 	}
 
-	void resize(size_t new_size, const T& value) {
+	void resize(size_type new_size, const_reference value) {
 		assert(new_size < StackSize);
 		assert(new_size > 0);
 
@@ -247,16 +342,41 @@ struct stack_vector {
 		swap(_size, other._size);
 	}
 
+	//	compares the values in the unordered_map
+	template <class K, size_t S>
+	friend constexpr bool operator==(
+			const stack_vector<K, S>& lhs, const stack_vector<K, S>& rhs);
+
+	template <class K, size_t S>
+	friend constexpr bool operator!=(
+			const stack_vector<K, S>& lhs, const stack_vector<K, S>& rhs);
+
 private:
-	void destroy_range(size_t first, size_t last, std::false_type) const {
+	void destroy_range(size_type first, size_type last, std::false_type) const {
 		for (size_t i = first; i < last; ++i) {
 			_data[i].~T();
 		}
 	}
-	void destroy_range(size_t, size_t, std::true_type) const {
+	void destroy_range(size_type, size_type, std::true_type) const {
 	}
 
-	std::array<T, StackSize> _data; // uninitialized
-	size_t _size = 0;
+	std::array<value_type, StackSize> _data; // uninitialized
+	size_type _size = 0;
 };
+
+template <class K, size_t S>
+constexpr bool operator==(
+		const stack_vector<K, S>& lhs, const stack_vector<K, S>& rhs) {
+	if (lhs.size() != rhs.size()) {
+		return false;
+	}
+
+	return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+}
+
+template <class K, size_t S>
+constexpr bool operator!=(
+		const stack_vector<K, S>& lhs, const stack_vector<K, S>& rhs) {
+	return !(rhs == lhs);
+}
 } // namespace fea

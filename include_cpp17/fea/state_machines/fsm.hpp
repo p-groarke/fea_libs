@@ -117,7 +117,7 @@ struct fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 	using fsm_func_t = std::function<FuncRet(FuncArgs..., fsm_t&)>;
 
 	fsm_state() {
-		std::fill(_transitions.begin(), _transitions.end(), StateEnum::count);
+		_transitions.fill(StateEnum::count);
 	}
 
 	// Add your event implementation.
@@ -270,6 +270,12 @@ template <class TransitionEnum, class StateEnum, class FuncRet,
 struct fsm<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 	using state_t = fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)>;
 	using fsm_func_t = typename state_t::fsm_func_t;
+
+	// Helper so you don't have to type all the template parameters.
+	// Returns a new state to be filled in and later re-added through add_state.
+	static constexpr auto make_state() {
+		return fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)>{};
+	}
 
 	// Here, we use move semantics not for performance (it doesn't do anything).
 	// It is to make it clear to the user he cannot modify the state anymore.
@@ -437,6 +443,8 @@ private:
 template <class, class, class>
 struct fsm_builder;
 
+// The fsm_builder is a helper class that returns the appropriately templated
+// machine and states.
 template <class TransitionEnum, class StateEnum, class FuncRet,
 		class... FuncArgs>
 struct fsm_builder<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {

@@ -1,5 +1,6 @@
 ﻿#include <fea/containers/stack_vector.hpp>
 #include <gtest/gtest.h>
+#include <numeric>
 
 namespace fea {
 TEST(stack_vector, basics) {
@@ -107,6 +108,12 @@ TEST(stack_vector, ctors) {
 	EXPECT_EQ(v1[0], 42);
 	EXPECT_EQ(v1[1], 42);
 
+	const fea::stack_vector<int, 5> v2{ 0, 1, 2 };
+	EXPECT_EQ(v2.size(), 3u);
+	EXPECT_EQ(v2[0], 0);
+	EXPECT_EQ(v2[1], 1);
+	EXPECT_EQ(v2[2], 2);
+
 	//{
 	//	auto v2(v1);
 	//	EXPECT_EQ(v2.size(), 2);
@@ -134,5 +141,79 @@ TEST(stack_vector, ctors) {
 	//	EXPECT_EQ(v2[0], 42);
 	//	EXPECT_EQ(v2[1], 42);
 	//}
+}
+
+TEST(stack_vector, insert) {
+	fea::stack_vector<int, 5> v(5);
+
+	{
+		const fea::stack_vector<int, 5> answer{ 0, 1, 2, 3, 4 };
+		std::iota(v.begin(), v.end(), 0);
+		EXPECT_EQ(v, answer);
+	}
+
+	v.pop_back();
+	EXPECT_EQ(v.size(), 4u);
+
+	auto it = v.insert(v.begin() + 1, 42);
+	EXPECT_EQ(v.size(), 5u);
+	EXPECT_EQ(*it, 42);
+	EXPECT_EQ(std::distance(v.begin(), it), 1);
+	{
+		const fea::stack_vector<int, 5> answer{ 0, 42, 1, 2, 3 };
+		EXPECT_EQ(v, answer);
+	}
+
+	std::iota(v.begin(), v.end(), 0);
+	v.pop_back();
+	v.pop_back();
+	v.pop_back();
+	EXPECT_EQ(v.size(), 2u);
+	it = v.insert(v.begin() + 1, 3, 42);
+	EXPECT_EQ(v.size(), 5u);
+	EXPECT_EQ(*it, 42);
+	EXPECT_EQ(std::distance(v.begin(), it), 1);
+	{
+		const fea::stack_vector<int, 5> answer{ 0, 42, 42, 42, 1 };
+		EXPECT_EQ(v, answer);
+	}
+
+	std::vector<int> cpy{ 42, -42, 42 };
+	std::iota(v.begin(), v.end(), 0);
+	v.resize(2);
+	EXPECT_EQ(v.size(), 2u);
+	it = v.insert(v.begin() + 1, cpy.begin(), cpy.end());
+	EXPECT_EQ(v.size(), 5u);
+	EXPECT_EQ(*it, 42);
+	EXPECT_EQ(std::distance(v.begin(), it), 1);
+	{
+		const fea::stack_vector<int, 5> answer{ 0, 42, -42, 42, 1 };
+		EXPECT_EQ(v, answer);
+	}
+
+	std::iota(v.begin(), v.end(), 0);
+	v.resize(2);
+	EXPECT_EQ(v.size(), 2u);
+	it = v.insert(v.begin() + 1, { 42, -42, 101 });
+	EXPECT_EQ(v.size(), 5u);
+	EXPECT_EQ(*it, 42);
+	EXPECT_EQ(std::distance(v.begin(), it), 1);
+	{
+		const fea::stack_vector<int, 5> answer{ 0, 42, -42, 101, 1 };
+		EXPECT_EQ(v, answer);
+	}
+
+	v.clear();
+	EXPECT_EQ(v.size(), 0u);
+	EXPECT_TRUE(v.empty());
+
+	it = v.insert(v.end(), { 0, 1, 2, 3, 4 });
+	EXPECT_EQ(v.size(), 5u);
+	EXPECT_EQ(*it, 0);
+	EXPECT_EQ(std::distance(v.begin(), it), 0);
+	{
+		const fea::stack_vector<int, 5> answer{ 0, 1, 2, 3, 4 };
+		EXPECT_EQ(v, answer);
+	}
 }
 } // namespace fea

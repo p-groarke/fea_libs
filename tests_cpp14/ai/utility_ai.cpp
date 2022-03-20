@@ -15,34 +15,70 @@ TEST(utility_ai, basics) {
 		count, // count is mandatory
 	};
 
+	enum class upred {
+		always_true,
+		always_false,
+		count, // count is mandatory
+	};
+
 	// Create a utility ai with :
 	// - utility functions ufunc
+	// - predicates upred
 	// - action signature void()
 	// - predicate signature float()
-	fea::utility_ai<ufunc, void(), float()> ai;
-
-	// Create the function.
-	ai.create_function<ufunc::pass>(
-			[&]() { test_passed = true; }, []() { return 1.f; });
+	fea::utility_ai<ufunc, upred, float(), void()> ai;
 
 	// Add predicates.
-	ai.add_predicate<ufunc::pass>([]() { return 1.f; });
-	ai.add_predicates<ufunc::pass>([]() { return 1.f; }, []() { return 1.f; },
-			[]() { return 1.f; }, []() { return 1.f; });
+	ai.add_predicate<upred::always_true>([]() { return 1.f; });
+	ai.add_predicate<upred::always_false>([]() { return 0.f; });
 
-	// Should throw or assert, missing 1 utility function.
+	// Create a function and set it up.
+	{
+		auto pass_func = ai.make_function();
+		EXPECT_EQ(pass_func.size(), 0u);
+		EXPECT_TRUE(pass_func.predicates().empty());
+		EXPECT_FALSE(pass_func.has_action());
+
+		pass_func.add_predicate(upred::always_true);
+		EXPECT_EQ(pass_func.size(), 1u);
+		EXPECT_FALSE(pass_func.predicates().empty());
+		EXPECT_FALSE(pass_func.has_action());
+
+		// for testing
+		pass_func.add_predicate(upred::always_false);
+		EXPECT_EQ(pass_func.size(), 2u);
+		EXPECT_EQ(pass_func.predicates()[0], upred::always_true);
+		EXPECT_EQ(pass_func.predicates()[1], upred::always_false);
+
 #if FEA_DEBUG || defined(FEA_NOTHROW)
-	EXPECT_DEATH(ai.validate(), "");
-	EXPECT_DEATH(ai.trigger(), "");
-	EXPECT_DEATH(ai.trigger_mt(), "");
+		EXPECT_DEATH(pass_func.add_predicate(upred::always_true), "");
 #else
-	EXPECT_THROW(ai.validate(), std::runtime_error);
-	EXPECT_THROW(ai.trigger(), std::runtime_error);
-	EXPECT_THROW(ai.trigger_mt(), std::runtime_error);
+		EXPECT_THROW(pass_func.add_predicate(upred::always_true),
+				std::invalid_argument);
 #endif
 
-	ai.create_function<ufunc::fail>(
-			[&]() { test_passed = false; }, []() { return 0.f; });
+
+		pass_func.add_action([&]() { test_passed = true; });
+		EXPECT_EQ(pass_func.size(), 2u);
+		EXPECT_FALSE(pass_func.predicates().empty());
+		EXPECT_TRUE(pass_func.has_action());
+
+		ai.add_function<ufunc::pass>(std::move(pass_func));
+	}
+
+	// Should throw or assert, missing 1 utility function.
+#if FEA_DEBUG
+	EXPECT_DEATH(ai.trigger(), "");
+	EXPECT_DEATH(ai.trigger_mt(), "");
+#endif
+
+	{
+		auto fail_func = ai.make_function();
+		fail_func.add_predicate(upred::always_false);
+		fail_func.add_action([&]() { test_passed = false; });
+
+		ai.add_function<ufunc::fail>(std::move(fail_func));
+	}
 
 	ai.trigger();
 	EXPECT_TRUE(test_passed);
@@ -52,6 +88,18 @@ TEST(utility_ai, basics) {
 }
 
 struct cat {
+	enum class util_func {
+		sleep,
+		idle,
+		count,
+	};
+
+	enum class pred {
+		wants_sleep,
+		wants_idle,
+		count,
+	};
+
 	cat(const char* name_, float sleepy_head_)
 			: name(name_)
 			, sleepy_head(sleepy_head_) {
@@ -59,11 +107,25 @@ struct cat {
 		// Initialize utility_ai.
 		// Creates the 2 utility functions with 1 predicate and an action each.
 		// Uses member functions because pretty.
-		ai.create_function<util_func::sleep>(
-				&cat::do_sleep, &cat::wants_sleep, &cat::wants_sleep /*etc*/);
-		ai.add_predicate<util_func::sleep>(&cat::wants_sleep);
 
-		ai.create_function<util_func::idle>(&cat::do_idle, &cat::wants_idle);
+		ai.add_predicate<pred::wants_sleep>(&cat::wants_sleep);
+		ai.add_predicate<pred::wants_idle>(&cat::wants_idle);
+
+		// Sleep
+		{
+			auto sleep_func = ai.make_function();
+			sleep_func.add_predicate(pred::wants_sleep);
+			sleep_func.add_action(&cat::do_sleep);
+			ai.add_function<util_func::sleep>(std::move(sleep_func));
+		}
+
+		// Idle
+		{
+			auto idle_func = ai.make_function();
+			idle_func.add_predicate(pred::wants_idle);
+			idle_func.add_action(&cat::do_idle);
+			ai.add_function<util_func::idle>(std::move(idle_func));
+		}
 	}
 
 	void update(fea::dseconds dt) {
@@ -125,13 +187,7 @@ struct cat {
 	size_t id = cat_id_counter++;
 
 	// Utility AI
-	enum class util_func {
-		sleep,
-		idle,
-		count,
-	};
-
-	fea::utility_ai<util_func, void(cat*), float(cat*)> ai;
+	fea::utility_ai<util_func, pred, float(cat*), void(cat*)> ai;
 };
 
 size_t cat::cat_id_counter = 0;
