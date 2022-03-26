@@ -50,12 +50,24 @@ TEST(string_literal, basics) {
 		static_assert(t.lit.size() == 3, "string_literal.cpp : test failed");
 		static_assert(t.lit.sv() == t2, "string_literal.cpp : test failed");
 
+#if FEA_WINDOWS
+		// wchar_t 2 bytes on windows
 #if FEA_64BIT
 		static_assert(t.lit.hash() == 11903599094407814618u,
 				"string_literal.cpp : test failed");
 #else
 		static_assert(
 				t.lit.hash() == 879236538u, "string_literal.cpp : test failed");
+#endif
+#else
+		// wchar_t 4 bytes on gcc/clang
+#if FEA_64BIT
+		static_assert(t.lit.hash() == 11576784882793927306u,
+				"string_literal.cpp : test failed");
+#else
+		static_assert(t.lit.hash() == 1194068202u,
+				"string_literal.cpp : test failed");
+#endif
 #endif
 	}
 

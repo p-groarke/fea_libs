@@ -32,7 +32,6 @@
  **/
 
 #pragma once
-#include "fea/containers/span.hpp"
 #include "fea/utils/platform.hpp"
 
 #include <bitset>
