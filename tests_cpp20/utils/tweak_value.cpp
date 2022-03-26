@@ -36,13 +36,19 @@ struct restore_file {
 // restore_file file_restorer10000;
 
 float get_tweak_val() {
-	[[maybe_unused]] float u = FEA_TWEAK(0.f);
-	[[maybe_unused]] float u2 = FEA_TWEAK(1.f);
+	float u = FEA_TWEAK(0.f);
+	float u2 = FEA_TWEAK(1.f);
+	EXPECT_EQ(u, 0.f);
+	EXPECT_EQ(u2, 1.f);
+
 	return FEA_TWEAK(42.f);
 }
 int get_tweak_val2() {
-	[[maybe_unused]] int u = FEA_TWEAK(0);
-	[[maybe_unused]] int u2 = FEA_TWEAK(1);
+	int u = FEA_TWEAK(0);
+	int u2 = FEA_TWEAK(1);
+	EXPECT_EQ(u, 0);
+	EXPECT_EQ(u2, 1);
+
 	return FEA_TWEAK(42);
 }
 

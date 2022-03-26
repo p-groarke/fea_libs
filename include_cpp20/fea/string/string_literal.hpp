@@ -47,8 +47,8 @@ namespace detail {
 inline constexpr size_t fnv_offset_basis = 2166136261u;
 inline constexpr size_t fnv_prime = 16777619u;
 #else
-inline constexpr size_t fnv_offset_basis = 14695981039346656037;
-inline constexpr size_t fnv_prime = 1099511628211;
+inline constexpr size_t fnv_offset_basis = 14695981039346656037u;
+inline constexpr size_t fnv_prime = 1099511628211u;
 #endif
 } // namespace detail
 
