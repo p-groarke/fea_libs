@@ -90,11 +90,10 @@ inline void error_exit(
 	std::exit(EXIT_FAILURE);
 }
 
-// Prints error message and asserts.
+// Prints error message.
 // Provide __FUNCTION__, __LINE__, "your message".
 inline void error_message(
 		const char* func_name, size_t line, const std::string& message) {
 	fprintf(stderr, "%s(%zu) : %s\n", func_name, line, message.c_str());
-	assert(false);
 }
 } // namespace fea

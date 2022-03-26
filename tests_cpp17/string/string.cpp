@@ -417,6 +417,35 @@ TEST(string, is_number) {
 			invalid_search);
 }
 
+TEST(string, line_funcs) {
+	gen_tests(lines, "0\n\n1\n2\n", "0\r\n\r\n1\r\n2\r\n");
+	gen_tests(answers1, "1", "1\r");
+	gen_tests(answers2, "", "1");
+
+	constexpr size_t s = std::tuple_size_v<decltype(lines)>;
+	fea::static_for<s>([&](auto const_i) {
+		constexpr size_t i = const_i;
+		const auto& test_arr = std::get<i>(lines);
+		const auto& ans1_arr = std::get<i>(answers1);
+		const auto& ans2_arr = std::get<i>(answers2);
+
+		for (size_t j = 0; j < test_arr.size(); ++j) {
+			{
+				auto str_v = fea::get_line(test_arr[j], 2);
+				auto ans1 = ans1_arr[j];
+				EXPECT_EQ(str_v, ans1);
+			}
+
+			{
+				using CharT = std::decay_t<decltype(test_arr[j][0])>;
+				auto str_v = fea::get_line(test_arr[j], 2, FEA_LIT("\r\n"));
+				auto ans = ans2_arr[j];
+				EXPECT_EQ(str_v, ans);
+			}
+		}
+	});
+}
+
 
 #if FEA_CPP20
 struct str {

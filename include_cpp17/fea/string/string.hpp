@@ -240,6 +240,44 @@ void for_each_line(const std::basic_string<CharT>& str, Func&& func) {
 	}
 }
 
+// Get a specific line in string, using line_endings search.
+// Returns empty string_view on failure.
+template <class Str, class Str2>
+auto get_line(const Str& str, size_t line_num, const Str2& line_endings) {
+	detail::str_view<Str> str_v{ str };
+	using CharT = typename detail::str_view<Str>::char_type;
+	detail::str_view<Str2> search_v{ line_endings };
+
+	size_t line = 0;
+	size_t prev = 0;
+	size_t pos;
+
+	while ((pos = str_v.find(search_v, prev)) != str_v.npos) {
+		if (line == line_num) {
+			return std::basic_string_view<CharT>{ str_v.begin() + prev,
+				str_v.begin() + pos };
+		}
+
+		prev = pos + search_v.size();
+		++line;
+	}
+
+	return std::basic_string_view<CharT>{};
+}
+
+// Get a specific line in string, uses \n for search.
+// Returns empty string_view on failure.
+template <class Str>
+auto get_line(const Str& str, size_t line_num) {
+	detail::str_view<Str> str_v{ str };
+
+	using CharT = typename detail::str_view<Str>::char_type;
+	const CharT* endings = FEA_LIT("\n");
+
+	return get_line(str, line_num, endings);
+}
+
+
 // Replaces conflicting html characters with entities.
 template <class CharT>
 [[nodiscard]] std::basic_string<CharT> html_escape(
