@@ -43,7 +43,6 @@
 #include <charconv>
 #include <filesystem>
 #include <fstream>
-#include <source_location>
 
 /*
 Tweak Values are constant values which can be updated and reloaded at runtime.
@@ -58,28 +57,29 @@ The first I heard of this was from Joel David.
 #if FEA_RELEASE
 #define FEA_TWEAK(val) val
 #else
-// Must use __FILE__ macro to get full filepath, std::source_location
-// only supports file_name.
+// Must use __FILE__ macro to get full filepath.
+// std::source_location has issues on gcc.
 #define FEA_TWEAK(val) \
-	fea::detail::tweak_value<(fea::detail::src_stamp{ \
-			__FILE__, std::source_location::current() })>(val)
+	fea::detail::tweak_value<( \
+			fea::detail::src_stamp{ __FILE__, __LINE__, __COUNTER__ })>(val)
 #endif
 
 namespace fea {
 namespace detail {
 template <size_t N>
 struct src_stamp {
-	consteval src_stamp(const char (&path)[N], std::source_location loc)
+	consteval src_stamp(
+			const char (&path)[N], uint32_t _line, uint32_t _counter)
 			: file_path(path)
 			, file_hash(file_path.hash())
-			, line(loc.line())
-			, column(loc.column()) {
+			, line(_line)
+			, counter(_counter) {
 	}
 
 	fea::string_literal<N> file_path;
 	size_t file_hash = 0;
 	uint32_t line = 0;
-	uint32_t column = 0; // __COUNTER__ replacement
+	uint32_t counter = 0;
 };
 
 struct tweak_file {
