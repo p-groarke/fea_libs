@@ -99,6 +99,8 @@ TEST(tweak_value, basics) {
 
 
 TEST(tweak_value, demo) {
+	size_t loop_cnt = 0;
+
 	float tval = 0.f;
 	while (tval != 69.f) {
 
@@ -107,6 +109,12 @@ TEST(tweak_value, demo) {
 
 		fea::tweak_update();
 		std::this_thread::sleep_for(1s);
+
+		// Just in case.
+		++loop_cnt;
+		if (loop_cnt == 100) {
+			break;
+		}
 	}
 }
 

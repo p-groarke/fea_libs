@@ -254,8 +254,9 @@ auto get_line(const Str& str, size_t line_num, const Str2& line_endings) {
 
 	while ((pos = str_v.find(search_v, prev)) != str_v.npos) {
 		if (line == line_num) {
-			return std::basic_string_view<CharT>{ str_v.begin() + prev,
-				str_v.begin() + pos };
+			assert(prev < pos);
+			return std::basic_string_view<CharT>(
+					str_v.data() + prev, pos - prev);
 		}
 
 		prev = pos + search_v.size();

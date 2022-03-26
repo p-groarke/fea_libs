@@ -150,11 +150,9 @@ T tweak_value(T&& val) {
 		return stored_value;
 	}
 
-	std::string_view my_val{ my_line.begin() + start, my_line.begin() + end };
 	T result{};
-
 	auto [ptr, ec]{ std::from_chars(
-			my_val.data(), my_val.data() + my_val.size(), result) };
+			my_line.data() + start, my_line.data() + end, result) };
 
 	if (ec == std::errc{}) {
 		stored_value = result;
