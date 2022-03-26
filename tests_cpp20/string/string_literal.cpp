@@ -36,11 +36,11 @@ TEST(string_literal, basics) {
 		static_assert(t.lit.sv() == t2, "string_literal.cpp : test failed");
 
 #if FEA_64BIT
-		static_assert(t.lit.hash() == 20863340834690462,
+		static_assert(t.lit.hash() == 20863340834690462u,
 				"string_literal.cpp : test failed");
 #else
-		static_assert(
-				t.lit.hash() == 1640245246, "string_literal.cpp : test failed");
+		static_assert(t.lit.hash() == 1640245246u,
+				"string_literal.cpp : test failed");
 #endif
 	}
 
@@ -51,11 +51,11 @@ TEST(string_literal, basics) {
 		static_assert(t.lit.sv() == t2, "string_literal.cpp : test failed");
 
 #if FEA_64BIT
-		static_assert(t.lit.hash() == 11903599094407814618,
+		static_assert(t.lit.hash() == 11903599094407814618u,
 				"string_literal.cpp : test failed");
 #else
 		static_assert(
-				t.lit.hash() == 879236538, "string_literal.cpp : test failed");
+				t.lit.hash() == 879236538u, "string_literal.cpp : test failed");
 #endif
 	}
 
@@ -66,11 +66,11 @@ TEST(string_literal, basics) {
 		static_assert(t.lit.sv() == t2, "string_literal.cpp : test failed");
 
 #if FEA_64BIT
-		static_assert(t.lit.hash() == 20863340834690462,
+		static_assert(t.lit.hash() == 20863340834690462u,
 				"string_literal.cpp : test failed");
 #else
-		static_assert(
-				t.lit.hash() == 1640245246, "string_literal.cpp : test failed");
+		static_assert(t.lit.hash() == 1640245246u,
+				"string_literal.cpp : test failed");
 #endif
 	}
 
@@ -81,11 +81,11 @@ TEST(string_literal, basics) {
 		static_assert(t.lit.sv() == t2, "string_literal.cpp : test failed");
 
 #if FEA_64BIT
-		static_assert(t.lit.hash() == 11903599094407814618,
+		static_assert(t.lit.hash() == 11903599094407814618u,
 				"string_literal.cpp : test failed");
 #else
 		static_assert(
-				t.lit.hash() == 879236538, "string_literal.cpp : test failed");
+				t.lit.hash() == 879236538u, "string_literal.cpp : test failed");
 #endif
 	}
 
@@ -96,11 +96,11 @@ TEST(string_literal, basics) {
 		static_assert(t.lit.sv() == t2, "string_literal.cpp : test failed");
 
 #if FEA_64BIT
-		static_assert(t.lit.hash() == 11576784882793927306,
+		static_assert(t.lit.hash() == 11576784882793927306u,
 				"string_literal.cpp : test failed");
 #else
-		static_assert(
-				t.lit.hash() == 1194068202, "string_literal.cpp : test failed");
+		static_assert(t.lit.hash() == 1194068202u,
+				"string_literal.cpp : test failed");
 #endif
 	}
 }
