@@ -46,9 +46,10 @@
 #include <source_location>
 
 /*
-Tweak Values are values which can be updated and reloaded during runtime.
+Tweak Values are constant values which can be updated and reloaded at runtime.
 
-When in debug, the macro checks if the current source file has been modified.
+In release, the macro simply pastes the value.
+In debug, the macro checks if the current source file has been modified.
 If so, it parses the source file and updates the value.
 
 The first I heard of this was from Joel David.
@@ -59,28 +60,31 @@ The first I heard of this was from Joel David.
 #else
 // Must use __FILE__ macro to get full filepath, std::source_location
 // only supports file_name.
-#define FEA_TWEAK(val) fea::detail::tweak_value<__FILE__>(val);
+#define FEA_TWEAK(val) \
+	fea::detail::tweak_value<(fea::detail::src_stamp{ \
+			__FILE__, std::source_location::current() })>(val)
 #endif
 
 namespace fea {
 namespace detail {
 template <size_t N>
 struct src_stamp {
-	consteval src_stamp(const char (&path)[N],
-			std::source_location loc = std::source_location::current())
+	consteval src_stamp(const char (&path)[N], std::source_location loc)
 			: file_path(path)
 			, file_hash(file_path.hash())
-			, line(loc.line()) {
+			, line(loc.line())
+			, column(loc.column()) {
 	}
 
 	fea::string_literal<N> file_path;
 	size_t file_hash = 0;
 	uint32_t line = 0;
-	// uint32_t column = 0; // doesn't result in anything usable
+	uint32_t column = 0; // __COUNTER__ replacement
 };
 
 struct tweak_file {
 	void load_data() {
+		data.clear();
 		std::ifstream ifs{ file_path };
 		if (!ifs.is_open()) {
 			assert(false);
@@ -102,18 +106,21 @@ inline fea::flat_unsigned_hashmap<size_t, tweak_file> tweak_files;
 
 template <src_stamp loc, class T>
 T tweak_value(T&& val) {
+	static bool first_call = true;
 	static T stored_value;
 
-	if (!tweak_files.contains(loc.file_hash)) {
-		// First call, just store and init data.
-		tweak_file f;
-		f.needs_update = false;
-		f.file_path = loc.file_path.sv();
-		f.last_modified = std::filesystem::last_write_time(f.file_path);
-		f.load_data();
-		tweak_files.insert(loc.file_hash, std::move(f));
-
+	if (first_call) {
+		first_call = false;
 		stored_value = std::forward<T>(val);
+		if (!tweak_files.contains(loc.file_hash)) {
+			// First call, just store and init data.
+			tweak_file f;
+			f.needs_update = false;
+			f.file_path = loc.file_path.sv();
+			f.last_modified = std::filesystem::last_write_time(f.file_path);
+			f.load_data();
+			tweak_files.insert(loc.file_hash, std::move(f));
+		}
 		return stored_value;
 	}
 
@@ -144,22 +151,19 @@ T tweak_value(T&& val) {
 	}
 
 	std::string_view my_val{ my_line.begin() + start, my_line.begin() + end };
+	T result{};
 
-	{
-		T result{};
-		auto [ptr, ec]{ std::from_chars(
-				my_val.data(), my_val.data() + my_val.size(), result) };
+	auto [ptr, ec]{ std::from_chars(
+			my_val.data(), my_val.data() + my_val.size(), result) };
 
-		if (ec == std::errc{}) {
-			stored_value = result;
-		} else {
-			fea::error_message(__FUNCTION__, __LINE__,
-					"Failed to parse tweak value, returning previously stored "
-					"value.");
-		}
-
-		printf("%.*s\n", int(my_val.size()), my_val.data());
+	if (ec == std::errc{}) {
+		stored_value = result;
+	} else {
+		fea::error_message(__FUNCTION__, __LINE__,
+				"Failed to parse tweak value, returning previously stored "
+				"value.");
 	}
+
 	return stored_value;
 }
 } // namespace detail
