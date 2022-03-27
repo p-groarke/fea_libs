@@ -43,6 +43,8 @@
 #include <charconv>
 #include <filesystem>
 #include <fstream>
+// std::source_location has issues on gcc.
+//#include <source_location>
 
 /*
 Tweak Values are constant values which can be updated and reloaded at runtime.
@@ -58,7 +60,6 @@ The first I heard of this was from Joel David.
 #define FEA_TWEAK(val) val
 #else
 // Must use __FILE__ macro to get full filepath.
-// std::source_location has issues on gcc.
 #define FEA_TWEAK(val) \
 	fea::detail::tweak_value<( \
 			fea::detail::src_stamp{ __FILE__, __LINE__, __COUNTER__ })>(val)
@@ -110,9 +111,11 @@ T tweak_value(T&& val) {
 	static T stored_value;
 
 	if (first_call) {
+		printf("firstcall\n");
 		first_call = false;
 		stored_value = std::forward<T>(val);
 		if (!tweak_files.contains(loc.file_hash)) {
+			printf("doesn't contain tweak file\n");
 			// First call, just store and init data.
 			tweak_file f;
 			f.needs_update = false;
@@ -126,6 +129,7 @@ T tweak_value(T&& val) {
 
 	const tweak_file& f = tweak_files.at_unchecked(loc.file_hash);
 	if (!f.needs_update) {
+		printf("doesn't need update\n");
 		return stored_value;
 	}
 
