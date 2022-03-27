@@ -65,8 +65,8 @@ The first I heard of this was from Joel David.
 			__FILE__, std::source_location::current() })>(val)
 #endif
 
-//fea::detail::tweak_value<( \
-	//		fea::detail::src_stamp{ __FILE__, __LINE__, __COUNTER__ })>(val)
+// fea::detail::tweak_value<(
+//		fea::detail::src_stamp{ __FILE__, __LINE__, __COUNTER__ })>(val)
 
 namespace fea {
 namespace detail {
