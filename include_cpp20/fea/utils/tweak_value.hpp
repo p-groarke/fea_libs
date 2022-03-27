@@ -43,7 +43,6 @@
 #include <charconv>
 #include <filesystem>
 #include <fstream>
-// std::source_location has issues on gcc.
 #include <source_location>
 
 /*
@@ -65,21 +64,10 @@ The first I heard of this was from Joel David.
 			__FILE__, std::source_location::current() })>(val)
 #endif
 
-// fea::detail::tweak_value<(
-//		fea::detail::src_stamp{ __FILE__, __LINE__, __COUNTER__ })>(val)
-
 namespace fea {
 namespace detail {
 template <size_t N>
 struct src_stamp {
-	// consteval src_stamp(
-	//		const char (&path)[N], uint32_t _line, uint32_t _counter)
-	//		: file_path(path)
-	//		, file_hash(file_path.hash())
-	//		, line(_line)
-	//		, counter(_counter) {
-	//}
-
 	consteval src_stamp(const char (&path)[N], std::source_location loc)
 			: file_path(path)
 			, file_hash(file_path.hash())
