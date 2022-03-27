@@ -60,7 +60,7 @@ TEST(tweak_value, basics) {
 	int val2 = get_tweak_val2();
 	EXPECT_EQ(val2, 42);
 
-	std::this_thread::sleep_for(100ms);
+	std::this_thread::sleep_for(200ms);
 	fea::tweak_update();
 
 	val = get_tweak_val();
@@ -75,7 +75,7 @@ TEST(tweak_value, basics) {
 		ofs << "\n";
 	}
 
-	std::this_thread::sleep_for(100ms);
+	std::this_thread::sleep_for(200ms);
 	fea::tweak_update();
 
 	val = get_tweak_val();
@@ -88,7 +88,7 @@ TEST(tweak_value, basics) {
 	fea::replace_all_inplace(file_data, "FEA_TWEAK(42.f)", "FEA_TWEAK(101.f)");
 	save_current_file(file_data);
 
-	std::this_thread::sleep_for(100ms);
+	std::this_thread::sleep_for(200ms);
 	fea::tweak_update();
 
 	val = get_tweak_val();
@@ -99,7 +99,7 @@ TEST(tweak_value, basics) {
 	fea::replace_all_inplace(file_data, "FEA_TWEAK(42)", "FEA_TWEAK(-1)");
 	save_current_file(file_data);
 
-	std::this_thread::sleep_for(100ms);
+	std::this_thread::sleep_for(200ms);
 	fea::tweak_update();
 
 	val = get_tweak_val();
