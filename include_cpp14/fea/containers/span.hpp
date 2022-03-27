@@ -104,71 +104,71 @@ struct span {
 	/**
 	 * Iterators
 	 */
-	iterator begin() const noexcept {
+	constexpr iterator begin() const noexcept {
 		return _data;
 	}
 
-	iterator end() const noexcept {
+	constexpr iterator end() const noexcept {
 		return _data + _size;
 	}
 
-	reverse_iterator rbegin() const noexcept {
+	constexpr reverse_iterator rbegin() const noexcept {
 		return reverse_iterator(end());
 	}
 
-	reverse_iterator rend() const noexcept {
+	constexpr reverse_iterator rend() const noexcept {
 		return reverse_iterator(begin());
 	}
 
 	/**
 	 * Element access
 	 */
-	const_reference front() const {
+	constexpr const_reference front() const {
 		assert(!empty());
 		return _data[0];
 	}
-	reference front() {
+	constexpr reference front() {
 		assert(!empty());
 		return _data[0];
 	}
 
-	const_reference back() const {
+	constexpr const_reference back() const {
 		assert(!empty());
 		return _data[_size - 1];
 	}
-	reference back() {
+	constexpr reference back() {
 		assert(!empty());
 		return _data[_size - 1];
 	}
 
-	const_reference operator[](size_type i) const {
+	constexpr const_reference operator[](size_type i) const {
 		assert(i < _size);
 		return _data[i];
 	}
-	reference operator[](size_type i) {
+	constexpr reference operator[](size_type i) {
 		assert(i < _size);
 		return _data[i];
 	}
 
-	const_pointer data() const noexcept {
+	constexpr const_pointer data() const noexcept {
 		return _data;
 	}
-	pointer data() noexcept {
+	constexpr pointer data() noexcept {
 		return _data;
 	}
 
 	/**
 	 * Observers
 	 */
-	size_type size() const noexcept {
+	constexpr size_type size() const noexcept {
 		return _size;
 	}
 
-	size_type size_bytes() const noexcept {
+	constexpr size_type size_bytes() const noexcept {
 		return _size * sizeof(element_type);
 	}
 
-	bool empty() const noexcept {
+	constexpr bool empty() const noexcept {
 		return _size == 0;
 	}
 
@@ -176,9 +176,9 @@ struct span {
 	 * Operators
 	 */
 	template <class U>
-	friend bool operator==(span<U> lhs, span<U> rhs);
+	friend constexpr bool operator==(span<U> lhs, span<U> rhs);
 	template <class U>
-	friend bool operator!=(span<U> lhs, span<U> rhs);
+	friend constexpr bool operator!=(span<U> lhs, span<U> rhs);
 
 private:
 	pointer _data = nullptr;
@@ -186,7 +186,7 @@ private:
 };
 
 template <class U>
-bool operator==(span<U> lhs, span<U> rhs) {
+constexpr bool operator==(span<U> lhs, span<U> rhs) {
 	if (lhs.size() != rhs.size()) {
 		return false;
 	}
@@ -199,7 +199,7 @@ bool operator==(span<U> lhs, span<U> rhs) {
 }
 
 template <class U>
-bool operator!=(span<U> lhs, span<U> rhs) {
+constexpr bool operator!=(span<U> lhs, span<U> rhs) {
 	return !(lhs == rhs);
 }
 } // namespace imp

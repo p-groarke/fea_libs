@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cassert>
 #include <functional>
 #include <initializer_list>
+#include <limits>
 #include <string_view>
 #include <tuple>
 #include <type_traits>
