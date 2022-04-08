@@ -32,6 +32,7 @@
  **/
 #pragma once
 #include "fea/meta/traits.hpp"
+#include "fea/utils/platform.hpp"
 #include "fea/utils/throw.hpp"
 
 #include <algorithm>
@@ -111,14 +112,14 @@ struct stack_vector {
 	/**
 	 * Element access
 	 */
-	[[nodiscard]] constexpr const_reference at(size_type i) const {
+	FEA_NODISCARD constexpr const_reference at(size_type i) const {
 		if (i >= _size) {
 			fea::maybe_throw(
 					__FUNCTION__, __LINE__, "accessing out-of-range element");
 		}
 		return _data.at(i);
 	}
-	[[nodiscard]] constexpr reference at(size_type i) {
+	FEA_NODISCARD constexpr reference at(size_type i) {
 		if (i >= _size) {
 			fea::maybe_throw(
 					__FUNCTION__, __LINE__, "accessing out-of-range element");
@@ -126,39 +127,39 @@ struct stack_vector {
 		return _data.at(i);
 	}
 
-	[[nodiscard]] constexpr const_reference operator[](
+	FEA_NODISCARD constexpr const_reference operator[](
 			size_type i) const noexcept {
 		assert(i < _size);
 		return _data[i];
 	}
-	[[nodiscard]] constexpr reference operator[](size_type i) noexcept {
+	FEA_NODISCARD constexpr reference operator[](size_type i) noexcept {
 		assert(i < _size);
 		return _data[i];
 	}
 
-	[[nodiscard]] constexpr const_reference front() const noexcept {
+	FEA_NODISCARD constexpr const_reference front() const noexcept {
 		assert(_size > 0);
 		return _data.front();
 	}
-	[[nodiscard]] constexpr reference front() noexcept {
+	FEA_NODISCARD constexpr reference front() noexcept {
 		assert(_size > 0);
 		return _data.front();
 	}
 
-	[[nodiscard]] constexpr const_reference back() const noexcept {
+	FEA_NODISCARD constexpr const_reference back() const noexcept {
 		assert(_size > 0);
 		return _data[_size - 1];
 	}
-	[[nodiscard]] constexpr reference back() noexcept {
+	FEA_NODISCARD constexpr reference back() noexcept {
 		assert(_size > 0);
 		return _data[_size - 1];
 	}
 
-	[[nodiscard]] constexpr const_pointer data() const noexcept {
+	FEA_NODISCARD constexpr const_pointer data() const noexcept {
 		assert(_size > 0);
 		return _data.data();
 	}
-	[[nodiscard]] constexpr pointer data() noexcept {
+	FEA_NODISCARD constexpr pointer data() noexcept {
 		assert(_size > 0);
 		return _data.data();
 	}
@@ -166,60 +167,60 @@ struct stack_vector {
 	/**
 	 * Iterators
 	 */
-	[[nodiscard]] constexpr const_iterator begin() const noexcept {
+	FEA_NODISCARD constexpr const_iterator begin() const noexcept {
 		return _data.begin();
 	}
-	[[nodiscard]] constexpr iterator begin() noexcept {
+	FEA_NODISCARD constexpr iterator begin() noexcept {
 		return _data.begin();
 	}
 
-	[[nodiscard]] constexpr const_iterator end() const noexcept {
+	FEA_NODISCARD constexpr const_iterator end() const noexcept {
 		return _data.begin() + _size;
 	}
-	[[nodiscard]] constexpr iterator end() noexcept {
+	FEA_NODISCARD constexpr iterator end() noexcept {
 		return _data.begin() + _size;
 	}
 
-	[[nodiscard]] constexpr const_reverse_iterator rbegin() const noexcept {
+	FEA_NODISCARD constexpr const_reverse_iterator rbegin() const noexcept {
 		return std::make_reverse_iterator(end());
 	}
-	[[nodiscard]] constexpr reverse_iterator rbegin() noexcept {
+	FEA_NODISCARD constexpr reverse_iterator rbegin() noexcept {
 		return std::make_reverse_iterator(end());
 	}
 
-	[[nodiscard]] constexpr const_reverse_iterator rend() const noexcept {
+	FEA_NODISCARD constexpr const_reverse_iterator rend() const noexcept {
 		return std::make_reverse_iterator(begin());
 	}
-	[[nodiscard]] constexpr reverse_iterator rend() noexcept {
+	FEA_NODISCARD constexpr reverse_iterator rend() noexcept {
 		return std::make_reverse_iterator(begin());
 	}
 
-	[[nodiscard]] constexpr const_iterator cbegin() const noexcept {
+	FEA_NODISCARD constexpr const_iterator cbegin() const noexcept {
 		return begin();
 	}
-	[[nodiscard]] constexpr const_iterator cend() const noexcept {
+	FEA_NODISCARD constexpr const_iterator cend() const noexcept {
 		return end();
 	}
 
-	[[nodiscard]] constexpr const_reverse_iterator crbegin() const noexcept {
+	FEA_NODISCARD constexpr const_reverse_iterator crbegin() const noexcept {
 		return rbegin();
 	}
-	[[nodiscard]] constexpr const_reverse_iterator crend() const noexcept {
+	FEA_NODISCARD constexpr const_reverse_iterator crend() const noexcept {
 		return rend();
 	}
 
 	/**
 	 * Capacity
 	 */
-	[[nodiscard]] constexpr bool empty() const noexcept {
+	FEA_NODISCARD constexpr bool empty() const noexcept {
 		return _size == 0;
 	}
 
-	[[nodiscard]] constexpr size_type size() const noexcept {
+	FEA_NODISCARD constexpr size_type size() const noexcept {
 		return _size;
 	}
 
-	[[nodiscard]] constexpr size_type max_size() const noexcept {
+	FEA_NODISCARD constexpr size_type max_size() const noexcept {
 		return StackSize;
 	}
 
@@ -227,7 +228,7 @@ struct stack_vector {
 		// Provided to match std::vector api.
 	}
 
-	[[nodiscard]] constexpr size_type capacity() const noexcept {
+	FEA_NODISCARD constexpr size_type capacity() const noexcept {
 		return StackSize;
 	}
 
@@ -345,11 +346,11 @@ struct stack_vector {
 
 	//	compares the values in the unordered_map
 	template <class K, size_t S>
-	[[nodiscard]] friend constexpr bool operator==(
+	friend FEA_NODISCARD constexpr bool operator==(
 			const stack_vector<K, S>& lhs, const stack_vector<K, S>& rhs);
 
 	template <class K, size_t S>
-	[[nodiscard]] friend constexpr bool operator!=(
+	friend FEA_NODISCARD constexpr bool operator!=(
 			const stack_vector<K, S>& lhs, const stack_vector<K, S>& rhs);
 
 private:
