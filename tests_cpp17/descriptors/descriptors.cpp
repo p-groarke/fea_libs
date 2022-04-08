@@ -64,14 +64,16 @@ TEST(descriptors, basics) {
 			king_edward_desc, kennebec_desc>
 			mmap;
 
-	constexpr std::array<std::string_view, size_t(potato::count)> test_arr
+	// VS v141 doesn't support constexpr array.
+	std::array<std::string_view, size_t(potato::count)> test_arr
 			= mmap.make_array([](auto desc) { return desc.name; });
 
 	for (size_t i = 0; i < test_arr.size(); ++i) {
 		EXPECT_EQ(test_arr[i], std::to_string(i));
 	}
 
-	constexpr fea::enum_array<std::string_view, potato> test_arr2
+	// VS v141 doesn't support constexpr array.
+	fea::enum_array<std::string_view, potato> test_arr2
 			= mmap.make_enum_array([](auto desc) { return desc.name; });
 
 	for (size_t i = 0; i < test_arr2.size(); ++i) {
@@ -84,8 +86,6 @@ TEST(descriptors, basics) {
 		EXPECT_EQ(desc.name, std::to_string(i));
 		++num_visited;
 	});
-
-	// std::vector
 
 	EXPECT_EQ(num_visited, mmap.size);
 

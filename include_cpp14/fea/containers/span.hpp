@@ -191,9 +191,9 @@ struct span {
 	 * Operators
 	 */
 	template <class U>
-	friend FEA_NODISCARD constexpr bool operator==(span<U> lhs, span<U> rhs);
+	friend constexpr bool operator==(span<U> lhs, span<U> rhs);
 	template <class U>
-	friend FEA_NODISCARD constexpr bool operator!=(span<U> lhs, span<U> rhs);
+	friend constexpr bool operator!=(span<U> lhs, span<U> rhs);
 
 private:
 	pointer _data = nullptr;

@@ -346,11 +346,11 @@ struct stack_vector {
 
 	//	compares the values in the unordered_map
 	template <class K, size_t S>
-	friend FEA_NODISCARD constexpr bool operator==(
+	friend constexpr bool operator==(
 			const stack_vector<K, S>& lhs, const stack_vector<K, S>& rhs);
 
 	template <class K, size_t S>
-	friend FEA_NODISCARD constexpr bool operator!=(
+	friend constexpr bool operator!=(
 			const stack_vector<K, S>& lhs, const stack_vector<K, S>& rhs);
 
 private:
