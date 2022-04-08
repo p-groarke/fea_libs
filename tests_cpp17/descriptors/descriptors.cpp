@@ -11,7 +11,7 @@ struct desc_u {
 };
 struct desc_nok {};
 struct desc_badk {
-	static constexpr std::string_view key = "bad";
+	[[maybe_unused]] static constexpr std::string_view key = "bad";
 };
 
 enum class potato {
