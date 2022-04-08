@@ -57,10 +57,6 @@ static inline void title(const std::string& message, FILE* stream = stdout) {
 			"############################################################");
 }
 
-// static inline void title(const char* message, FILE* stream = stdout) {
-//	title(std::string{ message }, stream);
-//}
-
 static inline void start(
 		const std::string& message = {}, FILE* stream = stdout) {
 	if (!message.empty()) {
@@ -72,10 +68,6 @@ static inline void start(
 	start_time = std::chrono::steady_clock::now();
 }
 
-// static inline void start(const char* message = "", FILE* stream = stdout) {
-//	start(std::string{ message }, stream);
-//}
-
 static inline double stop(
 		const std::string& message = {}, FILE* stream = stdout) {
 	fea::unused(message);
@@ -86,10 +78,6 @@ static inline double stop(
 			elapsed_time.count());
 	return elapsed_time.count();
 }
-
-// static inline double stop(const char* message = "", FILE* stream = stdout) {
-//	return stop(std::string{ message }, stream);
-//}
 
 /**
  * This deactivates compiler optimizations for the passed pointer.
