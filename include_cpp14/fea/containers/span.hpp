@@ -104,18 +104,22 @@ struct span {
 	/**
 	 * Iterators
 	 */
+	FEA_NODISCARD
 	constexpr iterator begin() const noexcept {
 		return _data;
 	}
 
+	FEA_NODISCARD
 	constexpr iterator end() const noexcept {
 		return _data + _size;
 	}
 
+	FEA_NODISCARD
 	constexpr reverse_iterator rbegin() const noexcept {
 		return reverse_iterator(end());
 	}
 
+	FEA_NODISCARD
 	constexpr reverse_iterator rend() const noexcept {
 		return reverse_iterator(begin());
 	}
@@ -123,36 +127,44 @@ struct span {
 	/**
 	 * Element access
 	 */
+	FEA_NODISCARD
 	constexpr const_reference front() const {
 		assert(!empty());
 		return _data[0];
 	}
+	FEA_NODISCARD
 	constexpr reference front() {
 		assert(!empty());
 		return _data[0];
 	}
 
+	FEA_NODISCARD
 	constexpr const_reference back() const {
 		assert(!empty());
 		return _data[_size - 1];
 	}
+	FEA_NODISCARD
 	constexpr reference back() {
 		assert(!empty());
 		return _data[_size - 1];
 	}
 
+	FEA_NODISCARD
 	constexpr const_reference operator[](size_type i) const {
 		assert(i < _size);
 		return _data[i];
 	}
+	FEA_NODISCARD
 	constexpr reference operator[](size_type i) {
 		assert(i < _size);
 		return _data[i];
 	}
 
+	FEA_NODISCARD
 	constexpr const_pointer data() const noexcept {
 		return _data;
 	}
+	FEA_NODISCARD
 	constexpr pointer data() noexcept {
 		return _data;
 	}
@@ -160,14 +172,17 @@ struct span {
 	/**
 	 * Observers
 	 */
+	FEA_NODISCARD
 	constexpr size_type size() const noexcept {
 		return _size;
 	}
 
+	FEA_NODISCARD
 	constexpr size_type size_bytes() const noexcept {
 		return _size * sizeof(element_type);
 	}
 
+	FEA_NODISCARD
 	constexpr bool empty() const noexcept {
 		return _size == 0;
 	}
@@ -176,9 +191,9 @@ struct span {
 	 * Operators
 	 */
 	template <class U>
-	friend constexpr bool operator==(span<U> lhs, span<U> rhs);
+	FEA_NODISCARD friend constexpr bool operator==(span<U> lhs, span<U> rhs);
 	template <class U>
-	friend constexpr bool operator!=(span<U> lhs, span<U> rhs);
+	FEA_NODISCARD friend constexpr bool operator!=(span<U> lhs, span<U> rhs);
 
 private:
 	pointer _data = nullptr;

@@ -218,9 +218,10 @@ public:
 	// Constructors, destructors and assignement
 	flat_unsigned_hashmap() = default;
 	flat_unsigned_hashmap(const flat_unsigned_hashmap&) = default;
-	flat_unsigned_hashmap(flat_unsigned_hashmap&&) = default;
+	flat_unsigned_hashmap(flat_unsigned_hashmap&&) noexcept = default;
 	flat_unsigned_hashmap& operator=(const flat_unsigned_hashmap&) = default;
-	flat_unsigned_hashmap& operator=(flat_unsigned_hashmap&&) = default;
+	flat_unsigned_hashmap& operator=(
+			flat_unsigned_hashmap&&) noexcept = default;
 
 	explicit flat_unsigned_hashmap(size_t reserve_count) {
 		reserve(reserve_count);

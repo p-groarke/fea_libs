@@ -90,9 +90,9 @@ struct unsigned_map {
 
 	unsigned_map() = default;
 	unsigned_map(const unsigned_map&) = default;
-	unsigned_map(unsigned_map&&) = default;
+	unsigned_map(unsigned_map&&) noexcept = default;
 	unsigned_map& operator=(const unsigned_map&) = default;
-	unsigned_map& operator=(unsigned_map&&) = default;
+	unsigned_map& operator=(unsigned_map&&) noexcept = default;
 
 	explicit unsigned_map(size_t reserve_count) {
 		reserve(reserve_count);

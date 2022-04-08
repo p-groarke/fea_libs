@@ -77,6 +77,13 @@ namespace fea {
 #define FEA_INLINE_VAR static
 #endif
 
+// Pastes [[nodiscard]] attribute in C++ >= 17.
+#if FEA_CPP17
+#define FEA_NODISCARD [[nodiscard]]
+#else
+#define FEA_NODISCARD
+#endif
+
 // Are we building in 32 bits or 64 bits?
 #if INTPTR_MAX == INT32_MAX
 #undef FEA_ARCH

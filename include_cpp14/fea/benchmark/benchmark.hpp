@@ -36,6 +36,7 @@
 #include <chrono>
 #include <cstdio>
 #include <cstring>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -175,12 +176,12 @@ struct suite {
 	void print(FILE* stream = stdout) {
 		std::this_thread::sleep_for(_sleep_between);
 
-		if (_title != nullptr) {
-			fprintf(stream, "%.*s\n", int(strlen(_title)),
+		if (!_title.empty()) {
+			fprintf(stream, "%.*s\n", int(_title.size()),
 					"##########################################################"
 					"##");
-			fprintf(stream, "%s\n", _title);
-			fprintf(stream, "%.*s\n", int(strlen(_title)),
+			fprintf(stream, "%s\n", _title.c_str());
+			fprintf(stream, "%.*s\n", int(_title.size()),
 					"##########################################################"
 					"##");
 		}
@@ -197,8 +198,8 @@ struct suite {
 
 		for (const pair& p : _results) {
 			double ratio = _results.back().time / p.time;
-			fprintf(stream, "%s%*fs        %fx\n", p.message,
-					70 - int(strlen(p.message)), p.time, ratio);
+			fprintf(stream, "%s%*fs        %fx\n", p.message.c_str(),
+					70 - int(p.message.size()), p.time, ratio);
 		}
 		fprintf(stream, "%s", "\n");
 
@@ -215,11 +216,11 @@ private:
 		}
 		pair() = default;
 
-		const char* message{ nullptr };
+		std::string message;
 		double time{ 0.0 };
 	};
 
-	const char* _title{ nullptr };
+	std::string _title;
 	size_t _num_average = 1;
 	std::chrono::milliseconds _sleep_between{ 0 };
 	std::vector<pair> _results;
