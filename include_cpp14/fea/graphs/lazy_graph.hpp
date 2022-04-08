@@ -61,6 +61,13 @@ struct clean_container<0, T> {
 
 template <class Id, class NodeData, class DirtyVersion, size_t MaxParents>
 struct node {
+	node() = default;
+	~node() = default;
+	node(const node&) = default;
+	node(node&&) noexcept = default;
+	node& operator=(const node&) = default;
+	node& operator=(node&&) noexcept = default;
+
 	/**
 	 * Graph Functions
 	 */
@@ -315,6 +322,13 @@ struct lazy_graph {
 
 	// The storage container will take care of not compiling if the data is not
 	// copyable/moveable.
+
+	lazy_graph() = default;
+	~lazy_graph() = default;
+	lazy_graph(const lazy_graph&) = default;
+	lazy_graph(lazy_graph&&) noexcept = default;
+	lazy_graph& operator=(const lazy_graph&) = default;
+	lazy_graph& operator=(lazy_graph&&) noexcept = default;
 
 	/**
 	 * Graph Functions

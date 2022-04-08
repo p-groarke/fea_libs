@@ -333,4 +333,16 @@ struct back<> {
 template <class... Args>
 using back_t = typename detail::back<Args...>::type;
 
+
+template <class From, class To, class = To>
+struct is_static_castable : std::false_type {};
+
+template <class From, class To>
+struct is_static_castable<From, To,
+		decltype(static_cast<To>(std::declval<From>()))> : std::true_type {};
+
+// Checks whether a type can be static_casted to another.
+template <class From, class To>
+FEA_INLINE_VAR constexpr bool is_static_castable_v
+		= is_static_castable<From, To>::value;
 } // namespace fea

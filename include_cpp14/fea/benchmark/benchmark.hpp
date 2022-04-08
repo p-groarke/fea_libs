@@ -36,6 +36,7 @@
 #include <chrono>
 #include <cstdio>
 #include <cstring>
+#include <string>
 #include <thread>
 #include <vector>
 
@@ -47,31 +48,33 @@ namespace fea {
 namespace bench {
 static std::chrono::time_point<std::chrono::steady_clock> start_time, end_time;
 
-static inline void title(const char* message, FILE* stream = stdout) {
+static inline void title(const std::string& message, FILE* stream = stdout) {
 	fea::unused(message);
-	fprintf(stream, "%.*s\n", int(strlen(message)),
+	fprintf(stream, "%.*s\n", int(message.size()),
 			"############################################################");
-	fprintf(stream, "%s\n", message);
-	fprintf(stream, "%.*s\n", int(strlen(message)),
+	fprintf(stream, "%s\n", message.c_str());
+	fprintf(stream, "%.*s\n", int(message.size()),
 			"############################################################");
 }
 
-static inline void start(const char* message = "", FILE* stream = stdout) {
-	if (strlen(message) != 0) {
-		fprintf(stream, "\n%s\n", message);
-		fprintf(stream, "%.*s\n", int(strlen(message)),
+static inline void start(
+		const std::string& message = {}, FILE* stream = stdout) {
+	if (!message.empty()) {
+		fprintf(stream, "\n%s\n", message.c_str());
+		fprintf(stream, "%.*s\n", int(message.size()),
 				"--------------------------------------------------------");
 	}
 
 	start_time = std::chrono::steady_clock::now();
 }
 
-static inline double stop(const char* message = "", FILE* stream = stdout) {
+static inline double stop(
+		const std::string& message = {}, FILE* stream = stdout) {
 	fea::unused(message);
 	end_time = std::chrono::steady_clock::now();
 	const std::chrono::duration<double> elapsed_time = end_time - start_time;
 
-	fprintf(stream, "%s%*fs\n", message, 70 - int(strlen(message)),
+	fprintf(stream, "%s%*fs\n", message.c_str(), 70 - int(message.size()),
 			elapsed_time.count());
 	return elapsed_time.count();
 }
@@ -109,7 +112,7 @@ static inline void clobber() {
 
 struct suite {
 	// Set the title for the benchmark run. Optional.
-	void title(const char* message) {
+	void title(const std::string& message) {
 		_title = message;
 	}
 
@@ -137,8 +140,8 @@ struct suite {
 	// (useful when averaging to reset things). This function isn't measured.
 	// It is executed after each call to func.
 	template <class Func, class InBetweenFunc>
-	void benchmark(
-			const char* message, Func&& func, InBetweenFunc&& inbetween_func) {
+	void benchmark(const std::string& message, Func&& func,
+			InBetweenFunc&& inbetween_func) {
 
 		clock_duration_t elapsed_time = clock_duration_t(0);
 		std::this_thread::sleep_for(_sleep_between);
@@ -165,7 +168,7 @@ struct suite {
 	// If averaging was set, will average the times.
 	// Pass in message (name of the benchmark).
 	template <class Func>
-	void benchmark(const char* message, Func&& func) {
+	void benchmark(const std::string& message, Func&& func) {
 		benchmark(message, std::forward<Func>(func), []() {});
 	}
 
@@ -175,12 +178,12 @@ struct suite {
 	void print(FILE* stream = stdout) {
 		std::this_thread::sleep_for(_sleep_between);
 
-		if (_title != nullptr) {
-			fprintf(stream, "%.*s\n", int(strlen(_title)),
+		if (!_title.empty()) {
+			fprintf(stream, "%.*s\n", int(_title.size()),
 					"##########################################################"
 					"##");
-			fprintf(stream, "%s\n", _title);
-			fprintf(stream, "%.*s\n", int(strlen(_title)),
+			fprintf(stream, "%s\n", _title.c_str());
+			fprintf(stream, "%.*s\n", int(_title.size()),
 					"##########################################################"
 					"##");
 		}
@@ -197,8 +200,8 @@ struct suite {
 
 		for (const pair& p : _results) {
 			double ratio = _results.back().time / p.time;
-			fprintf(stream, "%s%*fs        %fx\n", p.message,
-					70 - int(strlen(p.message)), p.time, ratio);
+			fprintf(stream, "%s%*fs        %fx\n", p.message.c_str(),
+					70 - int(p.message.size()), p.time, ratio);
 		}
 		fprintf(stream, "%s", "\n");
 
@@ -209,17 +212,17 @@ private:
 	using clock_duration_t = std::chrono::steady_clock::duration;
 
 	struct pair {
-		pair(const char* msg, double t)
+		pair(const std::string& msg, double t)
 				: message(msg)
 				, time(t) {
 		}
 		pair() = default;
 
-		const char* message{ nullptr };
+		std::string message;
 		double time{ 0.0 };
 	};
 
-	const char* _title{ nullptr };
+	std::string _title;
 	size_t _num_average = 1;
 	std::chrono::milliseconds _sleep_between{ 0 };
 	std::vector<pair> _results;

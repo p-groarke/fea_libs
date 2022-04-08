@@ -110,6 +110,8 @@ TEST(traits, is_detected) {
 			"traits.cpp : failed test");
 }
 
+enum class an_enum { a, b, c };
+
 TEST(traits, misc) {
 	static_assert(
 			std::is_same<fea::remove_nested_const_t<std::pair<const int, int>>,
@@ -152,6 +154,15 @@ TEST(traits, misc) {
 			"traits.cpp : test failed");
 	static_assert(
 			!fea::is_template_template_v<potato>, "traits.cpp : test failed");
+
+	static_assert(
+			fea::is_static_castable_v<int, float>, "traits.cpp : test failed");
+	static_assert(!fea::is_static_castable_v<std::string, float>,
+			"traits.cpp : test failed");
+	static_assert(fea::is_static_castable_v<an_enum, int>,
+			"traits.cpp : test failed");
+	static_assert(fea::is_static_castable_v<int, an_enum>,
+			"traits.cpp : test failed");
 }
 
 TEST(traits, front_back_t) {

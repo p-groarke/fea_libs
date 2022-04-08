@@ -89,9 +89,9 @@ struct flat_unsigned_map {
 
 	flat_unsigned_map() = default;
 	flat_unsigned_map(const flat_unsigned_map&) = default;
-	flat_unsigned_map(flat_unsigned_map&&) = default;
+	flat_unsigned_map(flat_unsigned_map&&) noexcept = default;
 	flat_unsigned_map& operator=(const flat_unsigned_map&) = default;
-	flat_unsigned_map& operator=(flat_unsigned_map&&) = default;
+	flat_unsigned_map& operator=(flat_unsigned_map&&) noexcept = default;
 
 	explicit flat_unsigned_map(size_t reserve_count) {
 		reserve(reserve_count);
