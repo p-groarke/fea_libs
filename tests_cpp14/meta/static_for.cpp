@@ -38,10 +38,11 @@ TEST(static_for, return_type) {
 
 	{
 		auto tup = std::make_tuple([]() {}, []() {}, []() {});
-		using ret_t = decltype(fea::static_for<3>([&](auto const_i) {
+		auto l = [&](auto const_i) {
 			constexpr size_t i = const_i();
 			return std::get<i>(tup)();
-		}));
+		};
+		using ret_t = decltype(fea::static_for<3>(l));
 		using expected_t = void;
 
 		static_assert(std::is_same<ret_t, expected_t>::value,
@@ -52,10 +53,11 @@ TEST(static_for, return_type) {
 		auto tup = std::make_tuple([]() { return int(42); },
 				[]() { return double(42); }, []() { return char(42); });
 
-		using ret_t = decltype(fea::static_for<3>([&](auto const_i) {
+		auto l = [&](auto const_i) {
 			constexpr size_t i = const_i();
 			return std::get<i>(tup)();
-		}));
+		};
+		using ret_t = decltype(fea::static_for<3>(l));
 		using expected_t = std::tuple<int, double, char>;
 
 		static_assert(std::is_same<ret_t, expected_t>::value,
@@ -75,10 +77,11 @@ TEST(static_for, return_type) {
 		auto tup = std::make_tuple(
 				[]() {}, []() { return double(42); }, []() {});
 
-		using ret_t = decltype(fea::static_for<3>([&](auto const_i) {
+		auto l = [&](auto const_i) {
 			constexpr size_t i = const_i();
 			return std::get<i>(tup)();
-		}));
+		};
+		using ret_t = decltype(fea::static_for<3>(l));
 		using expected_t = std::tuple<std::nullptr_t, double, std::nullptr_t>;
 
 		static_assert(std::is_same<ret_t, expected_t>::value,
@@ -98,10 +101,11 @@ TEST(static_for, return_type) {
 		auto tup = std::make_tuple([]() { return int(0); },
 				[]() { return int(42); }, []() { return int(1); });
 
-		using ret_t = decltype(fea::static_for<3>([&](auto const_i) {
+		auto l = [&](auto const_i) {
 			constexpr size_t i = const_i();
 			return std::get<i>(tup)();
-		}));
+		};
+		using ret_t = decltype(fea::static_for<3>(l));
 		using expected_t = std::array<int, 3>;
 
 		static_assert(std::is_same<ret_t, expected_t>::value,
