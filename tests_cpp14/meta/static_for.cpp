@@ -63,11 +63,7 @@ TEST(static_for, return_type) {
 		static_assert(std::is_same<ret_t, expected_t>::value,
 				"static_for.cpp : test failed");
 
-		auto ans = fea::static_for<3>([&](auto const_i) {
-			constexpr size_t i = const_i();
-			return std::get<i>(tup)();
-		});
-
+		std::tuple<int, double, char> ans = fea::static_for<3>(l);
 		EXPECT_EQ(std::get<0>(ans), int(42));
 		EXPECT_EQ(std::get<1>(ans), double(42));
 		EXPECT_EQ(std::get<2>(ans), char(42));
@@ -87,11 +83,7 @@ TEST(static_for, return_type) {
 		static_assert(std::is_same<ret_t, expected_t>::value,
 				"static_for.cpp : test failed");
 
-		auto ans = fea::static_for<3>([&](auto const_i) {
-			constexpr size_t i = const_i();
-			return std::get<i>(tup)();
-		});
-
+		auto ans = fea::static_for<3>(l);
 		EXPECT_EQ(std::get<0>(ans), std::nullptr_t{});
 		EXPECT_EQ(std::get<1>(ans), double(42));
 		EXPECT_EQ(std::get<2>(ans), std::nullptr_t{});
@@ -111,14 +103,59 @@ TEST(static_for, return_type) {
 		static_assert(std::is_same<ret_t, expected_t>::value,
 				"static_for.cpp : test failed");
 
-		std::array<int, 3> ans = fea::static_for<3>([&](auto const_i) {
-			constexpr size_t i = const_i();
-			return std::get<i>(tup)();
-		});
-
+		std::array<int, 3> ans = fea::static_for<3>(l);
 		EXPECT_EQ(std::get<0>(ans), int(0));
 		EXPECT_EQ(std::get<1>(ans), int(42));
 		EXPECT_EQ(std::get<2>(ans), int(1));
+	}
+
+	{
+		int i(1);
+		double d(2);
+		char c(3);
+
+		auto tup = std::make_tuple([&]() -> int& { return i; },
+				[&]() -> double& { return d; }, [&]() -> char& { return c; });
+
+		auto l = [&](auto const_i) -> auto& {
+			constexpr size_t i = const_i();
+			return std::get<i>(tup)();
+		};
+
+		using ret_t = decltype(fea::static_for<3>(l));
+		using expected_t = std::tuple<int&, double&, char&>;
+
+		static_assert(std::is_same<ret_t, expected_t>::value,
+				"static_for.cpp : test failed");
+
+		std::tuple<int&, double&, char&> ans = fea::static_for<3>(l);
+		EXPECT_EQ(std::get<0>(ans), i);
+		EXPECT_EQ(std::get<1>(ans), d);
+		EXPECT_EQ(std::get<2>(ans), c);
+	}
+
+	{
+		int i(1);
+		char c(3);
+
+		auto tup = std::make_tuple(
+				[&]() -> int& { return i; }, [&]() {}, [&]() { return &c; });
+
+		auto l = [&](auto const_i) -> decltype(auto) {
+			constexpr size_t i = const_i();
+			return std::get<i>(tup)();
+		};
+
+		using ret_t = decltype(fea::static_for<3>(l));
+		using expected_t = std::tuple<int&, std::nullptr_t, char*>;
+
+		static_assert(std::is_same<ret_t, expected_t>::value,
+				"static_for.cpp : test failed");
+
+		std::tuple<int&, std::nullptr_t, char*> ans = fea::static_for<3>(l);
+		EXPECT_EQ(std::get<0>(ans), i);
+		EXPECT_EQ(std::get<1>(ans), std::nullptr_t{});
+		EXPECT_EQ(*std::get<2>(ans), c);
 	}
 }
 } // namespace

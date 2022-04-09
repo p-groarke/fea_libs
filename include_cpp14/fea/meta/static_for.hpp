@@ -144,7 +144,7 @@ using static_for_ret_t =
 
 template <class Ret, class Func, size_t I>
 struct pass_through {
-	constexpr auto operator()(Func& func) const {
+	constexpr Ret operator()(Func& func) const {
 		return func(std::integral_constant<size_t, I>{});
 	}
 };
