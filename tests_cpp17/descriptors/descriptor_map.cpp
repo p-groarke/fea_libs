@@ -1,4 +1,4 @@
-#include <fea/descriptors/descriptors.hpp>
+#include <fea/descriptors/descriptor_map.hpp>
 #include <gtest/gtest.h>
 #include <string_view>
 

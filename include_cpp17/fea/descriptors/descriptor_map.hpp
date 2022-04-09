@@ -100,6 +100,22 @@ struct descriptor_map {
 		}
 	}
 
+	// Returns a tuple filled with your operation results, indexed at key.
+	// Your function should return the desired descriptor value.
+	template <class Func>
+	[[nodiscard]] static constexpr auto make_tuple(Func&& func) {
+		using ret_t = decltype(func(fea::front_t<Descriptors...>{}));
+		std::array<ret_t, size> ret;
+
+		fea::static_for<size>([&](auto const_i) {
+			constexpr size_t i = const_i;
+			using desc_t = std::tuple_element_t<i, desc_tup_t>;
+			ret[i] = func(desc_t{});
+		});
+		return ret;
+	}
+
+
 	// Returns an array filled with your operation result, indexed at key.
 	// Your function should return the desired descriptor value.
 	template <class Func>

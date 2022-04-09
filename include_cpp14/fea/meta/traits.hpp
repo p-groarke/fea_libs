@@ -113,20 +113,9 @@ struct one_of<Trait, Traits...>
 template <class... Traits>
 FEA_INLINE_VAR constexpr bool one_of_v = one_of<Traits...>::value;
 
-// TODO : C++14 implementation
-// template <class...>
-// constexpr bool all_unique_v = std::true_type{};
-//
-// template <class T, class... Rest>
-// constexpr bool all_unique_v<T, Rest...> = std::bool_constant<
-//		(!std::is_same_v<T, Rest> && ...) && all_unique_v<Rest...>>{};
-
-
-namespace detail {
-// Used in is_detected.
+// Used in is_detected and to indicate a void type in container.
 template <class...>
 using void_t = void;
-} // namespace detail
 
 /*
 is_detected checks if a given type has function.
@@ -144,8 +133,7 @@ See unit tests for more examples.
 template <template <class...> class Op, class = void, class...>
 struct is_detected : std::false_type {};
 template <template <class...> class Op, class... Args>
-struct is_detected<Op, detail::void_t<Op<Args...>>, Args...> : std::true_type {
-};
+struct is_detected<Op, void_t<Op<Args...>>, Args...> : std::true_type {};
 
 template <template <class...> class Op, class... Args>
 FEA_INLINE_VAR constexpr bool is_detected_v
@@ -237,7 +225,7 @@ struct is_iterator {
 	static constexpr bool value = false;
 };
 template <class T>
-struct is_iterator<T, detail::void_t<iterator_category_t<T>>> {
+struct is_iterator<T, void_t<iterator_category_t<T>>> {
 	static constexpr bool value = true;
 };
 
