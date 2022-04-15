@@ -72,7 +72,7 @@ inline size_t random_idx(size_t count) {
 // Returns a random enum value between [min, max].
 template <class E>
 E random_enum(E min, E max) {
-	static_assert(std::is_enum_v<E>, "E must be enum");
+	static_assert(std::is_enum<E>::value, "E must be enum");
 	using u_t = std::underlying_type_t<E>;
 	return E(random_int(u_t(min), u_t(max)));
 }
@@ -81,7 +81,7 @@ E random_enum(E min, E max) {
 // Undefined if 'count' == 0.
 template <class E>
 E random_enum() {
-	static_assert(std::is_enum_v<E>, "E must be enum");
+	static_assert(std::is_enum<E>::value, "E must be enum");
 	using u_t = std::underlying_type_t<E>;
 	assert(u_t(E::count) != 0);
 	return random_enum(E{}, E(u_t(E::count) - 1));
