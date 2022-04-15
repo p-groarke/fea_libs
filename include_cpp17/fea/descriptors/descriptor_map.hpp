@@ -37,6 +37,7 @@
 #include "fea/meta/tuple.hpp"
 
 #include <array>
+#include <tuple>
 
 /*
 Descriptors are data-driven, compile time configurators.
@@ -48,16 +49,25 @@ header implements commonly used descriptor helpers.
 descriptor_map
 A compile-time map of descriptors. Use it to apply static_asserts and create
 arrays. When adding descriptors to the descriptor_map, all descriptors must
-contain a static constexpr enum/integer "key" or "Key". The map checks if your
+contain a static constexpr enum/integer 'key'. The map checks if your
 descriptor order matches its key.
 */
 
 namespace fea {
 namespace detail {
 template <class T>
-using has_lower_case_key = decltype(std::declval<T>().key);
-template <class T>
-using has_upper_case_key = decltype(std::declval<T>().Key);
+using has_key = decltype(std::declval<T>().key);
+
+template <class T, class Func>
+auto dm_unerase(Func&& f) {
+	return f(T{});
+}
+
+template <class Func, class... Ds>
+constexpr auto dm_unerase_lookup() {
+	using func_t = std::common_type_t<decltype(&dm_unerase<Ds, Func>)...>;
+	return std::array<func_t, sizeof...(Ds)>{ &dm_unerase<Ds, Func>... };
+}
 } // namespace detail
 
 /*
@@ -69,11 +79,6 @@ key value).
 */
 template <class KeyT, class... Descriptors>
 struct descriptor_map {
-	// Do the descriptors use capitalized Key var, or lower case key.
-	static constexpr bool upper_case_key
-			= fea::is_detected_v<detail::has_upper_case_key,
-					fea::front_t<Descriptors...>>;
-
 	// A tuple of all descriptors.
 	using desc_tup_t = std::tuple<Descriptors...>;
 
@@ -83,38 +88,38 @@ struct descriptor_map {
 	// The type of key. Must be castable to size_t.
 	using key_t = KeyT;
 
+	// All the keys.
+	static constexpr std::array<key_t, size> keys{ Descriptors::key... };
+
+	// Get a specific descriptor at runtime.
+	template <class Func>
+	static constexpr auto descriptor(KeyT key, Func&& func) {
+		// Unerase lookup (switch-case equivalent).
+		static constexpr auto lookup
+				= detail::dm_unerase_lookup<Func, Descriptors...>();
+		return lookup[size_t(key)](std::forward<Func>(func));
+	}
 
 	// Get a specific descriptor.
 	template <KeyT K>
-	[[nodiscard]] static constexpr auto desriptor() {
+	[[nodiscard]] static constexpr auto descriptor() {
 		return std::tuple_element_t<size_t(K), desc_tup_t>{};
 	}
 
-	// Get a specific descriptor's key.
-	template <size_t I>
+	// Get a descriptor's key at index I.
+	template <size_t Idx>
 	[[nodiscard]] static constexpr auto key() {
-		if constexpr (!upper_case_key) {
-			return std::tuple_element_t<I, desc_tup_t>::key;
-		} else {
-			return std::tuple_element_t<I, desc_tup_t>::Key;
-		}
+		return std::tuple_element_t<Idx, desc_tup_t>::key;
 	}
 
 	// Returns a tuple filled with your operation results, indexed at key.
 	// Your function should return the desired descriptor value.
 	template <class Func>
 	[[nodiscard]] static constexpr auto make_tuple(Func&& func) {
-		using ret_t = decltype(func(fea::front_t<Descriptors...>{}));
-		std::array<ret_t, size> ret;
-
-		fea::static_for<size>([&](auto const_i) {
-			constexpr size_t i = const_i;
-			using desc_t = std::tuple_element_t<i, desc_tup_t>;
-			ret[i] = func(desc_t{});
-		});
-		return ret;
+		return std::apply(
+				[&](auto... desc) { return std::make_tuple(func(desc)...); },
+				desc_tup_t{});
 	}
-
 
 	// Returns an array filled with your operation result, indexed at key.
 	// Your function should return the desired descriptor value.
@@ -149,11 +154,11 @@ struct descriptor_map {
 	// Calls your func for each descriptor and passes a type_wrapper of its
 	// type. Get type with : using desc_t = typename decltype(bla)::type;
 	template <class Func>
-	static constexpr void for_each_descriptor(Func&& func) {
-		fea::static_for<size>([&](auto const_i) {
+	static constexpr auto for_each_descriptor(Func&& func) {
+		return fea::static_for<size>([&](auto const_i) {
 			constexpr size_t i = const_i;
-			using trait_t = std::tuple_element_t<i, desc_tup_t>;
-			func(trait_t{});
+			using desc_t = std::tuple_element_t<i, desc_tup_t>;
+			return func(desc_t{});
 		});
 	}
 
@@ -168,33 +173,28 @@ private:
 
 		ret &= convertible;
 
+		constexpr bool has_all_descriptors
+				= sizeof...(Descriptors) == size_t(KeyT::count);
+		static_assert(has_all_descriptors,
+				"descriptor_map : missing descriptors, or key type doesn't "
+				"have 'count' value");
+		ret &= has_all_descriptors;
+
 		fea::static_for<std::tuple_size_v<desc_tup_t>>([&](auto const_i) {
 			constexpr size_t i = const_i;
-			using trait_t = std::tuple_element_t<i, desc_tup_t>;
+			using desc_t = std::tuple_element_t<i, desc_tup_t>;
 
-			if constexpr (!upper_case_key) {
-				// Every descriptor has key.
-				constexpr bool has_key
-						= fea::is_detected_v<detail::has_lower_case_key,
-								trait_t>;
-				static_assert(has_key,
-						"descriptor_map : all descriptors must have the member "
-						"variable 'key'");
+			// Every descriptor has key.
+			constexpr bool has_key
+					= fea::is_detected_v<detail::has_key, desc_t>;
+			static_assert(has_key,
+					"descriptor_map : all descriptors must have the member "
+					"variable 'key'");
 
-				ret &= has_key;
-			} else {
-				constexpr bool has_key
-						= fea::is_detected_v<detail::has_upper_case_key,
-								trait_t>;
-				static_assert(has_key,
-						"descriptor_map : all descriptors must have the "
-						"member variable 'Key'");
-
-				ret &= has_key;
-			}
+			ret &= has_key;
 
 			// Key is correct type.
-			constexpr auto k = key<i>();
+			constexpr auto k = desc_t::key;
 			using key_type = std::decay_t<decltype(k)>;
 			constexpr bool same_key_t = std::is_same_v<key_type, KeyT>;
 			static_assert(same_key_t,

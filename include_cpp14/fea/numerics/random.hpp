@@ -2,6 +2,7 @@
 #include "fea/utils/platform.hpp"
 
 #include <array>
+#include <cassert>
 #include <chrono>
 #include <limits>
 #include <random>
@@ -67,6 +68,25 @@ inline size_t random_idx(size_t count) {
 	std::uniform_int_distribution<size_t> dist(0, count - 1);
 	return dist(detail::gen);
 }
+
+// Returns a random enum value between [min, max].
+template <class E>
+E random_enum(E min, E max) {
+	static_assert(std::is_enum_v<E>, "E must be enum");
+	using u_t = std::underlying_type_t<E>;
+	return E(random_int(u_t(min), u_t(max)));
+}
+
+// Returns a random enum value between [E{}, E::count[.
+// Undefined if 'count' == 0.
+template <class E>
+E random_enum() {
+	static_assert(std::is_enum_v<E>, "E must be enum");
+	using u_t = std::underlying_type_t<E>;
+	assert(u_t(E::count) != 0);
+	return random_enum(E{}, E(u_t(E::count) - 1));
+}
+
 
 template <size_t N>
 std::array<uint8_t, N> random_bytes() {

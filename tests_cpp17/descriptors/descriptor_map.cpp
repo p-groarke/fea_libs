@@ -50,13 +50,10 @@ struct kennebec_desc {
 
 
 TEST(descriptors, basics) {
-	static_assert(!fea::descriptor_map<size_t, desc_l>::upper_case_key,
-			"descriptors.cpp : test failed");
-	static_assert(fea::descriptor_map<size_t, desc_u>::upper_case_key,
-			"descriptors.cpp : test failed");
-
 	static_assert(
-			std::is_same_v<fea::descriptor_map<potato, russet_desc>::key_t,
+			std::is_same_v<fea::descriptor_map<potato, russet_desc, yukon_desc,
+								   bintje_desc, king_edward_desc,
+								   kennebec_desc>::key_t,
 					potato>,
 			"descriptors.cpp : test failed");
 
@@ -79,6 +76,16 @@ TEST(descriptors, basics) {
 	for (size_t i = 0; i < test_arr2.size(); ++i) {
 		EXPECT_EQ(test_arr2[potato(i)], std::to_string(i));
 	}
+
+	// VS v141 doesn't support constexpr array.
+	std::tuple<std::string_view, std::string_view, std::string_view,
+			std::string_view, std::string_view>
+			test_tup = mmap.make_tuple([](auto desc) { return desc.name; });
+
+	fea::static_for<size_t(potato::count)>([&](auto const_i) {
+		constexpr size_t i = const_i;
+		EXPECT_EQ(std::get<i>(test_tup), std::to_string(i));
+	});
 
 	size_t num_visited = 0;
 	mmap.for_each_descriptor([&](auto desc) {
