@@ -79,7 +79,7 @@ TEST(random, basics) {
 		for (size_t i = 0; i < num_fuzz; ++i) {
 			std::array<size_t, 10> v1 = fea::random_fixed_sum<10>(size_t(100));
 			size_t ans = fea::sum(v1);
-			EXPECT_EQ(ans, 100);
+			EXPECT_EQ(ans, 100u);
 		}
 	}
 }

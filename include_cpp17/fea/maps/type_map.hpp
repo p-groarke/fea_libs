@@ -58,7 +58,7 @@ using tm_has_imp = decltype(std::declval<Func>()(std::declval<T>()));
 
 template <size_t I, class TMap, class Func>
 decltype(auto) tm_unerase(TMap& tmap, Func&& func) {
-	return std::forward<Func>(func)(tmap.at<I>());
+	return std::forward<Func>(func)(tmap.template at<I>());
 }
 
 // WIP : Use id_detected idiom to filter out unavailable

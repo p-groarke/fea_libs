@@ -1,6 +1,7 @@
 #include <array>
 #include <fea/math/math.hpp>
 #include <gtest/gtest.h>
+#include <vector>
 
 namespace {
 TEST(math, basics) {
@@ -48,6 +49,11 @@ TEST(math, basics) {
 
 		double net = fea::profit_margin(revenue, net_costs);
 		EXPECT_NEAR(net, 0.1445, 0.0001);
+	}
+
+	{
+		std::vector<int> v{ 10, 10, 20, 40, 70 };
+		EXPECT_EQ(fea::mean(v.begin(), v.end()), 30);
 	}
 }
 } // namespace
