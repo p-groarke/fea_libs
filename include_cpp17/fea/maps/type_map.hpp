@@ -61,30 +61,30 @@ decltype(auto) tm_unerase(TMap& tmap, Func&& func) {
 	return std::forward<Func>(func)(tmap.at<I>());
 }
 
-template <class FuncPtrT, size_t I, class Func, class TMap>
-constexpr FuncPtrT tm_filter_uncallable() {
-	using called_t = decltype(std::declval<TMap>().at<I>());
-	// using called_t = std::tuple_element_t<I, std::decay_t<TMap>::values_t>;
-
-	if constexpr (fea::is_detected_v<tm_has_imp, Func, called_t>) {
-		return &tm_unerase<I, TMap, Func>;
-	} else {
-		return nullptr;
-	}
-}
-
+// WIP : Use id_detected idiom to filter out unavailable
+// instantiations and move the problem to runtime.
+// template <class FuncPtrT, size_t I, class Func, class TMap>
+// constexpr FuncPtrT tm_filter_uncallable() {
+//	using called_t = decltype(std::declval<TMap>().at<I>());
+//	// using called_t = std::tuple_element_t<I, std::decay_t<TMap>::values_t>;
+//
+//	if constexpr (fea::is_detected_v<tm_has_imp, Func, called_t>) {
+//		return &tm_unerase<I, TMap, Func>;
+//	} else {
+//		return nullptr;
+//	}
+//}
 
 template <class Func, class TMap, size_t... Is>
 constexpr decltype(auto) tm_unerase_lookup(std::index_sequence<Is...>) {
-	// using func_t = std::common_type_t<decltype(&tm_unerase<Is, TMap,
-	// Func>)...>;
-	// return std::array<func_t, sizeof...(Is)>{ &tm_unerase<Is, TMap, Func>...
-	// };
+	using func_t = std::common_type_t<decltype(&tm_unerase<Is, TMap, Func>)...>;
+	return std::array<func_t, sizeof...(Is)>{ &tm_unerase<Is, TMap, Func>... };
 
-	using func_t = decltype(&tm_unerase<0, TMap, Func>);
-	return std::array<func_t, sizeof...(Is)>{
-		tm_filter_uncallable<func_t, Is, Func, TMap>()...
-	};
+	// WIP
+	// using func_t = decltype(&tm_unerase<0, TMap, Func>);
+	// return std::array<func_t, sizeof...(Is)>{
+	//	tm_filter_uncallable<func_t, Is, Func, TMap>()...
+	//};
 }
 
 template <class... Values>

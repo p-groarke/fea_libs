@@ -4,10 +4,10 @@
 
 namespace {
 struct desc_l {
-	static constexpr size_t key = 0;
+	[[maybe_unused]] static constexpr size_t key = 0;
 };
 struct desc_u {
-	static constexpr size_t Key = 0;
+	[[maybe_unused]] static constexpr size_t Key = 0;
 };
 struct desc_nok {};
 struct desc_badk {

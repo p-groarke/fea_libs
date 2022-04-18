@@ -1,3 +1,4 @@
+#include <array>
 #include <fea/math/math.hpp>
 #include <gtest/gtest.h>
 
@@ -16,7 +17,7 @@ TEST(math, basics) {
 			fea::binomial_coeff(10, 3) == 120, "math.cpp : unit test failed");
 
 	for (size_t i = 1; i < 10; ++i) {
-		EXPECT_EQ(fea::binomial_coeff(i, i), 1);
+		EXPECT_EQ(fea::binomial_coeff(i, i), 1u);
 	}
 
 	static_assert(fea::stars_and_bars_pos(10, 4) == 84,
@@ -27,5 +28,26 @@ TEST(math, basics) {
 	EXPECT_EQ(fea::stars_and_bars_zero(size_t(10), size_t(4)), size_t(286));
 	static_assert(fea::stars_and_bars_zero(5, 4) == 56,
 			"math.cpp : unit test failed");
+
+	{
+		std::array<int, 4> arr{ 0, 1, 2, 3 };
+		EXPECT_EQ(fea::sum(arr), 6);
+	}
+
+	{
+		double revenue = 29.06;
+		double cost = 8.74;
+		double op_costs = 24.19;
+		double net_costs = 24.86;
+
+		double gross = fea::profit_margin(revenue, cost);
+		EXPECT_NEAR(gross, 0.6992, 0.0001);
+
+		double operating = fea::profit_margin(revenue, op_costs);
+		EXPECT_NEAR(operating, 0.1676, 0.0001);
+
+		double net = fea::profit_margin(revenue, net_costs);
+		EXPECT_NEAR(net, 0.1445, 0.0001);
+	}
 }
 } // namespace

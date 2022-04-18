@@ -27,6 +27,7 @@ constexpr T roi(T gains, T cost) {
 }
 
 // Compute profit margin.
+// https://www.investopedia.com/ask/answers/031815/what-formula-calculating-profit-margins.asp
 template <class T>
 constexpr T profit_margin(T gains, T cost) {
 	return profit(gains, cost) / gains;
