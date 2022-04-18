@@ -101,10 +101,7 @@ FEA_NODISCARD constexpr auto median(FwdIt begin, FwdIt end) {
 // or an empty vector if no mode was found.
 // O(n^2) for memory concearns.
 template <class FwdIt, class Func>
-FEA_NODISCARD constexpr std::vector<FwdIt> mode(
-		FwdIt begin, FwdIt end, Func&& func) {
-	using T = std::decay_t<decltype(func(*begin))>;
-
+FEA_NODISCARD std::vector<FwdIt> mode(FwdIt begin, FwdIt end, Func&& func) {
 	size_t num = std::distance(begin, end);
 	if (num == 0) {
 		return {};
@@ -169,7 +166,7 @@ FEA_NODISCARD constexpr std::vector<FwdIt> mode(
 // or an empty vector if no mode was found.
 // O(n^2) for memory concearns.
 template <class FwdIt>
-FEA_NODISCARD constexpr std::vector<FwdIt> mode(FwdIt begin, FwdIt end) {
+FEA_NODISCARD std::vector<FwdIt> mode(FwdIt begin, FwdIt end) {
 	return mode(
 			begin, end, [](const auto& v) -> const auto& { return v; });
 }
