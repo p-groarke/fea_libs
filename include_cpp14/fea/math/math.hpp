@@ -5,8 +5,10 @@
 #include <cassert>
 #include <cmath>
 #include <iterator>
+#include <limits>
 #include <numeric>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace fea {
@@ -64,11 +66,10 @@ FEA_NODISCARD constexpr auto mean(FwdIt begin, FwdIt end) {
 
 // Compute the median (middle value of given set).
 // Provided callback must return desired value.
-// Note : This function heap allocates. Values
-// must be sortable.
+// Note : This function heap allocates. Values must be sortable.
 template <class FwdIt, class Func>
 FEA_NODISCARD constexpr auto median(FwdIt begin, FwdIt end, Func&& func) {
-	using T = std::decay_t<decltype(*begin)>;
+	using T = std::decay_t<decltype(func(*begin))>;
 	std::vector<T> vals;
 	vals.reserve(std::distance(begin, end));
 	for (auto it = begin; it != end; ++it) {
@@ -95,10 +96,83 @@ FEA_NODISCARD constexpr auto median(FwdIt begin, FwdIt end) {
 			begin, end, [](const auto& v) -> const auto& { return v; });
 }
 
-// TODO
 // Compute the mode (the most common number in set).
-// Returns a iterators pointing to the highest frequency numbers,
-// or end() if no mode was found.
+// Returns a vector of iterators pointing to the highest frequency numbers,
+// or an empty vector if no mode was found.
+// O(n^2) for memory concearns.
+template <class FwdIt, class Func>
+FEA_NODISCARD constexpr std::vector<FwdIt> mode(
+		FwdIt begin, FwdIt end, Func&& func) {
+	using T = std::decay_t<decltype(func(*begin))>;
+
+	size_t num = std::distance(begin, end);
+	if (num == 0) {
+		return {};
+	}
+	if (num == 1) {
+		return { begin };
+	}
+
+	// Copy iters in candidate vec.
+	// std::vector<std::remove_cv_t<FwdIt>> candidates;
+	std::vector<FwdIt> candidates;
+	candidates.reserve(num);
+	for (auto it = begin; it != end; ++it) {
+		candidates.push_back(it);
+	}
+
+	// Stores : { value count, iter index }.
+	std::vector<std::pair<size_t, size_t>> counts;
+
+	// Count candidates, and remove duplicates.
+	for (size_t i = 0; i < candidates.size(); ++i) {
+		FwdIt c = candidates[i];
+		counts.push_back({ i, 1u });
+
+		auto new_end = std::remove_if(candidates.begin() + i + 1,
+				candidates.end(), [&](const auto& v) {
+					if (*v == *c) {
+						++counts[i].second;
+						return true;
+					}
+					return false;
+				});
+		candidates.erase(new_end, candidates.end());
+	}
+
+	// Now reverse sort counts to find highest frequency numbers.
+	std::sort(counts.begin(), counts.end(),
+			[](const std::pair<size_t, size_t>& lhs,
+					const std::pair<size_t, size_t>& rhs) {
+				return lhs.second > rhs.second;
+			});
+
+	// The final candidates are the front values who's counts are equal.
+	// If first count is 1, no mode found.
+	if (counts.front().second == 1u) {
+		return {};
+	}
+
+	std::vector<FwdIt> ret;
+	size_t max_count = counts.front().second;
+	for (const std::pair<size_t, size_t>& c : counts) {
+		if (c.second != max_count) {
+			break;
+		}
+		ret.push_back(candidates[c.first]);
+	}
+	return ret;
+}
+
+// Compute the mode (the most common number in set).
+// Returns a vector of iterators pointing to the highest frequency numbers,
+// or an empty vector if no mode was found.
+// O(n^2) for memory concearns.
+template <class FwdIt>
+FEA_NODISCARD constexpr std::vector<FwdIt> mode(FwdIt begin, FwdIt end) {
+	return mode(
+			begin, end, [](const auto& v) -> const auto& { return v; });
+}
 
 
 // Compute variance of values, sigma^2.

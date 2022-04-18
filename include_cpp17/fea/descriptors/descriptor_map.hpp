@@ -58,15 +58,18 @@ namespace detail {
 template <class T>
 using has_key = decltype(std::declval<T>().key);
 
-template <class T, class Func>
-decltype(auto) dm_unerase(Func&& f) {
-	return f(T{});
+template <class FuncRet, class T, class Func>
+FuncRet dm_unerase(Func&& func) {
+	return std::forward<Func>(func)(T{});
 }
 
-template <class Func, class... Ds>
-constexpr decltype(auto) dm_unerase_lookup() {
-	using func_t = std::common_type_t<decltype(&dm_unerase<Ds, Func>)...>;
-	return std::array<func_t, sizeof...(Ds)>{ &dm_unerase<Ds, Func>... };
+template <class FuncRet, class Func, class... Ds>
+constexpr auto dm_unerase_lookup() {
+	using func_t
+			= std::common_type_t<decltype(&dm_unerase<FuncRet, Ds, Func>)...>;
+	return std::array<func_t, sizeof...(Ds)>{
+		&dm_unerase<FuncRet, Ds, Func>...
+	};
 }
 } // namespace detail
 
@@ -91,20 +94,23 @@ struct descriptor_map {
 	// All the keys.
 	static constexpr std::array<key_t, size> keys{ Descriptors::key... };
 
-	// Get a specific descriptor at runtime.
-	template <class Func>
-	static constexpr decltype(auto) descriptor(KeyT key, Func&& func) {
-		// Unerase lookup (switch-case equivalent).
-		constexpr auto lookup
-				= detail::dm_unerase_lookup<Func, Descriptors...>();
-		return lookup[size_t(key)](std::forward<Func>(func));
-	}
-
 	// Get a specific descriptor.
 	template <KeyT K>
 	[[nodiscard]] static constexpr auto descriptor() {
 		return std::tuple_element_t<size_t(K), desc_tup_t>{};
 	}
+
+	// Get a specific descriptor at runtime.
+	template <class Func>
+	static constexpr decltype(auto) descriptor(KeyT key, Func&& func) {
+		// Unerase lookup (switch-case equivalent).
+		using func_ret_t
+				= std::invoke_result_t<Func, decltype(descriptor<KeyT(0)>())>;
+		constexpr auto lookup
+				= detail::dm_unerase_lookup<func_ret_t, Func, Descriptors...>();
+		return lookup[size_t(key)](std::forward<Func>(func));
+	}
+
 
 	// Get a descriptor's key at index I.
 	template <size_t Idx>

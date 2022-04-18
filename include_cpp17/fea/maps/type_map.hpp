@@ -56,8 +56,8 @@ namespace detail {
 template <class Func, class T>
 using tm_has_imp = decltype(std::declval<Func>()(std::declval<T>()));
 
-template <size_t I, class TMap, class Func>
-decltype(auto) tm_unerase(TMap& tmap, Func&& func) {
+template <class FuncRet, size_t I, class TMap, class Func>
+FuncRet tm_unerase(TMap& tmap, Func&& func) {
 	return std::forward<Func>(func)(tmap.template at<I>());
 }
 
@@ -75,10 +75,13 @@ decltype(auto) tm_unerase(TMap& tmap, Func&& func) {
 //	}
 //}
 
-template <class Func, class TMap, size_t... Is>
-constexpr decltype(auto) tm_unerase_lookup(std::index_sequence<Is...>) {
-	using func_t = std::common_type_t<decltype(&tm_unerase<Is, TMap, Func>)...>;
-	return std::array<func_t, sizeof...(Is)>{ &tm_unerase<Is, TMap, Func>... };
+template <class FuncRet, class Func, class TMap, size_t... Is>
+constexpr auto tm_unerase_lookup(std::index_sequence<Is...>) {
+	using func_t = std::common_type_t<
+			decltype(&tm_unerase<FuncRet, Is, TMap, Func>)...>;
+	return std::array<func_t, sizeof...(Is)>{
+		&tm_unerase<FuncRet, Is, TMap, Func>...
+	};
 
 	// WIP
 	// using func_t = decltype(&tm_unerase<0, TMap, Func>);
@@ -127,13 +130,9 @@ struct type_map_base {
 	template <class Func>
 	constexpr decltype(auto) at(size_t idx, Func&& func) const {
 		// Unerase lookup (switch-case equivalent).
-		// auto getit = [&, this](auto const_i) -> decltype(auto) {
-		//	constexpr size_t i = const_i;
-		//	return std::forward<Func>(func)(at<i>());
-		//};
-
+		using func_ret_t = std::invoke_result_t<Func, decltype(at<0>())>;
 		constexpr auto lookup
-				= detail::tm_unerase_lookup<Func, decltype(*this)>(
+				= detail::tm_unerase_lookup<func_ret_t, Func, decltype(*this)>(
 						std::make_index_sequence<size()>{});
 		return lookup[idx](*this, std::forward<Func>(func));
 	}
@@ -141,13 +140,10 @@ struct type_map_base {
 	// Get value at runtime index.
 	template <class Func>
 	constexpr decltype(auto) at(size_t idx, Func&& func) {
-		//// Unerase lookup (switch-case equivalent).
-		// auto getit = [&, this](auto const_i) -> decltype(auto) {
-		//	constexpr size_t i = const_i;
-		//	return std::forward<Func>(func)(at<i>());
-		//};
+		// Unerase lookup (switch-case equivalent).
+		using func_ret_t = std::invoke_result_t<Func, decltype(at<0>())>;
 		constexpr auto lookup
-				= detail::tm_unerase_lookup<Func, decltype(*this)>(
+				= detail::tm_unerase_lookup<func_ret_t, Func, decltype(*this)>(
 						std::make_index_sequence<size()>{});
 		return lookup[idx](*this, std::forward<Func>(func));
 	}

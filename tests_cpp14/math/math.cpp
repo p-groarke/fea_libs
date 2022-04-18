@@ -81,5 +81,30 @@ TEST(math, basics) {
 		vd = { 12, 3, 5, 9, 22, 37, 44, 51, 32, 2, 10, 25 };
 		EXPECT_EQ(fea::median(vd.begin(), vd.end()), 17.0);
 	}
+
+	{
+		std::vector<int> v{ 16, 3, 16, 6, 9, 27, 3, 27, 37, 16, 48 };
+		using it_t = std::vector<int>::iterator;
+
+		std::vector<it_t> answer = fea::mode(v.begin(), v.end());
+		EXPECT_EQ(answer.size(), 1u);
+		EXPECT_EQ(*answer.front(), 16);
+
+		v = { 16, 3, 16, 6, 9, 27, 3, 27, 37, 16, 48, 0, 5, 3 };
+		answer = fea::mode(v.begin(), v.end());
+		EXPECT_EQ(answer.size(), 2u);
+		for (auto it : answer) {
+			EXPECT_TRUE(*it == 16 || *it == 3);
+		}
+
+		v = { 0, 1, 2, 3, 4 };
+		answer = fea::mode(v.begin(), v.end());
+		EXPECT_EQ(answer.size(), 0u);
+
+		v = { 1, 4, 1, 2, 7, 1, 2, 5, 3, 6 };
+		answer = fea::mode(v.begin(), v.end());
+		EXPECT_EQ(answer.size(), 1u);
+		EXPECT_EQ(*answer.front(), 1);
+	}
 }
 } // namespace
