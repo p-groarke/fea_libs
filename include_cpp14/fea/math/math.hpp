@@ -97,25 +97,27 @@ FEA_NODISCARD constexpr auto median(FwdIt begin, FwdIt end) {
 }
 
 // Compute the mode (the most common number in set).
-// Returns a vector of iterators pointing to the highest frequency numbers,
+// Returns a vector of highest frequency items,
 // or an empty vector if no mode was found.
-// O(n^2) for memory concearns.
+// Note : Heap allocates.
 template <class FwdIt, class Func>
-FEA_NODISCARD std::vector<FwdIt> mode(FwdIt begin, FwdIt end, Func&& func) {
+FEA_NODISCARD auto mode(FwdIt begin, FwdIt end, Func&& func) {
+	using T = std::decay_t<decltype(func(*begin))>;
+
 	size_t num = std::distance(begin, end);
 	if (num == 0) {
-		return {};
+		return std::vector<T>{};
 	}
 	if (num == 1) {
-		return { begin };
+		return std::vector<T>{ func(*begin) };
 	}
 
 	// Copy iters in candidate vec.
 	// std::vector<std::remove_cv_t<FwdIt>> candidates;
-	std::vector<FwdIt> candidates;
+	std::vector<T> candidates;
 	candidates.reserve(num);
 	for (auto it = begin; it != end; ++it) {
-		candidates.push_back(it);
+		candidates.push_back(func(*it));
 	}
 
 	// Stores : { value count, iter index }.
@@ -123,12 +125,12 @@ FEA_NODISCARD std::vector<FwdIt> mode(FwdIt begin, FwdIt end, Func&& func) {
 
 	// Count candidates, and remove duplicates.
 	for (size_t i = 0; i < candidates.size(); ++i) {
-		FwdIt c = candidates[i];
+		const T& c = candidates[i];
 		counts.push_back({ i, 1u });
 
-		auto new_end = std::remove_if(candidates.begin() + i + 1,
-				candidates.end(), [&](const auto& v) {
-					if (*v == *c) {
+		auto new_end = std::remove_if(
+				candidates.begin() + i + 1, candidates.end(), [&](const T& v) {
+					if (v == c) {
 						++counts[i].second;
 						return true;
 					}
@@ -147,10 +149,10 @@ FEA_NODISCARD std::vector<FwdIt> mode(FwdIt begin, FwdIt end, Func&& func) {
 	// The final candidates are the front values who's counts are equal.
 	// If first count is 1, no mode found.
 	if (counts.front().second == 1u) {
-		return {};
+		return std::vector<T>{};
 	}
 
-	std::vector<FwdIt> ret;
+	std::vector<T> ret;
 	size_t max_count = counts.front().second;
 	for (const std::pair<size_t, size_t>& c : counts) {
 		if (c.second != max_count) {
@@ -162,11 +164,11 @@ FEA_NODISCARD std::vector<FwdIt> mode(FwdIt begin, FwdIt end, Func&& func) {
 }
 
 // Compute the mode (the most common number in set).
-// Returns a vector of iterators pointing to the highest frequency numbers,
+// Returns a vector of the highest frequency items,
 // or an empty vector if no mode was found.
-// O(n^2) for memory concearns.
+// Note : Heap allocates.
 template <class FwdIt>
-FEA_NODISCARD std::vector<FwdIt> mode(FwdIt begin, FwdIt end) {
+FEA_NODISCARD auto mode(FwdIt begin, FwdIt end) {
 	return mode(
 			begin, end, [](const auto& v) -> const auto& { return v; });
 }

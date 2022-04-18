@@ -84,17 +84,16 @@ TEST(math, basics) {
 
 	{
 		std::vector<int> v{ 16, 3, 16, 6, 9, 27, 3, 27, 37, 16, 48 };
-		using it_t = std::vector<int>::iterator;
 
-		std::vector<it_t> answer = fea::mode(v.begin(), v.end());
+		std::vector<int> answer = fea::mode(v.begin(), v.end());
 		EXPECT_EQ(answer.size(), 1u);
-		EXPECT_EQ(*answer.front(), 16);
+		EXPECT_EQ(answer.front(), 16);
 
 		v = { 16, 3, 16, 6, 9, 27, 3, 27, 37, 16, 48, 0, 5, 3 };
 		answer = fea::mode(v.begin(), v.end());
 		EXPECT_EQ(answer.size(), 2u);
-		for (auto it : answer) {
-			EXPECT_TRUE(*it == 16 || *it == 3);
+		for (auto val : answer) {
+			EXPECT_TRUE(val == 16 || val == 3);
 		}
 
 		v = { 0, 1, 2, 3, 4 };
@@ -104,7 +103,7 @@ TEST(math, basics) {
 		v = { 1, 4, 1, 2, 7, 1, 2, 5, 3, 6 };
 		answer = fea::mode(v.begin(), v.end());
 		EXPECT_EQ(answer.size(), 1u);
-		EXPECT_EQ(*answer.front(), 1);
+		EXPECT_EQ(answer.front(), 1);
 	}
 }
 } // namespace
