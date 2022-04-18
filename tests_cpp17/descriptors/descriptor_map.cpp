@@ -1,13 +1,13 @@
-#include <fea/descriptors/descriptors.hpp>
+#include <fea/descriptors/descriptor_map.hpp>
 #include <gtest/gtest.h>
 #include <string_view>
 
 namespace {
 struct desc_l {
-	static constexpr size_t key = 0;
+	[[maybe_unused]] static constexpr size_t key = 0;
 };
 struct desc_u {
-	static constexpr size_t Key = 0;
+	[[maybe_unused]] static constexpr size_t Key = 0;
 };
 struct desc_nok {};
 struct desc_badk {
@@ -50,13 +50,10 @@ struct kennebec_desc {
 
 
 TEST(descriptors, basics) {
-	static_assert(!fea::descriptor_map<size_t, desc_l>::upper_case_key,
-			"descriptors.cpp : test failed");
-	static_assert(fea::descriptor_map<size_t, desc_u>::upper_case_key,
-			"descriptors.cpp : test failed");
-
 	static_assert(
-			std::is_same_v<fea::descriptor_map<potato, russet_desc>::key_t,
+			std::is_same_v<fea::descriptor_map<potato, russet_desc, yukon_desc,
+								   bintje_desc, king_edward_desc,
+								   kennebec_desc>::key_t,
 					potato>,
 			"descriptors.cpp : test failed");
 
@@ -80,6 +77,16 @@ TEST(descriptors, basics) {
 		EXPECT_EQ(test_arr2[potato(i)], std::to_string(i));
 	}
 
+	// VS v141 doesn't support constexpr array.
+	std::tuple<std::string_view, std::string_view, std::string_view,
+			std::string_view, std::string_view>
+			test_tup = mmap.make_tuple([](auto desc) { return desc.name; });
+
+	fea::static_for<size_t(potato::count)>([&](auto const_i) {
+		constexpr size_t i = const_i;
+		EXPECT_EQ(std::get<i>(test_tup), std::to_string(i));
+	});
+
 	size_t num_visited = 0;
 	mmap.for_each_descriptor([&](auto desc) {
 		constexpr size_t i = size_t(decltype(desc)::key);
@@ -88,6 +95,23 @@ TEST(descriptors, basics) {
 	});
 
 	EXPECT_EQ(num_visited, mmap.size);
+
+	{
+		int ret = mmap.descriptor(potato::kennebec, [&](auto desc) {
+			EXPECT_EQ(desc.name, kennebec_desc::name);
+			return int(42);
+		});
+		EXPECT_EQ(ret, 42);
+	}
+
+	{
+		int my_int = 101;
+		int& ret = mmap.descriptor(potato::kennebec, [&](auto desc) -> int& {
+			EXPECT_EQ(desc.name, kennebec_desc::name);
+			return my_int;
+		});
+		EXPECT_EQ(ret, my_int);
+	}
 
 	// Shouldn't compile
 	// fea::descriptor_map<potato, russet_desc, yukon_desc, bintje_desc,

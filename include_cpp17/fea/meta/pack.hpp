@@ -65,6 +65,15 @@ constexpr fea::pack<Args...> make_pack(Args&&...) {
 	return fea::pack<Args...>{};
 }
 
+template <class... Args>
+constexpr fea::pack<Args...> make_pack_from(std::tuple<Args...>&&) {
+	return fea::pack<Args...>{};
+}
+template <class... Args>
+constexpr fea::pack<Args...> make_pack_from(const std::tuple<Args...>&) {
+	return fea::pack<Args...>{};
+}
+
 // make_pack_nt doesn't make sense, since you can't deduce non-type parameters.
 
 

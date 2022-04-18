@@ -5,7 +5,7 @@
 
 namespace {
 struct my_class_impl;
-struct my_class {
+struct my_class : fea::pimpl_ptr<my_class_impl> {
 	my_class() = default;
 	my_class(const my_class&) = default;
 	my_class(my_class&&) = default;
@@ -14,7 +14,8 @@ struct my_class {
 
 	~my_class();
 
-	fea::pimpl_ptr<my_class_impl> impl;
+	// make it public for tests
+	using fea::pimpl_ptr<my_class_impl>::_impl;
 };
 
 struct my_class_impl {
@@ -51,33 +52,29 @@ TEST(pimpl_ptr, asserts) {
 
 TEST(pimpl_ptr, basics) {
 	my_class m;
-	EXPECT_EQ(m.impl->data, -42);
-	EXPECT_EQ(m.impl->data2.front(), -42);
-	m.impl->data2.push_back(101);
+	EXPECT_EQ(m._impl->data, -42);
+	EXPECT_EQ(m._impl->data2.front(), -42);
+	m._impl->data2.push_back(101);
 
-	m.impl->data = 42;
-	EXPECT_EQ(m.impl->data, 42);
+	m._impl->data = 42;
+	EXPECT_EQ(m._impl->data, 42);
 
 	{
 		my_class m2(m);
-		EXPECT_EQ(m2.impl->data, 42);
+		EXPECT_EQ(m2._impl->data, 42);
 
 		my_class m3 = m2;
-		EXPECT_EQ(m2.impl->data, 42);
+		EXPECT_EQ(m2._impl->data, 42);
 	}
 
 	{
 		my_class mcpy = m;
 		my_class m2(std::move(mcpy));
-		EXPECT_EQ(m2.impl->data, 42);
-		EXPECT_EQ(mcpy.impl->data, -42);
-		EXPECT_EQ(mcpy.impl->data2.front(), -42);
+		EXPECT_EQ(m2._impl->data, 42);
 
 		mcpy = m;
 		my_class m3 = std::move(mcpy);
-		EXPECT_EQ(m3.impl->data, 42);
-		EXPECT_EQ(mcpy.impl->data, -42);
-		EXPECT_EQ(mcpy.impl->data2.front(), -42);
+		EXPECT_EQ(m3._impl->data, 42);
 	}
 }
 } // namespace

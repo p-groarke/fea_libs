@@ -35,7 +35,9 @@
 #include "fea/utils/platform.hpp"
 #include "fea/utils/unused.hpp"
 
+#include <array>
 #include <cstddef>
+#include <tuple>
 #include <type_traits>
 #include <utility>
 
@@ -53,24 +55,147 @@ constexpr void fold(Func&& func, Args&&... args) {
 }
 
 namespace detail {
-template <class Func, size_t... I>
-constexpr void static_for(Func& func, std::index_sequence<I...>) {
-#if FEA_CPP17
-	(func(std::integral_constant<size_t, I>{}), ...);
-#else
-	char dummy[]
-			= { (void(func(std::integral_constant<size_t, I>{})), '0')... };
-	unused(dummy);
-#endif
+// Checks if the all the passed in traits are true.
+template <class...>
+struct sf_all_of : std::true_type {};
+
+template <class Trait, class... Traits>
+struct sf_all_of<Trait, Traits...>
+		: std::conditional<Trait::value, sf_all_of<Traits...>,
+				  std::false_type>::type {
+	// Check that provided templates are type_traits. Better way?
+	static_assert(Trait::value == true || Trait::value == false,
+			"fea::all_of : must use type traits");
+};
+
+// Return type of the call with I constant.
+template <class Func, size_t I>
+struct sf_ret {
+	using type = decltype(std::declval<Func>()(
+			std::integral_constant<size_t, I>{}));
+};
+template <class Func, size_t I>
+using sf_ret_t = typename sf_ret<Func, I>::type;
+
+// Return type or std::nullptr_t if void.
+template <class RetT>
+struct sf_ret_or_nullptr {
+	using type = RetT;
+};
+template <>
+struct sf_ret_or_nullptr<void> {
+	using type = std::nullptr_t;
+};
+template <class RetT>
+using sf_ret_or_nullptr_t = typename sf_ret_or_nullptr<RetT>::type;
+
+
+template <class Func, size_t First, size_t... I>
+constexpr bool sf_all_ret_same() {
+	return sf_all_of<
+			std::is_same<sf_ret_t<Func, First>, sf_ret_t<Func, I>>...>::value;
 }
+
+template <bool, class, size_t...>
+struct sf_ret_pack_tup_or_arr;
+
+// All same value, return array.
+// No need for nullptr_t, if all rets are void we never get here.
+template <class Func, size_t First, size_t... I>
+struct sf_ret_pack_tup_or_arr<true, Func, First, I...> {
+	using type = std::array<sf_ret_t<Func, First>, sizeof...(I) + 1>;
+};
+
+// Not all same value, return tuple.
+template <class Func, size_t... I>
+struct sf_ret_pack_tup_or_arr<false, Func, I...> {
+	using type = std::tuple<sf_ret_or_nullptr_t<sf_ret_t<Func, I>>...>;
+};
+template <class Func, size_t... I>
+using sf_ret_pack_tup_or_arr_t =
+		typename sf_ret_pack_tup_or_arr<sf_all_ret_same<Func, I...>(), Func,
+				I...>::type;
+
+// The final return type.
+template <bool, class, size_t...>
+struct sf_ret_pack;
+
+// All void return.
+template <class Func, size_t... I>
+struct sf_ret_pack<true, Func, I...> {
+	using type = void;
+};
+
+// Not all return void.
+template <class Func, size_t... I>
+struct sf_ret_pack<false, Func, I...> {
+	using type = sf_ret_pack_tup_or_arr_t<Func, I...>;
+};
+
+template <class Func, size_t... I>
+constexpr bool sf_all_ret_void() {
+	return sf_all_of<std::is_same<sf_ret_t<Func, I>, void>...>::value;
+}
+
+template <class Func, size_t... I>
+using static_for_ret_t =
+		typename sf_ret_pack<sf_all_ret_void<Func, I...>(), Func, I...>::type;
+
+
+template <class Ret, class Func, size_t I>
+struct pass_through {
+	constexpr Ret operator()(Func& func) const {
+		return func(std::integral_constant<size_t, I>{});
+	}
+};
+template <class Func, size_t I>
+struct pass_through<void, Func, I> {
+	constexpr std::nullptr_t operator()(Func& func) const {
+		func(std::integral_constant<size_t, I>{});
+		return std::nullptr_t{};
+	}
+};
+
+
+template <class RetT, class Func, size_t... I>
+struct do_static_for {
+	constexpr RetT operator()(Func& func) const {
+		return RetT{ pass_through<sf_ret_t<Func, I>, Func, I>{}(func)... };
+	}
+};
+
+template <class Func, size_t... I>
+struct do_static_for<void, Func, I...> {
+	constexpr void operator()(Func& func) const {
+#if FEA_CPP17
+		(func(std::integral_constant<size_t, I>{}), ...);
+#else
+		char dummy[]
+				= { (void(func(std::integral_constant<size_t, I>{})), '0')... };
+		unused(dummy);
+#endif
+	}
+};
+
+
+template <class Func, size_t... I>
+constexpr auto static_for(Func& func, std::index_sequence<I...>) {
+	return do_static_for<static_for_ret_t<Func, I...>, Func, I...>{}(func);
+}
+
 } // namespace detail
 
 // Call a for loop at compile time.
 // Your lambda is provided with an integral_constant.
-// Accept it with auto, access the index with '::value'.
+// Accept it with auto, access the index with '::value' or '()'.
+// If any of your lambda invocations returns values:
+// they are concatenated in an array if all identical types, or tuple if not.
+// std::nullptr_t is used as a sentinel to denote invocations that don't return
+// anything (when returning tuples).
+// If all invocations return void, returns void.
 template <size_t N, class Func>
-constexpr void static_for(Func&& func) {
-	detail::static_for(func, std::make_index_sequence<N>{});
+constexpr auto static_for(Func&& func) {
+	return detail::static_for(func, std::make_index_sequence<N>{});
 }
 
 

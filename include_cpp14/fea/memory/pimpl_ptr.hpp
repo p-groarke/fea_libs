@@ -49,49 +49,35 @@ struct pimpl_ptr {
 	using deleter_type = Deleter;
 
 	pimpl_ptr()
-			: _ptr(std::make_unique<T>()) {
+			: _impl(std::make_unique<T>()) {
+	}
+
+	template <class... Args>
+	pimpl_ptr(Args&&... args)
+			: _impl(std::make_unique<T>(std::forward<Args>(args)...)) {
 	}
 
 	pimpl_ptr(const pimpl_ptr& other)
-			: _ptr(std::make_unique<T>(*other)) {
+			: _impl(std::make_unique<T>(*other._impl)) {
 	}
-	pimpl_ptr(pimpl_ptr&& other)
-			: _ptr(std::make_unique<T>(std::move(*other))) {
-		*other = {};
+	pimpl_ptr(pimpl_ptr&& other) noexcept
+			: _impl(std::make_unique<T>(std::move(*other._impl))) {
 	}
 	pimpl_ptr& operator=(const pimpl_ptr& other) {
 		if (this != &other) {
-			*_ptr = *other;
+			*_impl = *other._impl;
 		}
 		return *this;
 	}
-	pimpl_ptr& operator=(pimpl_ptr&& other) {
+	pimpl_ptr& operator=(pimpl_ptr&& other) noexcept {
 		if (this != &other) {
-			*_ptr = std::move(*other);
-			*other = {};
+			*_impl = std::move(*other._impl);
 		}
 		return *this;
-	}
-
-	~pimpl_ptr() = default;
-
-	pointer get() const noexcept {
-		return _ptr.get();
-	}
-
-	pointer operator->() const noexcept {
-		return _ptr.get();
-	}
-
-	const std::add_lvalue_reference_t<T> operator*() const {
-		return *_ptr;
-	}
-	std::add_lvalue_reference_t<T> operator*() {
-		return *_ptr;
 	}
 
 protected:
-	const std::unique_ptr<element_type, deleter_type> _ptr;
+	const std::unique_ptr<element_type, deleter_type> _impl;
 };
 
 } // namespace fea

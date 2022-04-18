@@ -37,6 +37,7 @@
 #include "fea/meta/tuple.hpp"
 #include "fea/utils/platform.hpp"
 
+#include <array>
 
 /*
 fea::type_map stores items which can be accessed using types. The types must be
@@ -52,6 +53,43 @@ maps.
 
 namespace fea {
 namespace detail {
+template <class Func, class T>
+using tm_has_imp = decltype(std::declval<Func>()(std::declval<T>()));
+
+template <class FuncRet, size_t I, class TMap, class Func>
+FuncRet tm_unerase(TMap& tmap, Func&& func) {
+	return std::forward<Func>(func)(tmap.template at<I>());
+}
+
+// WIP : Use id_detected idiom to filter out unavailable
+// instantiations and move the problem to runtime.
+// template <class FuncPtrT, size_t I, class Func, class TMap>
+// constexpr FuncPtrT tm_filter_uncallable() {
+//	using called_t = decltype(std::declval<TMap>().at<I>());
+//	// using called_t = std::tuple_element_t<I, std::decay_t<TMap>::values_t>;
+//
+//	if constexpr (fea::is_detected_v<tm_has_imp, Func, called_t>) {
+//		return &tm_unerase<I, TMap, Func>;
+//	} else {
+//		return nullptr;
+//	}
+//}
+
+template <class FuncRet, class Func, class TMap, size_t... Is>
+constexpr auto tm_unerase_lookup(std::index_sequence<Is...>) {
+	using func_t = std::common_type_t<
+			decltype(&tm_unerase<FuncRet, Is, TMap, Func>)...>;
+	return std::array<func_t, sizeof...(Is)>{
+		&tm_unerase<FuncRet, Is, TMap, Func>...
+	};
+
+	// WIP
+	// using func_t = decltype(&tm_unerase<0, TMap, Func>);
+	// return std::array<func_t, sizeof...(Is)>{
+	//	tm_filter_uncallable<func_t, Is, Func, TMap>()...
+	//};
+}
+
 template <class... Values>
 struct type_map_base {
 	using values_t = std::tuple<Values...>;
@@ -74,6 +112,42 @@ struct type_map_base {
 		return ret;
 	}
 
+	// Get value at index.
+	template <size_t Idx>
+	constexpr const auto& at() const {
+		static_assert(Idx < size(), "type_map : index out-of-range");
+		return std::get<Idx>(data());
+	}
+
+	// Get value at index.
+	template <size_t Idx>
+	constexpr auto& at() {
+		static_assert(Idx < size(), "type_map : index out-of-range");
+		return std::get<Idx>(data());
+	}
+
+	// Get value at runtime index.
+	template <class Func>
+	constexpr decltype(auto) at(size_t idx, Func&& func) const {
+		// Unerase lookup (switch-case equivalent).
+		using func_ret_t = std::invoke_result_t<Func, decltype(at<0>())>;
+		constexpr auto lookup
+				= detail::tm_unerase_lookup<func_ret_t, Func, decltype(*this)>(
+						std::make_index_sequence<size()>{});
+		return lookup[idx](*this, std::forward<Func>(func));
+	}
+
+	// Get value at runtime index.
+	template <class Func>
+	constexpr decltype(auto) at(size_t idx, Func&& func) {
+		// Unerase lookup (switch-case equivalent).
+		using func_ret_t = std::invoke_result_t<Func, decltype(at<0>())>;
+		constexpr auto lookup
+				= detail::tm_unerase_lookup<func_ret_t, Func, decltype(*this)>(
+						std::make_index_sequence<size()>{});
+		return lookup[idx](*this, std::forward<Func>(func));
+	}
+
 
 	// The data, a tuple of your values.
 	constexpr const auto& data() const {
@@ -81,6 +155,10 @@ struct type_map_base {
 	}
 	constexpr auto& data() {
 		return _values;
+	}
+
+	static constexpr size_t size() {
+		return std::tuple_size_v<values_t>;
 	}
 
 private:
@@ -95,7 +173,7 @@ struct type_map;
 // Typed type_map.
 template <class... Keys, class... Values>
 struct type_map<fea::pack<Keys...>, Values...>
-		: detail::type_map_base<Values...> {
+		: public detail::type_map_base<Values...> {
 	static_assert(sizeof...(Keys) == sizeof...(Values),
 			"type_map : unequal number of keys and values");
 
@@ -130,6 +208,15 @@ struct type_map<fea::pack<Keys...>, Values...>
 
 		constexpr size_t idx = pack_idx_v<Key, pack_t>;
 		return std::get<idx>(base_t::data());
+	}
+
+	// Return the key's index.
+	template <class Key>
+	constexpr size_t idx() const {
+		static_assert(
+				contains<Key>(), "type_map : doesn't contain requested key");
+
+		return pack_idx_v<Key, pack_t>;
 	}
 
 	// Loops on all elements of map.
@@ -196,6 +283,15 @@ struct type_map<fea::pack_nt<Keys...>, Values...>
 
 		constexpr size_t idx = pack_idx_nt_v<Key, pack_t>;
 		return std::get<idx>(base_t::data());
+	}
+
+	// Return the key's index.
+	template <auto Key>
+	constexpr size_t idx() const {
+		static_assert(
+				contains<Key>(), "type_map : doesn't contain requested key");
+
+		return pack_idx_nt_v<Key, pack_t>;
 	}
 
 	// Loops on all elements of map.

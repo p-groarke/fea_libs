@@ -183,51 +183,63 @@ TEST(pack, basics) {
 TEST(pack, splice) {
 	static_assert(std::is_same<fea::idx_splice_t<0, int, double, float, short>,
 						  int>::value,
-			"traits.cpp : test failed");
+			"pack.cpp : test failed");
 	static_assert(
 			std::is_same<fea::idx_splice_before_t<0, int, double, float, short>,
 					fea::pack<>>::value,
-			"traits.cpp : test failed");
+			"pack.cpp : test failed");
 	static_assert(
 			std::is_same<fea::idx_splice_after_t<0, int, double, float, short>,
 					fea::pack<double, float, short>>::value,
-			"traits.cpp : test failed");
+			"pack.cpp : test failed");
 
 	static_assert(std::is_same<fea::idx_splice_t<1, int, double, float, short>,
 						  double>::value,
-			"traits.cpp : test failed");
+			"pack.cpp : test failed");
 	static_assert(
 			std::is_same<fea::idx_splice_before_t<1, int, double, float, short>,
 					fea::pack<int>>::value,
-			"traits.cpp : test failed");
+			"pack.cpp : test failed");
 	static_assert(
 			std::is_same<fea::idx_splice_after_t<1, int, double, float, short>,
 					fea::pack<float, short>>::value,
-			"traits.cpp : test failed");
+			"pack.cpp : test failed");
 
 	static_assert(std::is_same<fea::idx_splice_t<2, int, double, float, short>,
 						  float>::value,
-			"traits.cpp : test failed");
+			"pack.cpp : test failed");
 	static_assert(
 			std::is_same<fea::idx_splice_before_t<2, int, double, float, short>,
 					fea::pack<int, double>>::value,
-			"traits.cpp : test failed");
+			"pack.cpp : test failed");
 	static_assert(
 			std::is_same<fea::idx_splice_after_t<2, int, double, float, short>,
 					fea::pack<short>>::value,
-			"traits.cpp : test failed");
+			"pack.cpp : test failed");
 
 	static_assert(std::is_same<fea::idx_splice_t<3, int, double, float, short>,
 						  short>::value,
-			"traits.cpp : test failed");
+			"pack.cpp : test failed");
 	static_assert(
 			std::is_same<fea::idx_splice_before_t<3, int, double, float, short>,
 					fea::pack<int, double, float>>::value,
-			"traits.cpp : test failed");
+			"pack.cpp : test failed");
 	static_assert(
 			std::is_same<fea::idx_splice_after_t<3, int, double, float, short>,
 					fea::pack<>>::value,
-			"traits.cpp : test failed");
+			"pack.cpp : test failed");
+
+	{
+		std::tuple<int, double, float, char> tup;
+		static_assert(std::is_same<decltype(fea::make_pack_from(tup)),
+							  fea::pack<int, double, float, char>>::value,
+				"pack.cpp : test failed");
+		static_assert(
+				std::is_same<decltype(fea::make_pack_from(
+									 std::tuple<int, double, float, char>{})),
+						fea::pack<int, double, float, char>>::value,
+				"pack.cpp : test failed");
+	}
 }
 
 TEST(pack, for_each) {
