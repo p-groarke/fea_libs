@@ -1,5 +1,6 @@
 #include <array>
 #include <fea/math/math.hpp>
+#include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 #include <vector>
 
@@ -26,7 +27,11 @@ TEST(math, basics) {
 	static_assert(
 			fea::stars_and_bars_pos(7, 3) == 15, "math.cpp : unit test failed");
 
+#if defined(FEA_64BIT)
+	// Overflows on 32 bits.
 	EXPECT_EQ(fea::stars_and_bars_zero(size_t(10), size_t(4)), size_t(286));
+#endif
+
 	static_assert(fea::stars_and_bars_zero(5, 4) == 56,
 			"math.cpp : unit test failed");
 
@@ -52,8 +57,29 @@ TEST(math, basics) {
 	}
 
 	{
-		std::vector<int> v{ 10, 10, 20, 40, 70 };
+		std::vector<int> v{ 20, 70, 10, 40, 10 };
 		EXPECT_EQ(fea::mean(v.begin(), v.end()), 30);
+		EXPECT_EQ(fea::median(v.begin(), v.end()), 20);
+
+		std::vector<int> v2{ 20, 70, 10, 40, 10 };
+		EXPECT_EQ(v, v2);
+
+		v = { 10, 8, 6, 9, 2, 3, 4, 5, 8 };
+		EXPECT_EQ(fea::median(v.begin(), v.end()), 6);
+
+		std::vector<double> vd = { 7.0, 4.0, 9.0, 3.0 };
+		EXPECT_EQ(fea::mean(vd.begin(), vd.end()), 5.75);
+		EXPECT_EQ(fea::median(vd.begin(), vd.end()), 5.5);
+
+		vd = { 16, 15, 18, 20, 17, 19 };
+		EXPECT_EQ(fea::median(vd.begin(), vd.end()), 17.5);
+
+		vd = { 3, 15, 9, 2, 27, 24, 38, 26, 45, 21, 56, 16, 11, 55, 29, 22,
+			60 };
+		EXPECT_EQ(fea::median(vd.begin(), vd.end()), 24.0);
+
+		vd = { 12, 3, 5, 9, 22, 37, 44, 51, 32, 2, 10, 25 };
+		EXPECT_EQ(fea::median(vd.begin(), vd.end()), 17.0);
 	}
 }
 } // namespace

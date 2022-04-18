@@ -7,6 +7,7 @@
 #include <iterator>
 #include <numeric>
 #include <type_traits>
+#include <vector>
 
 namespace fea {
 // Computes the sum of items in container.
@@ -60,6 +61,45 @@ FEA_NODISCARD constexpr auto mean(FwdIt begin, FwdIt end) {
 	return mean(
 			begin, end, [](const auto& v) -> const auto& { return v; });
 }
+
+// Compute the median (middle value of given set).
+// Provided callback must return desired value.
+// Note : This function heap allocates. Values
+// must be sortable.
+template <class FwdIt, class Func>
+FEA_NODISCARD constexpr auto median(FwdIt begin, FwdIt end, Func&& func) {
+	using T = std::decay_t<decltype(*begin)>;
+	std::vector<T> vals;
+	vals.reserve(std::distance(begin, end));
+	for (auto it = begin; it != end; ++it) {
+		vals.push_back(func(*it));
+	}
+	std::sort(vals.begin(), vals.end());
+
+	if (vals.size() % 2 == 0) {
+		// Even set, average middle values.
+		const T& v1 = vals[(vals.size() / 2) - 1];
+		const T& v2 = vals[vals.size() / 2];
+		return T((v1 + v2) / 2.0);
+	}
+
+	return vals[(vals.size() - 1) / 2];
+}
+
+// Compute the median (middle value of given set).
+// Note : This function heap allocates. Values
+// must be sortable.
+template <class FwdIt>
+FEA_NODISCARD constexpr auto median(FwdIt begin, FwdIt end) {
+	return median(
+			begin, end, [](const auto& v) -> const auto& { return v; });
+}
+
+// TODO
+// Compute the mode (the most common number in set).
+// Returns a iterators pointing to the highest frequency numbers,
+// or end() if no mode was found.
+
 
 // Compute variance of values, sigma^2.
 // Predicate function must return value to compute.
