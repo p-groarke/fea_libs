@@ -113,10 +113,6 @@ struct one_of<Trait, Traits...>
 template <class... Traits>
 FEA_INLINE_VAR constexpr bool one_of_v = one_of<Traits...>::value;
 
-// Used in is_detected and to indicate a void type in container.
-template <class...>
-using void_t = void;
-
 /*
 is_detected checks if a given type has function.
 You must call this with a "detector alias", for example :
@@ -130,14 +126,48 @@ More info : https://en.cppreference.com/w/cpp/experimental/is_detected
 
 See unit tests for more examples.
 */
-template <template <class...> class Op, class = void, class...>
-struct is_detected : std::false_type {};
-template <template <class...> class Op, class... Args>
-struct is_detected<Op, void_t<Op<Args...>>, Args...> : std::true_type {};
+
+// Used in is_detected and to indicate a void type in container.
+template <class...>
+using void_t = void;
+
+namespace detail {
+struct nonesuch {
+	~nonesuch() = delete;
+	nonesuch(nonesuch const&) = delete;
+	void operator=(nonesuch const&) = delete;
+};
+
+template <class Default, class AlwaysVoid, template <class...> class Op,
+		class... Args>
+struct detector {
+	using value_t = std::false_type;
+	using type = Default;
+};
+
+template <class Default, template <class...> class Op, class... Args>
+struct detector<Default, std::void_t<Op<Args...>>, Op, Args...> {
+	using value_t = std::true_type;
+	using type = Op<Args...>;
+};
+
+// Old version
+// template <template <class...> class Op, class = void, class...>
+// struct is_detected : std::false_type {};
+// template <template <class...> class Op, class... Args>
+// struct is_detected<Op, void_t<Op<Args...>>, Args...> : std::true_type {};
+// template <template <class...> class Op, class... Args>
+// FEA_INLINE_VAR constexpr bool is_detected_v = is_detected<Op, void,
+// Args...>::value;
+
+} // namespace detail
 
 template <template <class...> class Op, class... Args>
-FEA_INLINE_VAR constexpr bool is_detected_v
-		= is_detected<Op, void, Args...>::value;
+using is_detected =
+		typename detail::detector<detail::nonesuch, void, Op, Args...>::value_t;
+
+template <template <class...> class Op, class... Args>
+FEA_INLINE_VAR constexpr bool is_detected_v = is_detected<Op, Args...>::value;
 
 
 // Is the same non-type parameter.

@@ -1,12 +1,16 @@
 ﻿#pragma once
 #include "fea/utils/platform.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <chrono>
 #include <limits>
+#include <numeric>
 #include <random>
 #include <type_traits>
+#include <utility>
+#include <vector>
 
 namespace fea {
 namespace detail {
@@ -32,71 +36,77 @@ FEA_INLINE_VAR platform_mt19937 gen(
 
 } // namespace detail
 
-// Get a random int, from lowest to highest int value.
-template <class T>
-T random_int() {
-	std::uniform_int_distribution<T> dist(
-			std::numeric_limits<T>::lowest(), std::numeric_limits<T>::max());
-	return dist(detail::gen);
-}
-template <>
-int8_t random_int<int8_t>() {
-	return int8_t(random_int<short>());
-}
-template <>
-uint8_t random_int<uint8_t>() {
-	return uint8_t(random_int<uint16_t>());
-}
-
 // Get a random int between [min, max].
 template <class T>
-T random_int(T min, T max) {
+std::enable_if_t<std::is_integral<T>::value, T> random_val(T min, T max) {
 	std::uniform_int_distribution<T> dist(min, max);
 	return dist(detail::gen);
 }
+
+// Get a random float between [min, max].
+template <class T>
+std::enable_if_t<std::is_floating_point<T>::value, T> random_val(T min, T max) {
+	std::uniform_real_distribution<T> dist(min, max);
+	return dist(detail::gen);
+}
+
+// Get a random enum between [min, max].
+template <class T>
+std::enable_if_t<std::is_enum<T>::value, T> random_val(T min, T max) {
+	using u_t = std::underlying_type_t<T>;
+	return T(random_val(u_t(min), u_t(max)));
+}
+
 template <>
-int8_t random_int(int8_t min, int8_t max) {
-	return int8_t(random_int(int16_t(min), int16_t(max)));
+char random_val<char>(char min, char max) {
+	return char(random_val(short(min), short(max)));
 }
 template <>
-uint8_t random_int(uint8_t min, uint8_t max) {
-	return uint8_t(random_int(uint16_t(min), uint16_t(max)));
+uint8_t random_val<uint8_t>(uint8_t min, uint8_t max) {
+	return uint8_t(random_val(uint16_t(min), uint16_t(max)));
+}
+
+
+// Get a random value between [T::min, T::max].
+template <class T>
+std::enable_if_t<!std::is_enum<T>::value, T> random_val() {
+	return random_val(
+			std::numeric_limits<T>::lowest(), (std::numeric_limits<T>::max)());
+}
+
+// Get a random enum between [E{}, E::count[.
+template <class E>
+std::enable_if_t<std::is_enum<E>::value, E> random_val() {
+	using u_t = std::underlying_type_t<E>;
+	return random_val(E{}, E(u_t(E::count) - 1));
+}
+
+// Get a random value between [T::min, T::max].
+template <>
+char random_val<char>() {
+	constexpr short mmin = short(std::numeric_limits<char>::lowest());
+	constexpr short mmax = short((std::numeric_limits<char>::max)());
+	return char(random_val(mmin, mmax));
+}
+
+// Get a random value between [T::min, T::max].
+template <>
+uint8_t random_val<uint8_t>() {
+	constexpr uint16_t mmin = uint16_t(std::numeric_limits<uint8_t>::lowest());
+	constexpr uint16_t mmax = uint16_t((std::numeric_limits<uint8_t>::max)());
+	return uint8_t(random_val(mmin, mmax));
 }
 
 // Get a random index, from 0 to count - 1.
 inline size_t random_idx(size_t count) {
-	std::uniform_int_distribution<size_t> dist(0, count - 1);
-	return dist(detail::gen);
+	return random_val(size_t(0), count - 1);
 }
-
-// Returns a random enum value between [min, max].
-template <class E>
-E random_enum(E min, E max) {
-	static_assert(std::is_enum<E>::value, "E must be enum");
-	using u_t = std::underlying_type_t<E>;
-	return E(random_int(u_t(min), u_t(max)));
-}
-
-// Returns a random enum value between [E{}, E::count[.
-// Undefined if 'count' == 0.
-template <class E>
-E random_enum() {
-	static_assert(std::is_enum<E>::value, "E must be enum");
-	using u_t = std::underlying_type_t<E>;
-	assert(u_t(E::count) != 0);
-	return random_enum(E{}, E(u_t(E::count) - 1));
-}
-
 
 template <size_t N>
 std::array<uint8_t, N> random_bytes() {
 	std::array<uint8_t, N> ret{};
-
-	std::uniform_int_distribution<uint16_t> dist(
-			0, std::numeric_limits<uint8_t>::max());
-
 	for (size_t i = 0; i < N; ++i) {
-		ret[i] = uint8_t(dist(detail::gen));
+		ret[i] = random_val<uint8_t>();
 	}
 	return ret;
 }
@@ -104,13 +114,75 @@ std::array<uint8_t, N> random_bytes() {
 inline std::vector<uint8_t> random_bytes(size_t num_bytes) {
 	std::vector<uint8_t> ret;
 	ret.reserve(num_bytes);
-
-	std::uniform_int_distribution<uint16_t> dist(
-			0, std::numeric_limits<uint8_t>::max());
-
 	for (size_t i = 0; i < num_bytes; ++i) {
-		ret.push_back(uint8_t(dist(detail::gen)));
+		ret.push_back(random_val<uint8_t>());
 	}
+	return ret;
+}
+
+// Shuffles items in range [begin, end[
+template <class ForwardIt>
+void random_shuffle(ForwardIt begin, ForwardIt end) {
+	std::shuffle(begin, end, detail::gen);
+}
+
+// Shuffles items in container.
+template <class Container>
+void random_shuffle(Container& cont) {
+	return fea::random_shuffle(cont.begin(), cont.end());
+}
+
+// Given the available sum, fills your range with n values
+// so that : v0 + v1 + ... + v(n-1) == sum.
+// https://stackoverflow.com/a/8064754
+// The iterators must return the same type as sum.
+// The range must be sortable.
+template <class BidirIt, class T>
+void random_fixed_sum(BidirIt begin, BidirIt end, T sum) {
+	static_assert(std::is_same<std::decay_t<decltype(*begin)>, T>::value,
+			"fea::random_from_available : iterators must return same type as "
+			"sum");
+	assert(std::distance(begin, end) >= 2);
+
+	// First, generate n - 1 random numbers that are <= sum.
+	for (auto it = begin; it != end - 1; ++it) {
+		*it = random_val(T(0), sum);
+	}
+
+	// Assign the sum to last.
+	*(end - 1) = sum;
+
+	// Then sort it.
+	std::sort(begin, end);
+
+	// Now, going backwards (so as to not erase our values),
+	// assign our final number. We do that by substracting with
+	// the previous number.
+	auto rbegin = std::make_reverse_iterator(end);
+	auto rend = std::make_reverse_iterator(begin);
+	for (auto it = rbegin; it != rend - 1; ++it) {
+		*it = *it - *(it + 1);
+	}
+}
+
+// Given the available sum, returns a vector with 'count' values
+// so that : v0 + v1 + ... + v(n-1) == 'sum'.
+// https://stackoverflow.com/a/8064754
+// Returns a vector filled with 'count' values.
+template <class T>
+std::vector<T> random_fixed_sum(T sum, size_t count) {
+	std::vector<T> ret(count);
+	random_fixed_sum(ret, sum);
+	return ret;
+}
+
+// Given the available sum, returns a vector with 'count' values
+// so that : v0 + v1 + ... + v(n-1) == 'sum'.
+// https://stackoverflow.com/a/8064754
+template <size_t N, class T>
+std::array<T, N> random_fixed_sum(T sum) {
+	std::array<T, N> ret{};
+	random_fixed_sum(ret.begin(), ret.end(), sum);
 	return ret;
 }
 

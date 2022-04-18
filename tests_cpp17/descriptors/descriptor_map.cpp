@@ -96,6 +96,23 @@ TEST(descriptors, basics) {
 
 	EXPECT_EQ(num_visited, mmap.size);
 
+	{
+		int ret = mmap.descriptor(potato::kennebec, [&](auto desc) {
+			EXPECT_EQ(desc.name, kennebec_desc::name);
+			return int(42);
+		});
+		EXPECT_EQ(ret, 42);
+	}
+
+	{
+		int my_int = 101;
+		int& ret = mmap.descriptor(potato::kennebec, [&](auto desc) -> int& {
+			EXPECT_EQ(desc.name, kennebec_desc::name);
+			return my_int;
+		});
+		EXPECT_EQ(ret, my_int);
+	}
+
 	// Shouldn't compile
 	// fea::descriptor_map<potato, russet_desc, yukon_desc, bintje_desc,
 	// kennebec_desc,

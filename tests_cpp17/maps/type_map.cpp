@@ -33,16 +33,21 @@ TEST(type_map, basics) {
 		EXPECT_EQ(m.template idx<double>(), 1u);
 
 		// runtime at
-		m.at(0, [](auto v) {
+		int ret = m.at(0, [](auto v) {
 			if constexpr (std::is_same_v<decltype(v), short>) {
 				EXPECT_EQ(v, short(5));
 			}
+			return int(42);
 		});
-		m.at(1, [](auto v) {
+		EXPECT_EQ(ret, 42);
+
+		ret = m.at(1, [](auto v) {
 			if constexpr (std::is_same_v<decltype(v), size_t>) {
 				EXPECT_EQ(v, 42u);
 			}
+			return int(-1);
 		});
+		EXPECT_EQ(ret, -1);
 
 		using find_t = std::decay_t<decltype(m.find<double>())>;
 		static_assert(std::is_same<find_t, size_t>::value,
@@ -82,16 +87,25 @@ TEST(type_map, basics) {
 		EXPECT_EQ(m.template idx<double>(), 1u);
 
 		// runtime at
-		m.at(0, [](auto v) {
-			if constexpr (std::is_same_v<decltype(v), short>) {
-				EXPECT_EQ(v, short(5));
-			}
-		});
-		m.at(1, [](const auto& v) {
-			if constexpr (std::is_same_v<decltype(v), size_t>) {
-				EXPECT_EQ(v, 42u);
-			}
-		});
+		{
+			int my_int = 0;
+			int& ret = m.at(0, [&](auto v) -> int& {
+				if constexpr (std::is_same_v<decltype(v), short>) {
+					EXPECT_EQ(v, short(5));
+				}
+				return my_int;
+			});
+			EXPECT_EQ(ret, my_int);
+
+			++my_int;
+			ret = m.at(1, [&](const auto& v) {
+				if constexpr (std::is_same_v<decltype(v), size_t>) {
+					EXPECT_EQ(v, 42u);
+				}
+				return my_int;
+			});
+			EXPECT_EQ(ret, my_int);
+		}
 
 		using find_t = std::decay_t<decltype(m.find<double>())>;
 		static_assert(std::is_same<find_t, size_t>::value,

@@ -30,16 +30,40 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/utils/platform.hpp"
 
 #if FEA_CPP20
 #include <span>
 namespace fea {
 template <class T, size_t Extent = std::dynamic_extent>
 using span = std::span<T, Extent>;
-}
-#else
-#include "fea/utils/platform.hpp"
+} // namespace fea
 
+// Defining the operator== could cause issues.
+// You may disable these by defining FEA_DISABLE_SPAN_EQ.
+#if !defined(FEA_DISABLE_SPAN_EQ)
+namespace std {
+template <class U>
+[[nodiscard]] constexpr bool operator==(span<U> lhs, span<U> rhs) {
+	if (lhs.size() != rhs.size()) {
+		return false;
+	}
+
+	if (lhs.data() == rhs.data()) {
+		return true;
+	}
+
+	return std::equal(lhs.begin(), lhs.end(), rhs.begin());
+}
+
+template <class U>
+[[nodiscard]] constexpr bool operator!=(span<U> lhs, span<U> rhs) {
+	return !(lhs == rhs);
+}
+} // namespace std
+#endif
+
+#else
 #include <algorithm>
 #include <cassert>
 #include <iterator>

@@ -1,24 +1,34 @@
 ﻿#pragma once
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <iterator>
+#include <numeric>
+#include <type_traits>
 
 namespace fea {
+// Computes the sum of items in container.
+template <class Container>
+constexpr auto sum(const Container& cont) {
+	using T = Container::value_type;
+	return std::accumulate(cont.begin(), cont.end(), T(0));
+}
+
 // Compute profit.
 template <class T>
-T profit(T gains, T cost) {
+constexpr T profit(T gains, T cost) {
 	return gains - cost;
 }
 
 // Compute Return On Investment.
 template <class T>
-T roi(T gains, T cost) {
+constexpr T roi(T gains, T cost) {
 	return profit(gains, cost) / cost;
 }
 
 // Compute profit margin.
 template <class T>
-T profit_margin(T gains, T cost) {
+constexpr T profit_margin(T gains, T cost) {
 	return profit(gains, cost) / gains;
 }
 
@@ -199,5 +209,44 @@ void sample_sigma_filter(FwdIt begin, FwdIt end, T sigma, Func func) {
 	return sample_sigma_filter(
 			begin, end, sigma, [](const auto& v) -> const auto& { return v; },
 			func);
+}
+
+// Computes the factorial of n.
+template <class T>
+constexpr T factorial(T n) {
+	assert(n >= T(0));
+
+	size_t ret = 1;
+	for (size_t i = 1; i <= n; ++i) {
+		ret *= i;
+	}
+	return T(ret);
+}
+
+// Computes the factorial of n.
+template <class T>
+constexpr T fact(T n) {
+	return factorial(n);
+}
+
+// Computes the binomial coefficient given (n k).
+template <class T>
+constexpr T binomial_coeff(T n, T k) {
+	assert(n >= k && n > 0);
+	return fact(n) / (fact(k) * fact(n - k));
+}
+
+// Computes stars and bars for positive values (> 0).
+// https://en.wikipedia.org/wiki/Stars_and_bars_%28combinatorics%29
+template <class T>
+constexpr T stars_and_bars_pos(T n, T k) {
+	return binomial_coeff(n - 1, k - 1);
+}
+
+// Computes stars and bars for non-negative values (>= 0).
+// https://en.wikipedia.org/wiki/Stars_and_bars_%28combinatorics%29
+template <class T>
+constexpr T stars_and_bars_zero(T n, T k) {
+	return binomial_coeff(n + k - 1, k - 1);
 }
 } // namespace fea

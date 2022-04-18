@@ -59,12 +59,12 @@ template <class T>
 using has_key = decltype(std::declval<T>().key);
 
 template <class T, class Func>
-auto dm_unerase(Func&& f) {
+decltype(auto) dm_unerase(Func&& f) {
 	return f(T{});
 }
 
 template <class Func, class... Ds>
-constexpr auto dm_unerase_lookup() {
+constexpr decltype(auto) dm_unerase_lookup() {
 	using func_t = std::common_type_t<decltype(&dm_unerase<Ds, Func>)...>;
 	return std::array<func_t, sizeof...(Ds)>{ &dm_unerase<Ds, Func>... };
 }
@@ -93,9 +93,9 @@ struct descriptor_map {
 
 	// Get a specific descriptor at runtime.
 	template <class Func>
-	static constexpr auto descriptor(KeyT key, Func&& func) {
+	static constexpr decltype(auto) descriptor(KeyT key, Func&& func) {
 		// Unerase lookup (switch-case equivalent).
-		static constexpr auto lookup
+		constexpr auto lookup
 				= detail::dm_unerase_lookup<Func, Descriptors...>();
 		return lookup[size_t(key)](std::forward<Func>(func));
 	}
