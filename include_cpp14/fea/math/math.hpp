@@ -10,7 +10,7 @@ namespace fea {
 // Computes the sum of items in container.
 template <class Container>
 constexpr auto sum(const Container& cont) {
-	using T = Container::value_type;
+	using T = typename Container::value_type;
 	return std::accumulate(cont.begin(), cont.end(), T(0));
 }
 
@@ -216,11 +216,11 @@ template <class T>
 constexpr T factorial(T n) {
 	assert(n >= T(0));
 
-	size_t ret = 1;
-	for (size_t i = 1; i <= n; ++i) {
+	T ret = T(1);
+	for (T i = T(1); i <= n; ++i) {
 		ret *= i;
 	}
-	return T(ret);
+	return ret;
 }
 
 // Computes the factorial of n.
