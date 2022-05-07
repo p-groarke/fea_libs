@@ -94,7 +94,7 @@ TEST(descriptors, basics) {
 		++num_visited;
 	});
 
-	EXPECT_EQ(num_visited, mmap.size);
+	EXPECT_EQ(num_visited, mmap.desc_count);
 
 	{
 		int ret = mmap.descriptor(potato::kennebec, [&](auto desc) {

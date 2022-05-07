@@ -100,7 +100,6 @@ struct type_map_base {
 	constexpr type_map_base(const std::tuple<Values...>& values)
 			: _values(values) {
 	}
-
 	constexpr type_map_base(std::tuple<Values...>&& values)
 			: _values(std::move(values)) {
 	}
@@ -320,6 +319,8 @@ struct type_map<fea::pack_nt<Keys...>, Values...>
 template <class... Keys, class... Values>
 constexpr auto make_type_map(
 		pack<Keys...>, const std::tuple<Values...>& values) {
+	static_assert(sizeof...(Keys) == sizeof...(Values),
+			"fea::make_type_map : tuple must be same size as Keys");
 	return type_map<pack<Keys...>, Values...>(values);
 }
 
@@ -327,7 +328,38 @@ constexpr auto make_type_map(
 template <auto... Keys, class... Values>
 constexpr auto make_type_map(
 		pack_nt<Keys...>, const std::tuple<Values...>& values) {
+	static_assert(sizeof...(Keys) == sizeof...(Values),
+			"fea::make_type_map : tuple must be same size as Keys");
 	return type_map<pack_nt<Keys...>, Values...>(values);
+}
+
+// Construct a type_map using a fea::pack and a std::array.
+template <class... Keys, class T, size_t N>
+constexpr auto make_type_map(pack<Keys...>, const std::array<T, N>& values) {
+	static_assert(sizeof...(Keys) == N,
+			"fea::make_type_map : array must be same size as Keys");
+
+	return std::apply(
+			[](const auto&... ts) {
+				return type_map<pack<Keys...>, std::decay_t<decltype(ts)>...>(
+						std::forward_as_tuple(ts...));
+			},
+			values);
+}
+
+// Construct a non-type type_map using a fea::pack and a std::array.
+template <auto... Keys, class T, size_t N>
+constexpr auto make_type_map(pack_nt<Keys...>, const std::array<T, N>& values) {
+	static_assert(sizeof...(Keys) == N,
+			"fea::make_type_map : array must be same size as Keys");
+
+	return std::apply(
+			[](const auto&... ts) {
+				return type_map<pack_nt<Keys...>,
+						std::decay_t<decltype(ts)>...>(
+						std::forward_as_tuple(ts...));
+			},
+			values);
 }
 
 // kv_t is a holder for a type Key and Value v.

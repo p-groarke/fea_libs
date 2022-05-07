@@ -70,6 +70,34 @@ TEST(type_map, basics) {
 	}
 
 	{
+		auto m = fea::make_type_map(
+				fea::pack<int, double>{}, std::array<float, 2>{ 42.f, -1.f });
+		using t = std::decay_t<decltype(m)>;
+		static_assert(
+				std::is_same_v<t,
+						fea::type_map<fea::pack<int, double>, float, float>>,
+				"type_map.cpp : test failed");
+
+		static_assert(m.template contains<int>(), "type_map.cpp : test failed");
+		static_assert(
+				m.template contains<double>(), "type_map.cpp : test failed");
+		EXPECT_EQ(m.template find<int>(), 42.f);
+		EXPECT_EQ(m.template find<double>(), -1.f);
+
+		auto m2 = fea::make_type_map(
+				fea::pack_nt<0, 1>{}, std::array<int, 2>{ -42, 101 });
+		using t2 = std::decay_t<decltype(m2)>;
+		static_assert(
+				std::is_same_v<t2, fea::type_map<fea::pack_nt<0, 1>, int, int>>,
+				"type_map.cpp : test failed");
+
+		static_assert(m2.template contains<0>(), "type_map.cpp : test failed");
+		static_assert(m2.template contains<1>(), "type_map.cpp : test failed");
+		EXPECT_EQ(m2.template find<0>(), -42);
+		EXPECT_EQ(m2.template find<1>(), 101);
+	}
+
+	{
 		auto m = fea::make_type_map(fea::kv_t{ int{}, short(5) },
 				fea::kv_t{ double{}, size_t(42) });
 

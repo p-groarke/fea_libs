@@ -37,6 +37,9 @@
 #include "fea/meta/tuple.hpp"
 #include "fea/utils/platform.hpp"
 
+#include <array>
+#include <tuple>
+
 /*
 fea::pack and fea::pack_nt are like std::tuple without storage. You can use the
 provided traits and helpers to query things about the pack.
@@ -72,6 +75,14 @@ constexpr fea::pack<Args...> make_pack_from(std::tuple<Args...>&&) {
 template <class... Args>
 constexpr fea::pack<Args...> make_pack_from(const std::tuple<Args...>&) {
 	return fea::pack<Args...>{};
+}
+template <class T, size_t N>
+constexpr auto make_pack_from(const std::array<T, N>& arr) {
+	return std::apply(
+			[](const auto&... ts) {
+				return fea::pack<std::decay_t<decltype(ts)>...>{};
+			},
+			arr);
 }
 
 // make_pack_nt doesn't make sense, since you can't deduce non-type parameters.
