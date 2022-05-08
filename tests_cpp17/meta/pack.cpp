@@ -240,6 +240,17 @@ TEST(pack, splice) {
 						fea::pack<int, double, float, char>>::value,
 				"pack.cpp : test failed");
 	}
+
+	{
+		std::array<int, 5> arr;
+		static_assert(std::is_same<decltype(fea::make_pack_from(arr)),
+							  fea::pack<int, int, int, int, int>>::value,
+				"pack.cpp : test failed");
+		static_assert(std::is_same<decltype(fea::make_pack_from(
+										   std::array<double, 1>{})),
+							  fea::pack<double>>::value,
+				"pack.cpp : test failed");
+	}
 }
 
 TEST(pack, for_each) {

@@ -12,7 +12,7 @@ include(GoogleTest)
 option(FEA_TESTS "Build and run tests." On)
 option(FEA_BENCHMARKS "Build and run bencharks, requires tests." Off)
 option(FEA_CPP17 "Use C++17 (default is C++20). CMake's detection doesn't work well." Off)
-option(FEA_CPP14 "Use C++14 (default is C++17). CMake's detection doesn't work well." Off)
+option(FEA_CPP14 "Use C++14 (default is C++20). CMake's detection doesn't work well." Off)
 option(FEA_PULL_CONAN "Executes conan install from cmake." On)
 
 # Output to predictable location.

@@ -36,8 +36,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 
 /*
-Helpers to throw on builds where FEA_NOTHROW isn't defined, and terminate if it
-is.
+Exception Helpers
+
+Throw on builds where FEA_NOTHROW is not defined.
+Print exceptions message and terminate if FEA_NOTHROW is defined.
 
 Always asserts (for better multi-threaded breaking).
 Always prints the error message to help with ci or other environments

@@ -86,13 +86,18 @@ struct descriptor_map {
 	using desc_tup_t = std::tuple<Descriptors...>;
 
 	// Descriptor count.
-	static constexpr size_t size = sizeof...(Descriptors);
+	static constexpr size_t desc_count = sizeof...(Descriptors);
 
 	// The type of key. Must be castable to size_t.
 	using key_t = KeyT;
 
 	// All the keys.
-	static constexpr std::array<key_t, size> keys{ Descriptors::key... };
+	static constexpr std::array<key_t, desc_count> keys{ Descriptors::key... };
+
+	// Number of descriptors.
+	static constexpr size_t size() {
+		return sizeof...(Descriptors);
+	}
 
 	// Get a specific descriptor.
 	template <KeyT K>
@@ -132,9 +137,9 @@ struct descriptor_map {
 	template <class Func>
 	[[nodiscard]] static constexpr auto make_array(Func&& func) {
 		using ret_t = decltype(func(fea::front_t<Descriptors...>{}));
-		std::array<ret_t, size> ret;
+		std::array<ret_t, desc_count> ret;
 
-		fea::static_for<size>([&](auto const_i) {
+		fea::static_for<desc_count>([&](auto const_i) {
 			constexpr size_t i = const_i;
 			using desc_t = std::tuple_element_t<i, desc_tup_t>;
 			ret[i] = func(desc_t{});
@@ -147,9 +152,9 @@ struct descriptor_map {
 	template <class Func>
 	[[nodiscard]] static constexpr auto make_enum_array(Func&& func) {
 		using ret_t = decltype(func(fea::front_t<Descriptors...>{}));
-		fea::enum_array<ret_t, key_t, size> ret;
+		fea::enum_array<ret_t, key_t, desc_count> ret;
 
-		fea::static_for<size>([&](auto const_i) {
+		fea::static_for<desc_count>([&](auto const_i) {
 			constexpr size_t i = const_i;
 			using desc_t = std::tuple_element_t<i, desc_tup_t>;
 			ret[key_t(i)] = func(desc_t{});
@@ -161,7 +166,7 @@ struct descriptor_map {
 	// type. Get type with : using desc_t = typename decltype(bla)::type;
 	template <class Func>
 	static constexpr auto for_each_descriptor(Func&& func) {
-		return fea::static_for<size>([&](auto const_i) {
+		return fea::static_for<desc_count>([&](auto const_i) {
 			constexpr size_t i = const_i;
 			using desc_t = std::tuple_element_t<i, desc_tup_t>;
 			return func(desc_t{});

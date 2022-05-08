@@ -32,11 +32,10 @@
  **/
 
 #pragma once
-#include "fea/meta/tuple.hpp"
 #include "fea/utils/platform.hpp"
 
 #include <array> // for std::begin, std::end
-#include <tuple>
+#include <tuple> // for std::get
 #include <type_traits>
 #include <utility>
 

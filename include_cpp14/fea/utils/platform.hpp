@@ -220,6 +220,11 @@ FEA_INLINE_VAR constexpr platform_t platform = platform_t::solaris;
 
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::windows;
 
+#if _MSC_VER >= 1930
+#undef FEA_VS2022
+#define FEA_VS2022 1
+#endif
+
 #if _MSC_VER >= 1920
 #undef FEA_VS2019
 #define FEA_VS2019 1

@@ -100,7 +100,6 @@ struct type_map_base {
 	constexpr type_map_base(const std::tuple<Values...>& values)
 			: _values(values) {
 	}
-
 	constexpr type_map_base(std::tuple<Values...>&& values)
 			: _values(std::move(values)) {
 	}
@@ -320,6 +319,8 @@ struct type_map<fea::pack_nt<Keys...>, Values...>
 template <class... Keys, class... Values>
 constexpr auto make_type_map(
 		pack<Keys...>, const std::tuple<Values...>& values) {
+	static_assert(sizeof...(Keys) == sizeof...(Values),
+			"fea::make_type_map : tuple must be same size as Keys");
 	return type_map<pack<Keys...>, Values...>(values);
 }
 
@@ -327,7 +328,38 @@ constexpr auto make_type_map(
 template <auto... Keys, class... Values>
 constexpr auto make_type_map(
 		pack_nt<Keys...>, const std::tuple<Values...>& values) {
+	static_assert(sizeof...(Keys) == sizeof...(Values),
+			"fea::make_type_map : tuple must be same size as Keys");
 	return type_map<pack_nt<Keys...>, Values...>(values);
+}
+
+// Construct a type_map using a fea::pack and a std::array.
+template <class... Keys, class T, size_t N>
+constexpr auto make_type_map(pack<Keys...>, const std::array<T, N>& values) {
+	static_assert(sizeof...(Keys) == N,
+			"fea::make_type_map : array must be same size as Keys");
+
+	return std::apply(
+			[](const auto&... ts) {
+				return type_map<pack<Keys...>, std::decay_t<decltype(ts)>...>(
+						std::forward_as_tuple(ts...));
+			},
+			values);
+}
+
+// Construct a non-type type_map using a fea::pack and a std::array.
+template <auto... Keys, class T, size_t N>
+constexpr auto make_type_map(pack_nt<Keys...>, const std::array<T, N>& values) {
+	static_assert(sizeof...(Keys) == N,
+			"fea::make_type_map : array must be same size as Keys");
+
+	return std::apply(
+			[](const auto&... ts) {
+				return type_map<pack_nt<Keys...>,
+						std::decay_t<decltype(ts)>...>(
+						std::forward_as_tuple(ts...));
+			},
+			values);
 }
 
 // kv_t is a holder for a type Key and Value v.
@@ -407,9 +439,9 @@ constexpr auto make_type_map(kv_nt<Keys, Values>&&... kvs) {
  */
 
 // Get a mapped value at runtime.
-template <class Func, class Key, Key... Keys, class Val1, class... Values>
-std::invoke_result_t<Func, const Val1&> runtime_get(Func&& func, Key e,
-		const type_map<fea::pack_nt<Keys...>, Val1, Values...>& t_map) {
+template <class Func, class Key, Key... Keys, class... Values>
+decltype(auto) runtime_get(Func&& func, Key e,
+		const fea::type_map<fea::pack_nt<Keys...>, Values...>& t_map) {
 	// First, get the associated index for the enum value.
 	// The underlying enum value is not necessarily == position.
 	size_t val_idx = fea::runtime_get_idx(e, fea::pack_nt<Keys...>{});
@@ -417,9 +449,9 @@ std::invoke_result_t<Func, const Val1&> runtime_get(Func&& func, Key e,
 }
 
 // Get a mapped value at runtime.
-template <class Func, class Key, Key... Keys, class Val1, class... Values>
-std::invoke_result_t<Func, Val1&> runtime_get(Func&& func, Key e,
-		type_map<fea::pack_nt<Keys...>, Val1, Values...>& t_map) {
+template <class Func, class Key, Key... Keys, class... Values>
+decltype(auto) runtime_get(Func&& func, Key e,
+		fea::type_map<fea::pack_nt<Keys...>, Values...>& t_map) {
 	// First, get the associated index for the enum value.
 	// The underlying enum value is not necessarily == position.
 	size_t val_idx = fea::runtime_get_idx(e, fea::pack_nt<Keys...>{});

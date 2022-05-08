@@ -198,7 +198,7 @@ void unerase(Func& func, TupleRef tup) {
 }
 
 template <class Func, class TupleRef>
-constexpr auto make_lookup() {
+constexpr auto make_rt_lookup() {
 	// Our unerase function signature.
 	// It accepts a lambda reference and a tuple reference.
 	using unerase_t = void (*)(Func&, TupleRef);
@@ -230,7 +230,7 @@ void runtime_get(Func&& func, const std::tuple<Args...>& tup, size_t idx) {
 	using tup_ref_t = const std::tuple<Args...>&;
 
 	// Creates a lookup array at compile time, so we don't pay that price.
-	static constexpr auto lookup = detail::make_lookup<Func, tup_ref_t>();
+	static constexpr auto lookup = detail::make_rt_lookup<Func, tup_ref_t>();
 
 	// At the given index, call the stored pointer with the user lambda and
 	// tuple.
