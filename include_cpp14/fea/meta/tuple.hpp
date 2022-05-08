@@ -33,6 +33,7 @@
 
 #pragma once
 #include "fea/meta/static_for.hpp"
+#include "fea/meta/traits.hpp"
 #include "fea/utils/platform.hpp"
 #include "fea/utils/unused.hpp"
 
@@ -244,15 +245,16 @@ FuncRet unerase(Func& func, TupleRef tup) {
 	return func(std::get<Idx>(tup));
 }
 
-template <class FuncRet, class Func, class TupleRef>
-constexpr auto make_lookup() {
-	using unerase_t = FuncRet (*)(Func&, TupleRef);
-	constexpr size_t tup_size = std::tuple_size_v<std::decay_t<TupleRef>>;
+template <class FuncRet, class Func, class TupleRef, size_t... Is>
+constexpr auto make_rt_lookup(std::index_sequence<Is...>) {
+	// using unerase_t = FuncRet (*)(Func&, TupleRef);
+	using unerase_t = std::common_type_t<
+			decltype(&unerase<Is, FuncRet, Func, TupleRef>)...>;
 
-	std::array<unerase_t, tup_size> ret{};
-	fea::static_for<tup_size>([&](auto idx) {
-		ret[idx] = &unerase<idx, FuncRet, Func, TupleRef>;
-	});
+	constexpr size_t tup_size = std::tuple_size_v<std::decay_t<TupleRef>>;
+	std::array<unerase_t, sizeof...(Is)> ret{
+		&unerase<Is, FuncRet, Func, TupleRef>...
+	};
 	return ret;
 }
 } // namespace detail
@@ -262,15 +264,17 @@ constexpr auto make_lookup() {
 // Provide a generic lambda which accepts const auto& to recieve the value.
 // Your lambda may return a value, but it must be the same type for all
 // specializations.
-template <class Func, class Arg1, class... Args>
-std::invoke_result_t<Func, const Arg1&> runtime_get(
-		Func&& func, size_t idx, const std::tuple<Arg1, Args...>& tup) {
+template <class Func, class... Args>
+decltype(auto) runtime_get(
+		Func&& func, size_t idx, const std::tuple<Args...>& tup) {
 
-	using func_ret_t = std::invoke_result_t<Func, const Arg1&>;
-	using tup_ref_t = const std::tuple<Arg1, Args...>&;
+	using func_ret_t = std::invoke_result_t<Func, const fea::front_t<Args...>&>;
+	using tup_ref_t = decltype(tup);
 
-	static constexpr auto lookup
-			= detail::make_lookup<func_ret_t, Func, tup_ref_t>();
+	constexpr size_t tup_size = std::tuple_size_v<std::decay_t<tup_ref_t>>;
+	constexpr auto lookup = detail::make_rt_lookup<func_ret_t, Func, tup_ref_t>(
+			std::make_index_sequence<tup_size>{});
+
 	return lookup[idx](func, tup);
 }
 
@@ -278,15 +282,16 @@ std::invoke_result_t<Func, const Arg1&> runtime_get(
 // Provide a generic lambda which accepts auto& to recieve the value.
 // Your lambda may return a value, but it must be the same type for all
 // specializations.
-template <class Func, class Arg1, class... Args>
-std::invoke_result_t<Func, Arg1&> runtime_get(
-		Func&& func, size_t idx, std::tuple<Arg1, Args...>& tup) {
+template <class Func, class... Args>
+decltype(auto) runtime_get(Func&& func, size_t idx, std::tuple<Args...>& tup) {
 
-	using func_ret_t = std::invoke_result_t<Func, Arg1&>;
-	using tup_ref_t = std::tuple<Arg1, Args...>&;
+	using func_ret_t = std::invoke_result_t<Func, fea::front_t<Args...>&>;
+	using tup_ref_t = decltype(tup);
 
-	static constexpr auto lookup
-			= detail::make_lookup<func_ret_t, Func, tup_ref_t>();
+	constexpr size_t tup_size = std::tuple_size_v<std::decay_t<tup_ref_t>>;
+	constexpr auto lookup = detail::make_rt_lookup<func_ret_t, Func, tup_ref_t>(
+			std::make_index_sequence<tup_size>{});
+
 	return lookup[idx](func, tup);
 }
 

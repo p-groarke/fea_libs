@@ -439,9 +439,9 @@ constexpr auto make_type_map(kv_nt<Keys, Values>&&... kvs) {
  */
 
 // Get a mapped value at runtime.
-template <class Func, class Key, Key... Keys, class Val1, class... Values>
-std::invoke_result_t<Func, const Val1&> runtime_get(Func&& func, Key e,
-		const type_map<fea::pack_nt<Keys...>, Val1, Values...>& t_map) {
+template <class Func, class Key, Key... Keys, class... Values>
+decltype(auto) runtime_get(Func&& func, Key e,
+		const fea::type_map<fea::pack_nt<Keys...>, Values...>& t_map) {
 	// First, get the associated index for the enum value.
 	// The underlying enum value is not necessarily == position.
 	size_t val_idx = fea::runtime_get_idx(e, fea::pack_nt<Keys...>{});
@@ -449,9 +449,9 @@ std::invoke_result_t<Func, const Val1&> runtime_get(Func&& func, Key e,
 }
 
 // Get a mapped value at runtime.
-template <class Func, class Key, Key... Keys, class Val1, class... Values>
-std::invoke_result_t<Func, Val1&> runtime_get(Func&& func, Key e,
-		type_map<fea::pack_nt<Keys...>, Val1, Values...>& t_map) {
+template <class Func, class Key, Key... Keys, class... Values>
+decltype(auto) runtime_get(Func&& func, Key e,
+		fea::type_map<fea::pack_nt<Keys...>, Values...>& t_map) {
 	// First, get the associated index for the enum value.
 	// The underlying enum value is not necessarily == position.
 	size_t val_idx = fea::runtime_get_idx(e, fea::pack_nt<Keys...>{});

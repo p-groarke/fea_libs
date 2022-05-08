@@ -1,4 +1,5 @@
 ﻿#include <fea/meta/traits.hpp>
+#include <fea/meta/tuple.hpp>
 #include <functional>
 #include <gtest/gtest.h>
 #include <set>

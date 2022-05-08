@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 
 namespace {
-enum class e {
+enum class tm_e : unsigned {
 	one,
 	two,
 	three,
@@ -198,23 +198,23 @@ TEST(type_map, basics) {
 	}
 
 	{
-		constexpr fea::pack_nt<e::one, e::two> k2;
+		constexpr fea::pack_nt<tm_e::one, tm_e::two> k2;
 		constexpr std::tuple<short, size_t> v2{ short(5), size_t(42) };
 		auto m = fea::make_type_map(k2, v2);
 
 		static_assert(
-				m.template contains<e::one>(), "type_map.cpp : test failed");
-		static_assert(
-				!m.template contains<e::three>(), "type_map.cpp : test failed");
+				m.template contains<tm_e::one>(), "type_map.cpp : test failed");
+		static_assert(!m.template contains<tm_e::three>(),
+				"type_map.cpp : test failed");
 
-		EXPECT_EQ(m.template find<e::one>(), short(5));
-		EXPECT_EQ(m.template find<e::two>(), 42u);
+		EXPECT_EQ(m.template find<tm_e::one>(), short(5));
+		EXPECT_EQ(m.template find<tm_e::two>(), 42u);
 
 		EXPECT_EQ(m.template at<0>(), short(5));
 		EXPECT_EQ(m.template at<1>(), 42u);
 
-		EXPECT_EQ(m.template idx<e::one>(), 0u);
-		EXPECT_EQ(m.template idx<e::two>(), 1u);
+		EXPECT_EQ(m.template idx<tm_e::one>(), 0u);
+		EXPECT_EQ(m.template idx<tm_e::two>(), 1u);
 
 		// runtime at
 		m.at(0, [](auto v) {
@@ -228,14 +228,18 @@ TEST(type_map, basics) {
 			}
 		});
 
-		using find_t = std::decay_t<decltype(m.find<e::two>())>;
+		using find_t = std::decay_t<decltype(m.find<tm_e::two>())>;
 		static_assert(std::is_same<find_t, size_t>::value,
 				"type_map.cpp : test failed");
 
 		m.for_each([](auto k, auto& val) {
-			if constexpr (k == e::one) {
+			// Fix VS v141, 32 bits. For some reason it deduces int
+			// instead of tm_e in fea::pack_nt.
+			constexpr tm_e tmk = tm_e(k());
+
+			if constexpr (tmk == tm_e::one) {
 				EXPECT_EQ(val, short(5));
-			} else if constexpr (k == e::two) {
+			} else if constexpr (tmk == tm_e::two) {
 				EXPECT_EQ(val, 42u);
 			}
 		});
@@ -243,22 +247,22 @@ TEST(type_map, basics) {
 
 
 	{
-		auto m = fea::make_type_map(
-				fea::make_kv_nt<e::one>(42.f), fea::make_kv_nt<e::two>(42.0));
+		auto m = fea::make_type_map(fea::make_kv_nt<tm_e::one>(42.f),
+				fea::make_kv_nt<tm_e::two>(42.0));
 
 		static_assert(std::is_same_v<decltype(m),
-							  fea::type_map<fea::pack_nt<e::one, e::two>, float,
-									  double>>,
+							  fea::type_map<fea::pack_nt<tm_e::one, tm_e::two>,
+									  float, double>>,
 				"type_map.cpp : test failed");
 
-		EXPECT_EQ(m.template find<e::one>(), 42.f);
-		EXPECT_EQ(m.template find<e::two>(), 42.0);
+		EXPECT_EQ(m.template find<tm_e::one>(), 42.f);
+		EXPECT_EQ(m.template find<tm_e::two>(), 42.0);
 
 		EXPECT_EQ(m.template at<0>(), 42.f);
 		EXPECT_EQ(m.template at<1>(), 42.0);
 
-		EXPECT_EQ(m.template idx<e::one>(), 0u);
-		EXPECT_EQ(m.template idx<e::two>(), 1u);
+		EXPECT_EQ(m.template idx<tm_e::one>(), 0u);
+		EXPECT_EQ(m.template idx<tm_e::two>(), 1u);
 
 		// runtime at
 		m.at(0, [](auto v) {
@@ -273,9 +277,13 @@ TEST(type_map, basics) {
 		});
 
 		m.for_each([](auto k, auto& val) {
-			if constexpr (decltype(k)::value == e::one) {
+			// Fix VS v141, 32 bits. For some reason it deduces int
+			// instead of tm_e in fea::pack_nt.
+			constexpr tm_e tmk = tm_e(k());
+
+			if constexpr (tmk == tm_e::one) {
 				EXPECT_EQ(val, 42.f);
-			} else if constexpr (decltype(k)::value == e::two) {
+			} else if constexpr (tmk == tm_e::two) {
 				EXPECT_EQ(val, 42.0);
 			}
 		});
@@ -283,41 +291,59 @@ TEST(type_map, basics) {
 }
 
 TEST(type_map, runtime_get) {
-	{
-		auto m = fea::make_type_map(
-				fea::make_kv_nt<e::one>(-42.f), fea::make_kv_nt<e::two>(42.0));
+	auto m = fea::make_type_map(fea::make_kv_nt<tm_e::one>(-42.f),
+			fea::make_kv_nt<tm_e::two>(42.0));
 
-		EXPECT_EQ(m.template find<e::one>(), -42.f);
-		EXPECT_EQ(m.template find<e::two>(), 42.0);
+	static_assert(std::is_same_v<decltype(m),
+						  fea::type_map<fea::pack_nt<tm_e::one, tm_e::two>,
+								  float, double>>,
+			"type_map.cpp : unit test failed");
 
-		EXPECT_EQ(m.template at<0>(), -42.f);
-		EXPECT_EQ(m.template at<1>(), 42.0);
+	EXPECT_EQ(m.template find<tm_e::one>(), -42.f);
+	EXPECT_EQ(m.template find<tm_e::two>(), 42.0);
 
-		EXPECT_EQ(m.template idx<e::one>(), 0u);
-		EXPECT_EQ(m.template idx<e::two>(), 1u);
+	EXPECT_EQ(m.template at<0>(), -42.f);
+	EXPECT_EQ(m.template at<1>(), 42.0);
 
-		// runtime at
-		m.at(0, [](auto v) {
-			if constexpr (std::is_same_v<decltype(v), float>) {
-				EXPECT_EQ(v, -42.f);
-			}
-		});
-		m.at(1, [](const auto& v) {
-			if constexpr (std::is_same_v<decltype(v), double>) {
-				EXPECT_EQ(v, 42.0);
-			}
-		});
+	EXPECT_EQ(m.template idx<tm_e::one>(), 0u);
+	EXPECT_EQ(m.template idx<tm_e::two>(), 1u);
 
-		fea::runtime_get(
-				[](const auto& val) {
-					using T = decltype(val);
-					if constexpr (std::is_same_v<T, float>) {
-						EXPECT_EQ(val, -42.f);
-					} else if constexpr (std::is_same_v<T, double>) {
-						EXPECT_EQ(val, 42.0);
-					}
-				},
-				e::two, m);
-	}
+	// runtime at
+	m.at(0, [](auto v) {
+		if constexpr (std::is_same_v<decltype(v), float>) {
+			EXPECT_EQ(v, -42.f);
+		}
+	});
+	m.at(1, [](const auto& v) {
+		if constexpr (std::is_same_v<decltype(v), double>) {
+			EXPECT_EQ(v, 42.0);
+		}
+	});
+
+#if defined(FEA_VS2017) && defined(FEA_32BIT)
+	// Fix VS v141, 32 bits. For some reason it deduces int
+	// instead of tm_e in fea::pack_nt.
+	fea::runtime_get(
+			[](const auto& val) {
+				using T = std::decay_t<decltype(val)>;
+				if constexpr (std::is_same_v<T, float>) {
+					EXPECT_EQ(val, -42.f);
+				} else if constexpr (std::is_same_v<T, double>) {
+					EXPECT_EQ(val, 42.0);
+				}
+			},
+			int(tm_e::two), m);
+#else
+	fea::runtime_get(
+			[](const auto& val) {
+				using T = std::decay_t<decltype(val)>;
+				if constexpr (std::is_same_v<T, float>) {
+					EXPECT_EQ(val, -42.f);
+				} else if constexpr (std::is_same_v<T, double>) {
+					EXPECT_EQ(val, 42.0);
+				}
+			},
+			tm_e::two, m);
+#endif
 }
 } // namespace

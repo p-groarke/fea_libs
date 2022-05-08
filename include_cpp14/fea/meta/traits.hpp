@@ -32,13 +32,10 @@
  **/
 
 #pragma once
-#include "fea/meta/tuple.hpp"
 #include "fea/utils/platform.hpp"
 
 #include <array> // for std::begin, std::end
-#include <tuple>
 #include <type_traits>
-#include <utility>
 
 namespace fea {
 // Checks if the all the passed in traits are true.
