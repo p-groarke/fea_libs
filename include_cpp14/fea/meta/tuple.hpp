@@ -269,11 +269,11 @@ decltype(auto) runtime_get(
 		Func&& func, size_t idx, const std::tuple<Args...>& tup) {
 
 	using func_ret_t = std::invoke_result_t<Func, const fea::front_t<Args...>&>;
-	using tup_ref_t = decltype(tup);
+	using tup_ref_t = const std::tuple<Args...>&;
 
-	constexpr size_t tup_size = std::tuple_size_v<std::decay_t<tup_ref_t>>;
 	constexpr auto lookup = detail::make_rt_lookup<func_ret_t, Func, tup_ref_t>(
-			std::make_index_sequence<tup_size>{});
+			std::make_index_sequence<
+					std::tuple_size_v<std::decay_t<tup_ref_t>>>{});
 
 	return lookup[idx](func, tup);
 }
@@ -286,11 +286,11 @@ template <class Func, class... Args>
 decltype(auto) runtime_get(Func&& func, size_t idx, std::tuple<Args...>& tup) {
 
 	using func_ret_t = std::invoke_result_t<Func, fea::front_t<Args...>&>;
-	using tup_ref_t = decltype(tup);
+	using tup_ref_t = std::tuple<Args...>&;
 
-	constexpr size_t tup_size = std::tuple_size_v<std::decay_t<tup_ref_t>>;
 	constexpr auto lookup = detail::make_rt_lookup<func_ret_t, Func, tup_ref_t>(
-			std::make_index_sequence<tup_size>{});
+			std::make_index_sequence<
+					std::tuple_size_v<std::decay_t<tup_ref_t>>>{});
 
 	return lookup[idx](func, tup);
 }
