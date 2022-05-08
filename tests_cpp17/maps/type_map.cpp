@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 
 namespace {
-enum class tm_e : unsigned {
+enum class tm_e {
 	one,
 	two,
 	three,

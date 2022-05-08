@@ -35,7 +35,9 @@
 #include "fea/utils/platform.hpp"
 
 #include <array> // for std::begin, std::end
+#include <tuple> // for std::get
 #include <type_traits>
+#include <utility>
 
 namespace fea {
 // Checks if the all the passed in traits are true.
