@@ -320,7 +320,7 @@ TEST(type_map, runtime_get) {
 		}
 	});
 
-#if defined(FEA_WINDOWS) && defined(FEA_32BIT)
+#if defined(FEA_WINDOWS) && (defined(FEA_32BIT) || !defined(FEA_VS2019))
 	// Fix VS v141, 32 bits. For some reason it deduces int
 	// instead of tm_e in fea::pack_nt.
 	// In v142, it complains about ambiguity between int and enum class...
