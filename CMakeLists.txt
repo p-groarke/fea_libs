@@ -1,5 +1,3 @@
-include(${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.global.txt)
-
 cmake_minimum_required (VERSION 3.20)
 project(fea_libs VERSION 1.0.0 LANGUAGES CXX)
 
@@ -14,6 +12,20 @@ option(FEA_BENCHMARKS "Build and run bencharks, requires tests." Off)
 option(FEA_CPP17 "Use C++17 (default is C++20). CMake's detection doesn't work well." Off)
 option(FEA_CPP14 "Use C++14 (default is C++20). CMake's detection doesn't work well." Off)
 option(FEA_PULL_CONAN "Executes conan install from cmake." On)
+option(FEA_CMAKE_LOCAL "Use local fea_cmake repo. Searches for '../fea_cmake'" Off)
+
+# Pull fea_cmake helper library.
+if (${FEA_CMAKE_LOCAL})
+	set(FETCHCONTENT_SOURCE_DIR_FEA_CMAKE ${CMAKE_CURRENT_SOURCE_DIR}/../fea_cmake CACHE INTERNAL "")
+endif()
+FetchContent_Declare(fea_cmake
+	GIT_REPOSITORY https://github.com/p-groarke/fea_cmake.git
+	GIT_TAG main
+)
+FetchContent_MakeAvailable(fea_cmake)
+
+# Include cmake helpers.
+include(${fea_cmake_SOURCE_DIR}/CMakeLists.txt)
 
 # Output to predictable location.
 set_output_dir(${CMAKE_BINARY_DIR}/bin)
@@ -153,16 +165,5 @@ if (${FEA_TESTS})
 	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${TEST_NAME})
 
 	# Copy test data on build.
-	# set(CPP14_DATA_IN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp14/data)
-	# set(CPP14_DATA_OUT_DIR ${BINARY_OUT_DIR}/tests_data)
-	# add_custom_command(TARGET ${TEST_NAME} POST_BUILD
-	# 	COMMAND ${CMAKE_COMMAND} -E make_directory ${CPP14_DATA_OUT_DIR}
-	# 	COMMAND ${CMAKE_COMMAND} -E copy_directory ${CPP14_DATA_IN_DIR} ${CPP14_DATA_OUT_DIR}
-	# )
-	set(CPP17_DATA_IN_DIR ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp17/data)
-	set(CPP17_DATA_OUT_DIR ${BINARY_OUT_DIR}/tests_data)
-	add_custom_command(TARGET ${TEST_NAME} POST_BUILD
-		COMMAND ${CMAKE_COMMAND} -E make_directory ${CPP17_DATA_OUT_DIR}
-		COMMAND ${CMAKE_COMMAND} -E copy_directory ${CPP17_DATA_IN_DIR} ${CPP17_DATA_OUT_DIR}
-	)
+	copy_folder_on_build(${TEST_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp17/data ${BINARY_OUT_DIR}/tests_data)
 endif()

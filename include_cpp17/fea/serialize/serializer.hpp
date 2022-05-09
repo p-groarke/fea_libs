@@ -63,6 +63,8 @@ data. The destructor will check you emptied the serializer.
 #if !defined(FEA_SERIALIZE_SIZE_T)
 #define FEA_SERIALIZE_SIZE_T size_t
 #endif
+static_assert(std::is_unsigned_v<FEA_SERIALIZE_SIZE_T>,
+		"FEA_SERIALIZE_SIZE_T must be unsigned");
 
 namespace fea {
 namespace detail {
