@@ -284,6 +284,8 @@ FEA_INLINE_VAR constexpr platform_group_t platform_group
 //#endif
 
 // Strict data packing for cross-platform/cross-compiler support.
+// Use like so :
+// FEA_PACKED(struct my_struct {});
 #if defined(FEA_WINDOWS)
 #define FEA_PACKED(class_to_pack) \
 	__pragma(pack(push, 1)) class_to_pack __pragma(pack(pop))
