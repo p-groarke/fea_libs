@@ -9,8 +9,8 @@ include(GoogleTest)
 # User options
 option(FEA_TESTS "Build and run tests." On)
 option(FEA_BENCHMARKS "Build and run bencharks, requires tests." Off)
-option(FEA_CPP17 "Use C++17 (default is C++20). CMake's detection doesn't work well." Off)
-option(FEA_CPP14 "Use C++14 (default is C++20). CMake's detection doesn't work well." Off)
+option(FEA_CPP17 "Use C++17 (default is C++20)." Off)
+option(FEA_CPP14 "Use C++14 (default is C++20)." Off)
 option(FEA_PULL_CONAN "Executes conan install from cmake." On)
 option(FEA_CMAKE_LOCAL "Use local fea_cmake repo. Searches for '../fea_cmake'" Off)
 
@@ -28,7 +28,7 @@ FetchContent_MakeAvailable(fea_cmake)
 include(${fea_cmake_SOURCE_DIR}/CMakeLists.txt)
 
 # Output to predictable location.
-set_output_dir(${CMAKE_BINARY_DIR}/bin)
+fea_set_output_dir(${CMAKE_BINARY_DIR}/bin)
 
 # C++ version.
 if ("cxx_std_20" IN_LIST CMAKE_CXX_COMPILE_FEATURES AND NOT FEA_CPP17 AND NOT FEA_CPP14)
@@ -44,7 +44,7 @@ endif()
 
 # External dependencies.
 if (${FEA_PULL_CONAN})
-	pull_conan()
+	fea_pull_conan()
 endif()
 find_package(TBB CONFIG REQUIRED QUIET)
 find_package(date CONFIG REQUIRED QUIET)
@@ -56,7 +56,7 @@ file(GLOB_RECURSE HEADER_FILES_CPP14 "include_cpp14/${INCLUDE_NAME}/*.hpp")
 file(GLOB_RECURSE HEADER_FILES_CPP17 "include_cpp17/${INCLUDE_NAME}/*.hpp")
 file(GLOB_RECURSE HEADER_FILES_CPP20 "include_cpp20/${INCLUDE_NAME}/*.hpp")
 add_library(${PROJECT_NAME} INTERFACE)
-set_compile_options(${PROJECT_NAME} INTERFACE)
+fea_set_compile_options(${PROJECT_NAME} INTERFACE)
 target_link_libraries(${PROJECT_NAME} INTERFACE TBB::TBB date::date)
 
 # To see files in IDE
@@ -128,8 +128,8 @@ if (${FEA_TESTS})
 		"$<$<COMPILE_FEATURES:cxx_std_20>:${TEST_HEADERS_CPP20}>"
 	)
 
-	set_compile_options(${TEST_NAME} PRIVATE)
-	set_compile_options(${TEST_NAME_NOTHROW} PRIVATE)
+	fea_set_compile_options(${TEST_NAME} PRIVATE)
+	fea_set_compile_options(${TEST_NAME_NOTHROW} PRIVATE)
 
 	# Set NOTHROW and other global defines that could impact tests.
 	target_compile_definitions(${TEST_NAME_NOTHROW} PRIVATE FEA_NOTHROW -DFEA_SERIALIZE_SIZE_T=uint16_t -DFEA_CODEPAGE_CONVERSIONS)
@@ -165,5 +165,5 @@ if (${FEA_TESTS})
 	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${TEST_NAME})
 
 	# Copy test data on build.
-	copy_folder_on_build(${TEST_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp17/data ${BINARY_OUT_DIR}/tests_data)
+	fea_copy_folder_on_build(${TEST_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp17/data ${BINARY_OUT_DIR}/tests_data)
 endif()
