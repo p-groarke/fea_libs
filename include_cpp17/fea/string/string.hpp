@@ -229,16 +229,63 @@ template <class CharT>
 	return { str.begin(), str.begin() + new_end + 1 };
 }
 
+// Iterates input string line by line and calls your function with a string_view
+// of each line.
+// Pass false to 'Strip' template to keep delimiter.
+template <bool Strip, class Str, class InCharT, class Func>
+void for_each_line(const Str& str, InCharT delim, Func&& func) {
+	using CharT = typename detail::str_view<Str>::char_type;
+	static_assert(std::is_same_v<CharT, InCharT>,
+			"fea::for_each_line : wrong delimiter type");
 
-// Iterates input string line by line and calls your function with each line.
-template <class CharT, class Func>
-void for_each_line(const std::basic_string<CharT>& str, Func&& func) {
-	std::basic_istringstream iss(str);
-	std::basic_string<CharT> line;
-	while (std::getline(iss, line)) {
-		std::forward<Func>(func)(line);
+	auto sv = detail::str_view<Str>{ str }.sv();
+	using str_view_t = decltype(sv);
+
+	// TODO : benchmark simd
+	const auto* begin = sv.data();
+	size_t sub_size = 0;
+	for (const auto& c : sv) {
+		if (c != delim) {
+			++sub_size;
+			continue;
+		}
+
+		str_view_t line;
+		if constexpr (Strip) {
+			line = str_view_t{ begin, sub_size };
+		} else {
+			line = str_view_t{ begin, sub_size + 1 };
+		}
+		begin = &c + 1;
+		sub_size = 0;
+		func(line);
 	}
 }
+
+// Iterates input string line by line and calls your function with a string_view
+// of each line. Strips the provided delimiter char.
+template <class Str, class InCharT, class Func>
+void for_each_line(const Str& str, InCharT delim, Func&& func) {
+	for_each_line<true>(str, delim, std::forward<Func>(func));
+}
+
+// Iterates input string line by line and calls your function with a string_view
+// of each line. Splits with '\n'.
+// Enable/disable stripping with Strip template.
+template <bool Strip, class Str, class Func>
+void for_each_line(const Str& str, Func&& func) {
+	using CharT = typename detail::str_view<Str>::char_type;
+	constexpr CharT end_ch = FEA_CH('\n');
+	for_each_line<Strip>(str, end_ch, std::forward<Func>(func));
+}
+
+// Iterates input string line by line and calls your function with a string_view
+// of each line. Splits with and strips out '\n'.
+template <class Str, class Func>
+void for_each_line(const Str& str, Func&& func) {
+	for_each_line<true>(str, std::forward<Func>(func));
+}
+
 
 // Get a specific line in string, using line_endings search.
 // Returns empty string_view on failure.

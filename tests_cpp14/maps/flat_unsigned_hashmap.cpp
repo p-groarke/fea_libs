@@ -552,4 +552,18 @@ TEST(flat_unsigned_hashmap, trailing_holes) {
 	}
 }
 
+TEST(flat_unsigned_hashmap, even_resize) {
+	fea::flat_unsigned_hashmap<unsigned, unsigned> map;
+	std::vector<unsigned> keys{ 1037, 2075, 70, 71, 1316, 518, 1318, 658, 659,
+		2072, 1036, 322, 2073 };
+
+	for (unsigned k : keys) {
+		map.insert(k, k);
+	}
+
+	for (unsigned k : keys) {
+		EXPECT_TRUE(map.contains(k));
+	}
+}
+
 } // namespace

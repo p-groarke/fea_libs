@@ -90,8 +90,8 @@ struct tweak_file {
 			return;
 		}
 		std::string blob = fea::any_to_utf8(fea::open_text_file_with_bom(ifs));
-		fea::for_each_line(
-				blob, [this](const std::string& l) { data.push_back(l); });
+		fea::for_each_line(blob,
+				[this](std::string_view l) { data.push_back(std::string(l)); });
 	}
 
 	bool needs_update = false;

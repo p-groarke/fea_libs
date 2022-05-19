@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 #include "fea/memory/memory.hpp"
+#include "fea/utils/platform.hpp"
 #include "fea/utils/scope.hpp"
 #include "fea/utils/throw.hpp"
 
@@ -69,7 +70,7 @@ bool is_prime(T number) {
 	if (number == 2 || number == 3)
 		return true;
 
-	if (number % 2 == 0 || number % 3 == 0)
+	if ((number & 1) == 0 || number % 3 == 0)
 		return false;
 
 	T divisor = 6;
@@ -388,9 +389,7 @@ public:
 		auto lookup_it = find_first_slot_or_hole(key);
 		if (lookup_it == _lookup.end()) {
 			// Need to grow _lookup for trailing collisions.
-			size_type idx = _lookup.size();
-			_lookup.resize(size_type(_lookup.size() * _lookup_trailing_amount));
-			lookup_it = _lookup.begin() + idx;
+			lookup_it = trailing_resize(_lookup);
 		}
 
 		if (lookup_it->idx != idx_sentinel()) {
@@ -613,13 +612,7 @@ public:
 
 			if (it == new_lookup.end()) {
 				// Expand the lookup past the end.
-
-				// Make sure collisions are odd slots.
-				size_type idx = new_lookup.size() + 1;
-				assert(idx % 2 != 0);
-
-				new_lookup.resize(size_type(idx * _lookup_trailing_amount));
-				it = new_lookup.begin() + idx;
+				it = trailing_resize(new_lookup);
 			}
 
 			// creates new lookup, assigns the existing element pos
@@ -736,6 +729,20 @@ private:
 		return it;
 	}
 
+	// Grows lookup for trailing collisions.
+	FEA_NODISCARD auto trailing_resize(
+			std::vector<lookup_data, lookup_allocator_type>& lookup) {
+		size_type idx = lookup.size();
+		if ((idx & 1) == 0) {
+			// Make sure idx is odd, to be a hole
+			++idx;
+		}
+		assert(idx % 2 != 0);
+
+		lookup.resize(size_type(idx * _lookup_trailing_amount));
+		return lookup.begin() + idx;
+	}
+
 	// Packs the collisions so all clashing keys are contigous.
 	// This is necessary after erase since erase could create a hole, with a
 	// collision left over after that whole. This would break the container
@@ -748,7 +755,7 @@ private:
 		size_type swap_right_idx = hole_idx + 1;
 
 		// Only test odd slots, since that's where collisions are stored.
-		if (swap_right_idx % 2 == 0) {
+		if ((swap_right_idx & 1) == 0) {
 			// This can happen if the hole was actually a collision.
 			++swap_right_idx;
 		}
@@ -796,15 +803,11 @@ private:
 
 		auto lookup_it = find_first_slot_or_hole(key);
 		if (lookup_it == _lookup.end()) {
-			// Need to grow _lookup for trailing collisions.
-			size_type idx = _lookup.size();
-			_lookup.resize(size_type(idx * _lookup_trailing_amount));
-			lookup_it = _lookup.begin() + idx;
+			lookup_it = trailing_resize(_lookup);
 		}
 
 		if (lookup_it->idx != idx_sentinel()) {
 			// Found valid key.
-
 			auto data_it = _values.begin() + lookup_it->idx;
 			if (assign_found) {
 				*data_it = std::forward<M>(value);
