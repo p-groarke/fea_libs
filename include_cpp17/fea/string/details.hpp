@@ -123,7 +123,7 @@ struct str_view {
 	using char_type = CharT;
 	using traits_type = std::char_traits<CharT>;
 
-	constexpr str_view(CharT ch) noexcept
+	constexpr str_view(const CharT& ch) noexcept
 			: _char(ch) {
 	}
 
@@ -145,8 +145,8 @@ struct str_view {
 		return &_char;
 	}
 
-	[[nodiscard]] constexpr CharT sv() const noexcept {
-		return _char;
+	[[nodiscard]] constexpr std::basic_string_view<CharT> sv() const noexcept {
+		return { &_char, 1 };
 	}
 
 	[[nodiscard]] constexpr size_t size() const noexcept {
@@ -195,7 +195,7 @@ struct str_view {
 	}
 
 private:
-	CharT _char;
+	const CharT& _char;
 };
 
 template <class CharT>
