@@ -239,21 +239,25 @@ void for_each_line(const Str& str, InCharT delim, Func&& func) {
 			"fea::for_each_line : wrong delimiter type");
 
 	auto sv = detail::str_view<Str>{ str }.sv();
+	using str_view_t = decltype(sv);
 
 	// TODO : benchmark simd
 	const auto* begin = sv.data();
+	size_t sub_size = 0;
 	for (const auto& c : sv) {
 		if (c != delim) {
+			++sub_size;
 			continue;
 		}
 
-		decltype(sv) line;
+		str_view_t line;
 		if constexpr (Strip) {
-			line = { begin, &c };
+			line = str_view_t{ begin, sub_size };
 		} else {
-			line = { begin, &c + 1 };
+			line = str_view_t{ begin, sub_size + 1 };
 		}
 		begin = &c + 1;
+		sub_size = 0;
 		func(line);
 	}
 }
