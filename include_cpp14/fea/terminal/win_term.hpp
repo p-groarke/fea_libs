@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
-#include <fea/utils/platform.hpp>
+#include "fea/utils/platform.hpp"
 
 /*
 Terminal utf tools for windows.
@@ -49,7 +49,7 @@ Does nothing (but is still callable) on other OSes.
 namespace fea {
 #if !defined(FEA_WINDOWS)
 struct codepage_resetter {};
-inline codepage_resetter win_utf8_terminal() {
+inline codepage_resetter win_utf8_terminal(bool = false) {
 	return {};
 }
 #else
