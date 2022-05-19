@@ -449,7 +449,7 @@ TEST(string, line_funcs) {
 
 				size_t num_lines = 0;
 				fea::for_each_line(test_arr[j], [&](auto sv) {
-					EXPECT_LE(sv.size(), 2);
+					EXPECT_LE(sv.size(), 2u);
 					EXPECT_FALSE(fea::contains(sv, FEA_CH('\n')));
 					++num_lines;
 				});
@@ -457,7 +457,7 @@ TEST(string, line_funcs) {
 
 				num_lines = 0;
 				fea::for_each_line<false>(test_arr[j], [&](auto sv) {
-					EXPECT_GE(sv.size(), 1);
+					EXPECT_GE(sv.size(), 1u);
 					EXPECT_TRUE(fea::contains(sv, FEA_CH('\n')));
 					++num_lines;
 				});
