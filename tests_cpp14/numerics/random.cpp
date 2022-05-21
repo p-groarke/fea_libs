@@ -39,6 +39,12 @@ TEST(random, basics) {
 		EXPECT_EQ(vbytes.size(), 4u);
 	}
 
+	for (size_t i = 0; i < num_fuzz; ++i) {
+		// Basically just confirm it compiles on all platforms and configs.
+		bool v = fea::random_val<bool>();
+		EXPECT_TRUE(v || !v);
+	}
+
 	{
 		for (size_t i = 0; i < num_fuzz; ++i) {
 			e v = fea::random_val<e>();

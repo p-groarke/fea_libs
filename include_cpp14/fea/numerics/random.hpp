@@ -97,9 +97,23 @@ uint8_t random_val<uint8_t>() {
 	return uint8_t(random_val(mmin, mmax));
 }
 
-// Get a random index, from 0 to count - 1.
+// Get a random bool [true, false].
+template <>
+bool random_val<bool>() {
+	return bool(random_val(uint8_t(0), uint8_t(1)));
+}
+
+// Get a random index, [0, count[
 inline size_t random_idx(size_t count) {
 	return random_val(size_t(0), count - 1);
+}
+
+// Fills the range with random indexes from [0, count[
+template <class FwdIt>
+inline void random_idxes(FwdIt begin, FwdIt end, size_t count) {
+	for (auto it = begin; it != end; ++it) {
+		*it = fea::random_idx(count);
+	}
 }
 
 template <size_t N>
