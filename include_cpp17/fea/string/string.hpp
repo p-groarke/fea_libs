@@ -260,6 +260,12 @@ void for_each_line(const Str& str, InCharT delim, Func&& func) {
 		sub_size = 0;
 		func(line);
 	}
+
+	// Leftover that doesn't end with delim.
+	if (sub_size != 0) {
+		str_view_t line{ begin, sub_size };
+		func(line);
+	}
 }
 
 // Iterates input string line by line and calls your function with a string_view
