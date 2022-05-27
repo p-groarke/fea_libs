@@ -216,4 +216,40 @@ TEST(stack_vector, insert) {
 		EXPECT_EQ(v, answer);
 	}
 }
+
+TEST(stack_vector, erase) {
+	fea::stack_vector<int, 5> v{ 0, 1, 2, 3, 4 };
+	EXPECT_EQ(v.size(), 5);
+
+	{
+		v.erase(v.begin());
+		EXPECT_EQ(v.size(), 4);
+		const fea::stack_vector<int, 5> answer{ 1, 2, 3, 4 };
+		EXPECT_EQ(v, answer);
+	}
+
+	{
+		v.erase(v.begin() + 2);
+		const fea::stack_vector<int, 5> answer{ 1, 2, 4 };
+		EXPECT_EQ(v, answer);
+	}
+
+	{
+		v.erase(v.begin() + 2);
+		const fea::stack_vector<int, 5> answer{ 1, 2 };
+		EXPECT_EQ(v, answer);
+	}
+
+	{
+		v.erase(v.begin() + 1);
+		const fea::stack_vector<int, 5> answer{ 1 };
+		EXPECT_EQ(v, answer);
+	}
+
+	{
+		v.erase(v.begin());
+		const fea::stack_vector<int, 5> answer{};
+		EXPECT_EQ(v, answer);
+	}
+}
 } // namespace fea

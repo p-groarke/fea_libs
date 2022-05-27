@@ -156,11 +156,9 @@ struct stack_vector {
 	}
 
 	FEA_NODISCARD constexpr const_pointer data() const noexcept {
-		assert(_size > 0);
 		return _data.data();
 	}
 	FEA_NODISCARD constexpr pointer data() noexcept {
-		assert(_size > 0);
 		return _data.data();
 	}
 
@@ -243,6 +241,16 @@ struct stack_vector {
 	constexpr void clear() {
 		destroy_range(0, _size, std::is_trivially_destructible<T>{});
 		_size = 0;
+	}
+
+	constexpr iterator erase(const_iterator pos) {
+		size_type dist = size_type(std::distance(cbegin(), pos));
+		assert(dist < size());
+		auto it = begin() + dist;
+		std::copy(it + 1, end(), it);
+		destroy_range(_size - 1, _size, std::is_trivially_destructible<T>{});
+		--_size;
+		return begin() + dist;
 	}
 
 	constexpr iterator insert(const_iterator pos, const_reference value) {

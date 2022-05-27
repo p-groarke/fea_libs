@@ -39,6 +39,7 @@ Does nothing (but is still callable) on other OSes.
 */
 
 #if FEA_WINDOWS
+#include "fea/utils/unused.hpp"
 #include <limits>
 
 #include <fcntl.h>
@@ -50,7 +51,7 @@ Does nothing (but is still callable) on other OSes.
 namespace fea {
 #if !defined(FEA_WINDOWS)
 struct codepage_resetter {};
-inline codepage_resetter win_utf8_terminal(bool = false) {
+FEA_NODISCARD inline codepage_resetter win_utf8_terminal(bool = false) {
 	return {};
 }
 #else
@@ -115,11 +116,12 @@ FEA_NODISCARD inline codepage_resetter win_utf8_terminal(
 
 	SetConsoleCP(CP_UTF8);
 	SetConsoleOutputCP(CP_UTF8);
-	if (force_wide) {
-		_setmode(_fileno(stdin), _O_U16TEXT);
-		_setmode(_fileno(stdout), _O_U16TEXT);
-	}
 
+	if (force_wide) {
+		int res = _setmode(_fileno(stdin), _O_U16TEXT);
+		res = _setmode(_fileno(stdout), _O_U16TEXT);
+		fea::unused(res);
+	}
 	return ret;
 }
 #endif

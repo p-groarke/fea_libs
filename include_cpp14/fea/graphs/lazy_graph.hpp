@@ -48,18 +48,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace fea {
 namespace detail {
 template <size_t N, class T>
-struct clean_container {
+struct choose_vector {
 	using type = fea::stack_vector<T, N>;
 };
 template <class T>
-struct clean_container<0, T> {
+struct choose_vector<0, T> {
 	using type = std::vector<T>;
 };
+
+template <size_t N, class T>
+using choose_vector_t = typename choose_vector<N, T>::type;
 
 } // namespace detail
 // TODO : callback should be 1 vector of pair<parent_id, bool_was_dirty>
 
-template <class Id, class NodeData, class DirtyVersion, size_t MaxParents>
+template <class Id, class NodeData, class DirtyVersion, size_t MaxLeafs>
 struct node {
 	node() = default;
 	~node() = default;
@@ -86,9 +89,9 @@ struct node {
 	}
 
 	void add_child(Id child_id) {
-		_children.push_back(child_id);
-		_children_versions.push_back(dirty_sentinel());
-		assert(_children.size() == _children_versions.size());
+		add_child(child_id,
+				std::conditional_t<MaxLeafs == 0, std::true_type,
+						std::false_type>{});
 	}
 
 	void remove_child(Id child_id) {
@@ -116,7 +119,7 @@ struct node {
 
 	void add_parent(Id parent_id) {
 		add_parent(parent_id,
-				std::conditional_t<MaxParents == 0, std::true_type,
+				std::conditional_t<MaxLeafs == 0, std::true_type,
 						std::false_type>{});
 	}
 
@@ -126,19 +129,19 @@ struct node {
 		_dirty_evaluation_graph = true;
 	}
 
-	const std::vector<Id>& children() const {
-		return _children;
+	fea::span<const Id> children() const {
+		return { _children.data(), _children.size() };
 	}
 
-	const std::vector<DirtyVersion>& children_versions() const {
-		return _children_versions;
+	fea::span<const DirtyVersion> children_versions() const {
+		return { _children_versions.data(), _children_versions.size() };
 	}
-	std::vector<DirtyVersion>& children_versions() {
-		return _children_versions;
+	fea::span<DirtyVersion> children_versions() {
+		return { _children_versions.data(), _children_versions.size() };
 	}
 
-	const std::vector<Id>& parents() const {
-		return _parents;
+	fea::span<const Id> parents() const {
+		return { _parents.data(), _parents.size() };
 	}
 	//// Only use this to change dirty version, not add or remove parents.
 	// std::vector<Id>& parents() {
@@ -216,9 +219,23 @@ struct node {
 	}
 
 private:
-	// Overload for max_parents set
+	// Overload for MaxLeafs set.
+	void add_child(Id child_id, std::false_type) {
+		if (_children.size() == MaxLeafs) {
+			fea::maybe_throw(
+					__FUNCTION__, __LINE__, "trying to add too many children");
+		}
+		add_child(child_id, std::true_type{});
+	}
+	void add_child(Id child_id, std::true_type) {
+		_children.push_back(child_id);
+		_children_versions.push_back(dirty_sentinel());
+		assert(_children.size() == _children_versions.size());
+	}
+
+	// Overload for MaxLeafs set.
 	void add_parent(Id parent_id, std::false_type) {
-		if (_parents.size() == MaxParents) {
+		if (_parents.size() == MaxLeafs) {
 			fea::maybe_throw(
 					__FUNCTION__, __LINE__, "trying to add too many parents");
 		}
@@ -229,25 +246,14 @@ private:
 		_dirty_evaluation_graph = true;
 	}
 
-	// Your parents.
-	// Stored in unordered_map because we do random lookups very often vs.
-	// adding or looping.
-	// The value is the version of your parent when you were last updated.
-	// Used to check if you are dirty (my version != current parent version).
-
 	// Your children.
-	std::vector<Id> _children;
+	detail::choose_vector_t<MaxLeafs, Id> _children;
 
 	// Children versions, synced with _children.
-	std::vector<DirtyVersion> _children_versions;
+	detail::choose_vector_t<MaxLeafs, DirtyVersion> _children_versions;
 
 	// Parents.
-	std::vector<Id> _parents;
-
-
-	//// TODO : investigate storing the versions inside the parent, to minimize
-	//// map lookups.
-	// std::unordered_map<Id, DirtyVersion> _parents;
+	detail::choose_vector_t<MaxLeafs, Id> _parents;
 
 
 	// This is an optimization, we tradeoff memory and insert time for faster
@@ -307,9 +313,11 @@ struct callback_data {
 // node).
 // UnorderedContainer is optional. You can provide your own std::unordered_map
 // compliant container.
+// If MaxLeafs is not 0, the maximum node parents and children is equal to
+// MaxLeafs, and when possible, std::arrays are used.
 template <class Id, class NodeData = char, class DirtyVersion = uint64_t,
 		template <class...> class UnorderedContainer = std::unordered_map,
-		size_t MaxParents = 0>
+		size_t MaxLeafs = 0>
 struct lazy_graph {
 	static_assert(std::is_unsigned<DirtyVersion>::value,
 			"fea::lazy_graph : DirtyVersion must be an unsigned integral");
@@ -414,12 +422,12 @@ struct lazy_graph {
 
 		node_t& n = it->second;
 
-		const std::vector<Id>& parents = n.parents();
+		fea::span<const Id> parents = n.parents();
 		for (Id parent_id : parents) {
 			_nodes.at(parent_id).remove_child(id);
 		}
 
-		const std::vector<Id>& children = n.children();
+		fea::span<const Id> children = n.children();
 		for (Id child_id : children) {
 			_nodes.at(child_id).remove_parent(id);
 		}
@@ -522,13 +530,13 @@ struct lazy_graph {
 	}
 
 	// Get a nodes children
-	const std::vector<Id>& children(Id id) const {
+	fea::span<const Id> children(Id id) const {
 		return _nodes.at(id).children();
 	}
 
 	// Get a nodes parent.
 	// Note this is in a map with dirtyness.
-	const std::vector<Id>& parents(Id id) const {
+	fea::span<const Id> parents(Id id) const {
 		return _nodes.at(id).parents();
 	}
 
@@ -547,8 +555,7 @@ struct lazy_graph {
 		if (n.version() == (std::numeric_limits<DirtyVersion>::max)()) {
 			n.version() = node_t::init_sentinel();
 
-			std::vector<DirtyVersion>& children_versions
-					= n.children_versions();
+			fea::span<DirtyVersion> children_versions = n.children_versions();
 			for (DirtyVersion& child_ver : children_versions) {
 				child_ver = node_t::dirty_sentinel();
 			}
@@ -583,7 +590,7 @@ struct lazy_graph {
 	// Can you read a node? Does a node need an update?
 	bool is_dirty(Id id) const {
 		return recurse_up(id, [this](Id id, const node_t& n) {
-			const std::vector<Id>& parents = n.parents();
+			fea::span<const Id> parents = n.parents();
 			for (Id pid : parents) {
 				const node_t& p_node = _nodes.at(pid);
 				if (p_node.version() != p_node.child_version(id)) {
@@ -616,7 +623,7 @@ struct lazy_graph {
 		const std::vector<Id>& graph = evaluation_graph(id);
 
 		// Stored here to reuse memory.
-		clean_container_t parent_statuses;
+		detail::choose_vector_t<MaxLeafs, parent_status_t> parent_statuses;
 
 		// Now that we have the correct evaluation graph, evaluate it.
 		// Call the user funcion with the current node id and provide it's
@@ -638,7 +645,7 @@ struct lazy_graph {
 			// Check all my parents to see if I am really dirty.
 			// Also reset my version while we are looping.
 			bool dirty = false;
-			const std::vector<Id>& parents = n.parents();
+			fea::span<const Id> parents = n.parents();
 
 			for (Id parent_id : parents) {
 				node_t& parent_node = _nodes.at(parent_id);
@@ -747,9 +754,9 @@ struct lazy_graph {
 			// Check all my parents to see if I am really dirty.
 			// Also reset my version while we are looping.
 			bool dirty = false;
-			const std::vector<Id>& parents = n.parents();
+			fea::span<const Id> parents = n.parents();
 
-			clean_container_t parent_statuses;
+			detail::choose_vector_t<MaxLeafs, parent_status_t> parent_statuses;
 			parent_statuses.reserve(parents.size());
 
 			// eh, not great. better way to pass on parents to user funcion?
@@ -975,11 +982,7 @@ struct lazy_graph {
 
 
 private:
-	using node_t = node<Id, NodeData, DirtyVersion, MaxParents>;
-
-	using clean_container_t =
-			typename detail::clean_container<MaxParents, parent_status_t>::type;
-
+	using node_t = node<Id, NodeData, DirtyVersion, MaxLeafs>;
 
 	// Recurse downward.
 	// Your function should accept both an id and a node reference.
@@ -1036,7 +1039,7 @@ private:
 				return true;
 			}
 
-			const std::vector<Id>& children = n.children();
+			fea::span<const Id> children = n.children();
 			graph.insert(graph.end(), children.begin(), children.end());
 		}
 
@@ -1054,7 +1057,7 @@ private:
 			return true;
 		}
 
-		const std::vector<Id>& parents = n.parents();
+		fea::span<const Id> parents = n.parents();
 		for (Id parent_id : parents) {
 			if (recurse_up(parent_id, func)) {
 				return true;
@@ -1084,7 +1087,7 @@ private:
 				return true;
 			}
 
-			const std::vector<Id>& parents = n.parents();
+			fea::span<const Id> parents = n.parents();
 			for (Id parent_id : parents) {
 				graph.push_back(parent_id);
 			}

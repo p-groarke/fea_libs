@@ -83,10 +83,10 @@ struct span {
 	using size_type = size_t;
 	using difference_type = std::ptrdiff_t;
 
-	using pointer = element_type*;
-	using const_pointer = const element_type*;
-	using reference = element_type&;
-	using const_reference = const element_type&;
+	using pointer = T*;
+	using const_pointer = const T*;
+	using reference = T&;
+	using const_reference = const T&;
 
 	using iterator = pointer;
 	using reverse_iterator = std::reverse_iterator<iterator>;
