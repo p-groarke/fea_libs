@@ -19,7 +19,7 @@ bool contains(fea::span<const fea::parent_status<unsigned>> vec, unsigned i) {
 			!= vec.end();
 }
 
-size_t get_index(const std::vector<unsigned>& vec, unsigned i) {
+size_t get_index(fea::span<const unsigned> vec, unsigned i) {
 	auto it = std::find(vec.begin(), vec.end(), i);
 	return std::distance(vec.begin(), it);
 }
@@ -173,7 +173,7 @@ TEST(lazy_graph, advanced_example) {
 	// The result is a left to right breadth first ordered vector.
 	// Note this isn't const, as the eval graph computation is also lazy.
 	// Lazy is good.
-	std::vector<my_id_t> my_node_eval_graph = graph.evaluation_graph(2);
+	fea::span<const my_id_t> my_node_eval_graph = graph.evaluation_graph(2);
 
 	// Graph independance.
 	// You can easily clean a node using optimal threading with clean_mt.
@@ -410,7 +410,7 @@ TEST(lazy_graph, advanced) {
 	reset_graph(graph);
 
 	// Evaluation graphs
-	std::vector<unsigned> subgraph = graph.evaluation_graph(7);
+	fea::span<const unsigned> subgraph = graph.evaluation_graph(7);
 	size_t idx_0 = get_index(subgraph, 0u);
 	size_t idx_1 = get_index(subgraph, 1u);
 	size_t idx_2 = get_index(subgraph, 2u);
@@ -1136,7 +1136,7 @@ TEST(lazy_graph, advanced_max_parents) {
 	reset_graph(graph);
 
 	// Evaluation graphs
-	std::vector<unsigned> subgraph = graph.evaluation_graph(7);
+	fea::span<const unsigned> subgraph = graph.evaluation_graph(7);
 	size_t idx_0 = get_index(subgraph, 0u);
 	size_t idx_1 = get_index(subgraph, 1u);
 	size_t idx_2 = get_index(subgraph, 2u);
@@ -1722,7 +1722,7 @@ TEST(lazy_graph, fixed_size) {
 	{
 		fea::lazy_graph<unsigned, char, uint8_t, std::unordered_map, 2, 2>
 				graph;
-#if FEA_DEBUG
+#if FEA_DEBUG || defined(FEA_NOTHROW)
 		EXPECT_DEATH(reset_graph(graph), "");
 #else
 		EXPECT_THROW(reset_graph(graph), std::runtime_error);
@@ -1735,7 +1735,7 @@ TEST(lazy_graph, fixed_size) {
 		graph.add_dependency(1, 0);
 		graph.add_dependency(2, 0);
 
-#if FEA_DEBUG
+#if FEA_DEBUG || defined(FEA_NOTHROW)
 		EXPECT_DEATH(graph.add_dependency(3, 0), "");
 #else
 		EXPECT_THROW(graph.add_dependency(3, 0), std::runtime_error);
@@ -1748,7 +1748,7 @@ TEST(lazy_graph, fixed_size) {
 		graph.add_dependency(0, 1);
 		graph.add_dependency(0, 2);
 
-#if FEA_DEBUG
+#if FEA_DEBUG || defined(FEA_NOTHROW)
 		EXPECT_DEATH(graph.add_dependency(0, 3), "");
 #else
 		EXPECT_THROW(graph.add_dependency(0, 3), std::runtime_error);

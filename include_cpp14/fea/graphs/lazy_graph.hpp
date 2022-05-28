@@ -157,7 +157,7 @@ struct node {
 	}
 
 	// A left to right graph of parents needed to update this node.
-	const std::vector<Id>& evaluation_graph() const {
+	fea::span<const Id> evaluation_graph() const {
 		if (_dirty_evaluation_graph) {
 			fea::maybe_throw(
 					__FUNCTION__, __LINE__, "reading dirty evaluation graph");
@@ -578,8 +578,7 @@ struct lazy_graph {
 		}
 
 		DirtyVersion parent_ver = n.version();
-		const std::vector<DirtyVersion>& children_versions
-				= n.children_versions();
+		fea::span<const DirtyVersion> children_versions = n.children_versions();
 
 		for (DirtyVersion child_ver : children_versions) {
 			if (child_ver == parent_ver) {
@@ -621,7 +620,7 @@ struct lazy_graph {
 		}
 
 		// Get back to front node subgraph.
-		const std::vector<Id>& graph = evaluation_graph(id);
+		fea::span<const Id> graph = evaluation_graph(id);
 
 		// Stored here to reuse memory.
 		detail::choose_vector_t<MaxParents, parent_status_t> parent_statuses;
@@ -691,7 +690,7 @@ struct lazy_graph {
 	// called on valid nodes.
 	// This call is heavy, so the overhead of std::function is minimized.
 	template <class Func>
-	void clean(const std::vector<Id>& ids,
+	void clean(fea::span<const Id> ids,
 			const fea::callback<Func, void(const callback_data_t&)>& func) {
 		for (Id id : ids) {
 			clean(id, func);
@@ -708,14 +707,13 @@ struct lazy_graph {
 	// during this evaluation!
 	template <class Func>
 	void clean_mt(Id id,
-			/* void(your_node, vector<parent, was_dirty>)*/
 			const fea::callback<Func, void(const callback_data_t&)>& func) {
 		if (_nodes.at(id).is_root()) {
 			return;
 		}
 
 		// Get back to front node subgraph.
-		const std::vector<Id>& graph = evaluation_graph(id);
+		fea::span<const Id> graph = evaluation_graph(id);
 
 
 		// We will keep a vector of currently evaluating nodes.
@@ -814,8 +812,7 @@ struct lazy_graph {
 	// It is important to only read your parents, and only write to yourself
 	// during this evaluation!
 	template <class Func>
-	void clean_mt(const std::vector<Id>& ids,
-			/* void(your_node, vector<parent, was_dirty>)*/
+	void clean_mt(fea::span<const Id> ids,
 			const fea::callback<Func, void(const callback_data_t&)>& func) {
 		// Figure out which graphs can run completely in parallel and which
 		// can't.
@@ -856,18 +853,17 @@ struct lazy_graph {
 	// without locks.
 	// This function is not const as it will compute the evaluation graphs if
 	// needed.
-	independance_data are_eval_graphs_independent(
-			const std::vector<Id>& nodes) {
+	independance_data are_eval_graphs_independent(fea::span<const Id> nodes) {
 		if (nodes.size() < 2) {
-			return { nodes, {} };
+			return { std::vector<Id>(nodes.begin(), nodes.end()), {} };
 		}
 
 		independance_data ret;
-		std::vector<const std::vector<Id>*> eval_graphs(nodes.size());
+		std::vector<fea::span<const Id>> eval_graphs(nodes.size());
 
 		// TODO : thread this?
 		for (size_t i = 0; i < eval_graphs.size(); ++i) {
-			eval_graphs[i] = &evaluation_graph(nodes[i]);
+			eval_graphs[i] = evaluation_graph(nodes[i]);
 		}
 
 		// Check which channels are independent.
@@ -881,7 +877,7 @@ struct lazy_graph {
 		std::unordered_map<Id, size_t> node_counter;
 
 		for (size_t i = 0; i < eval_graphs.size(); ++i) {
-			for (Id id : *eval_graphs[i]) {
+			for (Id id : eval_graphs[i]) {
 				++node_counter[id];
 			}
 		}
@@ -889,7 +885,7 @@ struct lazy_graph {
 		for (size_t i = 0; i < eval_graphs.size(); ++i) {
 			bool found = false;
 
-			for (Id id : *eval_graphs[i]) {
+			for (Id id : eval_graphs[i]) {
 				assert(node_counter[id] != 0);
 
 				if (node_counter[id] != 1) {
@@ -915,7 +911,7 @@ struct lazy_graph {
 	// needed. Recomputing the evaluation graph is heavy and mallocs, so we do
 	// it rarely. You shouldn't need to call this yourself, but it is exposed
 	// for debugging and testing purposes.
-	const std::vector<Id>& evaluation_graph(Id node_id) {
+	fea::span<const Id> evaluation_graph(Id node_id) {
 		node_t& n = _nodes.at(node_id);
 		if (!n.is_evaluation_graph_dirty()) {
 			return n.evaluation_graph();
@@ -986,42 +982,42 @@ struct lazy_graph {
 private:
 	using node_t = node<Id, NodeData, DirtyVersion, MaxParents, MaxChildren>;
 
-	// Recurse downward.
-	// Your function should accept both an id and a node reference.
-	// We pass the node on to minimize map lookups.
-	// Your function should return true to stop recursion.
-	template <class Func>
-	bool recurse_down(Id id, Func&& func) const {
-		const node_t& n = _nodes.at(id);
-		if (func(id, n)) {
-			return true;
-		}
+	//// Recurse downward.
+	//// Your function should accept both an id and a node reference.
+	//// We pass the node on to minimize map lookups.
+	//// Your function should return true to stop recursion.
+	// template <class Func>
+	// bool recurse_down(Id id, Func&& func) const {
+	//	const node_t& n = _nodes.at(id);
+	//	if (func(id, n)) {
+	//		return true;
+	//	}
 
-		const std::vector<Id>& children = n.children();
-		for (Id child_id : children) {
-			if (recurse_down(child_id, func)) {
-				return true;
-			}
-		}
+	//	const std::vector<Id>& children = n.children();
+	//	for (Id child_id : children) {
+	//		if (recurse_down(child_id, func)) {
+	//			return true;
+	//		}
+	//	}
 
-		return false;
-	}
-	template <class Func>
-	bool recurse_down(Id id, Func&& func) {
-		node_t& n = _nodes.at(id);
-		if (func(id, n)) {
-			return true;
-		}
+	//	return false;
+	//}
+	// template <class Func>
+	// bool recurse_down(Id id, Func&& func) {
+	//	node_t& n = _nodes.at(id);
+	//	if (func(id, n)) {
+	//		return true;
+	//	}
 
-		const std::vector<Id>& children = n.children();
-		for (Id child_id : children) {
-			if (recurse_down(child_id, func)) {
-				return true;
-			}
-		}
+	//	const std::vector<Id>& children = n.children();
+	//	for (Id child_id : children) {
+	//		if (recurse_down(child_id, func)) {
+	//			return true;
+	//		}
+	//	}
 
-		return false;
-	}
+	//	return false;
+	//}
 
 	template <class Func>
 	bool recurse_breadth_down(Id id, Func&& func) const {

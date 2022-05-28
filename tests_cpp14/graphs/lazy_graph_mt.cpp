@@ -10,43 +10,10 @@ extern bool contains(const std::vector<unsigned>& vec, unsigned i);
 extern bool contains(
 		fea::span<const fea::parent_status<unsigned>> vec, unsigned i);
 
-extern size_t get_index(const std::vector<unsigned>& vec, unsigned i);
+extern size_t get_index(fea::span<const unsigned> vec, unsigned i);
 extern size_t num_dirty(fea::span<const fea::parent_status<unsigned>> vec);
 
 namespace {
-// bool contains(const std::vector<unsigned>& vec, unsigned i) {
-//	return std::find(vec.begin(), vec.end(), i) != vec.end();
-//}
-// bool contains(fea::span<const fea::parent_status<unsigned>>& vec, unsigned i)
-// { 	return std::find_if(vec.begin(), vec.end(),
-//				   [&](const fea::parent_status<unsigned>& p) {
-//					   return p.parent_id == i;
-//				   })
-//			!= vec.end();
-//}
-//
-// size_t get_index(const std::vector<unsigned>& vec, unsigned i) {
-//	auto it = std::find_if(
-//			vec.begin(), vec.end(), [&](const fea::parent_status<unsigned>& p) {
-//				return p.parent_id == i;
-//			});
-//	return std::distance(vec.begin(), it);
-//}
-//
-// size_t get_index(
-//		fea::span<const fea::parent_status<unsigned>>& vec, unsigned i) {
-//	auto it = std::find_if(
-//			vec.begin(), vec.end(), [&](const fea::parent_status<unsigned>& p) {
-//				return p.parent_id == i;
-//			});
-//	return std::distance(vec.begin(), it);
-//}
-// size_t get_index(
-//		const std::vector<std::pair<unsigned, bool>>& vec, unsigned i) {
-//	auto it = std::find_if(vec.begin(), vec.end(),
-//			[i](const auto& p) { return p.first == i; });
-//	return std::distance(vec.begin(), it);
-//}
 
 size_t num_dirty(fea::span<const fea::parent_status<unsigned>> vec) {
 	return std::count_if(vec.begin(), vec.end(),
@@ -182,9 +149,10 @@ TEST(fea_lazy_graph, threading) {
 
 	// Dirty everything.
 	graph.make_dirty(0);
+	graph.make_dirty_if_not(0);
 	graph.make_dirty(12);
 	graph.make_dirty(13);
-	graph.make_dirty(17);
+	graph.make_dirty_if_not(17);
 
 	// Roots are never dirty.
 	EXPECT_FALSE(graph.is_dirty(0));
