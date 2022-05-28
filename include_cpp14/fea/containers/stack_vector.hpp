@@ -31,6 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
+#include "fea/memory/memory.hpp"
 #include "fea/meta/traits.hpp"
 #include "fea/utils/platform.hpp"
 #include "fea/utils/throw.hpp"
@@ -95,10 +96,10 @@ struct stack_vector {
 			: stack_vector(count, value_type{}) {
 	}
 
-	constexpr stack_vector(std::initializer_list<value_type> init)
+	constexpr stack_vector(std::initializer_list<value_type>&& init)
 			: _size(init.size()) {
 		assert(init.size() <= StackSize);
-		std::copy(init.begin(), init.end(), _data.begin());
+		fea::copy_or_move(init.begin(), init.end(), _data.begin());
 	}
 
 	template <class InputIt,
@@ -106,7 +107,7 @@ struct stack_vector {
 	constexpr stack_vector(InputIt start, InputIt stop)
 			: _size(std::distance(start, stop)) {
 		assert(size_t(std::distance(start, stop)) <= StackSize);
-		std::copy(start, stop, _data.begin());
+		fea::copy_or_move(start, stop, _data.begin());
 	}
 
 	/**
@@ -236,10 +237,9 @@ struct stack_vector {
 
 	/**
 	 * Modifiers
-	 * TODO : erase
 	 */
 	constexpr void clear() {
-		destroy_range(0, _size, std::is_trivially_destructible<T>{});
+		fea::destroy(begin(), end());
 		_size = 0;
 	}
 
@@ -247,17 +247,36 @@ struct stack_vector {
 		size_type dist = size_type(std::distance(cbegin(), pos));
 		assert(dist < size());
 		auto it = begin() + dist;
-		std::copy(it + 1, end(), it);
-		destroy_range(_size - 1, _size, std::is_trivially_destructible<T>{});
+		fea::copy_or_move(it + 1, end(), it);
 		--_size;
-		return begin() + dist;
+		fea::destroy_at(_data.data() + _size);
+		return it;
+	}
+
+	constexpr iterator erase(const_iterator first, const_iterator last) {
+		if (first == last) {
+			return begin() + std::distance(cbegin(), last);
+		}
+
+		size_type begin_idx = size_type(std::distance(cbegin(), first));
+		size_type end_idx = size_type(std::distance(cbegin(), last));
+		assert(begin_idx <= size());
+		assert(end_idx <= size());
+
+		auto beg_it = begin() + begin_idx;
+		auto end_it = begin() + end_idx;
+		fea::copy_or_move(end_it, end(), beg_it);
+		size_type range_size = size_type(std::distance(first, last));
+		_size -= range_size;
+		fea::destroy(end(), end() + range_size);
+		return beg_it;
 	}
 
 	constexpr iterator insert(const_iterator pos, const_reference value) {
 		assert(_size < _data.size());
 		size_type dist = size_type(std::distance(cbegin(), pos));
 		auto start_it = begin() + dist;
-		std::copy_backward(start_it, end(), end() + 1);
+		fea::copy_or_move_backward(start_it, end(), end() + 1);
 		*start_it = value;
 		++_size;
 		return start_it;
@@ -267,7 +286,7 @@ struct stack_vector {
 		assert(_size < _data.size());
 		size_type dist = size_type(std::distance(cbegin(), pos));
 		auto start_it = begin() + dist;
-		std::move_backward(start_it, end(), end() + 1);
+		fea::copy_or_move_backward(start_it, end(), end() + 1);
 		*start_it = std::move(value);
 		++_size;
 		return start_it;
@@ -282,7 +301,7 @@ struct stack_vector {
 		}
 
 		auto start_it = begin() + dist;
-		std::copy_backward(start_it, end(), end() + count);
+		fea::copy_or_move_backward(start_it, end(), end() + count);
 		std::fill_n(start_it, count, value);
 		_size += count;
 		return start_it;
@@ -301,8 +320,8 @@ struct stack_vector {
 
 		assert(_size <= _data.size() - count);
 		auto start_it = begin() + dist;
-		std::copy_backward(start_it, end(), end() + count);
-		std::copy(first, last, start_it);
+		fea::copy_or_move_backward(start_it, end(), end() + count);
+		fea::copy_or_move(first, last, start_it);
 		_size += count;
 		return start_it;
 	}
@@ -323,8 +342,8 @@ struct stack_vector {
 
 	constexpr void pop_back() {
 		assert(_size > 0);
-		destroy_range(_size - 1, _size, std::is_trivially_destructible<T>{});
 		--_size;
+		fea::destroy_at(_data.data() + _size);
 	}
 
 	constexpr void resize(size_type new_size) {
@@ -332,15 +351,12 @@ struct stack_vector {
 	}
 
 	constexpr void resize(size_type new_size, const_reference value) {
-		assert(new_size < StackSize);
-		assert(new_size > 0);
+		assert(new_size <= StackSize);
 
 		if (new_size > _size) {
-			for (size_t i = _size; i < new_size; ++i) {
-				_data[i] = value;
-			}
+			std::fill(end(), begin() + new_size, value);
 		} else {
-			destroy_range(new_size, _size, std::is_trivially_destructible<T>{});
+			fea::destroy(begin() + new_size, begin() + _size);
 		}
 
 		_size = new_size;
@@ -362,16 +378,7 @@ struct stack_vector {
 			const stack_vector<K, S>& lhs, const stack_vector<K, S>& rhs);
 
 private:
-	constexpr void destroy_range(
-			size_type first, size_type last, std::false_type) const {
-		for (size_t i = first; i < last; ++i) {
-			_data[i].~T();
-		}
-	}
-	constexpr void destroy_range(size_type, size_type, std::true_type) const {
-	}
-
-	std::array<value_type, StackSize> _data; // uninitialized
+	std::array<value_type, StackSize> _data; // Q: uninitialized?
 	size_type _size = 0;
 };
 
