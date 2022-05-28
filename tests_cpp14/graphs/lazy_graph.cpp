@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <fea/graphs/lazy_graph.hpp>
 #include <fea/maps/unsigned_map.hpp>
+#include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 #include <mutex>
 #include <tbb/task_group.h>
@@ -35,7 +36,7 @@ size_t num_dirty(fea::span<const fea::parent_status<unsigned>> vec) {
 }
 
 namespace {
-TEST(fea_lazy_graph, example) {
+TEST(lazy_graph, example) {
 	// You choose your id. It can be an unsigned integer, or a pointer.
 	// The id must be usable as a key in an unordered_map, unique and stable.
 	using my_id_t = unsigned;
@@ -126,7 +127,7 @@ TEST(fea_lazy_graph, example) {
 			}));
 }
 
-TEST(fea_lazy_graph, advanced_example) {
+TEST(lazy_graph, advanced_example) {
 	// These examples show multi-threading apis and advanced calls with graph
 	// information.
 	// These are optional.
@@ -265,7 +266,7 @@ void test_parents(
 	}
 }
 
-TEST(fea_lazy_graph, basics) {
+TEST(lazy_graph, basics) {
 	// We use a smaller version tracking int so we can test the edge case when
 	// version has to wrap around.
 	// fea::lazy_graph<unsigned, uint8_t> graph;
@@ -355,8 +356,8 @@ TEST(fea_lazy_graph, basics) {
 	}
 }
 
-TEST(fea_lazy_graph, removing) {
-	fea::lazy_graph<unsigned, char, uint8_t> graph;
+TEST(lazy_graph, removing) {
+	fea::lazy_graph<unsigned, char, uint8_t, std::unordered_map, 4, 4> graph;
 	reset_graph(graph);
 
 	// Test removing
@@ -404,7 +405,7 @@ TEST(fea_lazy_graph, removing) {
 	EXPECT_FALSE(graph.contains(7));
 }
 
-TEST(fea_lazy_graph, advanced) {
+TEST(lazy_graph, advanced) {
 	fea::lazy_graph<unsigned, char, uint8_t> graph;
 	reset_graph(graph);
 
@@ -442,7 +443,7 @@ TEST(fea_lazy_graph, advanced) {
 	EXPECT_EQ(ind_data.dependent_graphs.size(), 8u);
 }
 
-TEST(fea_lazy_graph, dirtyness) {
+TEST(lazy_graph, dirtyness) {
 	fea::lazy_graph<unsigned, char, uint8_t> graph;
 	using my_callback_data = fea::callback_data<unsigned>;
 	reset_graph(graph);
@@ -713,7 +714,7 @@ TEST(fea_lazy_graph, dirtyness) {
 	EXPECT_FALSE(contains(cleaned_ids, 7u));
 }
 
-TEST(fea_lazy_graph, dirtyness_mt) {
+TEST(lazy_graph, dirtyness_mt) {
 	fea::lazy_graph<unsigned, char, uint8_t> graph;
 	using my_callback_data = fea::callback_data<unsigned>;
 	reset_graph(graph);
@@ -991,7 +992,7 @@ TEST(fea_lazy_graph, dirtyness_mt) {
 	EXPECT_FALSE(contains(cleaned_ids, 7u));
 }
 
-TEST(fea_lazy_graph, basics_max_parents) {
+TEST(lazy_graph, basics_max_parents) {
 	// We use a smaller version tracking int so we can test the edge case when
 	// version has to wrap around.
 	// fea::lazy_graph<unsigned, uint8_t> graph;
@@ -1081,7 +1082,7 @@ TEST(fea_lazy_graph, basics_max_parents) {
 	}
 }
 
-TEST(fea_lazy_graph, removing_max_parents) {
+TEST(lazy_graph, removing_max_parents) {
 	fea::lazy_graph<unsigned, char, uint8_t, std::unordered_map, 32> graph;
 	reset_graph(graph);
 
@@ -1130,7 +1131,7 @@ TEST(fea_lazy_graph, removing_max_parents) {
 	EXPECT_FALSE(graph.contains(7));
 }
 
-TEST(fea_lazy_graph, advanced_max_parents) {
+TEST(lazy_graph, advanced_max_parents) {
 	fea::lazy_graph<unsigned, char, uint8_t, std::unordered_map, 32> graph;
 	reset_graph(graph);
 
@@ -1168,7 +1169,7 @@ TEST(fea_lazy_graph, advanced_max_parents) {
 	EXPECT_EQ(ind_data.dependent_graphs.size(), 8u);
 }
 
-TEST(fea_lazy_graph, dirtyness_max_parents) {
+TEST(lazy_graph, dirtyness_max_parents) {
 	fea::lazy_graph<unsigned, char, uint8_t, std::unordered_map, 32> graph;
 	using my_callback_data = fea::callback_data<unsigned>;
 	reset_graph(graph);
@@ -1439,7 +1440,7 @@ TEST(fea_lazy_graph, dirtyness_max_parents) {
 	EXPECT_FALSE(contains(cleaned_ids, 7u));
 }
 
-TEST(fea_lazy_graph, dirtyness_mt_max_parents) {
+TEST(lazy_graph, dirtyness_mt_max_parents) {
 	fea::lazy_graph<unsigned, char, uint8_t, std::unordered_map, 32> graph;
 	using my_callback_data = fea::callback_data<unsigned>;
 	reset_graph(graph);
@@ -1715,5 +1716,43 @@ TEST(fea_lazy_graph, dirtyness_mt_max_parents) {
 	EXPECT_FALSE(contains(cleaned_ids, 5u));
 	EXPECT_TRUE(contains(cleaned_ids, 6u));
 	EXPECT_FALSE(contains(cleaned_ids, 7u));
+}
+
+TEST(lazy_graph, fixed_size) {
+	{
+		fea::lazy_graph<unsigned, char, uint8_t, std::unordered_map, 2, 2>
+				graph;
+#if FEA_DEBUG
+		EXPECT_DEATH(reset_graph(graph), "");
+#else
+		EXPECT_THROW(reset_graph(graph), std::runtime_error);
+#endif
+	}
+
+	{
+		fea::lazy_graph<unsigned, char, uint8_t, std::unordered_map, 2, 2>
+				graph;
+		graph.add_dependency(1, 0);
+		graph.add_dependency(2, 0);
+
+#if FEA_DEBUG
+		EXPECT_DEATH(graph.add_dependency(3, 0), "");
+#else
+		EXPECT_THROW(graph.add_dependency(3, 0), std::runtime_error);
+#endif
+	}
+
+	{
+		fea::lazy_graph<unsigned, char, uint8_t, std::unordered_map, 2, 2>
+				graph;
+		graph.add_dependency(0, 1);
+		graph.add_dependency(0, 2);
+
+#if FEA_DEBUG
+		EXPECT_DEATH(graph.add_dependency(0, 3), "");
+#else
+		EXPECT_THROW(graph.add_dependency(0, 3), std::runtime_error);
+#endif
+	}
 }
 } // namespace

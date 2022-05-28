@@ -62,7 +62,8 @@ using choose_vector_t = typename choose_vector<N, T>::type;
 } // namespace detail
 // TODO : callback should be 1 vector of pair<parent_id, bool_was_dirty>
 
-template <class Id, class NodeData, class DirtyVersion, size_t MaxLeafs>
+template <class Id, class NodeData, class DirtyVersion, size_t MaxParents,
+		size_t MaxChildren>
 struct node {
 	node() = default;
 	~node() = default;
@@ -90,7 +91,7 @@ struct node {
 
 	void add_child(Id child_id) {
 		add_child(child_id,
-				std::conditional_t<MaxLeafs == 0, std::true_type,
+				std::conditional_t<MaxChildren == 0, std::true_type,
 						std::false_type>{});
 	}
 
@@ -119,7 +120,7 @@ struct node {
 
 	void add_parent(Id parent_id) {
 		add_parent(parent_id,
-				std::conditional_t<MaxLeafs == 0, std::true_type,
+				std::conditional_t<MaxParents == 0, std::true_type,
 						std::false_type>{});
 	}
 
@@ -219,9 +220,9 @@ struct node {
 	}
 
 private:
-	// Overload for MaxLeafs set.
+	// Fixed children num.
 	void add_child(Id child_id, std::false_type) {
-		if (_children.size() == MaxLeafs) {
+		if (_children.size() == MaxChildren) {
 			fea::maybe_throw(
 					__FUNCTION__, __LINE__, "trying to add too many children");
 		}
@@ -233,9 +234,9 @@ private:
 		assert(_children.size() == _children_versions.size());
 	}
 
-	// Overload for MaxLeafs set.
+	// Fixed parent num.
 	void add_parent(Id parent_id, std::false_type) {
-		if (_parents.size() == MaxLeafs) {
+		if (_parents.size() == MaxParents) {
 			fea::maybe_throw(
 					__FUNCTION__, __LINE__, "trying to add too many parents");
 		}
@@ -247,13 +248,13 @@ private:
 	}
 
 	// Your children.
-	detail::choose_vector_t<MaxLeafs, Id> _children;
+	detail::choose_vector_t<MaxChildren, Id> _children;
 
 	// Children versions, synced with _children.
-	detail::choose_vector_t<MaxLeafs, DirtyVersion> _children_versions;
+	detail::choose_vector_t<MaxChildren, DirtyVersion> _children_versions;
 
 	// Parents.
-	detail::choose_vector_t<MaxLeafs, Id> _parents;
+	detail::choose_vector_t<MaxParents, Id> _parents;
 
 
 	// This is an optimization, we tradeoff memory and insert time for faster
@@ -317,7 +318,7 @@ struct callback_data {
 // MaxLeafs, and when possible, std::arrays are used.
 template <class Id, class NodeData = char, class DirtyVersion = uint64_t,
 		template <class...> class UnorderedContainer = std::unordered_map,
-		size_t MaxLeafs = 0>
+		size_t MaxParents = 0, size_t MaxChildren = 0>
 struct lazy_graph {
 	static_assert(std::is_unsigned<DirtyVersion>::value,
 			"fea::lazy_graph : DirtyVersion must be an unsigned integral");
@@ -623,7 +624,7 @@ struct lazy_graph {
 		const std::vector<Id>& graph = evaluation_graph(id);
 
 		// Stored here to reuse memory.
-		detail::choose_vector_t<MaxLeafs, parent_status_t> parent_statuses;
+		detail::choose_vector_t<MaxParents, parent_status_t> parent_statuses;
 
 		// Now that we have the correct evaluation graph, evaluate it.
 		// Call the user funcion with the current node id and provide it's
@@ -756,7 +757,8 @@ struct lazy_graph {
 			bool dirty = false;
 			fea::span<const Id> parents = n.parents();
 
-			detail::choose_vector_t<MaxLeafs, parent_status_t> parent_statuses;
+			detail::choose_vector_t<MaxParents, parent_status_t>
+					parent_statuses;
 			parent_statuses.reserve(parents.size());
 
 			// eh, not great. better way to pass on parents to user funcion?
@@ -982,7 +984,7 @@ struct lazy_graph {
 
 
 private:
-	using node_t = node<Id, NodeData, DirtyVersion, MaxLeafs>;
+	using node_t = node<Id, NodeData, DirtyVersion, MaxParents, MaxChildren>;
 
 	// Recurse downward.
 	// Your function should accept both an id and a node reference.
