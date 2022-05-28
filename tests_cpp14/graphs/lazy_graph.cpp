@@ -3,6 +3,7 @@
 #include <fea/graphs/lazy_graph.hpp>
 #include <fea/maps/unsigned_map.hpp>
 #include <fea/utils/platform.hpp>
+#include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
 #include <mutex>
 #include <tbb/task_group.h>
@@ -174,6 +175,7 @@ TEST(lazy_graph, advanced_example) {
 	// Note this isn't const, as the eval graph computation is also lazy.
 	// Lazy is good.
 	fea::span<const my_id_t> my_node_eval_graph = graph.evaluation_graph(2);
+	fea::unused(my_node_eval_graph);
 
 	// Graph independance.
 	// You can easily clean a node using optimal threading with clean_mt.
