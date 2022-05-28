@@ -262,7 +262,7 @@ TEST(stack_vector, erase) {
 	};
 
 	fea::stack_vector<obj, 5> arr{ 0, 1, 2, 3, 4 };
-	EXPECT_EQ(arr.size(), 5);
+	EXPECT_EQ(arr.size(), 5u);
 	EXPECT_EQ(num_ctors, 5);
 	EXPECT_EQ(num_dtors, 5);
 	EXPECT_EQ(num_cpy, 5); // init-list is const static storage
@@ -270,7 +270,7 @@ TEST(stack_vector, erase) {
 
 	{
 		auto it = arr.erase(arr.begin());
-		EXPECT_EQ(arr.size(), 4);
+		EXPECT_EQ(arr.size(), 4u);
 		EXPECT_EQ(num_ctors, 5);
 		EXPECT_EQ(num_dtors, 6);
 		EXPECT_EQ(num_cpy, 5);
@@ -343,7 +343,7 @@ TEST(stack_vector, erase) {
 	num_mv = 0;
 
 	arr = { 0, 1, 2, 3, 4 };
-	EXPECT_EQ(arr.size(), 5);
+	EXPECT_EQ(arr.size(), 5u);
 	EXPECT_EQ(num_ctors, 5);
 	EXPECT_EQ(num_dtors, 10);
 	EXPECT_EQ(num_cpy, 5); // init-list is const static storage
@@ -351,7 +351,7 @@ TEST(stack_vector, erase) {
 
 	{
 		auto it = arr.erase(arr.begin(), arr.begin());
-		EXPECT_EQ(arr.size(), 5);
+		EXPECT_EQ(arr.size(), 5u);
 		EXPECT_EQ(num_ctors, 5);
 		EXPECT_EQ(num_dtors, 10);
 		EXPECT_EQ(num_cpy, 5);
@@ -366,7 +366,7 @@ TEST(stack_vector, erase) {
 
 	{
 		auto it = arr.erase(arr.begin(), arr.begin() + 2);
-		EXPECT_EQ(arr.size(), 3);
+		EXPECT_EQ(arr.size(), 3u);
 		EXPECT_EQ(num_ctors, 5);
 		EXPECT_EQ(num_dtors, 12);
 		EXPECT_EQ(num_cpy, 5);
@@ -381,7 +381,7 @@ TEST(stack_vector, erase) {
 
 	{
 		auto it = arr.erase(arr.begin() + 1, arr.end());
-		EXPECT_EQ(arr.size(), 1);
+		EXPECT_EQ(arr.size(), 1u);
 		EXPECT_EQ(num_ctors, 5);
 		EXPECT_EQ(num_dtors, 14);
 		EXPECT_EQ(num_cpy, 5);
@@ -395,7 +395,7 @@ TEST(stack_vector, erase) {
 
 	{
 		auto it = arr.erase(arr.begin(), arr.end());
-		EXPECT_EQ(arr.size(), 0);
+		EXPECT_EQ(arr.size(), 0u);
 		EXPECT_EQ(num_ctors, 5);
 		EXPECT_EQ(num_dtors, 15);
 		EXPECT_EQ(num_cpy, 5);
@@ -409,7 +409,7 @@ TEST(stack_vector, erase) {
 
 	{
 		auto it = arr.erase(arr.end(), arr.end());
-		EXPECT_EQ(arr.size(), 0);
+		EXPECT_EQ(arr.size(), 0u);
 		EXPECT_EQ(num_ctors, 5);
 		EXPECT_EQ(num_dtors, 15);
 		EXPECT_EQ(num_cpy, 5);
