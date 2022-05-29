@@ -418,10 +418,10 @@ TEST(string, is_number) {
 }
 
 TEST(string, line_funcs) {
-	gen_tests(lines, "0\n\n1\n2\n", "0\r\n\r\n1\r\n2\r\n");
+	gen_tests(lines, "0\n\n1\n2\n3", "0\r\n\r\n1\r\n2\r\n3");
 	gen_tests(answers1, "1", "1\r");
 	gen_tests(answers2, "", "1");
-	std::array<size_t, 2> expected_lines{ 4, 4 };
+	std::array<size_t, 2> expected_lines{ 5, 5 };
 
 	constexpr size_t s = std::tuple_size_v<decltype(lines)>;
 	fea::static_for<s>([&](auto const_i) {
@@ -449,17 +449,29 @@ TEST(string, line_funcs) {
 
 				size_t num_lines = 0;
 				fea::for_each_line(test_arr[j], [&](auto sv) {
+					++num_lines;
+					if (num_lines == expected_lines[j]) {
+						EXPECT_EQ(sv.size(), 1u);
+						EXPECT_FALSE(fea::contains(sv, FEA_CH('\n')));
+						return;
+					}
+
 					EXPECT_LE(sv.size(), 2u);
 					EXPECT_FALSE(fea::contains(sv, FEA_CH('\n')));
-					++num_lines;
 				});
 				EXPECT_EQ(num_lines, expected_lines[j]);
 
 				num_lines = 0;
 				fea::for_each_line<false>(test_arr[j], [&](auto sv) {
+					++num_lines;
+					if (num_lines == expected_lines[j]) {
+						EXPECT_EQ(sv.size(), 1u);
+						EXPECT_FALSE(fea::contains(sv, FEA_CH('\n')));
+						return;
+					}
+
 					EXPECT_GE(sv.size(), 1u);
 					EXPECT_TRUE(fea::contains(sv, FEA_CH('\n')));
-					++num_lines;
 				});
 				EXPECT_EQ(num_lines, expected_lines[j]);
 			}

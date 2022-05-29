@@ -216,4 +216,209 @@ TEST(stack_vector, insert) {
 		EXPECT_EQ(v, answer);
 	}
 }
+
+TEST(stack_vector, erase) {
+	static int num_ctors = 0;
+	static int num_dtors = 0;
+	static int num_cpy = 0;
+	static int num_mv = 0;
+
+	struct obj {
+		obj() = default;
+		obj(int val)
+				: v(val) {
+			++num_ctors;
+		}
+
+		~obj() {
+			++num_dtors;
+		}
+
+		obj(const obj& o) {
+			++num_cpy;
+			v = o.v;
+		}
+
+		obj(obj&& o) noexcept {
+			++num_mv;
+			v = o.v;
+		}
+		obj& operator=(const obj& o) {
+			++num_cpy;
+			v = o.v;
+			return *this;
+		}
+		obj& operator=(obj&& o) noexcept {
+			++num_mv;
+			v = o.v;
+			return *this;
+		}
+
+		operator int() const {
+			return v;
+		}
+
+		int v = 0;
+	};
+
+	fea::stack_vector<obj, 5> arr{ 0, 1, 2, 3, 4 };
+	EXPECT_EQ(arr.size(), 5u);
+	EXPECT_EQ(num_ctors, 5);
+	EXPECT_EQ(num_dtors, 5);
+	EXPECT_EQ(num_cpy, 5); // init-list is const static storage
+	EXPECT_EQ(num_mv, 0);
+
+	{
+		auto it = arr.erase(arr.begin());
+		EXPECT_EQ(arr.size(), 4u);
+		EXPECT_EQ(num_ctors, 5);
+		EXPECT_EQ(num_dtors, 6);
+		EXPECT_EQ(num_cpy, 5);
+		EXPECT_EQ(num_mv, 4);
+		EXPECT_EQ(it, arr.begin());
+		EXPECT_EQ(*it, 1);
+
+		const fea::stack_vector<int, 5> answer{ 1, 2, 3, 4 };
+		EXPECT_TRUE(std::equal(
+				arr.begin(), arr.end(), answer.begin(), answer.end()));
+	}
+
+	{
+		auto it = arr.erase(arr.begin() + 2);
+		EXPECT_EQ(num_ctors, 5);
+		EXPECT_EQ(num_dtors, 7);
+		EXPECT_EQ(num_cpy, 5);
+		EXPECT_EQ(num_mv, 5);
+		EXPECT_EQ(it, arr.begin() + 2);
+		EXPECT_EQ(*it, 4);
+
+		const fea::stack_vector<int, 5> answer{ 1, 2, 4 };
+		EXPECT_TRUE(std::equal(
+				arr.begin(), arr.end(), answer.begin(), answer.end()));
+	}
+
+	{
+		auto it = arr.erase(arr.begin() + 2);
+		EXPECT_EQ(num_ctors, 5);
+		EXPECT_EQ(num_dtors, 8);
+		EXPECT_EQ(num_cpy, 5);
+		EXPECT_EQ(num_mv, 5);
+		EXPECT_EQ(it, arr.end());
+
+		const fea::stack_vector<int, 5> answer{ 1, 2 };
+		EXPECT_TRUE(std::equal(
+				arr.begin(), arr.end(), answer.begin(), answer.end()));
+	}
+
+	{
+		auto it = arr.erase(arr.begin() + 1);
+		EXPECT_EQ(num_ctors, 5);
+		EXPECT_EQ(num_dtors, 9);
+		EXPECT_EQ(num_cpy, 5);
+		EXPECT_EQ(num_mv, 5);
+		EXPECT_EQ(it, arr.end());
+
+		const fea::stack_vector<int, 5> answer{ 1 };
+		EXPECT_TRUE(std::equal(
+				arr.begin(), arr.end(), answer.begin(), answer.end()));
+	}
+
+	{
+		auto it = arr.erase(arr.begin());
+		EXPECT_EQ(num_ctors, 5);
+		EXPECT_EQ(num_dtors, 10);
+		EXPECT_EQ(num_cpy, 5);
+		EXPECT_EQ(num_mv, 5);
+		EXPECT_EQ(it, arr.end());
+
+		const fea::stack_vector<int, 5> answer{};
+		EXPECT_TRUE(std::equal(
+				arr.begin(), arr.end(), answer.begin(), answer.end()));
+	}
+
+
+	num_ctors = 0;
+	num_dtors = 0;
+	num_cpy = 0;
+	num_mv = 0;
+
+	arr = { 0, 1, 2, 3, 4 };
+	EXPECT_EQ(arr.size(), 5u);
+	EXPECT_EQ(num_ctors, 5);
+	EXPECT_EQ(num_dtors, 10);
+	EXPECT_EQ(num_cpy, 5); // init-list is const static storage
+	EXPECT_EQ(num_mv, 5);
+
+	{
+		auto it = arr.erase(arr.begin(), arr.begin());
+		EXPECT_EQ(arr.size(), 5u);
+		EXPECT_EQ(num_ctors, 5);
+		EXPECT_EQ(num_dtors, 10);
+		EXPECT_EQ(num_cpy, 5);
+		EXPECT_EQ(num_mv, 5);
+		EXPECT_EQ(it, arr.begin());
+		EXPECT_EQ(*it, 0);
+
+		const fea::stack_vector<int, 5> answer{ 0, 1, 2, 3, 4 };
+		EXPECT_TRUE(std::equal(
+				arr.begin(), arr.end(), answer.begin(), answer.end()));
+	}
+
+	{
+		auto it = arr.erase(arr.begin(), arr.begin() + 2);
+		EXPECT_EQ(arr.size(), 3u);
+		EXPECT_EQ(num_ctors, 5);
+		EXPECT_EQ(num_dtors, 12);
+		EXPECT_EQ(num_cpy, 5);
+		EXPECT_EQ(num_mv, 8);
+		EXPECT_EQ(it, arr.begin());
+		EXPECT_EQ(*it, 2);
+
+		const fea::stack_vector<int, 5> answer{ 2, 3, 4 };
+		EXPECT_TRUE(std::equal(
+				arr.begin(), arr.end(), answer.begin(), answer.end()));
+	}
+
+	{
+		auto it = arr.erase(arr.begin() + 1, arr.end());
+		EXPECT_EQ(arr.size(), 1u);
+		EXPECT_EQ(num_ctors, 5);
+		EXPECT_EQ(num_dtors, 14);
+		EXPECT_EQ(num_cpy, 5);
+		EXPECT_EQ(num_mv, 8);
+		EXPECT_EQ(it, arr.end());
+
+		const fea::stack_vector<int, 5> answer{ 2 };
+		EXPECT_TRUE(std::equal(
+				arr.begin(), arr.end(), answer.begin(), answer.end()));
+	}
+
+	{
+		auto it = arr.erase(arr.begin(), arr.end());
+		EXPECT_EQ(arr.size(), 0u);
+		EXPECT_EQ(num_ctors, 5);
+		EXPECT_EQ(num_dtors, 15);
+		EXPECT_EQ(num_cpy, 5);
+		EXPECT_EQ(num_mv, 8);
+		EXPECT_EQ(it, arr.end());
+
+		const fea::stack_vector<int, 5> answer{};
+		EXPECT_TRUE(std::equal(
+				arr.begin(), arr.end(), answer.begin(), answer.end()));
+	}
+
+	{
+		auto it = arr.erase(arr.end(), arr.end());
+		EXPECT_EQ(arr.size(), 0u);
+		EXPECT_EQ(num_ctors, 5);
+		EXPECT_EQ(num_dtors, 15);
+		EXPECT_EQ(num_cpy, 5);
+		EXPECT_EQ(num_mv, 8);
+		EXPECT_EQ(it, arr.end());
+
+		const fea::stack_vector<int, 5> answer{};
+		EXPECT_TRUE(std::equal(
+				arr.begin(), arr.end(), answer.begin(), answer.end()));
+	}
+}
 } // namespace fea
