@@ -376,7 +376,7 @@ struct flat_unsigned_map {
 
 
 	// Lookup
-	// direct access to the underlying vector
+	// Direct access to the underlying value data.
 	const value_type* data() const noexcept {
 		return _values.data();
 	}
@@ -384,8 +384,22 @@ struct flat_unsigned_map {
 		return _values.data();
 	}
 
+	// Access to underlying reverse lookup.
+	// That is, keys ordered in the same order as values.
 	const key_type* key_data() const noexcept {
 		return _reverse_lookup.data();
+	}
+
+	// Access to underlying lookup.
+	// Dereferencing this with key returns the index of
+	// the associated value.
+	const pos_type* lookup_data() const noexcept {
+		return _indexes.data();
+	}
+
+	// Lookup size, != key/value size.
+	size_type lookup_size() const noexcept {
+		return _indexes.size();
 	}
 
 	// access specified element with bounds checking
