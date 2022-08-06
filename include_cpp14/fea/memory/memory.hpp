@@ -244,4 +244,15 @@ constexpr OutputIt copy_or_move_backward(
 	return detail::copy_or_move_backward(
 			first, last, dest_last, std::is_trivially_copyable<in_val_t>{});
 }
+
+// inline size_t page_size()
+//{
+//#if FEA_WINDOWS
+//        SYSTEM_INFO SystemInfo;
+//        GetSystemInfo(&SystemInfo);
+//        return SystemInfo.dwAllocationGranularity;
+//#else
+//        return sysconf(_SC_PAGE_SIZE);
+//#endif
+//}
 } // namespace fea

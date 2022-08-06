@@ -64,14 +64,30 @@ class out_of_range;
 #endif
 
 namespace fea {
-// Throws if FEA_NOTHROW is not defined, else prints the error message and
-// exits with error code.
+// Prints error message.
+// Provide __FUNCTION__, __LINE__, "your message".
+inline void error_message(
+		const char* func_name, size_t line, const std::string& message) {
+	fprintf(stderr, "%s(%zu) : %s\n", func_name, line, message.c_str());
+}
+
+// Prints message and exits with error code.
+// Use this when you absolutely can't throw (from destructors for example).
+// Provide __FUNCTION__, __LINE__, "your message".
+inline void error_exit(
+		const char* func_name, size_t line, const std::string& message) {
+	error_message(func_name, line, message);
+	assert(false);
+	std::exit(EXIT_FAILURE);
+}
+
+// Prints error message.
+// Throws if FEA_NOTHROW is not defined, else exits with error code.
 // Provide __FUNCTION__, __LINE__, "your message".
 template <class Ex = std::runtime_error>
 inline void maybe_throw(
 		const char* func_name, size_t line, const std::string& message) {
-
-	fprintf(stderr, "%s(%zu) : %s\n", func_name, line, message.c_str());
+	error_message(func_name, line, message);
 	assert(false);
 
 #if !defined(FEA_NOTHROW)
@@ -82,20 +98,4 @@ inline void maybe_throw(
 #endif
 }
 
-// Prints message and exits with error code.
-// Use this when you absolutely can't throw (from destructors for example).
-// Provide __FUNCTION__, __LINE__, "your message".
-inline void error_exit(
-		const char* func_name, size_t line, const std::string& message) {
-	fprintf(stderr, "%s(%zu) : %s\n", func_name, line, message.c_str());
-	assert(false);
-	std::exit(EXIT_FAILURE);
-}
-
-// Prints error message.
-// Provide __FUNCTION__, __LINE__, "your message".
-inline void error_message(
-		const char* func_name, size_t line, const std::string& message) {
-	fprintf(stderr, "%s(%zu) : %s\n", func_name, line, message.c_str());
-}
 } // namespace fea
