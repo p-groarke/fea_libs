@@ -40,14 +40,13 @@
 #include <filesystem>
 
 #if FEA_WINDOWS
-#include <stdio.h>
 #include <windows.h>
-//#include <tchar.h>
 #else
 #endif
 
 /*
 A basic, cross-platform, memory-mapped file view.
+fmap maps whole files to virtual memory, either in read or write mode.
 */
 
 namespace fea {
@@ -60,6 +59,45 @@ enum class fmap_mode : uint8_t {
 
 namespace detail {
 struct fmap_os_data {
+	fmap_os_data() = default;
+	fmap_os_data(const fmap_os_data&) = default;
+	fmap_os_data& operator=(const fmap_os_data&) = default;
+
+	fmap_os_data(fmap_os_data&& other) noexcept
+#if FEA_WINDOWS
+			: file_handle(other.file_handle)
+			, map_handle(other.map_handle)
+#else
+#endif
+			, ptr(other.ptr)
+			, byte_size(other.byte_size) {
+
+#if FEA_WINDOWS
+		other.file_handle = nullptr;
+		other.map_handle = nullptr;
+#else
+#endif
+		other.ptr = nullptr;
+		other.byte_size = 0;
+	}
+
+	fmap_os_data& operator=(fmap_os_data&& other) noexcept {
+		if (this != &other) {
+#if FEA_WINDOWS
+			file_handle = other.file_handle;
+			map_handle = other.map_handle;
+			other.file_handle = nullptr;
+			other.map_handle = nullptr;
+#else
+#endif
+			ptr = other.ptr;
+			byte_size = other.byte_size;
+			other.ptr = nullptr;
+			other.byte_size = 0;
+		}
+		return *this;
+	}
+
 #if FEA_WINDOWS
 	HANDLE file_handle = nullptr;
 	HANDLE map_handle = nullptr;
@@ -182,6 +220,8 @@ struct basic_fmap_read {
 			typename fea::span<const T>::reverse_iterator;
 
 	// Ctors
+	basic_fmap_read() = default;
+
 	explicit basic_fmap_read(const std::filesystem::path& filepath)
 			: _os_data(detail::os_map<T>(filepath, fmap_mode::read))
 			, _data(static_cast<const T*>(_os_data.ptr),
@@ -199,6 +239,25 @@ struct basic_fmap_read {
 
 		detail::os_unmap(_os_data);
 	}
+
+	basic_fmap_read(basic_fmap_read&& other) noexcept
+			: _os_data(std::move(other._os_data))
+			, _data(std::move(other._data)) {
+		other._data = {};
+	}
+
+	basic_fmap_read& operator=(basic_fmap_read&& other) noexcept {
+		if (this != &other) {
+			_os_data = std::move(other._os_data);
+			_data = std::move(other._data);
+			other._data = {};
+		}
+		return *this;
+	}
+
+	// Non-copyable
+	basic_fmap_read(const basic_fmap_read&) = delete;
+	basic_fmap_read& operator=(const basic_fmap_read&) = delete;
 
 	/**
 	 * Iterators
@@ -257,6 +316,15 @@ struct basic_fmap_read {
 	bool empty() const noexcept {
 		return _data.empty();
 	}
+
+	///**
+	// * Non-Standard Helpers
+	// */
+	// template <class U>
+	// fea::span<const U> as_span() const {
+	//	return fea::span<const U>{ reinterpret_cast<const char*>(_data.data()),
+	//		_data.size() };
+	//}
 
 private:
 	detail::fmap_os_data _os_data;

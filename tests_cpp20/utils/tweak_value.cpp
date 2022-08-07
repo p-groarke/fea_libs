@@ -33,7 +33,6 @@ struct restore_file {
 
 	std::string file_backup;
 };
-restore_file file_restorer10000;
 
 float get_tweak_val() {
 	float u = FEA_TWEAK(0.f);
@@ -109,25 +108,26 @@ TEST(tweak_value, basics) {
 }
 
 
-TEST(tweak_value, demo) {
-	size_t loop_cnt = 0;
-
-	float tval = 0.f;
-	while (tval != 69.f) {
-
-		tval = FEA_TWEAK(69.f);
-		printf("%f\n", tval);
-
-		fea::tweak_update();
-		std::this_thread::sleep_for(1s);
-
-		// Just in case.
-		++loop_cnt;
-		if (loop_cnt == 100) {
-			break;
-		}
-	}
-}
+// TEST(tweak_value, demo) {
+// restore_file file_restorer5000;
+//	size_t loop_cnt = 0;
+//
+//	float tval = 0.f;
+//	while (tval != 69.f) {
+//
+//		tval = FEA_TWEAK(69.f);
+//		printf("%f\n", tval);
+//
+//		fea::tweak_update();
+//		std::this_thread::sleep_for(1s);
+//
+//		// Just in case.
+//		++loop_cnt;
+//		if (loop_cnt == 100) {
+//			break;
+//		}
+//	}
+//}
 
 
 } // namespace
