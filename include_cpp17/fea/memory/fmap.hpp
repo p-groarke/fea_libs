@@ -38,6 +38,8 @@
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
+#include <iterator>
+#include <string_view>
 
 #if FEA_WINDOWS
 #include <windows.h>
@@ -45,19 +47,19 @@
 #endif
 
 /*
-A basic, cross-platform, memory-mapped file view.
+fmap : A light-weight, cross-platform, memory-mapped file view.
+
 fmap maps whole files to virtual memory, either in read or write mode.
 */
 
 namespace fea {
+namespace detail {
 enum class fmap_mode : uint8_t {
-	// read_write,
 	read,
 	write,
 	count,
 };
 
-namespace detail {
 struct fmap_os_data {
 	fmap_os_data() = default;
 	fmap_os_data(const fmap_os_data&) = default;
@@ -104,12 +106,12 @@ struct fmap_os_data {
 #else
 #endif
 
-	void* ptr = nullptr;
+	std::byte* ptr = nullptr;
 	size_t byte_size = 0;
 };
 
-template <class T>
-fmap_os_data os_map(const std::filesystem::path& filepath, fmap_mode mode) {
+inline fmap_os_data os_map(
+		const std::filesystem::path& filepath, fmap_mode mode) {
 	if (!std::filesystem::exists(filepath)
 			|| std::filesystem::is_directory(filepath)) {
 		return {};
@@ -120,22 +122,15 @@ fmap_os_data os_map(const std::filesystem::path& filepath, fmap_mode mode) {
 		return {};
 	}
 
-	if (file_size % sizeof(T) != 0) {
-		fea::maybe_throw(
-				__FUNCTION__, __LINE__, "Cannot map file to T*, size invalid.");
-		return {};
-	}
-
 	assert(mode != fmap_mode::count);
 	assert(!filepath.empty());
 
 	fmap_os_data ret;
 
 #if FEA_WINDOWS
-	DWORD win_mode = mode == fmap_mode::write ? GENERIC_READ | GENERIC_WRITE
-											  : GENERIC_READ;
-
-	ret.file_handle = CreateFileW(filepath.wstring().c_str(), win_mode,
+	DWORD file_mode = mode == fmap_mode::write ? GENERIC_READ | GENERIC_WRITE
+											   : GENERIC_READ;
+	ret.file_handle = CreateFileW(filepath.wstring().c_str(), file_mode,
 			FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
 			FILE_ATTRIBUTE_NORMAL, nullptr);
 
@@ -144,14 +139,17 @@ fmap_os_data os_map(const std::filesystem::path& filepath, fmap_mode mode) {
 		return {};
 	}
 
-	ret.map_handle = CreateFileMapping(
-			ret.file_handle, nullptr, PAGE_READONLY, 0, 0, nullptr);
+	DWORD map_mode = mode == fmap_mode::write ? PAGE_READWRITE : PAGE_READONLY;
+	ret.map_handle = CreateFileMappingW(
+			ret.file_handle, nullptr, map_mode, 0, 0, nullptr);
 	if (ret.map_handle == nullptr) {
 		// todo : GetLastError
 		return {};
 	}
 
-	ret.ptr = MapViewOfFile(ret.map_handle, FILE_MAP_READ, 0, 0, 0);
+	DWORD view_mode = mode == fmap_mode::write ? FILE_MAP_WRITE : FILE_MAP_READ;
+	ret.ptr = reinterpret_cast<std::byte*>(
+			MapViewOfFile(ret.map_handle, view_mode, 0, 0, 0));
 	if (ret.ptr == nullptr) {
 		// todo : GetLastError
 		return {};
@@ -164,7 +162,7 @@ fmap_os_data os_map(const std::filesystem::path& filepath, fmap_mode mode) {
 	return ret;
 }
 
-void os_unmap(const fmap_os_data& os_data) {
+inline void os_unmap(const fmap_os_data& os_data) {
 	assert(os_data.ptr != nullptr);
 	assert(os_data.byte_size != 0);
 
@@ -199,37 +197,22 @@ void os_unmap(const fmap_os_data& os_data) {
 #else
 #endif
 }
-
 } // namespace detail
 
-// template <fmap_mode mode, class>
-// struct basic_fmap;
 
-template <class T>
 struct basic_fmap_read {
-	using value_type = T;
+	using value_type = std::byte;
 	using size_type = std::size_t;
 	using difference_type = std::ptrdiff_t;
-	// using reference = const value_type&;
 	using const_reference = const value_type&;
-	// using pointer = const value_type*;
 	using const_pointer = const value_type*;
-
-	using const_iterator = typename fea::span<const T>::iterator;
-	using const_reverse_iterator =
-			typename fea::span<const T>::reverse_iterator;
+	using const_iterator = const_pointer;
+	using const_reverse_iterator = std::reverse_iterator<const_iterator>;
 
 	// Ctors
 	basic_fmap_read() = default;
-
-	explicit basic_fmap_read(const std::filesystem::path& filepath)
-			: _os_data(detail::os_map<T>(filepath, fmap_mode::read))
-			, _data(static_cast<const T*>(_os_data.ptr),
-					  _os_data.byte_size / sizeof(T)) {
-	}
-
-	explicit basic_fmap_read(std::filesystem::path&& p)
-			: basic_fmap_read(p) {
+	basic_fmap_read(const std::filesystem::path& filepath)
+			: basic_fmap_read(filepath, detail::fmap_mode::read) {
 	}
 
 	~basic_fmap_read() {
@@ -237,25 +220,11 @@ struct basic_fmap_read {
 			return;
 		}
 
-		detail::os_unmap(_os_data);
+		detail::os_unmap(_data);
 	}
 
-	basic_fmap_read(basic_fmap_read&& other) noexcept
-			: _os_data(std::move(other._os_data))
-			, _data(std::move(other._data)) {
-		other._data = {};
-	}
-
-	basic_fmap_read& operator=(basic_fmap_read&& other) noexcept {
-		if (this != &other) {
-			_os_data = std::move(other._os_data);
-			_data = std::move(other._data);
-			other._data = {};
-		}
-		return *this;
-	}
-
-	// Non-copyable
+	basic_fmap_read(basic_fmap_read&& other) noexcept = default;
+	basic_fmap_read& operator=(basic_fmap_read&& other) noexcept = default;
 	basic_fmap_read(const basic_fmap_read&) = delete;
 	basic_fmap_read& operator=(const basic_fmap_read&) = delete;
 
@@ -265,22 +234,22 @@ struct basic_fmap_read {
 
 	// Returns an iterator pointing to the beginning of mapped data.
 	const_iterator begin() const noexcept {
-		return _data.begin();
+		return _data.ptr;
 	}
 
 	// Returns an iterator pointing to the end of mapped data.
 	const_iterator end() const noexcept {
-		return _data.end();
+		return _data.ptr + _data.byte_size;
 	}
 
 	// Returns an iterator pointing to the beginning of the reversed data.
 	const_reverse_iterator rbegin() const noexcept {
-		return _data.rbegin();
+		return std::reverse_iterator{ end() };
 	}
 
 	// Returns an iterator pointing to the end of the reversed data.
 	const_reverse_iterator rend() const noexcept {
-		return _data.rend();
+		return std::reverse_iterator{ begin() };
 	}
 
 	/**
@@ -289,12 +258,13 @@ struct basic_fmap_read {
 
 	// Returns the mapped data.
 	const_pointer data() const noexcept {
-		return _data.data();
+		return _data.ptr;
 	}
 
-	// Returns the nth element.
+	// Returns the nth byte.
 	const_reference operator[](size_t idx) const {
-		return _data[idx];
+		assert(idx < _data.byte_size);
+		return _data.ptr[idx];
 	}
 
 	/**
@@ -309,36 +279,165 @@ struct basic_fmap_read {
 	// Returns the size of the available data.
 	// If using the default fmaps, this is the byte size.
 	size_type size() const noexcept {
-		return _data.size();
+		return _data.byte_size;
 	}
 
 	// Returns whether the map contains any data.
 	bool empty() const noexcept {
-		return _data.empty();
+		return _data.byte_size == 0;
 	}
 
-	///**
-	// * Non-Standard Helpers
-	// */
-	// template <class U>
-	// fea::span<const U> as_span() const {
-	//	return fea::span<const U>{ reinterpret_cast<const char*>(_data.data()),
-	//		_data.size() };
-	//}
+	/**
+	 * File operations
+	 */
+	void open(const std::filesystem::path& filepath) {
+		close();
+		_data = detail::os_map(filepath, detail::fmap_mode::read);
+	}
 
-private:
-	detail::fmap_os_data _os_data;
-	fea::span<const T> _data;
+	void close() {
+		this->~basic_fmap_read();
+		_data = {};
+	}
+
+protected:
+	basic_fmap_read(
+			const std::filesystem::path& filepath, detail::fmap_mode mode)
+			: _data(detail::os_map(filepath, mode)) {
+	}
+
+	detail::fmap_os_data _data;
 };
 
-//// A read-write file map.
-// using fmap = detail::fmap<detail::fmap_mode::read_write>;
-//
-//// A write-only file map.
-// using ofmap = detail::fmap<detail::fmap_mode::write>;
+
+struct basic_fmap_write : public basic_fmap_read {
+	using typename basic_fmap_read::difference_type;
+	using typename basic_fmap_read::size_type;
+	using typename basic_fmap_read::value_type;
+	using reference = value_type&;
+	using pointer = value_type*;
+	using iterator = pointer;
+	using reverse_iterator = std::reverse_iterator<iterator>;
+
+	// Ctors
+	basic_fmap_write() = default;
+	basic_fmap_write(const std::filesystem::path& filepath)
+			: basic_fmap_read(filepath, detail::fmap_mode::write) {
+	}
+
+	~basic_fmap_write() = default;
+	basic_fmap_write(basic_fmap_write&& other) noexcept = default;
+	basic_fmap_write& operator=(basic_fmap_write&& other) noexcept = default;
+	basic_fmap_write(const basic_fmap_write&) = delete;
+	basic_fmap_write& operator=(const basic_fmap_write&) = delete;
+
+	/**
+	 * Iterators
+	 */
+
+	// Returns an iterator pointing to the beginning of mapped data.
+	iterator begin() noexcept {
+		return const_cast<iterator>(basic_fmap_read::begin());
+	}
+
+	// Returns an iterator pointing to the end of mapped data.
+	iterator end() noexcept {
+		return const_cast<iterator>(basic_fmap_read::end());
+	}
+
+	// Returns an iterator pointing to the beginning of the reversed data.
+	reverse_iterator rbegin() noexcept {
+		return std::reverse_iterator{ end() };
+	}
+
+	// Returns an iterator pointing to the end of the reversed data.
+	reverse_iterator rend() noexcept {
+		return std::reverse_iterator{ begin() };
+	}
+
+	/**
+	 * Element access
+	 */
+
+	// Returns the mapped data.
+	pointer data() noexcept {
+		return const_cast<pointer>(basic_fmap_read::data());
+	}
+
+	// Returns the nth byte.
+	reference operator[](size_t idx) {
+		return const_cast<reference>(basic_fmap_read::operator[](idx));
+	}
+
+	/**
+	 * File operations
+	 */
+	void open(const std::filesystem::path& filepath) {
+		close();
+		_data = detail::os_map(filepath, detail::fmap_mode::write);
+	}
+};
+
+
+/**
+ * Helpers
+ */
+template <class U>
+fea::span<const U> to_span(const basic_fmap_read& ifm) noexcept {
+	if (ifm.size() % sizeof(U) != 0) {
+		fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+				"Cannot convert to span<U>, total size not multiple of "
+				"U size.");
+		return {};
+	}
+
+	return fea::span<const U>{ reinterpret_cast<const U*>(ifm.data()),
+		ifm.size() / sizeof(U) };
+}
+
+template <class U>
+void to_span(
+		const fea::basic_fmap_read& ifm, fea::span<const U>& out) noexcept {
+	out = to_span<U>(ifm);
+}
+
+template <class U>
+fea::span<U> to_span(basic_fmap_write& ofm) noexcept {
+	fea::span<const U> const_ret
+			= to_span<U>(static_cast<const basic_fmap_read&>(ofm));
+	return fea::span<U>{ const_cast<U*>(const_ret.data()), const_ret.size() };
+}
+
+template <class U>
+void to_span(fea::basic_fmap_write& ofm, fea::span<U>& out) noexcept {
+	out = to_span<U>(ofm);
+}
+
+inline std::string_view to_sv(const basic_fmap_read& ifm) noexcept {
+	return std::string_view{ reinterpret_cast<const char*>(ifm.data()),
+		ifm.size() };
+}
+
+inline std::wstring_view to_wsv(const basic_fmap_read& ifm) noexcept {
+	if (ifm.size() % sizeof(wchar_t) != 0) {
+		fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+				"Cannot convert to std::wstring_view, total size not multiple "
+				"of wchar_t size.");
+		return {};
+	}
+	return std::wstring_view{ reinterpret_cast<const wchar_t*>(ifm.data()),
+		ifm.size() / sizeof(wchar_t) };
+}
+
+
+/**
+ * Aliases
+ */
+// A read-write file map.
+using fmap = basic_fmap_write;
+using ofmap = basic_fmap_write;
 
 // A read-only file map.
-// using ifmap = basic_fmap<fmap_mode::read, std::byte>;
-using ifmap = basic_fmap_read<std::byte>;
+using ifmap = basic_fmap_read;
 
 } // namespace fea
