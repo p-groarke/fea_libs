@@ -39,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #if FEA_WINDOWS
 #include <windows.h>
 #else
+#include <errno.h>
 #endif
 
 namespace fea {
@@ -63,7 +64,7 @@ inline void maybe_throw(
 
 	std::string msg
 			= "Error Code " + std::to_string(ec.value()) + ". " + ec.message();
-	print_error_message(func_name, line, msg);
+	fea::print_error_message(func_name, line, msg);
 	assert(false);
 
 #if !defined(FEA_NOTHROW)

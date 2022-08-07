@@ -44,7 +44,7 @@ Does nothing (but is still callable) on other OSes.
 
 #include <fcntl.h>
 #include <io.h>
-//#include <stdio.h>
+#include <stdio.h>
 #include <windows.h>
 #endif
 

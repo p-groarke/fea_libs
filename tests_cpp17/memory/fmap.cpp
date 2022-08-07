@@ -18,17 +18,14 @@ TEST(fmap, basics) {
 
 	// Invalid files
 	{
+		EXPECT_TRUE(fea::ifmap{ testfiles_dir / "asldfkj.txt" }.empty());
+		EXPECT_FALSE(fea::ifmap{ testfiles_dir / "asldfkj.txt" }.is_open());
+
 		fea::ifmap ifm;
-
-#if FEA_DEBUG || defined(FEA_NOTHROW)
-		EXPECT_DEATH(fea::ifmap{ testfiles_dir / "asldfkj.txt" }, "");
-		EXPECT_DEATH(ifm.open(testfiles_dir / "asldfkj.txt"), "");
-#else
-		EXPECT_THROW(
-				fea::ifmap{ testfiles_dir / "asldfkj.txt" }, std::system_error);
-#endif
+		ifm.open(testfiles_dir / "asldfkj.txt");
+		EXPECT_TRUE(ifm.empty());
+		EXPECT_FALSE(ifm.is_open());
 	}
-
 
 	// Read
 	{

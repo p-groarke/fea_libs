@@ -45,6 +45,11 @@
 #if FEA_WINDOWS
 #include <windows.h>
 #else
+#include <fcntl.h>
+#include <sys/mman.h>
+
+//#include <sys/stat.h>
+//#include <unistd.h>
 #endif
 
 /*
@@ -70,7 +75,6 @@ struct fmap_os_data {
 #if FEA_WINDOWS
 			: file_handle(other.file_handle)
 			, map_handle(other.map_handle)
-#else
 #endif
 			, ptr(other.ptr)
 			, byte_size(other.byte_size)
@@ -79,7 +83,6 @@ struct fmap_os_data {
 #if FEA_WINDOWS
 		other.file_handle = nullptr;
 		other.map_handle = nullptr;
-#else
 #endif
 		other.ptr = nullptr;
 		other.byte_size = 0;
@@ -93,8 +96,8 @@ struct fmap_os_data {
 			map_handle = other.map_handle;
 			other.file_handle = nullptr;
 			other.map_handle = nullptr;
-#else
 #endif
+
 			ptr = other.ptr;
 			byte_size = other.byte_size;
 			mode = other.mode;
@@ -108,7 +111,6 @@ struct fmap_os_data {
 #if FEA_WINDOWS
 	HANDLE file_handle = nullptr;
 	HANDLE map_handle = nullptr;
-#else
 #endif
 
 	std::byte* ptr = nullptr;
@@ -162,6 +164,26 @@ inline fmap_os_data os_map(
 	}
 
 #else
+	int file_mode = mode == fmap_mode::write ? O_RDWR : O_RDONLY;
+	int fd = open(filepath.c_str(), file_mode);
+	if (fd == -1) {
+		fea::maybe_throw(__FUNCTION__, __LINE__, fea::last_os_error());
+		return {};
+	}
+
+	int view_mode = mode == fmap_mode::write ? PROT_WRITE : PROT_READ;
+	void* map_ptr = mmap(nullptr, file_size, view_mode, MAP_SHARED, fd, 0);
+	if (map_ptr == MAP_FAILED) {
+		fea::maybe_throw(__FUNCTION__, __LINE__, fea::last_os_error());
+		return {};
+	}
+	ret.ptr = reinterpret_cast<std::byte*>(map_ptr);
+
+	if (close(fd) == -1) {
+		fea::maybe_throw(__FUNCTION__, __LINE__, fea::last_os_error());
+		return {};
+	}
+
 #endif
 
 	ret.byte_size = file_size;
@@ -197,6 +219,9 @@ inline void os_unmap(const fmap_os_data& os_data) {
 		fea::maybe_throw(__FUNCTION__, __LINE__, fea::last_os_error());
 	}
 #else
+	if (munmap(os_data.ptr, os_data.byte_size) == -1) {
+		fea::maybe_throw(__FUNCTION__, __LINE__, fea::last_os_error());
+	}
 #endif
 }
 } // namespace detail
