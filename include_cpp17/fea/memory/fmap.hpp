@@ -75,8 +75,11 @@ struct fmap_os_data {
 #if FEA_WINDOWS
 			: file_handle(other.file_handle)
 			, map_handle(other.map_handle)
+			,
+#else
+			:
 #endif
-			, ptr(other.ptr)
+			ptr(other.ptr)
 			, byte_size(other.byte_size)
 			, mode(other.mode) {
 
@@ -125,7 +128,7 @@ inline fmap_os_data os_map(
 		return {};
 	}
 
-	size_t file_size = std::filesystem::file_size(filepath);
+	size_t file_size = size_t(std::filesystem::file_size(filepath));
 	if (file_size == 0) {
 		return {};
 	}
@@ -171,7 +174,8 @@ inline fmap_os_data os_map(
 		return {};
 	}
 
-	int view_mode = mode == fmap_mode::write ? PROT_WRITE : PROT_READ;
+	int view_mode
+			= mode == fmap_mode::write ? PROT_READ | PROT_WRITE : PROT_READ;
 	void* map_ptr = mmap(nullptr, file_size, view_mode, MAP_SHARED, fd, 0);
 	if (map_ptr == MAP_FAILED) {
 		fea::maybe_throw(__FUNCTION__, __LINE__, fea::last_os_error());
