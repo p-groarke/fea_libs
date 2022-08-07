@@ -16,6 +16,20 @@ TEST(fmap, basics) {
 	std::string exp_str;
 	fea::open_text_file(in_filepath, exp_str);
 
+	// Invalid files
+	{
+		fea::ifmap ifm;
+
+#if FEA_DEBUG || defined(FEA_NOTHROW)
+		EXPECT_DEATH(fea::ifmap{ testfiles_dir / "asldfkj.txt" }, "");
+		EXPECT_DEATH(ifm.open(testfiles_dir / "asldfkj.txt"), "");
+#else
+		EXPECT_THROW(
+				fea::ifmap{ testfiles_dir / "asldfkj.txt" }, std::system_error);
+#endif
+	}
+
+
 	// Read
 	{
 		fea::ifmap ifm(in_filepath);

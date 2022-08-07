@@ -100,7 +100,7 @@ struct serializer {
 
 		std::FILE* ofs = fea::fopen(_filepath, "wb");
 		if (ofs == nullptr) {
-			fea::error_message(__FUNCTION__, __LINE__,
+			fea::print_error_message(__FUNCTION__, __LINE__,
 					"Couldn't open file '" + _filepath.string() + "'.");
 			return;
 		}
@@ -259,7 +259,7 @@ struct deserializer {
 
 		std::FILE* ifs = fea::fopen(_filepath, "rb");
 		if (ifs == nullptr) {
-			fea::error_message(__FUNCTION__, __LINE__,
+			fea::print_error_message(__FUNCTION__, __LINE__,
 					"Couldn't open file '" + _filepath.string() + "'.");
 			_is_gucci = false;
 			return;

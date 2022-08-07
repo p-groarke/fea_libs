@@ -1,4 +1,4 @@
-﻿/*
+/*
 BSD 3-Clause License
 
 Copyright (c) 2022, Philippe Groarke
@@ -30,66 +30,48 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
-#include <cassert>
-#include <cstdio>
-#include <cstdlib>
+#include "fea/utils/platform.hpp"
+#include "fea/utils/throw.hpp"
+
 #include <string>
+#include <system_error>
 
-/*
-Exception Helpers
-
-Throw on builds where FEA_NOTHROW is not defined.
-Print exceptions message and terminate if FEA_NOTHROW is defined.
-
-Always asserts (for better multi-threaded breaking).
-Always prints the error message to help with ci or other environments
-where getting the error message may not be trivial.
-*/
-
-namespace std {
-// Most popular ones.
-class runtime_error;
-class invalid_argument;
-class out_of_range;
-} // namespace std
-
-#if !defined(FEA_NOTHROW)
-#include <stdexcept>
+#if FEA_WINDOWS
+#include <windows.h>
+#else
 #endif
 
 namespace fea {
-// Prints error message.
-// Provide __FUNCTION__, __LINE__, "your message".
-inline void print_error_message(
-		const char* func_name, size_t line, const std::string& message) {
-	fprintf(stderr, "%s(%zu) : %s\n", func_name, line, message.c_str());
-}
-
-// Prints message and exits with error code.
-// Use this when you absolutely can't throw (from destructors for example).
-// Provide __FUNCTION__, __LINE__, "your message".
-inline void error_exit(
-		const char* func_name, size_t line, const std::string& message) {
-	print_error_message(func_name, line, message);
-	assert(false);
-	std::exit(EXIT_FAILURE);
+// Cross-platform helper to get last OS error.
+// GetLastError on Windows, errno on anything else.
+inline std::error_code last_os_error() {
+#if FEA_WINDOWS
+	return std::error_code{ int(GetLastError()), std::system_category() };
+#else
+	return std::error_code{ errno, std::system_category() };
+#endif
 }
 
 // Prints error message.
 // Throws if FEA_NOTHROW is not defined, else exits with error code.
-// Provide __FUNCTION__, __LINE__, "your message".
-template <class Ex = std::runtime_error>
+// Provide __FUNCTION__, __LINE__, std::error_code.
 inline void maybe_throw(
-		const char* func_name, size_t line, const std::string& message) {
-	print_error_message(func_name, line, message);
+		const char* func_name, size_t line, const std::error_code& ec) {
+	if (!ec) {
+		return;
+	}
+
+	std::string msg
+			= "Error Code " + std::to_string(ec.value()) + ". " + ec.message();
+	print_error_message(func_name, line, msg);
 	assert(false);
 
 #if !defined(FEA_NOTHROW)
-	throw Ex{ std::string{ func_name } + "(" + std::to_string(line) + ")"
-		+ " : " + message };
+	throw std::system_error{ ec,
+		std::string{ func_name } + "(" + std::to_string(line) + ")" + " : "
+				+ msg };
 #else
 	std::exit(EXIT_FAILURE);
 #endif
 }
-
 } // namespace fea

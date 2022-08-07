@@ -32,6 +32,7 @@
  **/
 #pragma once
 #include "fea/containers/span.hpp"
+#include "fea/utils/error.hpp"
 #include "fea/utils/platform.hpp"
 #include "fea/utils/throw.hpp"
 
@@ -72,7 +73,8 @@ struct fmap_os_data {
 #else
 #endif
 			, ptr(other.ptr)
-			, byte_size(other.byte_size) {
+			, byte_size(other.byte_size)
+			, mode(other.mode) {
 
 #if FEA_WINDOWS
 		other.file_handle = nullptr;
@@ -81,6 +83,7 @@ struct fmap_os_data {
 #endif
 		other.ptr = nullptr;
 		other.byte_size = 0;
+		other.mode = fmap_mode::count;
 	}
 
 	fmap_os_data& operator=(fmap_os_data&& other) noexcept {
@@ -94,8 +97,10 @@ struct fmap_os_data {
 #endif
 			ptr = other.ptr;
 			byte_size = other.byte_size;
+			mode = other.mode;
 			other.ptr = nullptr;
 			other.byte_size = 0;
+			other.mode = fmap_mode::count;
 		}
 		return *this;
 	}
@@ -108,6 +113,7 @@ struct fmap_os_data {
 
 	std::byte* ptr = nullptr;
 	size_t byte_size = 0;
+	fmap_mode mode = fmap_mode::count;
 };
 
 inline fmap_os_data os_map(
@@ -135,7 +141,7 @@ inline fmap_os_data os_map(
 			FILE_ATTRIBUTE_NORMAL, nullptr);
 
 	if (ret.file_handle == INVALID_HANDLE_VALUE) {
-		// todo : GetLastError?
+		fea::maybe_throw(__FUNCTION__, __LINE__, fea::last_os_error());
 		return {};
 	}
 
@@ -143,7 +149,7 @@ inline fmap_os_data os_map(
 	ret.map_handle = CreateFileMappingW(
 			ret.file_handle, nullptr, map_mode, 0, 0, nullptr);
 	if (ret.map_handle == nullptr) {
-		// todo : GetLastError
+		fea::maybe_throw(__FUNCTION__, __LINE__, fea::last_os_error());
 		return {};
 	}
 
@@ -151,7 +157,7 @@ inline fmap_os_data os_map(
 	ret.ptr = reinterpret_cast<std::byte*>(
 			MapViewOfFile(ret.map_handle, view_mode, 0, 0, 0));
 	if (ret.ptr == nullptr) {
-		// todo : GetLastError
+		fea::maybe_throw(__FUNCTION__, __LINE__, fea::last_os_error());
 		return {};
 	}
 
@@ -159,41 +165,37 @@ inline fmap_os_data os_map(
 #endif
 
 	ret.byte_size = file_size;
+	ret.mode = mode;
 	return ret;
 }
 
 inline void os_unmap(const fmap_os_data& os_data) {
 	assert(os_data.ptr != nullptr);
 	assert(os_data.byte_size != 0);
+	assert(os_data.mode != fmap_mode::count);
 
 #if FEA_WINDOWS
-	if (!FlushViewOfFile(os_data.ptr, 0)) {
-		// todo : getlasterror
-		// return;
-	}
+	if (os_data.mode == fmap_mode::write) {
+		if (!FlushViewOfFile(os_data.ptr, 0)) {
+			fea::maybe_throw(__FUNCTION__, __LINE__, fea::last_os_error());
+		}
 
-	if (!FlushFileBuffers(os_data.file_handle)) {
-		// todo : getlasterror
-		// return;
+		if (!FlushFileBuffers(os_data.file_handle)) {
+			fea::maybe_throw(__FUNCTION__, __LINE__, fea::last_os_error());
+		}
 	}
 
 	if (!UnmapViewOfFile(os_data.ptr)) {
-		// todo : getlasterror
-		// return;
+		fea::maybe_throw(__FUNCTION__, __LINE__, fea::last_os_error());
 	}
 
 	if (!CloseHandle(os_data.map_handle)) {
-		// todo : getlasterror
-		// return;
+		fea::maybe_throw(__FUNCTION__, __LINE__, fea::last_os_error());
 	}
 
 	if (!CloseHandle(os_data.file_handle)) {
+		fea::maybe_throw(__FUNCTION__, __LINE__, fea::last_os_error());
 	}
-
-	// if (!bFlag) {
-	//	_tprintf(TEXT("\nError %ld occurred closing the file!"),
-	//			GetLastError());
-	//}
 #else
 #endif
 }
@@ -433,6 +435,7 @@ inline std::wstring_view to_wsv(const basic_fmap_read& ifm) noexcept {
 /**
  * Aliases
  */
+
 // A read-write file map.
 using fmap = basic_fmap_write;
 using ofmap = basic_fmap_write;

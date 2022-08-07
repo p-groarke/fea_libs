@@ -134,7 +134,7 @@ T tweak_value(T&& val) {
 
 	size_t start = my_line.find("FEA_TWEAK(");
 	if (start == my_line.npos) {
-		fea::error_message(__FUNCTION__, __LINE__,
+		fea::print_error_message(__FUNCTION__, __LINE__,
 				"Couldn't find tweak macro at expected line, returning "
 				"previously stored value.");
 		return stored_value;
@@ -143,7 +143,7 @@ T tweak_value(T&& val) {
 
 	size_t end = my_line.find(")", start);
 	if (end == my_line.npos) {
-		fea::error_message(__FUNCTION__, __LINE__,
+		fea::print_error_message(__FUNCTION__, __LINE__,
 				"Couldn't find tweak macro end at expected line, returning "
 				"previously stored value.");
 		return stored_value;
@@ -156,7 +156,7 @@ T tweak_value(T&& val) {
 	if (ec == std::errc{}) {
 		stored_value = result;
 	} else {
-		fea::error_message(__FUNCTION__, __LINE__,
+		fea::print_error_message(__FUNCTION__, __LINE__,
 				"Failed to parse tweak value, returning previously stored "
 				"value.");
 	}
