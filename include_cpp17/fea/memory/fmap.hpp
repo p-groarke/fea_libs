@@ -205,9 +205,10 @@ inline fmap_os_data os_map(
 inline void os_unmap(const fmap_os_data& os_data) {
 	assert(os_data.ptr != nullptr);
 	assert(os_data.byte_size != 0);
-	assert(os_data.mode != fmap_mode::count);
 
 #if FEA_WINDOWS
+	assert(os_data.mode != fmap_mode::count);
+
 	if (os_data.mode == fmap_mode::write) {
 		if (!FlushViewOfFile(os_data.ptr, 0)) {
 			fea::maybe_throw(__FUNCTION__, __LINE__, fea::last_os_error());
