@@ -81,15 +81,18 @@ struct fmap_os_data {
 #endif
 			ptr(other.ptr)
 			, byte_size(other.byte_size)
-			, mode(other.mode) {
+#if FEA_WINDOWS
+			, mode(other.mode)
+#endif
+	{
 
 #if FEA_WINDOWS
 		other.file_handle = nullptr;
 		other.map_handle = nullptr;
+		other.mode = fmap_mode::count;
 #endif
 		other.ptr = nullptr;
 		other.byte_size = 0;
-		other.mode = fmap_mode::count;
 	}
 
 	fmap_os_data& operator=(fmap_os_data&& other) noexcept {
@@ -97,16 +100,16 @@ struct fmap_os_data {
 #if FEA_WINDOWS
 			file_handle = other.file_handle;
 			map_handle = other.map_handle;
+			mode = other.mode;
 			other.file_handle = nullptr;
 			other.map_handle = nullptr;
+			other.mode = fmap_mode::count;
 #endif
 
 			ptr = other.ptr;
 			byte_size = other.byte_size;
-			mode = other.mode;
 			other.ptr = nullptr;
 			other.byte_size = 0;
-			other.mode = fmap_mode::count;
 		}
 		return *this;
 	}
@@ -118,7 +121,11 @@ struct fmap_os_data {
 
 	std::byte* ptr = nullptr;
 	size_t byte_size = 0;
+
+#if FEA_WINDOWS
+	// Keep it tightly packed.
 	fmap_mode mode = fmap_mode::count;
+#endif
 };
 
 inline fmap_os_data os_map(
@@ -166,6 +173,7 @@ inline fmap_os_data os_map(
 		return {};
 	}
 
+	ret.mode = mode;
 #else
 	int file_mode = mode == fmap_mode::write ? O_RDWR : O_RDONLY;
 	int fd = open(filepath.c_str(), file_mode);
@@ -191,7 +199,6 @@ inline fmap_os_data os_map(
 #endif
 
 	ret.byte_size = file_size;
-	ret.mode = mode;
 	return ret;
 }
 
@@ -414,7 +421,7 @@ struct basic_fmap_write : public basic_fmap_read {
  * Helpers
  */
 template <class U>
-fea::span<const U> to_span(const basic_fmap_read& ifm) noexcept {
+fea::span<const U> to_span(const basic_fmap_read& ifm) {
 	if (ifm.size() % sizeof(U) != 0) {
 		fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
 				"Cannot convert to span<U>, total size not multiple of "
@@ -427,29 +434,28 @@ fea::span<const U> to_span(const basic_fmap_read& ifm) noexcept {
 }
 
 template <class U>
-void to_span(
-		const fea::basic_fmap_read& ifm, fea::span<const U>& out) noexcept {
+void to_span(const fea::basic_fmap_read& ifm, fea::span<const U>& out) {
 	out = to_span<U>(ifm);
 }
 
 template <class U>
-fea::span<U> to_span(basic_fmap_write& ofm) noexcept {
+fea::span<U> to_span(basic_fmap_write& ofm) {
 	fea::span<const U> const_ret
 			= to_span<U>(static_cast<const basic_fmap_read&>(ofm));
 	return fea::span<U>{ const_cast<U*>(const_ret.data()), const_ret.size() };
 }
 
 template <class U>
-void to_span(fea::basic_fmap_write& ofm, fea::span<U>& out) noexcept {
+void to_span(fea::basic_fmap_write& ofm, fea::span<U>& out) {
 	out = to_span<U>(ofm);
 }
 
-inline std::string_view to_sv(const basic_fmap_read& ifm) noexcept {
+inline std::string_view to_sv(const basic_fmap_read& ifm) {
 	return std::string_view{ reinterpret_cast<const char*>(ifm.data()),
 		ifm.size() };
 }
 
-inline std::wstring_view to_wsv(const basic_fmap_read& ifm) noexcept {
+inline std::wstring_view to_wsv(const basic_fmap_read& ifm) {
 	if (ifm.size() % sizeof(wchar_t) != 0) {
 		fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
 				"Cannot convert to std::wstring_view, total size not multiple "

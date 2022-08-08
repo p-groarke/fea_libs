@@ -254,7 +254,7 @@ TEST(fmap, read_write) {
 	}
 	{
 		std::ifstream ifs{ in_filepath };
-		size_t size = std::filesystem::file_size(in_filepath);
+		size_t size = size_t(std::filesystem::file_size(in_filepath));
 		std::string data(size, '\0');
 		ifs.read(data.data(), size);
 		for (size_t i = 0; i < exp_str.size(); ++i) {

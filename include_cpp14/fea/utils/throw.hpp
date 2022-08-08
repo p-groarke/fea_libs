@@ -70,7 +70,7 @@ inline void print_error_message(
 // Provide __FUNCTION__, __LINE__, "your message".
 inline void error_exit(
 		const char* func_name, size_t line, const std::string& message) {
-	print_error_message(func_name, line, message);
+	fea::print_error_message(func_name, line, message);
 	assert(false);
 	std::exit(EXIT_FAILURE);
 }
@@ -81,7 +81,7 @@ inline void error_exit(
 template <class Ex = std::runtime_error>
 inline void maybe_throw(
 		const char* func_name, size_t line, const std::string& message) {
-	print_error_message(func_name, line, message);
+	fea::print_error_message(func_name, line, message);
 	assert(false);
 
 #if !defined(FEA_NOTHROW)
