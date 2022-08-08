@@ -44,6 +44,10 @@
 
 #if FEA_WINDOWS
 #include <windows.h>
+
+// Unreachable code on v142, 32bits (only)
+#pragma warning(push)
+#pragma warning(disable : 4702)
 #else
 #include <fcntl.h>
 #include <sys/mman.h>
@@ -480,3 +484,7 @@ using ofmap = basic_fmap_write;
 using ifmap = basic_fmap_read;
 
 } // namespace fea
+
+#if FEA_WINDOWS
+#pragma warning(pop)
+#endif
