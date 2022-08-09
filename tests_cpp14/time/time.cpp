@@ -153,6 +153,14 @@ TEST(time, basics) {
 		diff_d = fea::elapsed(start_d, end_d, 365.f);
 		EXPECT_EQ(diff_d.count(), 1.f);
 	}
+
+	{
+		date::sys_days d{};
+		std::string s = fea::suffixed_day(d);
+		EXPECT_EQ("1st", s);
+		std::wstring s2 = fea::wsuffixed_day(d);
+		EXPECT_EQ(L"1st", s2);
+	}
 }
 
 TEST(time, timepoint_conversions) {

@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 #include "fea/utils/platform.hpp"
 
+#include <array>
 #include <chrono>
 #include <cmath>
 #include <ctime>
@@ -39,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <date/tz.h>
 #include <iomanip>
 #include <sstream>
+#include <string>
 
 #if FEA_CPP17
 #include <filesystem>
@@ -447,6 +449,94 @@ inline std::string to_string(std::tm tm_) {
 	std::ostringstream oss;
 	oss << std::put_time(&tm_, "%Y-%m-%d %H:%M:%S");
 	return oss.str();
+}
+
+// Given a date, returns the month's day with suffix.
+// Ex, 1st, 2nd, 3rd, etc.
+inline const std::string& suffixed_day(date::sys_days tp) {
+	static const std::array<std::string, 32> lookup{
+		"0th",
+		"1st",
+		"2nd",
+		"3rd",
+		"4th",
+		"5th",
+		"6th",
+		"7th",
+		"8th",
+		"9th",
+		"10th",
+		"11th",
+		"12th",
+		"13th",
+		"14th",
+		"15th",
+		"16th",
+		"17th",
+		"18th",
+		"19th",
+		"20th",
+		"21st",
+		"22nd",
+		"23rd",
+		"24th",
+		"25th",
+		"26th",
+		"27th",
+		"28th",
+		"29th",
+		"30th",
+		"31st",
+	};
+
+	date::year_month_day ymd{ tp };
+	unsigned d = unsigned(ymd.day());
+	assert(d < 32u);
+	return lookup[d];
+}
+
+// Given a date, returns the month's day with suffix (widestring).
+// Ex, 1st, 2nd, 3rd, etc.
+inline const std::wstring& wsuffixed_day(date::sys_days tp) {
+	static const std::array<std::wstring, 32> lookup{
+		L"0th",
+		L"1st",
+		L"2nd",
+		L"3rd",
+		L"4th",
+		L"5th",
+		L"6th",
+		L"7th",
+		L"8th",
+		L"9th",
+		L"10th",
+		L"11th",
+		L"12th",
+		L"13th",
+		L"14th",
+		L"15th",
+		L"16th",
+		L"17th",
+		L"18th",
+		L"19th",
+		L"20th",
+		L"21st",
+		L"22nd",
+		L"23rd",
+		L"24th",
+		L"25th",
+		L"26th",
+		L"27th",
+		L"28th",
+		L"29th",
+		L"30th",
+		L"31st",
+	};
+
+	date::year_month_day ymd{ tp };
+	unsigned d = unsigned(ymd.day());
+	assert(d < 32u);
+	return lookup[d];
 }
 
 } // namespace fea
