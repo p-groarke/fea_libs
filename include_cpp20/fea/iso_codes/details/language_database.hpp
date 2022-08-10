@@ -33,7 +33,7 @@
  **/
 
 #pragma once
-#include "fea/iso_codes/language_types.hpp"
+#include "fea/iso_codes/details/language_types.hpp"
 
 #include <array>
 

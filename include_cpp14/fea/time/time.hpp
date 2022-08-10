@@ -453,6 +453,7 @@ inline std::string to_string(std::tm tm_) {
 	return oss.str();
 }
 
+#if FEA_CPP17
 namespace detail {
 template <class String>
 void suffixed_day(date::sys_days tp, const String*& ret) {
@@ -482,4 +483,5 @@ inline auto suffixed_day(date::sys_days tp) {
 		detail::suffixed_day(tp, ret);
 	} };
 }
+#endif
 } // namespace fea
