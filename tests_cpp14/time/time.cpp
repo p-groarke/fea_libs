@@ -154,6 +154,7 @@ TEST(time, basics) {
 		EXPECT_EQ(diff_d.count(), 1.f);
 	}
 
+#if FEA_CPP17
 	{
 		date::sys_days d{};
 		std::string s = fea::suffixed_day(d);
@@ -188,6 +189,7 @@ TEST(time, basics) {
 		const std::u32string& s4 = fea::suffixed_day(d);
 		EXPECT_EQ(U"4th", s4);
 	}
+#endif
 }
 
 TEST(time, timepoint_conversions) {
