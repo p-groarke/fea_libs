@@ -32,6 +32,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 #include "fea/utils/platform.hpp"
 
+#if FEA_CPP17
+#include "fea/macros/literals.hpp"
+#include "fea/string/string.hpp"
+#endif
+
 #include <array>
 #include <chrono>
 #include <cmath>
@@ -451,92 +456,35 @@ inline std::string to_string(std::tm tm_) {
 	return oss.str();
 }
 
+#if FEA_CPP17
+namespace detail {
+template <class String>
+void suffixed_day(date::sys_days tp, const String*& ret) {
+	using CharT = typename String::value_type;
+	static const std::array<String, 32> lookup{ FEA_LIT("0th"), FEA_LIT("1st"),
+		FEA_LIT("2nd"), FEA_LIT("3rd"), FEA_LIT("4th"), FEA_LIT("5th"),
+		FEA_LIT("6th"), FEA_LIT("7th"), FEA_LIT("8th"), FEA_LIT("9th"),
+		FEA_LIT("10th"), FEA_LIT("11th"), FEA_LIT("12th"), FEA_LIT("13th"),
+		FEA_LIT("14th"), FEA_LIT("15th"), FEA_LIT("16th"), FEA_LIT("17th"),
+		FEA_LIT("18th"), FEA_LIT("19th"), FEA_LIT("20th"), FEA_LIT("21st"),
+		FEA_LIT("22nd"), FEA_LIT("23rd"), FEA_LIT("24th"), FEA_LIT("25th"),
+		FEA_LIT("26th"), FEA_LIT("27th"), FEA_LIT("28th"), FEA_LIT("29th"),
+		FEA_LIT("30th"), FEA_LIT("31st") };
+
+	date::year_month_day ymd{ tp };
+	unsigned d = unsigned(ymd.day());
+	assert(d < 32u);
+	ret = &lookup[d];
+}
+} // namespace detail
+
 // Given a date, returns the month's day with suffix.
 // Ex, 1st, 2nd, 3rd, etc.
-inline const std::string& suffixed_day(date::sys_days tp) {
-	static const std::array<std::string, 32> lookup{
-		"0th",
-		"1st",
-		"2nd",
-		"3rd",
-		"4th",
-		"5th",
-		"6th",
-		"7th",
-		"8th",
-		"9th",
-		"10th",
-		"11th",
-		"12th",
-		"13th",
-		"14th",
-		"15th",
-		"16th",
-		"17th",
-		"18th",
-		"19th",
-		"20th",
-		"21st",
-		"22nd",
-		"23rd",
-		"24th",
-		"25th",
-		"26th",
-		"27th",
-		"28th",
-		"29th",
-		"30th",
-		"31st",
-	};
-
-	date::year_month_day ymd{ tp };
-	unsigned d = unsigned(ymd.day());
-	assert(d < 32u);
-	return lookup[d];
+// Return type overload magic. Supports all std strings (other than u8string).
+inline auto suffixed_day(date::sys_days tp) {
+	return fea::str_cr_return_overload{ [tp](const auto*& ret) {
+		detail::suffixed_day(tp, ret);
+	} };
 }
-
-// Given a date, returns the month's day with suffix (widestring).
-// Ex, 1st, 2nd, 3rd, etc.
-inline const std::wstring& wsuffixed_day(date::sys_days tp) {
-	static const std::array<std::wstring, 32> lookup{
-		L"0th",
-		L"1st",
-		L"2nd",
-		L"3rd",
-		L"4th",
-		L"5th",
-		L"6th",
-		L"7th",
-		L"8th",
-		L"9th",
-		L"10th",
-		L"11th",
-		L"12th",
-		L"13th",
-		L"14th",
-		L"15th",
-		L"16th",
-		L"17th",
-		L"18th",
-		L"19th",
-		L"20th",
-		L"21st",
-		L"22nd",
-		L"23rd",
-		L"24th",
-		L"25th",
-		L"26th",
-		L"27th",
-		L"28th",
-		L"29th",
-		L"30th",
-		L"31st",
-	};
-
-	date::year_month_day ymd{ tp };
-	unsigned d = unsigned(ymd.day());
-	assert(d < 32u);
-	return lookup[d];
-}
-
+#endif
 } // namespace fea

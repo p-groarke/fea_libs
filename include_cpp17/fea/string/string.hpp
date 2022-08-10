@@ -450,4 +450,73 @@ template <class InputIt1, class InputIt2>
 }
 #endif
 
+
+// Helper structure which accepts a lambda
+// and calls it with a return overloaded string output.
+// Return overloads your function with value type string returns.
+template <class Func>
+struct str_return_overload {
+	str_return_overload(Func&& func)
+			: _func(std::forward<Func>(func)) {
+	}
+
+	operator std::string() const {
+		std::string ret;
+		_func(ret);
+		return ret;
+	}
+	operator std::wstring() const {
+		std::wstring ret;
+		_func(ret);
+		return ret;
+	}
+	operator std::u16string() const {
+		std::u16string ret;
+		_func(ret);
+		return ret;
+	}
+	operator std::u32string() const {
+		std::u32string ret;
+		_func(ret);
+		return ret;
+	}
+
+private:
+	Func _func;
+};
+
+
+// Helper structure which accepts a lambda
+// and calls it with a return overloaded string pointer.
+// Return overloads your function with const ref string returns.
+template <class Func>
+struct str_cr_return_overload {
+	str_cr_return_overload(Func&& func)
+			: _func(std::forward<Func>(func)) {
+	}
+
+	operator const std::string&() const {
+		const std::string* ret = nullptr;
+		_func(ret);
+		return *ret;
+	}
+	operator const std::wstring&() const {
+		const std::wstring* ret = nullptr;
+		_func(ret);
+		return *ret;
+	}
+	operator const std::u16string&() const {
+		const std::u16string* ret = nullptr;
+		_func(ret);
+		return *ret;
+	}
+	operator const std::u32string&() const {
+		const std::u32string* ret = nullptr;
+		_func(ret);
+		return *ret;
+	}
+
+private:
+	Func _func;
+};
 } // namespace fea

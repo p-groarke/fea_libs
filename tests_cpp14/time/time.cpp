@@ -154,13 +154,42 @@ TEST(time, basics) {
 		EXPECT_EQ(diff_d.count(), 1.f);
 	}
 
+#if FEA_CPP17
 	{
 		date::sys_days d{};
 		std::string s = fea::suffixed_day(d);
 		EXPECT_EQ("1st", s);
-		std::wstring s2 = fea::wsuffixed_day(d);
-		EXPECT_EQ(L"1st", s2);
+
+		d += date::days{ 1 };
+		std::wstring s2 = fea::suffixed_day(d);
+		EXPECT_EQ(L"2nd", s2);
+
+		d += date::days{ 1 };
+		std::u16string s3 = fea::suffixed_day(d);
+		EXPECT_EQ(u"3rd", s3);
+
+		d += date::days{ 1 };
+		std::u32string s4 = fea::suffixed_day(d);
+		EXPECT_EQ(U"4th", s4);
 	}
+	{
+		date::sys_days d{};
+		const std::string& s = fea::suffixed_day(d);
+		EXPECT_EQ("1st", s);
+
+		d += date::days{ 1 };
+		const std::wstring& s2 = fea::suffixed_day(d);
+		EXPECT_EQ(L"2nd", s2);
+
+		d += date::days{ 1 };
+		const std::u16string& s3 = fea::suffixed_day(d);
+		EXPECT_EQ(u"3rd", s3);
+
+		d += date::days{ 1 };
+		const std::u32string& s4 = fea::suffixed_day(d);
+		EXPECT_EQ(U"4th", s4);
+	}
+#endif
 }
 
 TEST(time, timepoint_conversions) {

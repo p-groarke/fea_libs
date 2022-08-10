@@ -32,5 +32,20 @@ TEST(language, basics) {
 			EXPECT_EQ(l.runtime_id, l1.runtime_id);
 		}
 	}
+
+	EXPECT_TRUE(fea::iso_639_3_valid("eng"));
+	EXPECT_TRUE(fea::iso_639_2b_valid("eng"));
+	EXPECT_TRUE(fea::iso_639_2t_valid("eng"));
+	EXPECT_TRUE(fea::iso_639_1_valid("en"));
+
+	EXPECT_FALSE(fea::iso_639_3_valid("en"));
+	EXPECT_FALSE(fea::iso_639_2b_valid("en"));
+	EXPECT_FALSE(fea::iso_639_2t_valid("en"));
+	EXPECT_FALSE(fea::iso_639_1_valid("e"));
+
+	EXPECT_FALSE(fea::iso_639_3_valid("cn"));
+	EXPECT_FALSE(fea::iso_639_2b_valid("cn"));
+	EXPECT_FALSE(fea::iso_639_2t_valid("cn"));
+	EXPECT_FALSE(fea::iso_639_1_valid("cn"));
 }
 } // namespace
