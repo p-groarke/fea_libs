@@ -62,7 +62,7 @@ inline std::filesystem::path executable_dir(const char* argv0) {
 	return c_path.parent_path();
 #endif
 }
-inline std::filesystem::path wexecutable_dir(const wchar_t* argv0) {
+inline std::filesystem::path executable_dir(const wchar_t* argv0) {
 #if defined(FEA_WINDOWS)
 	return std::filesystem::absolute(argv0).remove_filename();
 #else
