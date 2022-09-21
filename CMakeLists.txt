@@ -20,12 +20,18 @@ if (${FEA_CMAKE_LOCAL})
 endif()
 FetchContent_Declare(fea_cmake
 	GIT_REPOSITORY https://github.com/p-groarke/fea_cmake.git
-	GIT_TAG main
+	GIT_TAG 433b3dd87b8a1ea88bc4816a37c1ea196eb0ebcb
 )
 FetchContent_MakeAvailable(fea_cmake)
 
 # Include cmake helpers.
 include(${fea_cmake_SOURCE_DIR}/CMakeLists.txt)
+
+# Use fea clang-format file.
+fea_import_clangformat()
+
+# Use fea gitignore file.
+fea_import_gitignore()
 
 # Output to predictable location.
 fea_set_output_dir(${CMAKE_BINARY_DIR}/bin)
@@ -44,7 +50,7 @@ endif()
 
 # External dependencies.
 if (${FEA_PULL_CONAN})
-	fea_pull_conan()
+	fea_pull_conan_locked("${CMAKE_CURRENT_SOURCE_DIR}/conanfile.py" "${CMAKE_CURRENT_SOURCE_DIR}/partial.lock")
 endif()
 find_package(TBB CONFIG REQUIRED QUIET)
 find_package(date CONFIG REQUIRED QUIET)
