@@ -50,8 +50,12 @@ endif()
 
 # External dependencies.
 if (${FEA_PULL_CONAN})
+	# Enable conan revisions (RREV).
+	execute_process(COMMAND conan config set general.revisions_enabled=True)
+
 	fea_pull_conan_locked("${CMAKE_CURRENT_SOURCE_DIR}/conanfile.py" "${CMAKE_CURRENT_SOURCE_DIR}/partial.lock")
 endif()
+
 find_package(TBB CONFIG REQUIRED QUIET)
 find_package(date CONFIG REQUIRED QUIET)
 
