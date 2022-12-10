@@ -501,24 +501,25 @@ TEST(unsigned_map, ids) {
 	map = map2;
 
 	for (size_t i = 0; i < small_num; ++i) {
-		EXPECT_EQ(map[i], i);
-		EXPECT_EQ(map.at(i), i);
-		EXPECT_EQ(map.at_unchecked(i), i);
-		EXPECT_EQ(map.find(i)->second, i);
+		int v = int(i);
+		EXPECT_EQ(map[i], v);
+		EXPECT_EQ(map.at(i), v);
+		EXPECT_EQ(map.at_unchecked(i), v);
+		EXPECT_EQ(map.find(i)->second, v);
 		EXPECT_TRUE(map.contains(i));
 		EXPECT_EQ(map.count(i), 1u);
 
-		EXPECT_EQ(map2[i], i);
-		EXPECT_EQ(map2.at(i), i);
-		EXPECT_EQ(map2.at_unchecked(i), i);
-		EXPECT_EQ(map2.find(i)->second, i);
+		EXPECT_EQ(map2[i], v);
+		EXPECT_EQ(map2.at(i), v);
+		EXPECT_EQ(map2.at_unchecked(i), v);
+		EXPECT_EQ(map2.find(i)->second, v);
 		EXPECT_TRUE(map2.contains(i));
 		EXPECT_EQ(map2.count(i), 1u);
 
-		EXPECT_EQ(map3[i], i);
-		EXPECT_EQ(map3.at(i), i);
-		EXPECT_EQ(map3.at_unchecked(i), i);
-		EXPECT_EQ(map3.find(i)->second, i);
+		EXPECT_EQ(map3[i], v);
+		EXPECT_EQ(map3.at(i), v);
+		EXPECT_EQ(map3.at_unchecked(i), v);
+		EXPECT_EQ(map3.find(i)->second, v);
 		EXPECT_TRUE(map2.contains(i));
 		EXPECT_EQ(map2.count(i), 1u);
 	}

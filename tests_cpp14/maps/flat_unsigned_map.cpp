@@ -392,12 +392,12 @@ struct my_id {
 	unsigned bla = 0;
 };
 
-bool operator==(const my_id& lhs, const my_id& rhs) {
-	return lhs.id == rhs.id;
-}
-// bool operator!=(const my_id& lhs, const my_id& rhs) {
-//	return !(lhs.id == rhs.id);
+// bool operator==(const my_id& lhs, const my_id& rhs) {
+//	return lhs.id == rhs.id;
 // }
+//  bool operator!=(const my_id& lhs, const my_id& rhs) {
+//	return !(lhs.id == rhs.id);
+//  }
 } // namespace
 
 namespace fea {
@@ -696,7 +696,7 @@ TEST(flat_unsigned_map, ids) {
 		EXPECT_EQ(map, map1_back);
 	}
 
-	map.insert({ 3, 4, 5 }, { { 3 }, { 4 }, { 5 } });
+	map.insert({ 3, 4, 5 }, { 3, 4, 5 });
 
 	EXPECT_EQ(map.size(), 6u);
 	EXPECT_TRUE(map.contains(0));
