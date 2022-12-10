@@ -34,15 +34,16 @@ TEST(unsigned_map, basics) {
 	fea::unsigned_map<size_t, test> map1{ small_num };
 
 	using map1_t = std::decay_t<decltype(map1)>;
-	static_assert(
-			std::is_same_v<typename map1_t::hasher, fea::id_getter<size_t>>,
+	static_assert(std::is_same<typename map1_t::hasher,
+						  fea::id_getter<size_t>>::value,
+			test_failed_msg);
+	static_assert(std::is_same<typename map1_t::key_type, size_t>::value,
 			test_failed_msg);
 	static_assert(
-			std::is_same_v<typename map1_t::key_type, size_t>, test_failed_msg);
-	static_assert(std::is_same_v<typename map1_t::underlying_key_type, size_t>,
+			std::is_same<typename map1_t::underlying_key_type, size_t>::value,
 			test_failed_msg);
-	static_assert(
-			std::is_same_v<typename map1_t::pos_type, size_t>, test_failed_msg);
+	static_assert(std::is_same<typename map1_t::pos_type, size_t>::value,
+			test_failed_msg);
 
 	map1.reserve(100);
 	EXPECT_EQ(map1.capacity(), 100u);
@@ -393,10 +394,9 @@ struct my_id {
 bool operator==(const my_id& lhs, const my_id& rhs) {
 	return lhs.id == rhs.id;
 }
-
-bool operator!=(const my_id& lhs, const my_id& rhs) {
-	return !(lhs.id == rhs.id);
-}
+// bool operator!=(const my_id& lhs, const my_id& rhs) {
+//	return !(lhs.id == rhs.id);
+// }
 } // namespace
 
 namespace fea {
@@ -415,14 +415,16 @@ TEST(unsigned_map, ids) {
 	fea::unsigned_map<my_id, int> map;
 
 	using map_t = std::decay_t<decltype(map)>;
-	static_assert(std::is_same_v<typename map_t::hasher, fea::id_getter<my_id>>,
+	static_assert(
+			std::is_same<typename map_t::hasher, fea::id_getter<my_id>>::value,
+			test_failed_msg);
+	static_assert(std::is_same<typename map_t::key_type, my_id>::value,
 			test_failed_msg);
 	static_assert(
-			std::is_same_v<typename map_t::key_type, my_id>, test_failed_msg);
-	static_assert(std::is_same_v<typename map_t::underlying_key_type, uint8_t>,
+			std::is_same<typename map_t::underlying_key_type, uint8_t>::value,
 			test_failed_msg);
-	static_assert(
-			std::is_same_v<typename map_t::pos_type, uint8_t>, test_failed_msg);
+	static_assert(std::is_same<typename map_t::pos_type, uint8_t>::value,
+			test_failed_msg);
 
 	map.reserve(100);
 	EXPECT_EQ(map.capacity(), 100u);
@@ -442,12 +444,12 @@ TEST(unsigned_map, ids) {
 	for (size_t i = 0; i < small_num; ++i) {
 		auto ret_pair = map.insert({ my_id(i), int(i) });
 		EXPECT_TRUE(ret_pair.second);
-		EXPECT_EQ(ret_pair.first->second, i);
+		EXPECT_EQ(ret_pair.first->second, int(i));
 	}
 	for (size_t i = 0; i < small_num; ++i) {
 		auto ret_pair = map.insert({ my_id(i), int(i) });
 		EXPECT_FALSE(ret_pair.second);
-		EXPECT_EQ(ret_pair.first->second, i);
+		EXPECT_EQ(ret_pair.first->second, int(i));
 	}
 	for (size_t i = 0; i < small_num; ++i) {
 		int t = int(i);
