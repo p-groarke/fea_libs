@@ -30,6 +30,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/maps/id_getter.hpp"
 #include "fea/memory/memory.hpp"
 #include "fea/utils/throw.hpp"
 
@@ -51,27 +52,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // - Doesn't provide hint apis.
 
 namespace fea {
-// Default id getter.
-// Specialize this struct for your own id classes.
-// Return an unsigned type.
-template <class Key>
-struct id_getter {
-	inline constexpr Key operator()(const Key& k) const noexcept {
-		return k;
-	}
-};
-
-namespace detail {
-template <class T>
-struct id_getter_traits {
-	using type = std::decay_t<
-			decltype(std::declval<fea::id_getter<T>>().operator()(T{}))>;
-};
-
-template <class T>
-using id_getter_t = typename id_getter_traits<T>::type;
-} // namespace detail
-
 // An id map (indexed at key), which grows as large as biggest stored n.
 // Very fast since there is no hashing or collisions, but trades-off
 // memory pressure.
