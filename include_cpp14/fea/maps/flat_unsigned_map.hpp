@@ -30,6 +30,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/maps/id_getter.hpp"
 #include "fea/memory/memory.hpp"
 #include "fea/meta/tuple.hpp"
 #include "fea/utils/throw.hpp"
@@ -50,8 +51,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace fea {
 template <class Key, class T, class Alloc = std::allocator<T>>
 struct flat_unsigned_map {
-	static_assert(std::is_unsigned<Key>::value,
-			"unsigned_map : key must be unsigned integer");
+	static_assert(std::is_unsigned<fea::detail::id_getter_t<Key>>::value,
+			"unsigned_map : key or id_getter return type must be unsigned "
+			"integer");
+
+	using hasher = fea::id_getter<Key>;
+	using underlying_key_type = fea::detail::id_getter_t<Key>;
 
 	using key_type = Key;
 	using const_key_type = const key_type;
@@ -59,7 +64,7 @@ struct flat_unsigned_map {
 	using value_type = mapped_type;
 	using iter_value_type = mapped_type;
 	using size_type = std::size_t;
-	using pos_type = Key;
+	using pos_type = underlying_key_type;
 	using difference_type = std::ptrdiff_t;
 
 	using allocator_type = Alloc;
@@ -227,10 +232,10 @@ struct flat_unsigned_map {
 	}
 
 	// inserts elements or nodes
-	std::pair<iterator, bool> insert(key_type k, const value_type& v) {
+	std::pair<iterator, bool> insert(const key_type& k, const value_type& v) {
 		return minsert(k, v);
 	}
-	std::pair<iterator, bool> insert(key_type k, value_type&& v) {
+	std::pair<iterator, bool> insert(key_type&& k, value_type&& v) {
 		return minsert(k, fea::maybe_move(v));
 	}
 	template <class KeyIt, class ValIt>
@@ -269,21 +274,22 @@ struct flat_unsigned_map {
 	// inserts an element or assigns to the current element if the key already
 	// exists
 	template <class M>
-	std::pair<iterator, bool> insert_or_assign(key_type k, M&& obj) {
+	std::pair<iterator, bool> insert_or_assign(const key_type& k, M&& obj) {
 		return minsert(k, std::forward<M>(obj), true);
 	}
 
 	// constructs element in-place
 	template <class... Args>
-	std::pair<iterator, bool> emplace(key_type k, Args&&... args) {
+	std::pair<iterator, bool> emplace(const key_type& k, Args&&... args) {
 		iterator it = find(k);
 		if (it != end()) {
 			return { it, false };
 		}
 
-		resize_indexes_if_needed(k);
+		underlying_key_type mk = hasher{}(k);
+		resize_indexes_if_needed(mk);
 
-		_indexes[k] = pos_type(_values.size());
+		_indexes[mk] = pos_type(_values.size());
 		_reverse_lookup.push_back(k);
 		_values.emplace_back(std::forward<Args>(args)...);
 
@@ -294,7 +300,7 @@ struct flat_unsigned_map {
 	// inserts in-place if the key does not exist, does nothing if the key
 	// exists
 	template <class... Args>
-	std::pair<iterator, bool> try_emplace(key_type key, Args&&... args) {
+	std::pair<iterator, bool> try_emplace(const key_type& key, Args&&... args) {
 		// Standard emplace behavior doesn't apply, always use try_emplace
 		// behavior.
 		return emplace(key, std::forward<Args>(args)...);
@@ -335,14 +341,15 @@ struct flat_unsigned_map {
 		}
 		return _values.begin() + first_idx;
 	}
-	size_type erase(key_type k) {
+	size_type erase(const key_type& k) {
 		iterator replace_it = find(k);
 		if (replace_it == end()) {
 			return 0;
 		}
 
+		underlying_key_type mk = hasher{}(k);
 		iterator last_val_it = std::prev(end());
-		_indexes[k] = pos_sentinel();
+		_indexes[mk] = pos_sentinel();
 
 		// No need for swap, object is already at end.
 		if (last_val_it == replace_it) {
@@ -355,7 +362,7 @@ struct flat_unsigned_map {
 		// swap & pop
 		pos_type new_idx = pos_type(std::distance(_values.begin(), replace_it));
 		key_iterator replace_key_it = _reverse_lookup.begin() + new_idx;
-		key_type last_key = _reverse_lookup.back();
+		underlying_key_type last_key = hasher{}(_reverse_lookup.back());
 
 		*replace_it = fea::maybe_move(_values.back());
 		*replace_key_it = _reverse_lookup.back();
@@ -403,7 +410,7 @@ struct flat_unsigned_map {
 	}
 
 	// access specified element with bounds checking
-	const mapped_type& at(key_type k) const {
+	const mapped_type& at(const key_type& k) const {
 		if (!contains(k)) {
 			fea::maybe_throw<std::out_of_range>(
 					__FUNCTION__, __LINE__, "value doesn't exist");
@@ -411,22 +418,23 @@ struct flat_unsigned_map {
 
 		return at_unchecked(k);
 	}
-	mapped_type& at(key_type k) {
+	mapped_type& at(const key_type& k) {
 		return const_cast<mapped_type&>(
 				static_cast<const flat_unsigned_map*>(this)->at(k));
 	}
 
 	// access specified element without any bounds checking
-	const mapped_type& at_unchecked(key_type k) const {
-		return _values[_indexes[k]];
+	const mapped_type& at_unchecked(const key_type& k) const {
+		assert(contains(k));
+		return _values[_indexes[hasher{}(k)]];
 	}
-	mapped_type& at_unchecked(key_type k) {
+	mapped_type& at_unchecked(const key_type& k) {
 		return const_cast<mapped_type&>(
 				static_cast<const flat_unsigned_map*>(this)->at_unchecked(k));
 	}
 
 	// access or insert specified element
-	mapped_type& operator[](key_type k) {
+	mapped_type& operator[](const key_type& k) {
 		if (!contains(k)) {
 			emplace(k, mapped_type{});
 		}
@@ -436,36 +444,36 @@ struct flat_unsigned_map {
 
 	// returns the number of elements matching specific key (which is 1 or 0,
 	// since there are no duplicates)
-	size_type count(key_type k) const {
+	size_type count(const key_type& k) const {
 		if (contains(k)) {
 			return 1;
 		}
-
 		return 0;
 	}
 
 	// finds element with specific key
-	iterator find(key_type k) {
+	iterator find(const key_type& k) {
 		if (!contains(k)) {
 			return end();
 		}
 
-		return begin() + _indexes[k];
+		return begin() + _indexes[hasher{}(k)];
 	}
-	const_iterator find(key_type k) const {
+	const_iterator find(const key_type& k) const {
 		if (!contains(k)) {
 			return end();
 		}
 
-		return begin() + _indexes[k];
+		return begin() + _indexes[hasher{}(k)];
 	}
 
 	// checks if the container contains element with specific key
-	bool contains(key_type k) const {
-		if (k >= _indexes.size())
+	bool contains(const key_type& k) const {
+		underlying_key_type mk = hasher{}(k);
+		if (mk >= _indexes.size())
 			return false;
 
-		if (_indexes[k] == pos_sentinel())
+		if (_indexes[mk] == pos_sentinel())
 			return false;
 
 		return true;
@@ -473,14 +481,15 @@ struct flat_unsigned_map {
 
 	// returns range of elements matching a specific key (in this case, 1 or 0
 	// elements)
-	std::pair<iterator, iterator> equal_range(key_type k) {
+	std::pair<iterator, iterator> equal_range(const key_type& k) {
 		iterator it = find(k);
 		if (it == end()) {
 			return { it, it };
 		}
 		return { it, it + 1 };
 	}
-	std::pair<const_iterator, const_iterator> equal_range(key_type k) const {
+	std::pair<const_iterator, const_iterator> equal_range(
+			const key_type& k) const {
 		const_iterator it = find(k);
 		if (it == end()) {
 			return { it, it };
@@ -504,7 +513,7 @@ private:
 		return (std::numeric_limits<pos_type>::max)();
 	}
 
-	void resize_indexes_if_needed(key_type k) {
+	void resize_indexes_if_needed(underlying_key_type k) {
 		if (k < _indexes.size()) {
 			return;
 		}
@@ -519,7 +528,7 @@ private:
 
 	template <class M>
 	std::pair<iterator, bool> minsert(
-			key_type k, M&& obj, bool assign_found = false) {
+			const key_type& k, M&& obj, bool assign_found = false) {
 		iterator it = find(k);
 		if (it != end()) {
 			if (assign_found) {
@@ -528,9 +537,10 @@ private:
 			return { it, false };
 		}
 
-		resize_indexes_if_needed(k);
+		underlying_key_type mk = hasher{}(k);
+		resize_indexes_if_needed(mk);
 
-		_indexes[k] = pos_type(_values.size());
+		_indexes[mk] = pos_type(_values.size());
 		_reverse_lookup.push_back(k);
 		_values.push_back(std::forward<M>(obj));
 
@@ -556,7 +566,7 @@ bool operator==(const flat_unsigned_map<Key, T, Alloc>& lhs,
 			return false;
 
 		// Compare value.
-		if (lhs.at_unchecked(*it) != rhs.at_unchecked(*it))
+		if (!(lhs.at_unchecked(*it) == rhs.at_unchecked(*it)))
 			return false;
 	}
 

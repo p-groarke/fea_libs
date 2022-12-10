@@ -30,6 +30,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/maps/id_getter.hpp"
 #include "fea/memory/memory.hpp"
 #include "fea/utils/throw.hpp"
 
@@ -40,6 +41,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <type_traits>
 #include <utility>
 #include <vector>
+// To add custom id classes, in the fea namespace, define a struct
+// specialization to `id_getter` which returns your id type through operator().
+// Important : The return type must be an unsigned, but unlike std::hash,
+// shouldn't necessarily be of size_t.
 
 // Notes :
 // - The container doesn't use const key_type& in apis, it uses key_type. The
@@ -47,18 +52,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // - Doesn't provide hint apis.
 
 namespace fea {
+// An id map (indexed at key), which grows as large as biggest stored n.
+// Very fast since there is no hashing or collisions, but trades-off
+// memory pressure.
 template <class Key, class T, class Alloc = std::allocator<T>>
 struct unsigned_map {
-	static_assert(std::is_unsigned<Key>::value,
-			"unsigned_map : key must be unsigned integer");
+	// Checks
+	static_assert(std::is_unsigned<fea::detail::id_getter_t<Key>>::value,
+			"unsigned_map : key or id_getter return type must be unsigned "
+			"integer");
+
+	using hasher = fea::id_getter<Key>;
+	using underlying_key_type = fea::detail::id_getter_t<Key>;
 
 	using key_type = Key;
 	using const_key_type = const key_type;
 	using mapped_type = T;
 	using value_type = std::pair<key_type, mapped_type>;
-	using iter_value_type = std::pair<const_key_type, mapped_type>;
 	using size_type = std::size_t;
-	using pos_type = Key;
+	using pos_type = underlying_key_type;
 	using difference_type = std::ptrdiff_t;
 
 	using allocator_type = typename std::allocator_traits<
@@ -73,6 +85,10 @@ struct unsigned_map {
 			typename std::allocator_traits<allocator_type>::const_pointer;
 
 	// TODO : cont key type
+	using iter_value_type = std::pair<const_key_type, mapped_type>;
+	using iter_allocator_type = typename std::allocator_traits<
+			Alloc>::template rebind_alloc<iter_value_type>;
+
 	using iterator = typename std::vector<value_type, allocator_type>::iterator;
 	using const_iterator =
 			typename std::vector<value_type, allocator_type>::const_iterator;
@@ -80,15 +96,14 @@ struct unsigned_map {
 	using const_local_iterator = const_iterator;
 
 	// Don't make sense
-	// using hasher = std::hash<key_type>;
 	// using key_equal = std::equal_to<key_type>;
 	// using node_type;
 	// using insert_return_type;
 
 
 	// Constructors, destructors and assignement
-
 	unsigned_map() = default;
+	~unsigned_map() = default;
 	unsigned_map(const unsigned_map&) = default;
 	unsigned_map(unsigned_map&&) noexcept = default;
 	unsigned_map& operator=(const unsigned_map&) = default;
@@ -212,21 +227,22 @@ struct unsigned_map {
 	// inserts an element or assigns to the current element if the key already
 	// exists
 	template <class M>
-	std::pair<iterator, bool> insert_or_assign(key_type k, M&& obj) {
+	std::pair<iterator, bool> insert_or_assign(const key_type& k, M&& obj) {
 		return minsert(k, std::forward<M>(obj), true);
 	}
 
 	// constructs element in-place
 	template <class... Args>
-	std::pair<iterator, bool> emplace(key_type k, Args&&... args) {
+	std::pair<iterator, bool> emplace(const key_type& k, Args&&... args) {
 		iterator it = find(k);
 		if (it != end()) {
 			return { it, false };
 		}
 
-		resize_indexes_if_needed(k);
+		underlying_key_type mk = hasher{}(k);
+		resize_indexes_if_needed(mk);
 
-		_indexes[k] = pos_type(_values.size());
+		_indexes[mk] = pos_type(_values.size());
 		_values.emplace_back(k, std::forward<Args>(args)...);
 
 		return { std::prev(_values.end()), true };
@@ -235,7 +251,7 @@ struct unsigned_map {
 	// inserts in-place if the key does not exist, does nothing if the key
 	// exists
 	template <class... Args>
-	std::pair<iterator, bool> try_emplace(key_type key, Args&&... args) {
+	std::pair<iterator, bool> try_emplace(const key_type& key, Args&&... args) {
 		// Standard emplace behavior doesn't apply, always use try_emplace
 		// behavior.
 		return emplace(key, std::forward<Args>(args)...);
@@ -271,14 +287,15 @@ struct unsigned_map {
 			return end();
 		return find(_values[first_idx].first);
 	}
-	size_type erase(key_type k) {
+	size_type erase(const key_type& k) {
 		iterator it = find(k);
 		if (it == end()) {
 			return 0;
 		}
 
+		underlying_key_type mk = hasher{}(k);
 		iterator last_it = std::prev(end());
-		_indexes[k] = pos_sentinel();
+		_indexes[mk] = pos_sentinel();
 
 		// No need for swap, object is already at end.
 		if (last_it == it) {
@@ -288,7 +305,7 @@ struct unsigned_map {
 
 		// swap & pop
 		pos_type value_idx = pos_type(std::distance(_values.begin(), it));
-		key_type last_key = _values.back().first;
+		underlying_key_type last_key = hasher{}(_values.back().first);
 
 		*it = fea::maybe_move(_values.back());
 		_values.pop_back();
@@ -314,7 +331,7 @@ struct unsigned_map {
 	}
 
 	// access specified element with bounds checking
-	const mapped_type& at(key_type k) const {
+	const mapped_type& at(const key_type& k) const {
 		if (!contains(k)) {
 			fea::maybe_throw<std::out_of_range>(
 					__FUNCTION__, __LINE__, "value doesn't exist");
@@ -322,22 +339,23 @@ struct unsigned_map {
 
 		return at_unchecked(k);
 	}
-	mapped_type& at(key_type k) {
+	mapped_type& at(const key_type& k) {
 		return const_cast<mapped_type&>(
 				static_cast<const unsigned_map*>(this)->at(k));
 	}
 
 	// access specified element without any bounds checking
-	const mapped_type& at_unchecked(key_type k) const {
-		return _values[_indexes[k]].second;
+	const mapped_type& at_unchecked(const key_type& k) const {
+		assert(contains(k));
+		return _values[_indexes[hasher{}(k)]].second;
 	}
-	mapped_type& at_unchecked(key_type k) {
+	mapped_type& at_unchecked(const key_type& k) {
 		return const_cast<mapped_type&>(
 				static_cast<const unsigned_map*>(this)->at_unchecked(k));
 	}
 
 	// access or insert specified element
-	mapped_type& operator[](key_type k) {
+	mapped_type& operator[](const key_type& k) {
 		if (!contains(k)) {
 			emplace(k, mapped_type{});
 		}
@@ -347,50 +365,49 @@ struct unsigned_map {
 
 	// returns the number of elements matching specific key (which is 1 or 0,
 	// since there are no duplicates)
-	size_type count(key_type k) const {
-		if (contains(k))
+	size_type count(const key_type& k) const {
+		if (contains(k)) {
 			return 1;
-
+		}
 		return 0;
 	}
 
 	// finds element with specific key
-	iterator find(key_type k) {
+	iterator find(const key_type& k) {
 		if (!contains(k)) {
 			return end();
 		}
 
-		return begin() + _indexes[k];
+		return begin() + _indexes[hasher{}(k)];
 	}
-	const_iterator find(key_type k) const {
+	const_iterator find(const key_type& k) const {
 		if (!contains(k)) {
 			return end();
 		}
 
-		return begin() + _indexes[k];
+		return begin() + _indexes[hasher{}(k)];
 	}
 
 	// checks if the container contains element with specific key
-	bool contains(key_type k) const {
-		if (k >= _indexes.size())
+	bool contains(const key_type& k) const {
+		underlying_key_type mk = hasher{}(k);
+		if (mk >= _indexes.size() || _indexes[mk] == pos_sentinel()) {
 			return false;
-
-		if (_indexes[k] == pos_sentinel())
-			return false;
-
+		}
 		return true;
 	}
 
 	// returns range of elements matching a specific key (in this case, 1 or 0
 	// elements)
-	std::pair<iterator, iterator> equal_range(key_type k) {
+	std::pair<iterator, iterator> equal_range(const key_type& k) {
 		iterator it = find(k);
 		if (it == end()) {
 			return { it, it };
 		}
 		return { it, it + 1 };
 	}
-	std::pair<const_iterator, const_iterator> equal_range(key_type k) const {
+	std::pair<const_iterator, const_iterator> equal_range(
+			const key_type& k) const {
 		const_iterator it = find(k);
 		if (it == end()) {
 			return { it, it };
@@ -414,7 +431,7 @@ private:
 		return (std::numeric_limits<pos_type>::max)();
 	}
 
-	void resize_indexes_if_needed(key_type k) {
+	void resize_indexes_if_needed(underlying_key_type k) {
 		if (k < _indexes.size()) {
 			return;
 		}
@@ -429,7 +446,7 @@ private:
 
 	template <class M>
 	std::pair<iterator, bool> minsert(
-			key_type k, M&& obj, bool assign_found = false) {
+			const key_type& k, M&& obj, bool assign_found = false) {
 		iterator it = find(k);
 		if (it != end()) {
 			if (assign_found) {
@@ -438,9 +455,10 @@ private:
 			return { it, false };
 		}
 
-		resize_indexes_if_needed(k);
+		underlying_key_type mk = hasher{}(k);
+		resize_indexes_if_needed(mk);
 
-		_indexes[k] = pos_type(_values.size());
+		_indexes[mk] = pos_type(_values.size());
 		_values.push_back({ k, std::forward<M>(obj) });
 		return { std::prev(_values.end()), true };
 	}
@@ -461,7 +479,7 @@ inline bool operator==(const unsigned_map<Key, T, Alloc>& lhs,
 			return false;
 
 		// Compare value.
-		if (kv != *rhs.find(kv.first))
+		if (!(kv == *rhs.find(kv.first)))
 			return false;
 	}
 
