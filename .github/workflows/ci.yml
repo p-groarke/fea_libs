@@ -76,12 +76,10 @@ jobs:
         build_type: [Release, Debug]
         config:
           # - { xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP20=On" } # tbd, clang has bad c++20 support right now
+          - { xcode_ver: "14.1.0", fea_ver: "-DFEA_CPP17=On" }
+          - { xcode_ver: "14.1.0", fea_ver: "-DFEA_CPP14=On" }
           - { xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP17=On" }
           - { xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP14=On" }
-          - { xcode_ver: "12.4", fea_ver: "-DFEA_CPP17=On" }
-          - { xcode_ver: "12.4", fea_ver: "-DFEA_CPP14=On" }
-          - { xcode_ver: "11.7", fea_ver: "-DFEA_CPP17=On" }
-          - { xcode_ver: "11.7", fea_ver: "-DFEA_CPP14=On" }
 
     steps:
     - name: Git Line Endings
