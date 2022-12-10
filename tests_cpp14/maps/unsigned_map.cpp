@@ -24,9 +24,9 @@ struct test {
 bool operator==(const test& lhs, const test& rhs) {
 	return lhs.val == rhs.val;
 }
-// bool operator!=(const test& lhs, const test& rhs) {
-//	return !operator==(lhs, rhs);
-// }
+bool operator!=(const test& lhs, const test& rhs) {
+	return !operator==(lhs, rhs);
+}
 
 TEST(unsigned_map, basics) {
 	constexpr size_t small_num = 10;
@@ -392,6 +392,10 @@ struct my_id {
 
 bool operator==(const my_id& lhs, const my_id& rhs) {
 	return lhs.id == rhs.id;
+}
+
+bool operator!=(const my_id& lhs, const my_id& rhs) {
+	return !(lhs.id == rhs.id);
 }
 } // namespace
 

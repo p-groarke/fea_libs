@@ -394,6 +394,9 @@ struct my_id {
 bool operator==(const my_id& lhs, const my_id& rhs) {
 	return lhs.id == rhs.id;
 }
+bool operator!=(const my_id& lhs, const my_id& rhs) {
+	return !(lhs.id == rhs.id);
+}
 } // namespace
 
 namespace fea {
@@ -576,7 +579,7 @@ TEST(flat_unsigned_map, ids) {
 	EXPECT_EQ(map.size(), small_num / 2);
 
 	for (auto t : map) {
-		EXPECT_EQ(t % 2, 0u);
+		EXPECT_EQ(t % 2, 0);
 	}
 
 	map = map2;
