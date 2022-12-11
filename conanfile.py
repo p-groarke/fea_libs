@@ -27,6 +27,7 @@ class FeaLibsConan(ConanFile):
         self.requires("gtest/1.11.0#7475482232fcd017fa110b0b8b0f936e", "private")
         self.requires("date/3.0.0#8fcb40f84e304971b86cae3c21d2ce99")
         self.requires("onetbb/2020.3#47de209cf102270d266f4b20e4524d0b")
+        self.requires("pugixml/1.13") # Used only in unit tests
 
     def config_options(self):
         if self.settings.os == "Windows":

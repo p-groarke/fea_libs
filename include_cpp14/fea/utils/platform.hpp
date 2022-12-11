@@ -344,6 +344,15 @@ FEA_INLINE_VAR constexpr platform_group_t platform_group
 // #else
 // #define FEA_WARNING(x) #warning x
 // #endif
+<<<<<<< HEAD
+=======
+
+#if defined(FEA_WINDOWS)
+#define FEA_FORCEINLINE __forceinline
+#else
+#define FEA_FORCEINLINE __attribute__((always_inline))
+#endif
+>>>>>>> b843183 (wip : simd.)
 
 // Strict data packing for cross-platform/cross-compiler support.
 // Use like so :
@@ -355,4 +364,66 @@ FEA_INLINE_VAR constexpr platform_group_t platform_group
 #undef FEA_PACKED
 #define FEA_PACKED(...) __VA_ARGS__ __attribute__((__packed__))
 #endif
+
+// SIMD
+// These defines only tell you what is available in immintrin.h with your
+// current compiler settings.
+//
+// On windows, for example, all types and functions are available, and will
+// error at runtime.
+#undef FEA_MMX
+#undef FEA_SSE
+#undef FEA_SSE2
+#undef FEA_SSE3
+#undef FEA_SSSE3
+#undef FEA_SSE41
+#undef FEA_SSE42
+#undef FEA_AVX
+#undef FEA_AVX2
+#undef FEA_AVX512F
+
+#if FEA_WINDOWS
+#define FEA_MMX 1
+#define FEA_SSE 1
+#define FEA_SSE2 1
+#define FEA_SSE3 1
+#define FEA_SSSE3 1
+#define FEA_SSE41 1
+#define FEA_SSE42 1
+#define FEA_AVX 1
+#define FEA_AVX2 1
+#define FEA_AVX512F 1
+#else
+#if defined(__MMX__)
+#define FEA_MMX 1
+#endif
+#if defined(__SSE__)
+#define FEA_SSE 1
+#endif
+#if defined(__SSE2__)
+#define FEA_SSE2 1
+#endif
+#if defined(__SSE3__)
+#define FEA_SSE3 1
+#endif
+#if defined(__SSSE3__)
+#define FEA_SSSE3 1
+#endif
+#if defined(__SSE41__)
+#define FEA_SSE41 1
+#endif
+#if defined(__SSE42__)
+#define FEA_SSE42 1
+#endif
+#if defined(__AVX__)
+#define FEA_AVX 1
+#endif
+#if defined(__AVX2__)
+#define FEA_AVX2 1
+#endif
+#if defined(__AVX512F__)
+#define FEA_AVX512F 1
+#endif
+#endif
+
 } // namespace fea

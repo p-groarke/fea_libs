@@ -122,6 +122,7 @@ if (${FEA_TESTS})
 
 	# Tests external dependencies.
 	find_package(GTest CONFIG REQUIRED QUIET)
+	find_package(pugixml CONFIG REQUIRED QUIET)
 
 	# Test Project
 	set(TEST_NAME ${PROJECT_NAME}_tests)
@@ -164,7 +165,7 @@ if (${FEA_TESTS})
 	target_link_libraries(${TEST_NAME} PUBLIC ${PROJECT_NAME} GTest::GTest TBB::tbb
 		$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:${CMAKE_CXX_COMPILER_VERSION},9.0>>:stdc++fs>
 	)
-	target_link_libraries(${TEST_NAME_NOTHROW} PUBLIC ${PROJECT_NAME} GTest::GTest TBB::tbb
+	target_link_libraries(${TEST_NAME_NOTHROW} PUBLIC ${PROJECT_NAME} GTest::GTest TBB::tbb pugixml::pugixml
 		$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:${CMAKE_CXX_COMPILER_VERSION},9.0>>:stdc++fs>
 	)
 
