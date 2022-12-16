@@ -326,6 +326,7 @@ struct lazy_graph {
 	static_assert(std::is_default_constructible<NodeData>::value,
 			"fea::lazy_graph : NodeData must be default constructible.");
 
+	using node_t = node<Id, NodeData, DirtyVersion, MaxParents, MaxChildren>;
 	using callback_data_t = callback_data<Id, NodeData>;
 	using parent_status_t = typename callback_data_t::parent_status_t;
 
@@ -606,14 +607,13 @@ struct lazy_graph {
 		return _nodes.at(id).version();
 	}
 
-	// Update a node.
-	// Your function should clean the provided node.
+	// Recurse on the dirty graph, but do not clean the nodes.
 	// Your lambda will be called recursively from parent to child.
 	// A node that depends on nothing is always valid. Your function will not be
 	// called on valid nodes.
-	// This call is heavy, so the overhead of std::function is minimized.
+	// At the end of this call, all sub-nodes of dirty nodes are also dirty.
 	template <class Func>
-	void clean(Id id,
+	void evaluate_dirty(Id id,
 			const fea::callback<Func, void(const callback_data_t&)>& func) {
 		if (_nodes.at(id).is_root()) {
 			return;
@@ -654,15 +654,10 @@ struct lazy_graph {
 						{ parent_id, &parent_node.node_data(), false });
 
 				DirtyVersion parent_version = parent_node.version();
-				DirtyVersion& child_version = parent_node.child_version(nid);
+				DirtyVersion child_version = parent_node.child_version(nid);
 				if (child_version != parent_version) {
 					parent_statuses.back().was_dirty = true;
-
-					// clean my parent tracking version
-					child_version = parent_version;
 					dirty = true;
-
-					// Can't break here, all children must be cleaned.
 				}
 			}
 
@@ -677,36 +672,14 @@ struct lazy_graph {
 
 			// And finally, call the user lambda. Provide it with its id and
 			// parent ids.
-			// todo : pass parent ids
 			func(c_data);
 			make_dirty(nid);
 		}
 	}
 
-	// Update multiple nodes.
-	// Your function should clean the provided node.
-	// Your lambda will be called recursively from parent to child.
-	// A node that depends on nothing is always valid. Your function will not be
-	// called on valid nodes.
-	// This call is heavy, so the overhead of std::function is minimized.
+	// Same as evaluate_dirty but threaded breaths.
 	template <class Func>
-	void clean(fea::span<const Id> ids,
-			const fea::callback<Func, void(const callback_data_t&)>& func) {
-		for (Id id : ids) {
-			clean(id, func);
-		}
-	}
-
-	// Update a node, thread breadths that are threadable.
-	// Your function should clean the provided node.
-	// Your lambda will be called recursively from parent to child an seperate
-	// threads.
-	// A node that depends on nothing is always valid. Your function
-	// will not be called on valid nodes.
-	// It is important to only read your parents, and only write to yourself
-	// during this evaluation!
-	template <class Func>
-	void clean_mt(Id id,
+	void evaluate_dirty_mt(Id id,
 			const fea::callback<Func, void(const callback_data_t&)>& func) {
 		if (_nodes.at(id).is_root()) {
 			return;
@@ -767,16 +740,11 @@ struct lazy_graph {
 						{ parent_id, &parent_node.node_data(), false });
 
 				DirtyVersion parent_version = parent_node.version();
-				DirtyVersion& child_version = parent_node.child_version(nid);
+				DirtyVersion child_version = parent_node.child_version(nid);
 				if (child_version != parent_version) {
 					// set the callback bool to dirty
 					parent_statuses.back().was_dirty = true;
-
-					// clean the parent
-					child_version = parent_version;
 					dirty = true;
-
-					// Can't break here, all versions must be cleaned.
 				}
 			}
 
@@ -801,10 +769,80 @@ struct lazy_graph {
 		g.wait();
 	}
 
+
+	// Update a node.
+	// Your lambda will be called recursively from parent to child.
+	// A node that depends on nothing is always valid. Your function will not be
+	// called on valid nodes.
+	// This call is heavy, so the overhead of std::function is minimized.
+	template <class Func>
+	void clean(Id id,
+			const fea::callback<Func, void(const callback_data_t&)>& func) {
+
+		// Call our evaluation function, and clean nodes.
+		evaluate_dirty(id,
+				fea::make_callback([&, this](const callback_data_t& c_data) {
+					// Clean the node.
+					for (const parent_status_t& ps : c_data.parents) {
+						if (!ps.was_dirty) {
+							continue;
+						}
+
+						// Get parent node.
+						node_t& parent_node = _nodes.at(ps.parent_id);
+						DirtyVersion parent_version = parent_node.version();
+						DirtyVersion& child_version
+								= parent_node.child_version(c_data.id);
+						child_version = parent_version;
+					}
+
+					// Call user function.
+					func(c_data);
+				}));
+	}
+
+	// Update multiple nodes.
+	// Your lambda will be called recursively from parent to child.
+	// A node that depends on nothing is always valid. Your function will not be
+	// called on valid nodes.
+	// This call is heavy, so the overhead of std::function is minimized.
+	template <class Func>
+	void clean(fea::span<const Id> ids,
+			const fea::callback<Func, void(const callback_data_t&)>& func) {
+		for (Id id : ids) {
+			clean(id, func);
+		}
+	}
+
+	// Same as clean but threaded breadths.
+	template <class Func>
+	void clean_mt(Id id,
+			const fea::callback<Func, void(const callback_data_t&)>& func) {
+		// Call our evaluation function, and clean nodes.
+		evaluate_dirty_mt(id,
+				fea::make_callback([&, this](const callback_data_t& c_data) {
+					// Clean the node.
+					for (const parent_status_t& ps : c_data.parents) {
+						if (!ps.was_dirty) {
+							continue;
+						}
+
+						// Get parent node.
+						node_t& parent_node = _nodes.at(ps.parent_id);
+						DirtyVersion parent_version = parent_node.version();
+						DirtyVersion& child_version
+								= parent_node.child_version(c_data.id);
+						child_version = parent_version;
+					}
+
+					// Call user function.
+					func(c_data);
+				}));
+	}
+
 	// Update multiple node, thread as much as possible.
 	// Thread independent evaluation graphs and each's breadths (when
 	// applicable).
-	// Your function should clean the provided node.
 	// Your lambda will be called recursively from parent to child an seperate
 	// threads.
 	// A node that depends on nothing is always valid. Your function
@@ -978,10 +1016,13 @@ struct lazy_graph {
 		return n.evaluation_graph();
 	}
 
+	// Get the internal node representation.
+	// Careful with this call, you are on your own.
+	const node_t& internal_node(Id id) const {
+		return _nodes.at(id);
+	}
 
 private:
-	using node_t = node<Id, NodeData, DirtyVersion, MaxParents, MaxChildren>;
-
 	//// Recurse downward.
 	//// Your function should accept both an id and a node reference.
 	//// We pass the node on to minimize map lookups.
