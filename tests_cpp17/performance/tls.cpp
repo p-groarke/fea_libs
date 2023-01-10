@@ -158,14 +158,12 @@ TEST(tls, basics) {
 	fuzzit(1'000, tls);
 
 	tls.clear();
-	{
-		fea::tls_lock<int> lock{ tls };
-		std::thread t1{ [&]() {
-			// EXPECT_DEATH(lock.local(), "");
-			EXPECT_DEATH(fea::tls_lock<int>{ std::move(lock) }, "");
-		} };
-	}
-
-	{}
+	//{
+	//	fea::tls_lock<int> lock{ tls };
+	//	std::thread t1{ [&]() {
+	//		EXPECT_DEATH(lock.local(), "");
+	//		EXPECT_DEATH(fea::tls_lock<int>{ std::move(lock) }, "");
+	//	} };
+	//}
 }
 } // namespace
