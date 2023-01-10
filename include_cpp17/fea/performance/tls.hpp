@@ -156,7 +156,8 @@ struct tls {
 		std::lock_guard<std::shared_mutex> g{ _mutex };
 		assert(_thread_info.size() == _thread_data.size());
 
-		for (const std::pair<thread_id_t, thread_info>& p : _thread_info) {
+		for (const std::pair<const thread_id_t, thread_info>& p :
+				_thread_info) {
 			if (p.second.locked) {
 				fea::maybe_throw<std::runtime_error>(__FUNCTION__, __LINE__,
 						"Destroying storage with unreleased locks. Make sure "
@@ -228,7 +229,8 @@ struct tls {
 		std::lock_guard<std::shared_mutex> g{ _mutex };
 		assert(_thread_info.size() == _thread_data.size());
 
-		for (const std::pair<thread_id_t, thread_info>& p : _thread_info) {
+		for (const std::pair<const thread_id_t, thread_info>& p :
+				_thread_info) {
 			if (p.second.locked) {
 				fea::maybe_throw<std::runtime_error>(__FUNCTION__, __LINE__,
 						"Cannot clear storage, at least 1 thread currently "
@@ -247,7 +249,8 @@ struct tls {
 		std::lock_guard<std::shared_mutex> g{ _mutex };
 		assert(_thread_info.size() == _thread_data.size());
 
-		for (const std::pair<thread_id_t, thread_info>& p : _thread_info) {
+		for (const std::pair<const thread_id_t, thread_info>& p :
+				_thread_info) {
 			if (p.second.locked) {
 				fea::maybe_throw<std::runtime_error>(__FUNCTION__, __LINE__,
 						"Cannot combine storage, at least 1 thread still holds "
@@ -268,7 +271,8 @@ struct tls {
 		std::lock_guard<std::shared_mutex> g{ _mutex };
 		assert(_thread_info.size() == _thread_data.size());
 
-		for (const std::pair<thread_id_t, thread_info>& p : _thread_info) {
+		for (const std::pair<const thread_id_t, thread_info>& p :
+				_thread_info) {
 			if (p.second.locked) {
 				fea::maybe_throw<std::runtime_error>(__FUNCTION__, __LINE__,
 						"Cannot combine storage, at least 1 thread still holds "
