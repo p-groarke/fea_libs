@@ -14,11 +14,11 @@ template <class T>
 void fuzzit(size_t num_fuzz, fea::tls<T>& tls) {
 	tls.clear();
 	EXPECT_TRUE(tls.empty());
-	EXPECT_EQ(tls.size(), 0);
+	EXPECT_EQ(tls.size(), 0u);
 	{
 		size_t num = 0;
 		tls.combine_each([&](int) { ++num; });
-		EXPECT_EQ(num, 0);
+		EXPECT_EQ(num, 0u);
 	}
 
 	std::vector<std::thread::id> tids(num_fuzz);
@@ -63,7 +63,7 @@ TEST(tls, basics) {
 		thread_vec = 42;
 	}
 
-	EXPECT_EQ(tls.size(), 1);
+	EXPECT_EQ(tls.size(), 1u);
 	EXPECT_FALSE(tls.empty());
 	{
 		size_t num = 0;
@@ -71,11 +71,11 @@ TEST(tls, basics) {
 			EXPECT_EQ(v, 42);
 			++num;
 		});
-		EXPECT_EQ(num, 1);
+		EXPECT_EQ(num, 1u);
 	}
 
 	tls.clear();
-	EXPECT_EQ(tls.size(), 0);
+	EXPECT_EQ(tls.size(), 0u);
 	EXPECT_TRUE(tls.empty());
 
 	{
@@ -84,7 +84,7 @@ TEST(tls, basics) {
 		thread_vec = 42;
 	}
 
-	EXPECT_EQ(tls.size(), 1);
+	EXPECT_EQ(tls.size(), 1u);
 	EXPECT_FALSE(tls.empty());
 	{
 		size_t num = 0;
@@ -92,16 +92,16 @@ TEST(tls, basics) {
 			EXPECT_EQ(v, 42);
 			++num;
 		});
-		EXPECT_EQ(num, 1);
+		EXPECT_EQ(num, 1u);
 	}
 
 	tls.clear();
-	EXPECT_EQ(tls.size(), 0);
+	EXPECT_EQ(tls.size(), 0u);
 	EXPECT_TRUE(tls.empty());
 	{
 		size_t num = 0;
 		tls.combine_each([&](int) { ++num; });
-		EXPECT_EQ(num, 0);
+		EXPECT_EQ(num, 0u);
 	}
 
 	{
