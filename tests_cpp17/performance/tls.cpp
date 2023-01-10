@@ -158,6 +158,7 @@ TEST(tls, basics) {
 	fuzzit(1'000, tls);
 
 	tls.clear();
+
 	//{
 	//	fea::tls_lock<int> lock{ tls };
 	//	std::thread t1{ [&]() {

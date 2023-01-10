@@ -44,19 +44,20 @@
 #include <utility>
 
 /*
-safe_tls is a safe implementation of a thread local storage type,
+fea::tls is a safe implementation of a thread local storage type,
 with a few differences to thread_local and tbb::enumrable_thread_specific.
 
 General Usage
 - Types are constructed as threads require them.
 - Type T must be default constructible.
-- Get a scoped lock from the safe_tls storage, then call local on it
+- Get a scoped lock from the tls storage, then call local on it
 	to access your thread data.
 
 Unique Behavior
-- safe_tls will throw if 2 threads try to access the same data.
-- safe_tls does NOT destroy objects on thread destruction.
-- The lock call is SLOW and meant to be called rarely.
+- fea::tls will throw if 2 threads try to access the same data.
+- fea::tls does NOT destroy objects on thread destruction.
+
+Warning : The lock call is SLOW and meant to be called once.
 */
 
 namespace fea {
@@ -138,7 +139,7 @@ struct tls {
 	using size_type = std::size_t;
 	using difference_type = std::ptrdiff_t;
 	using reference = T&;
-	using pointer = std::allocator_traits<Alloc>::pointer;
+	using pointer = typename std::allocator_traits<Alloc>::pointer;
 
 	using map_alloctor_type =
 			typename std::allocator_traits<Alloc>::template rebind_alloc<
