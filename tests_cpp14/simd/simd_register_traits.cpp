@@ -1,4 +1,4 @@
-#include <fea/performance/simd_register_traits.hpp>
+#include <fea/simd/simd_register_traits.hpp>
 #include <gtest/gtest.h>
 #include <type_traits>
 

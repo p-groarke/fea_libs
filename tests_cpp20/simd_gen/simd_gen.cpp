@@ -1,6 +1,7 @@
 // #include "../../../build/bin/simd_api_mmx.hpp"
 // #include "../../../build/bin/simd_api_sse.hpp"
 // #include "../../../build/bin/simd_api_sse2.hpp"
+// #include "../../../build/bin/simd_api_sse3.hpp"
 
 #include "simd_gen_descriptions.hpp"
 #include "simd_gen_header_template.hpp"
@@ -11,10 +12,10 @@
 #include <fea/containers/stack_vector.hpp>
 #include <fea/enum/enum_array.hpp>
 #include <fea/maps/unsigned_map.hpp>
-#include <fea/performance/simd.hpp>
-#include <fea/performance/simd_register.hpp>
-#include <fea/performance/simd_register_traits.hpp>
-#include <fea/performance/simd_version.hpp>
+// #include <fea/performance/simd.hpp>
+// #include <fea/performance/simd_register.hpp>
+// #include <fea/performance/simd_register_traits.hpp>
+#include <fea/simd/simd_version.hpp>
 #include <fea/string/string.hpp>
 #include <fea/utils/file.hpp>
 #include <filesystem>
@@ -93,10 +94,10 @@ const std::unordered_map<std::string, fea::simd_ver> supported_cpuids{
 	{ "MMX", fea::simd_ver::mmx },
 	{ "SSE", fea::simd_ver::sse },
 	{ "SSE2", fea::simd_ver::sse2 },
+	{ "SSE3", fea::simd_ver::sse3 },
 };
 
 // TODO
-//{ "SSE3", fea::simd_ver::sse3 },
 //{ "SSSE3", fea::simd_ver::ssse3 },
 //{ "SSE4.1", fea::simd_ver::sse41 },
 //{ "SSE4.2", fea::simd_ver::sse42 },

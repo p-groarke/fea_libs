@@ -3005,4 +3005,73 @@ inline const std::vector<intrin_desc> intrin_descriptions{
 	intrin_desc{ .intrin_name = "_mm_set1_epi64" },
 	intrin_desc{ .intrin_name = "_mm_slli_si128" }, // bslli
 	intrin_desc{ .intrin_name = "_mm_srli_si128" }, // bsrli
+
+	// sse3
+	intrin_desc{
+			.intrin_name = "_mm_addsub_pd",
+			.func_name = "addsub",
+			.return_opts{ topt::f64 },
+			.arg_opts{ { topt::f64 }, { topt::f64 } },
+	},
+	intrin_desc{
+			.intrin_name = "_mm_addsub_ps",
+			.func_name = "addsub",
+			.return_opts{ topt::f32 },
+			.arg_opts{ { topt::f32 }, { topt::f32 } },
+	},
+	intrin_desc{
+			.intrin_name = "_mm_hadd_pd",
+			.func_name = "hadd",
+			.return_opts{ topt::f64 },
+			.arg_opts{ { topt::f64 }, { topt::f64 } },
+	},
+	intrin_desc{
+			.intrin_name = "_mm_hadd_ps",
+			.func_name = "hadd",
+			.return_opts{ topt::f32 },
+			.arg_opts{ { topt::f32 }, { topt::f32 } },
+	},
+	intrin_desc{
+			.intrin_name = "_mm_hsub_pd",
+			.func_name = "hsub",
+			.return_opts{ topt::f64 },
+			.arg_opts{ { topt::f64 }, { topt::f64 } },
+	},
+	intrin_desc{
+			.intrin_name = "_mm_hsub_ps",
+			.func_name = "hsub",
+			.return_opts{ topt::f32 },
+			.arg_opts{ { topt::f32 }, { topt::f32 } },
+	},
+	intrin_desc{
+			.intrin_name = "_mm_lddqu_si128",
+			.func_name = "lddqu",
+			.return_opts{ topt::overloads, topt::ref, topt::to_last_param },
+			.arg_opts{ { topt::overloads, topt::const_ptr, topt::reg_to_cpp } },
+	},
+	intrin_desc{
+			.intrin_name = "_mm_loaddup_pd",
+			.func_name = "loaddup",
+			.return_opts{ topt::f64, topt::ref, topt::to_last_param },
+			.arg_opts{ { topt::keep } },
+	},
+	intrin_desc{
+			.intrin_name = "_mm_movedup_pd",
+			.func_name = "movedup",
+			.return_opts{ topt::f64 },
+			.arg_opts{ { topt::f64 } },
+	},
+	intrin_desc{
+			.intrin_name = "_mm_movehdup_ps",
+			.func_name = "movehdup",
+			.return_opts{ topt::f32 },
+			.arg_opts{ { topt::f32 } },
+	},
+	intrin_desc{
+			.intrin_name = "_mm_moveldup_ps",
+			.func_name = "moveldup",
+			.return_opts{ topt::f32 },
+			.arg_opts{ { topt::f32 } },
+	},
+
 };

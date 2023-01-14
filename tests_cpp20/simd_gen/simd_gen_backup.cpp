@@ -8,10 +8,10 @@
 #include <fea/containers/stack_vector.hpp>
 #include <fea/enum/enum_array.hpp>
 #include <fea/maps/unsigned_map.hpp>
-#include <fea/performance/simd.hpp>
-#include <fea/performance/simd_register.hpp>
-#include <fea/performance/simd_register_traits.hpp>
-#include <fea/performance/simd_version.hpp>
+#include <fea/simd/simd.hpp>
+#include <fea/simd/simd_register.hpp>
+#include <fea/simd/simd_register_traits.hpp>
+#include <fea/simd/simd_version.hpp>
 #include <fea/string/string.hpp>
 #include <fea/utils/file.hpp>
 #include <filesystem>

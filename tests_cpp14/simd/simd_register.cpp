@@ -1,4 +1,4 @@
-#include <fea/performance/simd_register.hpp>
+#include <fea/simd/simd_register.hpp>
 #include <gtest/gtest.h>
 
 namespace {

@@ -1,5 +1,5 @@
 #include <cstdio>
-#include <fea/performance/simd.hpp>
+#include <fea/simd/simd.hpp>
 #include <gtest/gtest.h>
 
 namespace {

@@ -30,8 +30,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
-#include "fea/performance/simd_register.hpp"
-#include "fea/performance/simd_version.hpp"
+#include "fea/simd/simd_register.hpp"
+#include "fea/simd/simd_version.hpp"
 
 namespace fea {
 namespace detail {

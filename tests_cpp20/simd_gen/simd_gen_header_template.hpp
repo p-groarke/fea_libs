@@ -83,9 +83,9 @@ const std::string simd_api_header = R"xx(/**
  **/
 #pragma once
 {prev_include}
-#include "fea/performance/simd_register.hpp"
-#include "fea/performance/simd_register_traits.hpp"
-#include "fea/performance/simd_version.hpp"
+#include "fea/simd/simd_register.hpp"
+#include "fea/simd/simd_register_traits.hpp"
+#include "fea/simd/simd_version.hpp"
 #include "fea/utils/platform.hpp"
 
 #include <immintrin.h>

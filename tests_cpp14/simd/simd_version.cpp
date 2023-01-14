@@ -1,4 +1,4 @@
-#include <fea/performance/simd_version.hpp>
+#include <fea/simd/simd_version.hpp>
 #include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 

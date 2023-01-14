@@ -30,11 +30,11 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
-#include "fea/performance/simd_api_mmx.hpp"
-#include "fea/performance/simd_api_sse.hpp"
-#include "fea/performance/simd_api_sse2.hpp"
-#include "fea/performance/simd_register.hpp"
-#include "fea/performance/simd_version.hpp"
+#include "fea/simd/simd_api_mmx.hpp"
+#include "fea/simd/simd_api_sse.hpp"
+#include "fea/simd/simd_api_sse2.hpp"
+#include "fea/simd/simd_register.hpp"
+#include "fea/simd/simd_version.hpp"
 #include "fea/utils/platform.hpp"
 
 #include <array>
