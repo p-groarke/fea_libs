@@ -71,11 +71,14 @@ void fuzzit(size_t num_fuzz) {
 
 		auto outer_fuzz = [&](const tbb::blocked_range<size_t>& range) {
 			fea::tls_lock<std::vector<int>> lock{ tls };
+			const std::vector<int>& v = lock.local();
+			size_t backup_size = v.size();
 
 			for (size_t i = range.begin(); i < range.end(); ++i) {
 				tbb::parallel_for(tbb::blocked_range<size_t>{ 0, num_fuzz, 1 },
 						tbb_fuzz, tbb::static_partitioner{});
 			}
+			EXPECT_EQ(v.size(), backup_size);
 		};
 		tbb::parallel_for(tbb::blocked_range<size_t>{ 0, num_fuzz, 1 },
 				outer_fuzz, tbb::static_partitioner{});

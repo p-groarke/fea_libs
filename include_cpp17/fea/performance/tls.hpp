@@ -61,8 +61,8 @@ General Usage
 Unique Behavior
 - fea::tls will throw if 2 threads try to access the same data.
 - fea::tls does NOT destroy objects on thread destruction.
-- fea::tls is recursive, allowing global storage to be used in
-	combination with nested tbb calls.
+- fea::tls is recursive, allowing storage to be used in
+	nested tbb calls.
 
 Warning : The lock call is SLOW and meant to be called once.
 No effort has or shall go into making the lock faster.
