@@ -45,7 +45,12 @@
 
 /*
 fea::tls is a safe implementation of a thread local storage type,
-with a few differences to thread_local and tbb::enumrable_thread_specific.
+with a few differences to thread_local and tbb's offerings.
+
+It requires a lock on the tls storage, and with it, can throw / assert
+guaranteed problematic behaviors. Furthermore, the storage creation is
+recursive. A single thread can create more than 1 stored type if it
+already has a lock on the storage, it is not an error condition.
 
 General Usage
 - Types are constructed as threads require them.
@@ -56,8 +61,11 @@ General Usage
 Unique Behavior
 - fea::tls will throw if 2 threads try to access the same data.
 - fea::tls does NOT destroy objects on thread destruction.
+- fea::tls is recursive, allowing global storage to be used in
+	combination with nested tbb calls.
 
 Warning : The lock call is SLOW and meant to be called once.
+No effort has or shall go into making the lock faster.
 */
 
 namespace fea {
@@ -184,16 +192,17 @@ struct tls {
 		std::lock_guard<std::shared_mutex> g{ _mutex };
 
 		// Create thread data if we don't recognize this thread id.
-		if (_thread_info.count(tid) == 0) {
+		auto it = _thread_info.find(tid);
+		if (it == _thread_info.end()) {
 			size_t idx = _thread_data.size();
 			_thread_data.emplace_back();
 			assert(idx < _thread_data.size());
-			_thread_info.insert({ tid, thread_info{ false, idx } });
+			it = _thread_info.insert({ tid, thread_info{ false, idx } }).first;
 		}
 		assert(_thread_info.size() == _thread_data.size());
 
 		// Lock data and return RAII helper.
-		thread_info& tinfo = _thread_info.at(tid);
+		thread_info& tinfo = it->second;
 		if (tinfo.locked) {
 			fea::maybe_throw<std::runtime_error>(__FUNCTION__, __LINE__,
 					"Trying to access data locked by an other thread.");

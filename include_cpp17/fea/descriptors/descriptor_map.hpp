@@ -137,7 +137,7 @@ struct descriptor_map {
 	template <class Func>
 	[[nodiscard]] static constexpr auto make_array(Func&& func) {
 		using ret_t = decltype(func(fea::front_t<Descriptors...>{}));
-		std::array<ret_t, desc_count> ret;
+		std::array<ret_t, desc_count> ret{};
 
 		fea::static_for<desc_count>([&](auto const_i) {
 			constexpr size_t i = const_i;
@@ -152,7 +152,7 @@ struct descriptor_map {
 	template <class Func>
 	[[nodiscard]] static constexpr auto make_enum_array(Func&& func) {
 		using ret_t = decltype(func(fea::front_t<Descriptors...>{}));
-		fea::enum_array<ret_t, key_t, desc_count> ret;
+		fea::enum_array<ret_t, key_t, desc_count> ret{};
 
 		fea::static_for<desc_count>([&](auto const_i) {
 			constexpr size_t i = const_i;
