@@ -282,7 +282,7 @@ public:
 
 	uint8_t brand_index() const {
 		constexpr uint32_t mask = 0x0000'00ff;
-		uint32_t ret = _eax1.eax.to_ulong();
+		uint32_t ret = _eax1.ebx.to_ulong();
 		ret &= mask;
 		return uint8_t(ret);
 	}
@@ -293,7 +293,7 @@ public:
 		}
 
 		constexpr uint32_t mask = 0x0000'ff00;
-		uint32_t ret = _eax1.eax.to_ulong();
+		uint32_t ret = _eax1.ebx.to_ulong();
 		ret &= mask;
 		ret >>= 8;
 		return uint8_t(ret);
@@ -304,13 +304,13 @@ public:
 		}
 
 		constexpr uint32_t mask = 0x00ff'0000;
-		uint32_t ret = _eax1.eax.to_ulong();
+		uint32_t ret = _eax1.ebx.to_ulong();
 		ret &= mask;
 		ret >>= 16;
 		return uint8_t(ret);
 	}
 	uint8_t local_apic_id() const {
-		uint32_t ret = _eax1.eax.to_ulong();
+		uint32_t ret = _eax1.ebx.to_ulong();
 		ret >>= 24;
 		return uint8_t(ret);
 	}
