@@ -239,15 +239,6 @@ struct tls {
 		assert(it != range.second);
 		assert(it->second.locked);
 		it->second.locked = false;
-
-		// for (thread_info& tinfo : range) {
-		//	if (tinfo.data_idx == data_idx) {
-		//		assert(tinfo.locked);
-		//		tinfo.locked = false;
-		//		return;
-		//	}
-		// }
-		// assert(false);
 	}
 
 	bool empty() const {

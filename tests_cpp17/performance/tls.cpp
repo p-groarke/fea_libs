@@ -67,7 +67,6 @@ void fuzzit(size_t num_fuzz) {
 			for (size_t i = range.begin(); i < range.end(); ++i) {
 				v.push_back(int(i));
 			}
-			// std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		};
 
 		auto outer_fuzz = [&](const tbb::blocked_range<size_t>& range) {
