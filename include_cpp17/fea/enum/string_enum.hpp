@@ -57,18 +57,21 @@ You must always provide an underlying_type.
 Example :
 FEA_STRING_ENUM(my_enum, unsigned, potato, tomato)
 
-Generates :
+Generates the enum:
 enum class my_enum : unsigned { potato, tomato };
 
-constexpr fea::enum_array<const char* const, ...> my_enum_literals;
-const fea::enum_array<std::string, ...> my_enum_strings;
+// The string_views container :
+inline constexpr fea::enum_array<std::string_view, ...> my_enum_literals;
 
-constexpr const fea::enum_array<std::string>& strings<my_enum>();
 
-constexpr const std::string& to_string(my_enum e);
+// Helper functions :
+constexpr const fea::enum_array<std::string_view>& strings<my_enum>();
 
 template <my_enum E>
-constexpr const std::string& to_string();
+constexpr std::string_view to_string();
+
+constexpr std::string_view to_string(my_enum e);
+
 
 It generates all of these for all string types :
 string, wstring, u16string, u32string.
@@ -85,7 +88,7 @@ etc...
 #define FEA_DETAIL_SE_VARNAME(prefix, ename, suffix) \
 	FEA_PASTE(ename, FEA_PASTE(_, FEA_PASTE(prefix, suffix)))
 
-// Generates an enum_array of const char* const and one of std::string.
+// Generates a fea::enum_array of string_views.
 // The arrays are prefixed with the provided string type prefix.
 #define FEA_DETAIL_SE_ARRAYS(stringify_macro, chartype, prefix, ename, ...) \
 	[[maybe_unused]] inline constexpr fea::enum_array< \
@@ -95,13 +98,13 @@ etc...
 		{ FEA_FOR_EACH(stringify_macro, __VA_ARGS__) } \
 	}
 
-// Literals equivalent, currently unused.
-#define FEA_DETAIL_SE_LIT_ARRAYS( \
-		stringify_macro, chartype, prefix, ename, ...) \
-	[[maybe_unused]] inline constexpr fea::enum_array<const chartype* const, \
-			ename, FEA_SIZEOF_VAARGS(__VA_ARGS__)> \
-			FEA_DETAIL_SE_VARNAME(prefix, ename, literals){ { FEA_FOR_EACH( \
-					stringify_macro, __VA_ARGS__) } };
+//// Literals equivalent, currently unused.
+// #define FEA_DETAIL_SE_LIT_ARRAYS( \
+//		stringify_macro, chartype, prefix, ename, ...) \
+//	[[maybe_unused]] inline constexpr fea::enum_array<const chartype* const, \
+//			ename, FEA_SIZEOF_VAARGS(__VA_ARGS__)> \
+//			FEA_DETAIL_SE_VARNAME(prefix, ename, literals){ { FEA_FOR_EACH( \
+//					stringify_macro, __VA_ARGS__) } };
 
 
 // Declares and implements helper functions.
@@ -128,28 +131,28 @@ etc...
 		return FEA_DETAIL_SE_VARNAME(prefix, ename, strings)[e]; \
 	}
 
-// Literals equivalent, currently unused.
-#define FEA_DETAIL_SE_LIT_FUNCS(chartype, prefix, ename) \
-	/* Forward declares template functions we specialize. */ \
-	template <class> \
-	[[maybe_unused]] constexpr const auto& FEA_PASTE(prefix, literals)(); \
-	/* Specialize the above function declarations. */ \
-	template <> \
-	[[maybe_unused]] constexpr const auto& FEA_PASTE( \
-			prefix, literals)<ename>() { \
-		return FEA_DETAIL_SE_VARNAME(prefix, ename, literals); \
-	} \
-	/* Non-type compile-time getters. */ \
-	template <ename E> \
-	[[maybe_unused]] constexpr const chartype* FEA_DETAIL_SE_VARNAME( \
-			prefix, to, literal)() { \
-		return FEA_DETAIL_SE_VARNAME(prefix, ename, literals).at<E>(); \
-	} \
-	/* Non-templated getters, fast O(1). */ \
-	[[maybe_unused]] inline constexpr const chartype* FEA_DETAIL_SE_VARNAME( \
-			prefix, to, literal)(ename e) { \
-		return FEA_DETAIL_SE_VARNAME(prefix, ename, literals)[e]; \
-	}
+//// Literals equivalent, currently unused.
+// #define FEA_DETAIL_SE_LIT_FUNCS(chartype, prefix, ename) \
+//	/* Forward declares template functions we specialize. */ \
+//	template <class> \
+//	[[maybe_unused]] constexpr const auto& FEA_PASTE(prefix, literals)(); \
+//	/* Specialize the above function declarations. */ \
+//	template <> \
+//	[[maybe_unused]] constexpr const auto& FEA_PASTE( \
+//			prefix, literals)<ename>() { \
+//		return FEA_DETAIL_SE_VARNAME(prefix, ename, literals); \
+//	} \
+//	/* Non-type compile-time getters. */ \
+//	template <ename E> \
+//	[[maybe_unused]] constexpr const chartype* FEA_DETAIL_SE_VARNAME( \
+//			prefix, to, literal)() { \
+//		return FEA_DETAIL_SE_VARNAME(prefix, ename, literals).at<E>(); \
+//	} \
+//	/* Non-templated getters, fast O(1). */ \
+//	[[maybe_unused]] inline constexpr const chartype* FEA_DETAIL_SE_VARNAME( \
+//			prefix, to, literal)(ename e) { \
+//		return FEA_DETAIL_SE_VARNAME(prefix, ename, literals)[e]; \
+//	}
 
 
 // Generates both an enum and accompanying arrays of enum strings and functions.

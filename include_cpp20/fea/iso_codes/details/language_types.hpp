@@ -32,7 +32,7 @@
  **/
 
 #pragma once
-#include "fea/macros/enum_to_strings.hpp"
+#include "fea/enum/string_enum.hpp"
 
 #include <cstdint>
 #include <limits>
