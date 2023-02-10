@@ -33,6 +33,15 @@ TEST(random, basics) {
 	}
 
 	{
+		std::vector<int> v(100);
+		fea::random_fill(v.begin(), v.end(), 1, 42);
+		for (int i : v) {
+			EXPECT_GT(i, 0);
+			EXPECT_LT(i, 43);
+		}
+	}
+
+	{
 		std::array<uint8_t, 4> bytes = fea::random_bytes<4>();
 		fea::unused(bytes); // how to test?
 		std::vector<uint8_t> vbytes = fea::random_bytes(4);
