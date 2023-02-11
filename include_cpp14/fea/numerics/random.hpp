@@ -58,11 +58,11 @@ std::enable_if_t<std::is_enum<T>::value, T> random_val(T min, T max) {
 }
 
 template <>
-char random_val<char>(char min, char max) {
+inline char random_val<char>(char min, char max) {
 	return char(random_val(short(min), short(max)));
 }
 template <>
-uint8_t random_val<uint8_t>(uint8_t min, uint8_t max) {
+inline uint8_t random_val<uint8_t>(uint8_t min, uint8_t max) {
 	return uint8_t(random_val(uint16_t(min), uint16_t(max)));
 }
 
@@ -83,7 +83,7 @@ std::enable_if_t<std::is_enum<E>::value, E> random_val() {
 
 // Get a random value between [T::min, T::max].
 template <>
-char random_val<char>() {
+inline char random_val<char>() {
 	constexpr short mmin = short(std::numeric_limits<char>::lowest());
 	constexpr short mmax = short((std::numeric_limits<char>::max)());
 	return char(random_val(mmin, mmax));
@@ -91,7 +91,7 @@ char random_val<char>() {
 
 // Get a random value between [T::min, T::max].
 template <>
-uint8_t random_val<uint8_t>() {
+inline uint8_t random_val<uint8_t>() {
 	constexpr uint16_t mmin = uint16_t(std::numeric_limits<uint8_t>::lowest());
 	constexpr uint16_t mmax = uint16_t((std::numeric_limits<uint8_t>::max)());
 	return uint8_t(random_val(mmin, mmax));
@@ -99,8 +99,28 @@ uint8_t random_val<uint8_t>() {
 
 // Get a random bool [true, false].
 template <>
-bool random_val<bool>() {
+inline bool random_val<bool>() {
 	return bool(random_val(uint8_t(0), uint8_t(1)));
+}
+
+// Fills a range, from begin to end, with random values between [min, max].
+// Iterator value type should be supported by fea::random_val.
+template <class ForwardIt,
+		class T = typename std::iterator_traits<ForwardIt>::value_type>
+void random_fill(ForwardIt begin, ForwardIt end, T min, T max) {
+	for (; begin != end; ++begin) {
+		*begin = fea::random_val(min, max);
+	}
+}
+
+// Fills a range, from begin to end, with random values between
+// [numeric_limits::lowest, numeric_limits::max].
+// Iterator value type should be supported by fea::random_val.
+template <class ForwardIt>
+void random_fill(ForwardIt begin, ForwardIt end) {
+	using value_t = typename std::iterator_traits<ForwardIt>::value_type;
+	random_fill(begin, end, std::numeric_limits<value_t>::lowest(),
+			(std::numeric_limits<value_t>::max)());
 }
 
 // Get a random index, [0, count[
@@ -110,7 +130,7 @@ inline size_t random_idx(size_t count) {
 
 // Fills the range with random indexes from [0, count[
 template <class FwdIt>
-inline void random_idxes(FwdIt begin, FwdIt end, size_t count) {
+void random_idxes(FwdIt begin, FwdIt end, size_t count) {
 	for (auto it = begin; it != end; ++it) {
 		*it = fea::random_idx(count);
 	}
