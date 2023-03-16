@@ -32,7 +32,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 #include "fea/maps/id_getter.hpp"
 #include "fea/memory/memory.hpp"
-#include "fea/meta/tuple.hpp"
 #include "fea/utils/throw.hpp"
 
 #include <cassert>
