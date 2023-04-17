@@ -1022,44 +1022,11 @@ struct lazy_graph {
 		return _nodes.at(id);
 	}
 
-private:
-	//// Recurse downward.
-	//// Your function should accept both an id and a node reference.
-	//// We pass the node on to minimize map lookups.
-	//// Your function should return true to stop recursion.
-	// template <class Func>
-	// bool recurse_down(Id id, Func&& func) const {
-	//	const node_t& n = _nodes.at(id);
-	//	if (func(id, n)) {
-	//		return true;
-	//	}
 
-	//	const std::vector<Id>& children = n.children();
-	//	for (Id child_id : children) {
-	//		if (recurse_down(child_id, func)) {
-	//			return true;
-	//		}
-	//	}
-
-	//	return false;
-	//}
-	// template <class Func>
-	// bool recurse_down(Id id, Func&& func) {
-	//	node_t& n = _nodes.at(id);
-	//	if (func(id, n)) {
-	//		return true;
-	//	}
-
-	//	const std::vector<Id>& children = n.children();
-	//	for (Id child_id : children) {
-	//		if (recurse_down(child_id, func)) {
-	//			return true;
-	//		}
-	//	}
-
-	//	return false;
-	//}
-
+	// Recurse downward, by breadth.
+	// Your function should accept both an id and a node reference.
+	// We pass the node on to minimize map lookups.
+	// Your function should return true to stop recursion.
 	template <class Func>
 	bool recurse_breadth_down(Id id, Func&& func) const {
 		// We must gather the children in a container graph.
@@ -1106,6 +1073,28 @@ private:
 		return false;
 	}
 
+	// Recurse upward with filtered subgraphs.
+	// Your function should accept both an id and a node reference.
+	// We pass the node on to minimize map lookups.
+	// If your callback returns true, the current node's parents aren't visited.
+	// The rest of the graph still continues to recurse.
+	template <class Func>
+	void recurse_up_filtered(Id id, Func&& func) const {
+		const node_t& n = _nodes.at(id);
+		if (func(id, n)) {
+			return;
+		}
+
+		fea::span<const Id> parents = n.parents();
+		for (Id parent_id : parents) {
+			recurse_up_filtered(parent_id, func);
+		}
+	}
+
+	// Recurse upward, by breadths.
+	// Your function should accept both an id and a node reference.
+	// We pass the node on to minimize map lookups.
+	// Your function should return true to stop recursion.
 	template <class Func>
 	bool recurse_breadth_up(Id id, Func&& func) const {
 		// We need to gather a graph to recurse upwards.
@@ -1134,6 +1123,77 @@ private:
 
 		return false;
 	}
+
+	// Recurse upward, by breadths, with filtered subgraphs.
+	// Your function should accept both an id and a node reference.
+	// We pass the node on to minimize map lookups.
+	// If your callback returns true, the current node's parents aren't visited.
+	// The rest of the graph still continues to recurse.
+	template <class Func>
+	void recurse_breadth_up_filtered(Id id, Func&& func) const {
+		// We need to gather a graph to recurse upwards.
+		// This graph *will* contain duplicates, it is up to the user
+		// function to cull them if desired.
+		std::vector<Id> graph;
+
+		// Prime it.
+		graph.push_back(id);
+
+		// As long as there are parents, push them back in the vector and
+		// continue recursing upwards.
+		// Unless they are filtered out.
+		for (size_t i = 0; i < graph.size(); ++i) {
+			Id mid = graph[i];
+			const node_t& n = _nodes.at(mid);
+
+			if (func(mid, n)) {
+				continue;
+			}
+
+			fea::span<const Id> parents = n.parents();
+			for (Id parent_id : parents) {
+				graph.push_back(parent_id);
+			}
+		}
+	}
+
+private:
+	//// Recurse downward.
+	//// Your function should accept both an id and a node reference.
+	//// We pass the node on to minimize map lookups.
+	//// Your function should return true to stop recursion.
+	// template <class Func>
+	// bool recurse_down(Id id, Func&& func) const {
+	//	const node_t& n = _nodes.at(id);
+	//	if (func(id, n)) {
+	//		return true;
+	//	}
+
+	//	const std::vector<Id>& children = n.children();
+	//	for (Id child_id : children) {
+	//		if (recurse_down(child_id, func)) {
+	//			return true;
+	//		}
+	//	}
+
+	//	return false;
+	//}
+	// template <class Func>
+	// bool recurse_down(Id id, Func&& func) {
+	//	node_t& n = _nodes.at(id);
+	//	if (func(id, n)) {
+	//		return true;
+	//	}
+
+	//	const std::vector<Id>& children = n.children();
+	//	for (Id child_id : children) {
+	//		if (recurse_down(child_id, func)) {
+	//			return true;
+	//		}
+	//	}
+
+	//	return false;
+	//}
 
 	UnorderedContainer<Id, node_t> _nodes;
 }; // namespace fea
