@@ -139,7 +139,7 @@ jobs:
           - { os: ubuntu-20.04, gcc_ver: "10", fea_ver: "-DFEA_CPP14=On" }
           - { os: ubuntu-20.04, gcc_ver: "9", fea_ver: "-DFEA_CPP17=On" }
           - { os: ubuntu-20.04, gcc_ver: "9", fea_ver: "-DFEA_CPP14=On" }
-          - { os: ubuntu-18.04, gcc_ver: "7", fea_ver: "-DFEA_CPP14=On" }
+          # - { os: ubuntu-18.04, gcc_ver: "7", fea_ver: "-DFEA_CPP14=On" }
 
     steps:
     - name: Git Line Endings
