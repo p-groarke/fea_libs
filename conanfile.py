@@ -4,7 +4,6 @@ from conans.errors import ConanInvalidConfiguration
 
 class Mnmesh2Conan(ConanFile):
     name = "fea_libs"
-    version = "1.0.0"
     description = "A collection of useful libraries and utilities."
     topics = ("maps", "containers", "algorithms")
     url = "https://github.com/p-groarke/fea_libs"
