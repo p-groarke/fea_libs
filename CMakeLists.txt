@@ -67,7 +67,7 @@ file(GLOB_RECURSE HEADER_FILES_CPP17 "include_cpp17/${INCLUDE_NAME}/*.hpp")
 file(GLOB_RECURSE HEADER_FILES_CPP20 "include_cpp20/${INCLUDE_NAME}/*.hpp")
 add_library(${PROJECT_NAME} INTERFACE)
 fea_set_compile_options(${PROJECT_NAME} INTERFACE)
-target_link_libraries(${PROJECT_NAME} INTERFACE tbb::tbb date::date)
+target_link_libraries(${PROJECT_NAME} INTERFACE TBB::tbb date::date)
 
 # To see files in IDE
 # target_sources(${PROJECT_NAME} INTERFACE
@@ -151,10 +151,10 @@ if (${FEA_TESTS})
 	endif()
 
 	# g++ 8 needs to link with seperate filesystem library.
-	target_link_libraries(${TEST_NAME} PUBLIC ${PROJECT_NAME} GTest::GTest tbb::tbb
+	target_link_libraries(${TEST_NAME} PUBLIC ${PROJECT_NAME} GTest::GTest TBB::tbb
 		$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:${CMAKE_CXX_COMPILER_VERSION},9.0>>:stdc++fs>
 	)
-	target_link_libraries(${TEST_NAME_NOTHROW} PUBLIC ${PROJECT_NAME} GTest::GTest tbb::tbb
+	target_link_libraries(${TEST_NAME_NOTHROW} PUBLIC ${PROJECT_NAME} GTest::GTest TBB::tbb
 		$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:${CMAKE_CXX_COMPILER_VERSION},9.0>>:stdc++fs>
 	)
 

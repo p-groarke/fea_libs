@@ -23,43 +23,19 @@ class FeaLibsConan(ConanFile):
     }
     exports_sources = ["*", "!build/*", "!build_reports/*", "!Output/*", "!bin/*"]
 
-    requires = [
-        ("gtest/1.11.0#7475482232fcd017fa110b0b8b0f936e")
-        , ("tbb/2020.3#1368e21b74ba4c45faa2a73ff3cffd8a")
-        , ("date/3.0.0#8fcb40f84e304971b86cae3c21d2ce99")
-    ]
-
-    _cmake = None
-
-    # @property
-    # def _source_subfolder(self):
-    #     return "source_subfolder"
-
-    # @property
-    # def _build_subfolder(self):
-    #     return "build_subfolder"
-
-
-    def _get_cmake(self):
-        if self._cmake:
-            return self._cmake
-
-        self._cmake = CMake(self)
-        self._cmake.definitions["FEA_TESTS"] = False
-        self._cmake.definitions["FEA_BENCHMARKS"] = False
-        self._cmake.definitions["FEA_PULL_CONAN"] = False
-        return self._cmake
-
-    def imports(self):
-       self.copy("*.dl*", src="bin", dst="bin")
-       self.copy("*.pdb", src="bin", dst="bin")
-       self.copy("*.pdb", src="bin", dst="lib")
+    def requirements(self):
+        self.requires("gtest/1.11.0#7475482232fcd017fa110b0b8b0f936e", "private")
+        self.requires("onetbb/2020.3#0fa586916737df2aa07f4f34ede163cc")
+        self.requires("date/3.0.0#8fcb40f84e304971b86cae3c21d2ce99")
 
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
 
-    # def configure(self):
+    def imports(self):
+       self.copy("*.dl*", src="bin", dst="bin")
+       self.copy("*.pdb", src="bin", dst="bin")
+       self.copy("*.pdb", src="bin", dst="lib")
 
     def generate(self):
         tc = CMakeToolchain(self)
