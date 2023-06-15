@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <array>
 #include <cassert>
+#include <cstdio>
+#include <limits>
 #include <functional>
 #include <vector>
 

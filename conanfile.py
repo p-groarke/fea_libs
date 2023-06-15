@@ -1,22 +1,17 @@
-import os
-from conans import ConanFile, CMake, tools
-from conans.errors import ConanInvalidConfiguration
+import os, platform
+from conan import ConanFile
+from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
+from conan.tools.files import collect_libs
 
-class Mnmesh2Conan(ConanFile):
+class FeaLibsConan(ConanFile):
     name = "fea_libs"
-    version = "1.0.0"
     description = "A collection of useful libraries and utilities."
     topics = ("maps", "containers", "algorithms")
     url = "https://github.com/p-groarke/fea_libs"
     homepage = "https://github.com/p-groarke/fea_libs"
     license = "BSD-3"
-    generators = "cmake_find_package_multi"
+    generators = "CMakeDeps"
     settings = "os", "compiler", "build_type", "arch"
-    requires = [
-        ("gtest/1.11.0")
-        , ("onetbb/2021.3.0")
-        , ("date/3.0.0")
-    ]
     options = {
         "fPIC": [True, False]
     }
@@ -27,58 +22,44 @@ class Mnmesh2Conan(ConanFile):
         "tbb:tbbmalloc" : True
     }
     exports_sources = ["*", "!build/*", "!build_reports/*", "!Output/*", "!bin/*"]
-    _cmake = None
 
-    # @property
-    # def _source_subfolder(self):
-    #     return "source_subfolder"
+    def requirements(self):
+        self.requires("gtest/1.11.0#7475482232fcd017fa110b0b8b0f936e", "private")
+        self.requires("onetbb/2020.3#0fa586916737df2aa07f4f34ede163cc")
+        self.requires("date/3.0.0#8fcb40f84e304971b86cae3c21d2ce99")
 
-    # @property
-    # def _build_subfolder(self):
-    #     return "build_subfolder"
-
-
-    def _get_cmake(self):
-        if self._cmake:
-            return self._cmake
-
-        self._cmake = CMake(self)
-        self._cmake.definitions["FEA_TESTS"] = False
-        self._cmake.definitions["FEA_BENCHMARKS"] = False
-        self._cmake.definitions["FEA_PULL_CONAN"] = False
-        return self._cmake
+    def config_options(self):
+        if self.settings.os == "Windows":
+            del self.options.fPIC
 
     def imports(self):
        self.copy("*.dl*", src="bin", dst="bin")
        self.copy("*.pdb", src="bin", dst="bin")
        self.copy("*.pdb", src="bin", dst="lib")
 
-    def config_options(self):
-        if self.settings.os == "Windows":
-            del self.options.fPIC
-
-    # def configure(self):
+    def generate(self):
+        tc = CMakeToolchain(self)
+        tc.generate()
+        tc = CMakeDeps(self)
+        tc.generate()
 
     def build(self):
-        # for patch in self.conan_data.get("patches", {}).get(self.version, []):
-        #     tools.patch(**patch)
-
-        cmake = self._get_cmake()
-        cmake.configure()
+        cmake = CMake(self)
+        mdefinitions = {
+            "FEA_TESTS": False,
+            "FEA_BENCHMARKS": False,
+            "FEA_PULL_CONAN": False,
+        }
+        cmake.configure(variables=mdefinitions)
         cmake.build()
 
     def package(self):
-        # Allows us to run the local workflow :
-        # conan export-pkg . 3dsmax/local --build-folder=build -f
-        # https://github.com/conan-io/conan/issues/2350
-
-        cmake = self._get_cmake()
-        cmake.configure()
+        cmake = CMake(self)
         cmake.install()
 
         # Copy pdbs
         self.copy("*.pdb", src="bin", dst="bin")
 
     def package_info(self):
-        self.cpp_info.libs = tools.collect_libs(self)
+        self.cpp_info.libs = collect_libs(self)
 
