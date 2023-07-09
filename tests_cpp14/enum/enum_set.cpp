@@ -92,8 +92,13 @@ TEST(enum_set, basics) {
 TEST(enum_set, ctor) {
 	// fancy ctor
 	{
+#if FEA_CPP17
 		constexpr fea::enum_set<e, size_t(e::count)> set{ e::zero, e::two,
 			e::four };
+#else
+		fea::enum_set<e, size_t(e::count)> set{ e::zero, e::two, e::four };
+#endif
+
 		EXPECT_EQ(set.size(), size_t(e::count));
 
 		EXPECT_EQ(set[e::zero], true);
@@ -129,8 +134,14 @@ TEST(enum_set, ctor) {
 
 	// old ctor
 	{
+#if FEA_CPP17
 		constexpr fea::enum_set<e, size_t(e::count)> set{ true, false, true,
 			false, true, false };
+#else
+		fea::enum_set<e, size_t(e::count)> set{ true, false, true, false, true,
+			false };
+#endif
+
 		EXPECT_EQ(set.size(), size_t(e::count));
 
 		EXPECT_EQ(set[e::zero], true);
