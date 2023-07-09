@@ -46,13 +46,17 @@
 #include <windows.h>
 #endif
 
-namespace fea {
 // The standard doesn't provide codecvt equivalents. Use the old
 // functionality until they do.
 #if defined(FEA_WINDOWS)
 #pragma warning(push)
 #pragma warning(disable : 4996)
+#elif defined(FEA_MACOS)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
 
+namespace fea {
 // VS 2015 and VS 2017 don't export codecvt symbols...
 #if (_MSC_VER >= 1900 /* VS 2015*/) && (_MSC_VER <= 1916 /* VS 2017 */)
 #define FEA_MSVC_CODECVT_BUG
@@ -62,7 +66,6 @@ using u16string_hack = std::basic_string<std::uint_least16_t,
 using u32string_hack = std::basic_string<std::uint_least32_t,
 		std::char_traits<std::uint_least32_t>,
 		std::allocator<std::uint_least32_t>>;
-#endif
 #endif
 
 
@@ -427,5 +430,7 @@ inline std::string utf16_to_current_codepage(const std::wstring& str) {
 
 #if defined(FEA_WINDOWS)
 #pragma warning(pop)
+#elif defined(FEA_MACOS)
+#pragma clang diagnostic pop
 #endif
 } // namespace fea
