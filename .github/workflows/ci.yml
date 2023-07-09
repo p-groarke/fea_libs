@@ -75,9 +75,9 @@ jobs:
       matrix:
         build_type: [Release, Debug]
         config:
-          # - { xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP20=On" } # tbd, clang has bad c++20 support right now
-          # - { xcode_ver: "14.1.0", fea_ver: "-DFEA_CPP17=On" }
-          # - { xcode_ver: "14.1.0", fea_ver: "-DFEA_CPP14=On" }
+          - { xcode_ver: "15.0", fea_ver: "-DFEA_CPP20=On" } # tbd, xcode has bad c++ support
+          - { xcode_ver: "15.0", fea_ver: "-DFEA_CPP17=On" }
+          - { xcode_ver: "15.0", fea_ver: "-DFEA_CPP14=On" }
           - { xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP17=On" }
           - { xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP14=On" }
 
