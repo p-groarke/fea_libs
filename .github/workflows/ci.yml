@@ -72,17 +72,17 @@ jobs:
 
 
   Clang:
-    runs-on: macos-13
+    runs-on: ${{ matrix.config.os }}
     strategy:
       fail-fast: true
       matrix:
         build_type: [Release, Debug]
         config:
-          - { xcode_ver: "15.0", fea_ver: "-DFEA_CPP20=On" } # tbd, xcode has bad c++ support
-          - { xcode_ver: "15.0", fea_ver: "-DFEA_CPP17=On" }
-          - { xcode_ver: "15.0", fea_ver: "-DFEA_CPP14=On" }
-          - { xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP17=On" }
-          - { xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP14=On" }
+          - { os: macos-13, xcode_ver: "15.0", fea_ver: "-DFEA_CPP20=On" } # tbd, xcode has bad c++ support
+          - { os: macos-13, xcode_ver: "15.0", fea_ver: "-DFEA_CPP17=On" }
+          - { os: macos-13, xcode_ver: "15.0", fea_ver: "-DFEA_CPP14=On" }
+          - { os: macos-12, xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP17=On" }
+          - { os: macos-12, xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP14=On" }
 
     steps:
     - name: Git Line Endings
