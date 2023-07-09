@@ -67,7 +67,7 @@ struct func_ptr<Ret()> {
 		return { _c_ptr };
 	}
 
-private:
+	// public for non-type parameters
 	c_sig_t _c_ptr = nullptr;
 };
 
@@ -119,7 +119,7 @@ struct func_ptr<Ret(FrontT, Args...)> {
 		return { _mem_ptr };
 	}
 
-private:
+	// public for non-type parameters
 	c_sig_t _c_ptr = nullptr;
 	mem_sig_t _mem_ptr = nullptr;
 };
