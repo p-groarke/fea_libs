@@ -20,6 +20,9 @@ jobs:
         build_type: [Release, Debug]
         build_arch: [x64, Win32]
         config:
+          - { toolset_ver: "v143", fea_ver: "-DFEA_CPP20=On" }
+          - { toolset_ver: "v143", fea_ver: "-DFEA_CPP17=On" }
+          - { toolset_ver: "v143", fea_ver: "-DFEA_CPP14=On" }
           - { toolset_ver: "v142", fea_ver: "-DFEA_CPP20=On" }
           - { toolset_ver: "v142", fea_ver: "-DFEA_CPP17=On" }
           - { toolset_ver: "v142", fea_ver: "-DFEA_CPP14=On" }
@@ -75,9 +78,9 @@ jobs:
       matrix:
         build_type: [Release, Debug]
         config:
-          - { xcode_ver: "15.0", fea_ver: "-DFEA_CPP20=On" } # tbd, xcode has bad c++ support
-          - { xcode_ver: "15.0", fea_ver: "-DFEA_CPP17=On" }
-          - { xcode_ver: "15.0", fea_ver: "-DFEA_CPP14=On" }
+          - { xcode_ver: "14.3.1", fea_ver: "-DFEA_CPP20=On" } # tbd, xcode has bad c++ support
+          - { xcode_ver: "14.3.1", fea_ver: "-DFEA_CPP17=On" }
+          - { xcode_ver: "14.3.1", fea_ver: "-DFEA_CPP14=On" }
           - { xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP17=On" }
           - { xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP14=On" }
 

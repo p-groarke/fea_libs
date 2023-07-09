@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <fea/descriptors/config_map.hpp>
 #include <fea/functional/func_ptr.hpp>
 #include <functional>
@@ -7,9 +8,11 @@
 namespace {
 struct obj {
 	void func(int) const {
+		printf("blabla\n");
 	}
 };
 void func(const obj*, int) {
+	printf("blabla\n");
 }
 
 template <class EnumT>
