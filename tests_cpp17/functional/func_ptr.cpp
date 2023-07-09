@@ -1,4 +1,5 @@
 #include <fea/functional/func_ptr.hpp>
+#include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 
 namespace {
@@ -48,8 +49,10 @@ TEST(func_ptr, basics) {
 		obj o{};
 		constexpr int i{};
 
+#if FEA_CPP20
 		// Should be callable at compile time.
 		static_assert(f2.invoke(&o, i) == -42, "func_ptr.cpp : Test failed.");
+#endif
 
 		// Const overloads should have been resolved appropriately.
 		EXPECT_EQ(f1.invoke(&o, i), 42);
