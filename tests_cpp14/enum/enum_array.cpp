@@ -1,4 +1,5 @@
-﻿#include <fea/enum/enum_array.hpp>
+﻿#include <algorithm>
+#include <fea/enum/enum_array.hpp>
 #include <gtest/gtest.h>
 
 namespace {
@@ -7,6 +8,8 @@ TEST(enum_array, basics) {
 	{
 		fea::enum_array<size_t, e> arr{};
 		EXPECT_EQ(arr.size(), size_t(e::count));
+		EXPECT_TRUE(std::all_of(
+				arr.begin(), arr.end(), [](size_t s) { return s == 0; }));
 
 		for (size_t i = 0; i < arr.size(); ++i) {
 			arr[e(i)] = i;
@@ -46,6 +49,8 @@ TEST(enum_array, basics) {
 	{
 		fea::enum_array<size_t, e, size_t(e::count)> arr{};
 		EXPECT_EQ(arr.size(), size_t(e::count));
+		EXPECT_TRUE(std::all_of(
+				arr.begin(), arr.end(), [](size_t s) { return s == 0; }));
 
 		for (size_t i = 0; i < arr.size(); ++i) {
 			arr[e(i)] = i;
