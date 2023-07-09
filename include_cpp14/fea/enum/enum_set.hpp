@@ -33,29 +33,50 @@
 
 #pragma once
 #include "fea/meta/static_for.hpp"
+#include "fea/meta/traits.hpp"
 #include "fea/utils/platform.hpp"
 
 #include <array>
+#include <initializer_list>
 #include <type_traits>
 #include <utility>
 
 /*
-enum_array is a wrapper on std::array, which allows to access elements with
+enum_set is a wrapper on std::array<bool>, which allows to access elements with
 an enum class directly. Your enum must be from 0 to N!
 
 If your enum declares 'count', you do not need to provide the size.
 
-enum_array doesn't change anything to std::array other than overriding the
-accessors (at, operator[] and std::get) to accept your enums directly.
+enum_set doesn't change much about std::array,
+but it adds constructors and accessors to facilitate access.
 */
+
+// TODO : enum_bitset
 
 namespace fea {
 
-template <class T, class Enum, size_t N = size_t(Enum::count)>
-struct enum_array : public std::array<T, N> {
-	using array_t = std::array<T, N>;
+template <class Enum, size_t N = size_t(Enum::count)>
+struct enum_set : public std::array<bool, N> {
+	using array_t = std::array<bool, N>;
 	using reference = typename array_t::reference;
 	using const_reference = typename array_t::const_reference;
+
+	constexpr enum_set() = default;
+	constexpr enum_set(std::initializer_list<Enum> true_set)
+			: std::array<bool, N>{} {
+		for (Enum e : true_set) {
+			operator[](e) = true;
+		}
+	}
+	template <class... Vals>
+	constexpr enum_set(Vals... values)
+			: std::array<bool, N>{ values... } {
+		static_assert(sizeof...(Vals) == N,
+				"fea::enum_set : Invalid number of arguments.");
+		static_assert(fea::all_of<std::is_same<Vals, bool>...>::value,
+				"fea::enum_set : Invalid constructor parameters, expected "
+				"bools.");
+	}
 
 	template <Enum E>
 	constexpr reference at() {
@@ -82,28 +103,28 @@ struct enum_array : public std::array<T, N> {
 };
 
 #if FEA_CPP17
-template <auto I, class T, class E, size_t N>
-constexpr T& get(enum_array<T, E, N>& a) noexcept {
+template <auto I, class E, size_t N>
+constexpr bool& get(enum_set<E, N>& a) noexcept {
 	static_assert(std::is_same_v<decltype(I), E>,
-			"enum_array : passed in wrong enum type");
+			"enum_set : passed in wrong enum type");
 	return std::get<size_t(I)>(a);
 }
-template <auto I, class T, class E, size_t N>
-constexpr T&& get(enum_array<T, E, N>&& a) noexcept {
+template <auto I, class E, size_t N>
+constexpr bool&& get(enum_set<E, N>&& a) noexcept {
 	static_assert(std::is_same_v<decltype(I), E>,
-			"enum_array : passed in wrong enum type");
+			"enum_set : passed in wrong enum type");
 	return std::get<size_t(I)>(std::move(a));
 }
-template <auto I, class T, class E, size_t N>
-constexpr const T& get(const enum_array<T, E, N>& a) noexcept {
+template <auto I, class E, size_t N>
+constexpr const bool& get(const enum_set<E, N>& a) noexcept {
 	static_assert(std::is_same_v<decltype(I), E>,
-			"enum_array : passed in wrong enum type");
+			"enum_set : passed in wrong enum type");
 	return std::get<size_t(I)>(a);
 }
-template <auto I, class T, class E, size_t N>
-constexpr const T&& get(const enum_array<T, E, N>&& a) noexcept {
+template <auto I, class E, size_t N>
+constexpr const bool&& get(const enum_set<E, N>&& a) noexcept {
 	static_assert(std::is_same_v<decltype(I), E>,
-			"enum_array : passed in wrong enum type");
+			"enum_set : passed in wrong enum type");
 	return std::get<size_t(I)>(std::move(a));
 }
 #endif
