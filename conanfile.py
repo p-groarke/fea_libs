@@ -25,8 +25,13 @@ class FeaLibsConan(ConanFile):
 
     def requirements(self):
         self.requires("gtest/1.11.0#7475482232fcd017fa110b0b8b0f936e", "private")
-        self.requires("onetbb/2020.3#0fa586916737df2aa07f4f34ede163cc")
         self.requires("date/3.0.0#8fcb40f84e304971b86cae3c21d2ce99")
+
+        if (self.settings.os == "Macos")
+            # Fix stdlib.h include.
+            self.requires("onetbb/2021.3.0#98a11c269d52fa4756d43d6faf640792")
+        else
+            self.requires("onetbb/2020.3#0fa586916737df2aa07f4f34ede163cc")
 
     def config_options(self):
         if self.settings.os == "Windows":
