@@ -34,6 +34,7 @@
 #pragma once
 #include "fea/utils/platform.hpp"
 
+#include <algorithm>
 #include <bitset>
 #include <string_view>
 

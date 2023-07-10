@@ -57,7 +57,6 @@ std::unordered_map<std::string, bool> flag_map{
 	{ "tm2", fea::cpu_info.tm2() },
 	{ "ssse3", fea::cpu_info.ssse3() },
 	{ "cnxt-id", fea::cpu_info.cnxt_id() },
-	{ "sdbg", fea::cpu_info.sdbg() },
 	{ "fma", fea::cpu_info.fma() },
 	{ "cx16", fea::cpu_info.cx16() },
 	{ "xtpr", fea::cpu_info.xtpr() },
@@ -90,6 +89,7 @@ std::unordered_map<std::string, bool> flag_map{
 	{ "invpcid", fea::cpu_info.invpcid() },
 	{ "rtm", fea::cpu_info.rtm() },
 	{ "pqm", fea::cpu_info.pqm() },
+	{ "fpu_csds", fea::cpu_info.fpu_csds() },
 	{ "mpx", fea::cpu_info.mpx() },
 	{ "pqe", fea::cpu_info.pqe() },
 	{ "avx512f", fea::cpu_info.avx512_f() },
@@ -267,6 +267,16 @@ TEST(cpu_info, basics) {
 			s = "md_clear";
 		} else if (s == "acapmsr") {
 			s = "ia32_arch_capabilities";
+		} else if (s == "1gbpage") {
+			s = "pdpe1gb";
+		} else if (s == "clfsopt") {
+			s = "clflushopt";
+		} else if (s == "lzcnt") {
+			s = "abm";
+		} else if (s == "prefetchw") {
+			s = "3dnowprefetch";
+		} else if (s == "ipt") {
+			s = "intel_pt";
 		}
 
 		if (flag_map.count(s) == 0) {
@@ -283,7 +293,6 @@ TEST(cpu_info, basics) {
 	}
 
 	flag_map.erase("lm"); // Might be em64t or tsci.
-
 	// bool uncaught = false;
 	for (const auto& x : flag_map) {
 		if (x.second) {
