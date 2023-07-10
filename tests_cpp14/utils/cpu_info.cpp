@@ -293,17 +293,13 @@ TEST(cpu_info, basics) {
 	}
 
 	flag_map.erase("lm"); // Might be em64t or tsci.
-	// bool uncaught = false;
 	for (const auto& x : flag_map) {
 		if (x.second) {
 			printf("Uncaught cpu option : %s\n", x.first.c_str());
-			// uncaught = true;
 		}
 		EXPECT_FALSE(x.second);
 	}
 
-	// if (uncaught) {
-	// }
 #else
 	// How do you test this on windows?
 #endif
