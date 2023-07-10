@@ -288,7 +288,7 @@ TEST(cpu_info, basics) {
 	for (const auto& x : flag_map) {
 		if (x.second) {
 			printf("Uncaught cpu option : %s\n", x.first.c_str());
-			uncaught = true;
+			// uncaught = true;
 		}
 		EXPECT_FALSE(x.second);
 	}

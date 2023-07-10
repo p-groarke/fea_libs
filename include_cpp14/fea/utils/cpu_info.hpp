@@ -46,6 +46,7 @@
 #include <array>
 #include <bitset>
 #include <cstdint>
+#include <cstdio>
 #include <string>
 
 // References :
