@@ -6,22 +6,12 @@
 #include <type_traits>
 
 namespace {
-struct obj {
-	void func(int) const {
-		printf("blabla\n");
-	}
-};
-void func(const obj*, int) {
-	printf("blabla\n");
-}
-
 template <class EnumT>
 struct my_descriptor {
 	EnumT key = EnumT::count;
 	bool p = false;
 	int i = 0;
 	std::array<int, 2> test{};
-	fea::func_ptr<void(const obj*, int)> callback;
 };
 
 enum class potato {
@@ -35,14 +25,12 @@ constexpr my_descriptor<potato> russet_desc{
 	.p = true,
 	.i = 42,
 	.test = { 0, 1 },
-	.callback = &func,
 };
 constexpr my_descriptor<potato> yukon_desc{
 	.key = potato::yukon,
 	.p = false,
 	.i = -42,
 	.test = { 42, -42 },
-	.callback = &obj::func,
 };
 
 

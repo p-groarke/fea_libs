@@ -219,6 +219,12 @@ std::unordered_map<std::string, uint32_t> int_map{
 TEST(cpu_info, basics) {
 #if FEA_MACOS
 	std::vector<std::string> cpu_tokens = get_macos_cpu_features();
+	printf("Gathered cpuid flags:\n\t");
+	for (const std::string& str : cpu_tokens) {
+		printf("%s, ", str.c_str());
+	}
+	printf("\n");
+
 	for (auto& s : cpu_tokens) {
 		std::transform(s.begin(), s.end(), s.begin(), ::tolower);
 
@@ -277,12 +283,18 @@ TEST(cpu_info, basics) {
 	}
 
 	flag_map.erase("lm"); // Might be em64t or tsci.
+
+	// bool uncaught = false;
 	for (const auto& x : flag_map) {
 		if (x.second) {
 			printf("Uncaught cpu option : %s\n", x.first.c_str());
+			uncaught = true;
 		}
 		EXPECT_FALSE(x.second);
 	}
+
+	// if (uncaught) {
+	// }
 #else
 	// How do you test this on windows?
 #endif
