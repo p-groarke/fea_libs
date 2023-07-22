@@ -20,7 +20,7 @@ if (${FEA_CMAKE_LOCAL})
 endif()
 FetchContent_Declare(fea_cmake
 	GIT_REPOSITORY https://github.com/p-groarke/fea_cmake.git
-	GIT_TAG 30334f9119feb953054f08e95b4efd9af908beee
+	GIT_TAG e88ee825bf700504ba0313889c7f950056f61b80
 )
 FetchContent_MakeAvailable(fea_cmake)
 
@@ -175,5 +175,5 @@ if (${FEA_TESTS})
 	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${TEST_NAME})
 
 	# Copy test data on build.
-	fea_copy_folder_on_build(${TEST_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp17/data ${BINARY_OUT_DIR}/tests_data)
+	fea_copy_on_build(${TEST_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp17/data ${BINARY_OUT_DIR}/tests_data)
 endif()
