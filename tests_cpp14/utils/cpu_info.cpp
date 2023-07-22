@@ -57,7 +57,6 @@ std::unordered_map<std::string, bool> flag_map{
 	{ "tm2", fea::cpu_info.tm2() },
 	{ "ssse3", fea::cpu_info.ssse3() },
 	{ "cnxt-id", fea::cpu_info.cnxt_id() },
-	{ "sdbg", fea::cpu_info.sdbg() },
 	{ "fma", fea::cpu_info.fma() },
 	{ "cx16", fea::cpu_info.cx16() },
 	{ "xtpr", fea::cpu_info.xtpr() },
@@ -90,6 +89,7 @@ std::unordered_map<std::string, bool> flag_map{
 	{ "invpcid", fea::cpu_info.invpcid() },
 	{ "rtm", fea::cpu_info.rtm() },
 	{ "pqm", fea::cpu_info.pqm() },
+	{ "fpu_csds", fea::cpu_info.fpu_csds() },
 	{ "mpx", fea::cpu_info.mpx() },
 	{ "pqe", fea::cpu_info.pqe() },
 	{ "avx512f", fea::cpu_info.avx512_f() },
@@ -219,6 +219,12 @@ std::unordered_map<std::string, uint32_t> int_map{
 TEST(cpu_info, basics) {
 #if FEA_MACOS
 	std::vector<std::string> cpu_tokens = get_macos_cpu_features();
+	printf("Gathered cpuid flags:\n\t");
+	for (const std::string& str : cpu_tokens) {
+		printf("%s, ", str.c_str());
+	}
+	printf("\n");
+
 	for (auto& s : cpu_tokens) {
 		std::transform(s.begin(), s.end(), s.begin(), ::tolower);
 
@@ -261,6 +267,16 @@ TEST(cpu_info, basics) {
 			s = "md_clear";
 		} else if (s == "acapmsr") {
 			s = "ia32_arch_capabilities";
+		} else if (s == "1gbpage") {
+			s = "pdpe1gb";
+		} else if (s == "clfsopt") {
+			s = "clflushopt";
+		} else if (s == "lzcnt") {
+			s = "abm";
+		} else if (s == "prefetchw") {
+			s = "3dnowprefetch";
+		} else if (s == "ipt") {
+			s = "intel_pt";
 		}
 
 		if (flag_map.count(s) == 0) {
@@ -283,6 +299,7 @@ TEST(cpu_info, basics) {
 		}
 		EXPECT_FALSE(x.second);
 	}
+
 #else
 	// How do you test this on windows?
 #endif

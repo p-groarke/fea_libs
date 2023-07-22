@@ -981,7 +981,7 @@ private:
 								__FUNCTION__, __LINE__, "missing states");
 					}
 
-					size_t num_name = 0;
+					[[maybe_unused]] size_t num_name = 0;
 					std::for_each(
 							names.begin(), names.end(), [&](const auto& n) {
 								if (n == name)

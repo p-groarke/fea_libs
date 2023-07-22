@@ -46,6 +46,7 @@
 #include <array>
 #include <bitset>
 #include <cstdint>
+#include <cstdio>
 #include <string>
 
 // References :
@@ -806,7 +807,7 @@ public:
 	bool pqm() const {
 		return _eax7_ecx0.ebx[12];
 	}
-	bool fpu_cs_ds() const {
+	bool fpu_csds() const {
 		return _eax7_ecx0.ebx[13];
 	}
 	bool mpx() const {
@@ -1393,7 +1394,7 @@ public:
 		print_bool("invpcid", invpcid());
 		print_bool("rtm", rtm());
 		print_bool("pqm", pqm());
-		print_bool("fpu_cs_ds", fpu_cs_ds());
+		print_bool("fpu_csds", fpu_csds());
 		print_bool("mpx", mpx());
 		print_bool("pqe", pqe());
 		print_bool("avx512f", avx512_f());

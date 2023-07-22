@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <deque>
 #include <functional>
 #include <map>
+#include <memory>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -246,9 +247,9 @@ struct get_opt {
 	void reset();
 
 private:
-	static_assert(
-			std::is_same_v<CharT,
-					char> || std::is_same_v<CharT, wchar_t> || std::is_same_v<CharT, char16_t> || std::is_same_v<CharT, char32_t>,
+	static_assert(std::is_same_v<CharT, char> || std::is_same_v<CharT, wchar_t>
+					|| std::is_same_v<CharT, char16_t>
+					|| std::is_same_v<CharT, char32_t>,
 			"getopt : unknown character type, getopt only supports char, "
 			"wchar_t, char16_t and char32_t");
 
