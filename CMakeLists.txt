@@ -53,7 +53,7 @@ if (${FEA_PULL_CONAN})
 	# Enable conan revisions (RREV).
 	execute_process(COMMAND conan config set general.revisions_enabled=True)
 
-	fea_pull_conan()
+	fea_pull_conan(CONAN_MSVC_TOOLSET ${CMAKE_VS_PLATFORM_TOOLSET})
 endif()
 
 find_package(TBB CONFIG REQUIRED QUIET)
