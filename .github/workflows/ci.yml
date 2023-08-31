@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 # env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   # BUILD_TYPE: Release, Debug
