@@ -14,13 +14,25 @@ option(FEA_CPP14 "Use C++14 (default is C++20)." Off)
 option(FEA_PULL_CONAN "Executes conan install from cmake." On)
 option(FEA_CMAKE_LOCAL "Use local fea_cmake repo. Searches for '../fea_cmake'" Off)
 
+# C++ version.
+if ("cxx_std_20" IN_LIST CMAKE_CXX_COMPILE_FEATURES AND NOT FEA_CPP17 AND NOT FEA_CPP14)
+	set(CMAKE_CXX_STANDARD 20)
+	message("\nEnabling C++14, C++17 and C++20 libraries.\n")
+elseif ("cxx_std_17" IN_LIST CMAKE_CXX_COMPILE_FEATURES AND NOT FEA_CPP14)
+	set(CMAKE_CXX_STANDARD 17)
+	message("\nEnabling C++14 and C++17 libraries.\n")
+else()
+	set(CMAKE_CXX_STANDARD 14)
+	message("\nEnabling C++14 libraries.\n")
+endif()
+
 # Pull fea_cmake helper library.
 if (${FEA_CMAKE_LOCAL})
 	set(FETCHCONTENT_SOURCE_DIR_FEA_CMAKE ${CMAKE_CURRENT_SOURCE_DIR}/../fea_cmake CACHE INTERNAL "")
 endif()
 FetchContent_Declare(fea_cmake
 	GIT_REPOSITORY https://github.com/p-groarke/fea_cmake.git
-	GIT_TAG 62826d886c541a373f0baa2376ae7fa1863a63f5
+	GIT_TAG c18194b32552a4f6ea44d8843470e8ae544cabdb
 )
 FetchContent_MakeAvailable(fea_cmake)
 
@@ -35,18 +47,6 @@ fea_import_gitignore()
 
 # Output to predictable location.
 fea_set_output_dir(${CMAKE_BINARY_DIR}/bin)
-
-# C++ version.
-if ("cxx_std_20" IN_LIST CMAKE_CXX_COMPILE_FEATURES AND NOT FEA_CPP17 AND NOT FEA_CPP14)
-	set(CMAKE_CXX_STANDARD 20)
-	message("\nEnabling C++14, C++17 and C++20 libraries.\n")
-elseif ("cxx_std_17" IN_LIST CMAKE_CXX_COMPILE_FEATURES AND NOT FEA_CPP14)
-	set(CMAKE_CXX_STANDARD 17)
-	message("\nEnabling C++14 and C++17 libraries.\n")
-else()
-	set(CMAKE_CXX_STANDARD 14)
-	message("\nEnabling C++14 libraries.\n")
-endif()
 
 # External dependencies.
 if (${FEA_PULL_CONAN})
