@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 # env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   # BUILD_TYPE: Release, Debug
@@ -112,6 +116,8 @@ jobs:
 
     - name: Configure
       run: |
+        export SDKROOT=$(xcodebuild -version -sdk macosx Path)
+        export CPATH="$SDKROOT/usr/include"
         cd ${{github.workspace}}
         mkdir build
         cd build
