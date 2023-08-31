@@ -117,7 +117,7 @@ jobs:
     - name: Configure
       run: |
         export SDKROOT=$(xcodebuild -version -sdk macosx Path)
-        export CPATH="$SDKROOT/usr/include
+        export CPATH="$SDKROOT/usr/include"
         cd ${{github.workspace}}
         mkdir build
         cd build
