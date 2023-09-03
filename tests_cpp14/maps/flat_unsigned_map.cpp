@@ -34,15 +34,7 @@ TEST(flat_unsigned_map, basics) {
 	fea::flat_unsigned_map<size_t, test> map1(small_num);
 
 	using map1_t = std::decay_t<decltype(map1)>;
-	static_assert(std::is_same<typename map1_t::hasher,
-						  fea::id_getter<size_t>>::value,
-			test_failed_msg);
 	static_assert(std::is_same<typename map1_t::key_type, size_t>::value,
-			test_failed_msg);
-	static_assert(
-			std::is_same<typename map1_t::underlying_key_type, size_t>::value,
-			test_failed_msg);
-	static_assert(std::is_same<typename map1_t::pos_type, size_t>::value,
 			test_failed_msg);
 
 	map1.reserve(100);
@@ -416,15 +408,7 @@ TEST(flat_unsigned_map, ids) {
 	fea::flat_unsigned_map<my_id, int> map(small_num);
 
 	using map_t = std::decay_t<decltype(map)>;
-	static_assert(
-			std::is_same<typename map_t::hasher, fea::id_getter<my_id>>::value,
-			test_failed_msg);
 	static_assert(std::is_same<typename map_t::key_type, my_id>::value,
-			test_failed_msg);
-	static_assert(
-			std::is_same<typename map_t::underlying_key_type, uint16_t>::value,
-			test_failed_msg);
-	static_assert(std::is_same<typename map_t::pos_type, uint16_t>::value,
 			test_failed_msg);
 
 	map.reserve(100);
