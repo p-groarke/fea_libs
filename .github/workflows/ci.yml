@@ -50,27 +50,27 @@ jobs:
     - name: Install Conan
       run: |
         python --version
-        pip install -r ${{github.workspace}}/requirements.txt --upgrade
+        pip install -r ${{ github.workspace }}/requirements.txt --upgrade
         conan user
         conan --version
         conan profile new default --detect
 
     - name: Configure
       run: |
-        cd ${{github.workspace}}
+        cd ${{ github.workspace }}
         mkdir build
         cd build
         cmake .. -T ${{ matrix.config.toolset_ver }} -A ${{ matrix.build_arch }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.config.fea_ver }}
 
     - name: Build
       run: |
-        cd ${{github.workspace}}/build
+        cd ${{ github.workspace }}/build
         cmake --build . --config ${{ matrix.build_type }}
 
     - name: Test
-      # working-directory: ${{github.workspace}}/build
+      # working-directory: ${{ github.workspace }}/build
       run: |
-        cd ${{github.workspace}}/build
+        cd ${{ github.workspace }}/build
         ./bin/fea_libs_tests
         ./bin/fea_libs_nothrow_tests
 
@@ -82,7 +82,7 @@ jobs:
       matrix:
         build_type: [Release, Debug]
         config:
-          # - { os: macos-13, xcode_ver: "14.3.1", fea_ver: "-DFEA_CPP20=On" } # tbd, xcode has bad c++ support
+          - { os: macos-13, xcode_ver: "15.0-beta", fea_ver: "-DFEA_CPP20=On" } # tbd, xcode has bad c++ support
           - { os: macos-13, xcode_ver: "14.3.1", fea_ver: "-DFEA_CPP17=On" }
           - { os: macos-13, xcode_ver: "14.3.1", fea_ver: "-DFEA_CPP14=On" }
           - { os: macos-12, xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP17=On" }
@@ -109,28 +109,29 @@ jobs:
     - name: Install Conan
       run: |
         python --version
-        pip install -r ${{github.workspace}}/requirements.txt --upgrade
+        pip install -r ${{ github.workspace }}/requirements.txt --upgrade
         conan user
         conan --version
         conan profile new default --detect
+        conan config install ${{ github.workspace }}/.github/settings.yml
 
     - name: Configure
       run: |
         export SDKROOT=$(xcodebuild -version -sdk macosx Path)
         export CPATH="$SDKROOT/usr/include"
-        cd ${{github.workspace}}
+        cd ${{ github.workspace }}
         mkdir build
         cd build
         cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.config.fea_ver }}
 
     - name: Build
       run: |
-        cd ${{github.workspace}}/build
+        cd ${{ github.workspace }}/build
         cmake --build . --config ${{ matrix.build_type }}
 
     - name: Test
       run: |
-        cd ${{github.workspace}}/build
+        cd ${{ github.workspace }}/build
         ./bin/fea_libs_tests
         ./bin/fea_libs_nothrow_tests
 
@@ -176,7 +177,7 @@ jobs:
         CXX: g++-${{ matrix.config.gcc_ver }}
       run: |
         python --version
-        pip install -r ${{github.workspace}}/requirements.txt --upgrade
+        pip install -r ${{ github.workspace }}/requirements.txt --upgrade
         conan user
         conan --version
         conan profile new default --detect
@@ -187,18 +188,18 @@ jobs:
         CC: gcc-${{ matrix.config.gcc_ver }}
         CXX: g++-${{ matrix.config.gcc_ver }}
       run: |
-        cd ${{github.workspace}}
+        cd ${{ github.workspace }}
         mkdir build
         cd build
         cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.config.fea_ver }}
 
     - name: Build
       run: |
-        cd ${{github.workspace}}/build
+        cd ${{ github.workspace }}/build
         cmake --build . --config ${{ matrix.build_type }}
 
     - name: Test
       run: |
-        cd ${{github.workspace}}/build
+        cd ${{ github.workspace }}/build
         ./bin/fea_libs_tests
         ./bin/fea_libs_nothrow_tests

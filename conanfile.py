@@ -1,7 +1,7 @@
 import os, platform
 from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
-from conan.tools.files import collect_libs
+from conan.tools.files import collect_libs, copy
 
 class FeaLibsConan(ConanFile):
     name = "fea_libs"
@@ -10,16 +10,16 @@ class FeaLibsConan(ConanFile):
     url = "https://github.com/p-groarke/fea_libs"
     homepage = "https://github.com/p-groarke/fea_libs"
     license = "BSD-3"
-    generators = "CMakeDeps"
+    generators = "CMakeDeps", "CMakeToolchain"
     settings = "os", "compiler", "build_type", "arch"
     options = {
         "fPIC": [True, False]
     }
     default_options = {
         "fPIC": True,
-        "gtest:build_gmock" : False,
-        "date:use_system_tz_db" : True,
-        "tbb:tbbmalloc" : True
+        "gtest/*:build_gmock" : False,
+        "date/*:use_system_tz_db" : True,
+        "tbb/*:tbbmalloc" : True
     }
     exports_sources = ["*", "!build/*", "!build_reports/*", "!Output/*", "!bin/*"]
 
@@ -37,11 +37,21 @@ class FeaLibsConan(ConanFile):
        self.copy("*.pdb", src="bin", dst="bin")
        self.copy("*.pdb", src="bin", dst="lib")
 
+    # def layout(self):
+    #     cmake_layout(self)
+
     def generate(self):
         tc = CMakeToolchain(self)
         tc.generate()
         tc = CMakeDeps(self)
         tc.generate()
+
+        # # imports
+        # for dep in self.dependencies.values():
+        #     copy(self, "*.dl*", dep.cpp_info.bindirs[0], os.path.join("..", self.cpp.build.bindirs[0]))
+        #     copy(self, "*.dylib", dep.cpp_info.bindirs[0], os.path.join("..", self.cpp.build.bindirs[0]))
+        #     copy(self, "*.so", dep.cpp_info.bindirs[0], os.path.join("..", self.cpp.build.bindirs[0]))
+        #     copy(self, "*.pdb", dep.cpp_info.bindirs[0], os.path.join("..", self.cpp.build.bindirs[0]))
 
     def build(self):
         cmake = CMake(self)

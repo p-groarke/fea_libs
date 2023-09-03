@@ -12,6 +12,7 @@ option(FEA_BENCHMARKS "Build and run bencharks, requires tests." Off)
 option(FEA_CPP17 "Use C++17 (default is C++20)." Off)
 option(FEA_CPP14 "Use C++14 (default is C++20)." Off)
 option(FEA_PULL_CONAN "Executes conan install from cmake." On)
+option(FEA_CONAN2 "If pulling conan dependencies, are we running conan 2?" Off)
 option(FEA_CMAKE_LOCAL "Use local fea_cmake repo. Searches for '../fea_cmake'" Off)
 
 # C++ version.
@@ -50,10 +51,17 @@ fea_set_output_dir(${CMAKE_BINARY_DIR}/bin)
 
 # External dependencies.
 if (${FEA_PULL_CONAN})
-	# Enable conan revisions (RREV).
-	execute_process(COMMAND conan config set general.revisions_enabled=True)
+	if (NOT ${FEA_CONAN2})
+		# Enable conan revisions (RREV).
+		fea_execute_process(COMMAND conan config set general.revisions_enabled=True
+			COMMAND_ECHO STDOUT
+			ERROR_MSG "Failed to set conan 1 revisions_enabled."
+		)
+		fea_pull_conan(CONAN_MSVC_TOOLSET "${CMAKE_VS_PLATFORM_TOOLSET}")
+	else()
+		fea_pull_conan2(CONAN_MSVC_TOOLSET "${CMAKE_VS_PLATFORM_TOOLSET}")
+	endif()
 
-	fea_pull_conan(CONAN_MSVC_TOOLSET ${CMAKE_VS_PLATFORM_TOOLSET})
 endif()
 
 find_package(TBB CONFIG REQUIRED QUIET)
@@ -86,8 +94,6 @@ target_include_directories(${PROJECT_NAME} INTERFACE
 
 # source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include_cpp14 PREFIX "Header Files" FILES ${HEADER_FILES_CPP14})
 # source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include_cpp17 PREFIX "Header Files" FILES ${HEADER_FILES_CPP17})
-# make_pretty_source_folders("include_cpp14/fea" "Header Files" "${HEADER_FILES_CPP14}")
-# make_pretty_source_folders("include_cpp17/fea" "Header Files" "${HEADER_FILES_CPP17}")
 
 # Install Package Configuration
 install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}_targets)
@@ -104,6 +110,10 @@ if (${CMAKE_CXX_STANDARD} GREATER_EQUAL 17)
 endif()
 if (${CMAKE_CXX_STANDARD} GREATER_EQUAL 20)
 	install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/include_cpp20/${INCLUDE_NAME}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}")
+endif()
+
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX "install" CACHE PATH "..." FORCE)
 endif()
 
 # Tests
@@ -175,5 +185,5 @@ if (${FEA_TESTS})
 	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${TEST_NAME})
 
 	# Copy test data on build.
-	fea_copy_on_build(${TEST_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp17/data ${BINARY_OUT_DIR}/tests_data)
+	fea_copy_on_build(${TEST_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp17/data $<TARGET_FILE_DIR:${TEST_NAME}>/tests_data)
 endif()
