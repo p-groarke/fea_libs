@@ -1,7 +1,7 @@
 ﻿/**
  * BSD 3-Clause License
  *
- * Copyright (c) 2022, Philippe Groarke
+ * Copyright (c) 2023, Philippe Groarke
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -277,11 +277,11 @@ FEA_INLINE_VAR constexpr platform_group_t platform_group
 
 //// Cross-platform compiler warning.
 //// Note MSVC isn't a true warning, just a message.
-//#if FEA_WINDOWS
-//#define FEA_WARNING(x) __pragma(message("warning : "##x))
-//#else
-//#define FEA_WARNING(x) #warning x
-//#endif
+// #if FEA_WINDOWS
+// #define FEA_WARNING(x) __pragma(message("warning : "##x))
+// #else
+// #define FEA_WARNING(x) #warning x
+// #endif
 
 // Strict data packing for cross-platform/cross-compiler support.
 // Use like so :
