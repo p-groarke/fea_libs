@@ -57,10 +57,13 @@ std::enable_if_t<std::is_enum<T>::value, T> random_val(T min, T max) {
 	return T(random_val(u_t(min), u_t(max)));
 }
 
+// Get a random char between [min, max].
 template <>
 inline char random_val<char>(char min, char max) {
 	return char(random_val(short(min), short(max)));
 }
+
+// Get a random unsigned char between [min, max].
 template <>
 inline uint8_t random_val<uint8_t>(uint8_t min, uint8_t max) {
 	return uint8_t(random_val(uint16_t(min), uint16_t(max)));
@@ -128,6 +131,14 @@ inline size_t random_idx(size_t count) {
 	return random_val(size_t(0), count - 1);
 }
 
+// Get a random iterator, [first, last[
+template <class FwdIt>
+inline FwdIt random_iter(FwdIt first, FwdIt last) {
+	size_t count = std::distance(first, last);
+	size_t idx = random_idx(count);
+	return std::next(first, idx);
+}
+
 // Fills the range with random indexes from [0, count[
 template <class FwdIt>
 void random_idxes(FwdIt begin, FwdIt end, size_t count) {
@@ -136,6 +147,19 @@ void random_idxes(FwdIt begin, FwdIt end, size_t count) {
 	}
 }
 
+// Get a random value from container.
+template <class Container>
+inline const auto& random_val(const Container& container) {
+	return *random_iter(container.begin(), container.end());
+}
+
+// Get a random value from container.
+template <class Container>
+inline auto& random_val(Container& container) {
+	return *random_iter(container.begin(), container.end());
+}
+
+// Get some random bytes.
 template <size_t N>
 std::array<uint8_t, N> random_bytes() {
 	std::array<uint8_t, N> ret{};
@@ -145,6 +169,7 @@ std::array<uint8_t, N> random_bytes() {
 	return ret;
 }
 
+// Get some random bytes.
 inline std::vector<uint8_t> random_bytes(size_t num_bytes) {
 	std::vector<uint8_t> ret;
 	ret.reserve(num_bytes);

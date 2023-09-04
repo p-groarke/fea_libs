@@ -1,7 +1,7 @@
 /**
  * BSD 3-Clause License
  *
- * Copyright (c) 2022, Philippe Groarke
+ * Copyright (c) 2023, Philippe Groarke
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,11 +32,13 @@
  **/
 
 #pragma once
+#include "fea/utils/platform.hpp"
+
+#if !defined(FEA_MACOS) // Missing std::from_chars float.
 #include "fea/maps/flat_unsigned_hashmap.hpp"
 #include "fea/string/string.hpp"
 #include "fea/string/string_literal.hpp"
 #include "fea/utils/file.hpp"
-#include "fea/utils/platform.hpp"
 #include "fea/utils/throw.hpp"
 
 #include <cassert>
@@ -150,8 +152,8 @@ T tweak_value(T&& val) {
 	}
 
 	T result{};
-	auto [ptr, ec]{ std::from_chars(
-			my_line.data() + start, my_line.data() + end, result) };
+	auto [ptr, ec] = std::from_chars(
+			my_line.data() + start, my_line.data() + end, result);
 
 	if (ec == std::errc{}) {
 		stored_value = result;
@@ -177,3 +179,4 @@ inline void tweak_update() {
 	}
 }
 } // namespace fea
+#endif // !FEA_MACOS

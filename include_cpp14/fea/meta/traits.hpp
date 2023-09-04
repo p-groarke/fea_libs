@@ -1,7 +1,7 @@
 ﻿/**
  * BSD 3-Clause License
  *
- * Copyright (c) 2022, Philippe Groarke
+ * Copyright (c) 2023, Philippe Groarke
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -291,7 +291,7 @@ using has_size = decltype(std::declval<T>().size());
 // Checks if a type has std::begin and std::end.
 template <class T>
 FEA_INLINE_VAR constexpr bool is_container_v
-		= fea::is_detected_v<has_begin, T>&& fea::is_detected_v<has_end, T>;
+		= fea::is_detected_v<has_begin, T> && fea::is_detected_v<has_end, T>;
 
 // Checks if a type has std::get.
 template <class T>
@@ -300,7 +300,7 @@ FEA_INLINE_VAR constexpr bool is_tuple_like_v = fea::is_detected_v<has_get, T>;
 // Checks if a type has std::data and std::size.
 template <class T>
 FEA_INLINE_VAR constexpr bool is_contiguous_v
-		= fea::is_detected_v<has_data, T>&& fea::is_detected_v<has_size, T>;
+		= fea::is_detected_v<has_data, T> && fea::is_detected_v<has_size, T>;
 
 
 /**
@@ -362,4 +362,12 @@ struct is_static_castable<From, To,
 template <class From, class To>
 FEA_INLINE_VAR constexpr bool is_static_castable_v
 		= is_static_castable<From, To>::value;
+
+
+#if FEA_CPP17
+// Checks whether a function callback type is noexcept.
+template <class Func, class... Args>
+FEA_INLINE_VAR constexpr bool is_noexcept_v
+		= noexcept(std::declval<Func>()(std::declval<Args>()...));
+#endif
 } // namespace fea

@@ -1,3 +1,6 @@
+#include <fea/utils/platform.hpp>
+#if !defined(FEA_MACOS)
+
 #include <chrono>
 #include <fea/utils/scope.hpp>
 #include <fea/utils/tweak_value.hpp>
@@ -131,4 +134,5 @@ TEST(tweak_value, basics) {
 
 
 } // namespace
-#endif
+#endif // FEA_DEBUG
+#endif // !FEA_MACOS

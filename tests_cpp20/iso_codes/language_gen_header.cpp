@@ -20,7 +20,7 @@ const std::string file_header = R"xx(
 /**
  * BSD 3-Clause License
  *
- * Copyright (c) 2022, Philippe Groarke
+ * Copyright (c) 2023, Philippe Groarke
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

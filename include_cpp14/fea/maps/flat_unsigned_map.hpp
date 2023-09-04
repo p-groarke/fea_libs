@@ -1,7 +1,7 @@
 ﻿/*
 BSD 3-Clause License
 
-Copyright (c) 2022, Philippe Groarke
+Copyright (c) 2023, Philippe Groarke
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/maps/details/unsigned_lookup.hpp"
 #include "fea/maps/id_getter.hpp"
 #include "fea/memory/memory.hpp"
 #include "fea/utils/throw.hpp"
@@ -39,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <initializer_list>
 #include <iterator>
 #include <limits>
+#include <memory>
 #include <type_traits>
 #include <vector>
 
@@ -50,27 +52,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace fea {
 template <class Key, class T, class Alloc = std::allocator<T>>
 struct flat_unsigned_map {
-	static_assert(std::is_unsigned<fea::detail::id_getter_t<Key>>::value,
-			"unsigned_map : key or id_getter return type must be unsigned "
-			"integer");
-
-	using hasher = fea::id_getter<Key>;
-	using underlying_key_type = fea::detail::id_getter_t<Key>;
-
 	using key_type = Key;
 	using const_key_type = const key_type;
 	using mapped_type = T;
 	using value_type = mapped_type;
 	using iter_value_type = mapped_type;
 	using size_type = std::size_t;
-	using pos_type = underlying_key_type;
 	using difference_type = std::ptrdiff_t;
 
 	using allocator_type = Alloc;
 	using key_allocator_type = typename std::allocator_traits<
 			allocator_type>::template rebind_alloc<key_type>;
-	using pos_allocator_type = typename std::allocator_traits<
-			allocator_type>::template rebind_alloc<pos_type>;
 
 	using reference = value_type&;
 	using const_reference = const value_type&;
@@ -97,14 +89,12 @@ struct flat_unsigned_map {
 	flat_unsigned_map& operator=(const flat_unsigned_map&) = default;
 	flat_unsigned_map& operator=(flat_unsigned_map&&) noexcept = default;
 
-	explicit flat_unsigned_map(size_t reserve_count) {
+	explicit flat_unsigned_map(size_type reserve_count) {
 		reserve(reserve_count);
 	}
 	explicit flat_unsigned_map(
-			size_t key_reserve_count, size_t value_reserve_count) {
-		_indexes.reserve(key_reserve_count);
-		_reverse_lookup.reserve(value_reserve_count);
-		_values.reserve(value_reserve_count);
+			size_type key_reserve_count, size_type value_reserve_count) {
+		reserve(key_reserve_count, value_reserve_count);
 	}
 
 	template <class InputIt, class InputValIt>
@@ -197,15 +187,19 @@ struct flat_unsigned_map {
 
 	// returns the maximum possible number of elements
 	size_type max_size() const noexcept {
-		// -1 due to sentinel
-		return pos_sentinel() - 1;
+		return _lookup.max_size();
 	}
 
 	// reserves storage
 	void reserve(size_type new_cap) {
-		_indexes.reserve(new_cap);
+		_lookup.reserve(new_cap);
 		_reverse_lookup.reserve(new_cap);
 		_values.reserve(new_cap);
+	}
+	void reserve(size_type key_new_cap, size_type value_new_cap) {
+		_lookup.reserve(key_new_cap);
+		_reverse_lookup.reserve(value_new_cap);
+		_values.reserve(value_new_cap);
 	}
 
 	// returns the number of elements that can be held in currently allocated
@@ -216,7 +210,7 @@ struct flat_unsigned_map {
 
 	// reduces memory usage by freeing unused memory
 	void shrink_to_fit() {
-		_indexes.shrink_to_fit();
+		_lookup.shrink_to_fit();
 		_reverse_lookup.shrink_to_fit();
 		_values.shrink_to_fit();
 	}
@@ -225,7 +219,7 @@ struct flat_unsigned_map {
 
 	// clears the contents
 	void clear() noexcept {
-		_indexes.clear();
+		_lookup.clear();
 		_reverse_lookup.clear();
 		_values.clear();
 	}
@@ -285,10 +279,7 @@ struct flat_unsigned_map {
 			return { it, false };
 		}
 
-		underlying_key_type mk = hasher{}(k);
-		resize_indexes_if_needed(mk);
-
-		_indexes[mk] = pos_type(_values.size());
+		_lookup.insert(k, _values.size());
 		_reverse_lookup.push_back(k);
 		_values.emplace_back(std::forward<Args>(args)...);
 
@@ -341,17 +332,16 @@ struct flat_unsigned_map {
 		return _values.begin() + first_idx;
 	}
 	size_type erase(const key_type& k) {
-		iterator replace_it = find(k);
-		if (replace_it == end()) {
+		iterator it = find(k);
+		if (it == end()) {
 			return 0;
 		}
 
-		underlying_key_type mk = hasher{}(k);
 		iterator last_val_it = std::prev(end());
-		_indexes[mk] = pos_sentinel();
+		_lookup.invalidate(k);
 
 		// No need for swap, object is already at end.
-		if (last_val_it == replace_it) {
+		if (last_val_it == it) {
 			_values.pop_back();
 			_reverse_lookup.pop_back();
 			assert(_values.size() == _reverse_lookup.size());
@@ -359,23 +349,22 @@ struct flat_unsigned_map {
 		}
 
 		// swap & pop
-		pos_type new_idx = pos_type(std::distance(_values.begin(), replace_it));
-		key_iterator replace_key_it = _reverse_lookup.begin() + new_idx;
-		underlying_key_type last_key = hasher{}(_reverse_lookup.back());
+		size_type new_idx = size_type(std::distance(_values.begin(), it));
+		key_iterator key_it = _reverse_lookup.begin() + new_idx;
+		key_type last_key = _reverse_lookup.back();
 
-		*replace_it = fea::maybe_move(_values.back());
-		*replace_key_it = _reverse_lookup.back();
+		*it = fea::maybe_move(_values.back());
+		*key_it = _reverse_lookup.back();
 		_values.pop_back();
 		_reverse_lookup.pop_back();
-		_indexes[last_key] = new_idx;
-
+		_lookup.update(last_key, new_idx);
 		assert(_values.size() == _reverse_lookup.size());
 		return 1;
 	}
 
 	// swaps the contents
 	void swap(flat_unsigned_map& other) noexcept {
-		_indexes.swap(other._indexes);
+		_lookup.swap(other._lookup);
 		_reverse_lookup.swap(other._reverse_lookup);
 		_values.swap(other._values);
 	}
@@ -399,23 +388,23 @@ struct flat_unsigned_map {
 	// Access to underlying lookup.
 	// Dereferencing this with key returns the index of
 	// the associated value.
-	const pos_type* lookup_data() const noexcept {
-		return _indexes.data();
+	const auto* lookup_data() const noexcept {
+		return _lookup.data();
 	}
 
 	// Lookup size, != key/value size.
 	size_type lookup_size() const noexcept {
-		return _indexes.size();
+		return _lookup.size();
 	}
 
 	// access specified element with bounds checking
 	const mapped_type& at(const key_type& k) const {
-		if (!contains(k)) {
+		auto it = find(k);
+		if (it == end()) {
 			fea::maybe_throw<std::out_of_range>(
-					__FUNCTION__, __LINE__, "value doesn't exist");
+					__FUNCTION__, __LINE__, "key doesn't exist");
 		}
-
-		return at_unchecked(k);
+		return *it;
 	}
 	mapped_type& at(const key_type& k) {
 		return const_cast<mapped_type&>(
@@ -423,11 +412,10 @@ struct flat_unsigned_map {
 	}
 
 	// access specified element without any bounds checking
-	const mapped_type& at_unchecked(const key_type& k) const {
-		assert(contains(k));
-		return _values[_indexes[hasher{}(k)]];
+	const mapped_type& at_unchecked(const key_type& k) const noexcept {
+		return _values[_lookup.at_unchecked(k)];
 	}
-	mapped_type& at_unchecked(const key_type& k) {
+	mapped_type& at_unchecked(const key_type& k) noexcept {
 		return const_cast<mapped_type&>(
 				static_cast<const flat_unsigned_map*>(this)->at_unchecked(k));
 	}
@@ -443,53 +431,35 @@ struct flat_unsigned_map {
 
 	// returns the number of elements matching specific key (which is 1 or 0,
 	// since there are no duplicates)
-	size_type count(const key_type& k) const {
-		if (contains(k)) {
-			return 1;
-		}
-		return 0;
+	size_type count(const key_type& k) const noexcept {
+		return contains(k) ? 1 : 0;
 	}
 
 	// finds element with specific key
-	iterator find(const key_type& k) {
-		if (!contains(k)) {
-			return end();
-		}
-
-		return begin() + _indexes[hasher{}(k)];
+	const_iterator find(const key_type& k) const noexcept {
+		return begin() + _lookup.find(k, size());
 	}
-	const_iterator find(const key_type& k) const {
-		if (!contains(k)) {
-			return end();
-		}
-
-		return begin() + _indexes[hasher{}(k)];
+	iterator find(const key_type& k) noexcept {
+		return begin() + _lookup.find(k, size());
 	}
 
 	// checks if the container contains element with specific key
-	bool contains(const key_type& k) const {
-		underlying_key_type mk = hasher{}(k);
-		if (mk >= _indexes.size())
-			return false;
-
-		if (_indexes[mk] == pos_sentinel())
-			return false;
-
-		return true;
+	bool contains(const key_type& k) const noexcept {
+		return _lookup.contains(k);
 	}
 
 	// returns range of elements matching a specific key (in this case, 1 or 0
 	// elements)
-	std::pair<iterator, iterator> equal_range(const key_type& k) {
-		iterator it = find(k);
+	std::pair<const_iterator, const_iterator> equal_range(
+			const key_type& k) const noexcept {
+		const_iterator it = find(k);
 		if (it == end()) {
 			return { it, it };
 		}
 		return { it, it + 1 };
 	}
-	std::pair<const_iterator, const_iterator> equal_range(
-			const key_type& k) const {
-		const_iterator it = find(k);
+	std::pair<iterator, iterator> equal_range(const key_type& k) noexcept {
+		iterator it = find(k);
 		if (it == end()) {
 			return { it, it };
 		}
@@ -508,23 +478,6 @@ struct flat_unsigned_map {
 			const flat_unsigned_map<K, U, A>& rhs);
 
 private:
-	constexpr pos_type pos_sentinel() const noexcept {
-		return (std::numeric_limits<pos_type>::max)();
-	}
-
-	void resize_indexes_if_needed(underlying_key_type k) {
-		if (k < _indexes.size()) {
-			return;
-		}
-
-		if (k == pos_sentinel()) {
-			fea::maybe_throw<std::out_of_range>(
-					__FUNCTION__, __LINE__, "maximum size reached");
-		}
-
-		_indexes.resize(size_t(k) + 1u, pos_sentinel());
-	}
-
 	template <class M>
 	std::pair<iterator, bool> minsert(
 			const key_type& k, M&& obj, bool assign_found = false) {
@@ -536,18 +489,15 @@ private:
 			return { it, false };
 		}
 
-		underlying_key_type mk = hasher{}(k);
-		resize_indexes_if_needed(mk);
-
-		_indexes[mk] = pos_type(_values.size());
+		_lookup.insert(k, _values.size());
 		_reverse_lookup.push_back(k);
 		_values.push_back(std::forward<M>(obj));
-
 		assert(_values.size() == _reverse_lookup.size());
 		return { std::prev(_values.end()), true };
 	}
 
-	std::vector<pos_type, pos_allocator_type> _indexes; // key -> position
+
+	detail::unsigned_lookup<Key, allocator_type> _lookup; // key -> position
 	std::vector<key_type, key_allocator_type> _reverse_lookup; // used in erase
 	std::vector<value_type, allocator_type> _values; // packed values
 };

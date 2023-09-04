@@ -9,6 +9,8 @@
 #include <vector>
 
 namespace {
+#define fail_msg "traits.cpp : failed test"
+
 TEST(traits, all_none_any) {
 	std::tuple<int, float, unsigned, short, double> all_numeric{};
 	std::tuple<std::string, std::function<void()>, std::vector<int>, int>
@@ -29,11 +31,11 @@ TEST(traits, all_none_any) {
 				constexpr bool one2
 						= fea::one_of_v<std::is_same<decltype(args), int>...>;
 
-				static_assert(all, "traits.cpp : failed test");
-				static_assert(!none, "traits.cpp : failed test");
-				static_assert(any, "traits.cpp : failed test");
-				static_assert(!one, "traits.cpp : failed test");
-				static_assert(one2, "traits.cpp : failed test");
+				static_assert(all, fail_msg);
+				static_assert(!none, fail_msg);
+				static_assert(any, fail_msg);
+				static_assert(!one, fail_msg);
+				static_assert(one2, fail_msg);
 			},
 			all_numeric);
 
@@ -48,10 +50,10 @@ TEST(traits, all_none_any) {
 				constexpr bool one
 						= fea::one_of_v<std::is_arithmetic<decltype(args)>...>;
 
-				static_assert(!all, "traits.cpp : failed test");
-				static_assert(!none, "traits.cpp : failed test");
-				static_assert(any, "traits.cpp : failed test");
-				static_assert(one, "traits.cpp : failed test");
+				static_assert(!all, fail_msg);
+				static_assert(!none, fail_msg);
+				static_assert(any, fail_msg);
+				static_assert(one, fail_msg);
 			},
 			any_numeric);
 
@@ -66,10 +68,10 @@ TEST(traits, all_none_any) {
 				constexpr bool one
 						= fea::one_of_v<std::is_arithmetic<decltype(args)>...>;
 
-				static_assert(!all, "traits.cpp : failed test");
-				static_assert(none, "traits.cpp : failed test");
-				static_assert(!any, "traits.cpp : failed test");
-				static_assert(!one, "traits.cpp : failed test");
+				static_assert(!all, fail_msg);
+				static_assert(none, fail_msg);
+				static_assert(!any, fail_msg);
+				static_assert(!one, fail_msg);
 			},
 			none_numeric);
 }
@@ -98,17 +100,13 @@ using has_args_func
 
 // detect if classes have the functions you want.
 TEST(traits, is_detected) {
-	static_assert(fea::is_detected_v<has_noargs_func, potato>,
-			"traits.cpp : failed test");
+	static_assert(fea::is_detected_v<has_noargs_func, potato>, fail_msg);
 
-	static_assert(fea::is_detected_v<has_args_func, potato>,
-			"traits.cpp : failed test");
+	static_assert(fea::is_detected_v<has_args_func, potato>, fail_msg);
 
-	static_assert(!fea::is_detected_v<has_noargs_func, tomato>,
-			"traits.cpp : failed test");
+	static_assert(!fea::is_detected_v<has_noargs_func, tomato>, fail_msg);
 
-	static_assert(!fea::is_detected_v<has_args_func, tomato>,
-			"traits.cpp : failed test");
+	static_assert(!fea::is_detected_v<has_args_func, tomato>, fail_msg);
 }
 
 enum class an_enum { a, b, c };
@@ -117,59 +115,50 @@ TEST(traits, misc) {
 	static_assert(
 			std::is_same<fea::remove_nested_const_t<std::pair<const int, int>>,
 					std::pair<int, int>>::value,
-			"traits.cpp : test failed");
+			fail_msg);
 
-	static_assert(fea::is_first_const_v<std::pair<const int, int>>,
-			"traits.cpp : test failed");
-	static_assert(!fea::is_first_const_v<std::pair<int, const int>>,
-			"traits.cpp : test failed");
+	static_assert(fea::is_first_const_v<std::pair<const int, int>>, fail_msg);
+	static_assert(!fea::is_first_const_v<std::pair<int, const int>>, fail_msg);
 
-	static_assert(
-			fea::is_container_v<std::vector<int>>, "traits.cpp : test failed");
-	static_assert(
-			!fea::is_container_v<std::tuple<int>>, "traits.cpp : test failed");
+	static_assert(fea::is_container_v<std::vector<int>>, fail_msg);
+	static_assert(!fea::is_container_v<std::tuple<int>>, fail_msg);
 
-	static_assert(
-			fea::is_tuple_like_v<std::tuple<int>>, "traits.cpp : test failed");
-	static_assert(fea::is_tuple_like_v<std::pair<int, int>>,
-			"traits.cpp : test failed");
-	static_assert(!fea::is_tuple_like_v<std::vector<int>>,
-			"traits.cpp : test failed");
+	static_assert(fea::is_tuple_like_v<std::tuple<int>>, fail_msg);
+	static_assert(fea::is_tuple_like_v<std::pair<int, int>>, fail_msg);
+	static_assert(!fea::is_tuple_like_v<std::vector<int>>, fail_msg);
 
-	static_assert(
-			fea::is_contiguous_v<std::vector<int>>, "traits.cpp : test failed");
-	static_assert(
-			!fea::is_contiguous_v<std::set<int>>, "traits.cpp : test failed");
+	static_assert(fea::is_contiguous_v<std::vector<int>>, fail_msg);
+	static_assert(!fea::is_contiguous_v<std::set<int>>, fail_msg);
 
-	static_assert(fea::is_same_template_v<std::vector, std::vector>,
-			"traits.cpp : test failed");
-	static_assert(!fea::is_same_template_v<std::vector, std::set>,
-			"traits.cpp : test failed");
+	static_assert(fea::is_same_template_v<std::vector, std::vector>, fail_msg);
+	static_assert(!fea::is_same_template_v<std::vector, std::set>, fail_msg);
 
-	static_assert(fea::is_template_template<std::vector<int>>::value,
-			"traits.cpp : test failed");
-	static_assert(!fea::is_template_template<potato>::value,
-			"traits.cpp : test failed");
+	static_assert(fea::is_template_template<std::vector<int>>::value, fail_msg);
+	static_assert(!fea::is_template_template<potato>::value, fail_msg);
 
-	static_assert(fea::is_template_template_v<std::vector<int>>,
-			"traits.cpp : test failed");
-	static_assert(
-			!fea::is_template_template_v<potato>, "traits.cpp : test failed");
+	static_assert(fea::is_template_template_v<std::vector<int>>, fail_msg);
+	static_assert(!fea::is_template_template_v<potato>, fail_msg);
 
-	static_assert(
-			fea::is_static_castable_v<int, float>, "traits.cpp : test failed");
-	static_assert(!fea::is_static_castable_v<std::string, float>,
-			"traits.cpp : test failed");
-	static_assert(fea::is_static_castable_v<an_enum, int>,
-			"traits.cpp : test failed");
-	static_assert(fea::is_static_castable_v<int, an_enum>,
-			"traits.cpp : test failed");
+	static_assert(fea::is_static_castable_v<int, float>, fail_msg);
+	static_assert(!fea::is_static_castable_v<std::string, float>, fail_msg);
+	static_assert(fea::is_static_castable_v<an_enum, int>, fail_msg);
+	static_assert(fea::is_static_castable_v<int, an_enum>, fail_msg);
+
+#if FEA_CPP17
+	auto throw_l = [](int&, const double&) { return 0; };
+	auto nothrow_l = [](int&, const double&) noexcept { return 0; };
+
+	static_assert(!fea::is_noexcept_v<decltype(throw_l), int&, const double&>,
+			fail_msg);
+	static_assert(fea::is_noexcept_v<decltype(nothrow_l), int&, const double&>,
+			fail_msg);
+#endif
 }
 
 TEST(traits, front_back_t) {
 	static_assert(std::is_same<fea::front_t<int, double, float>, int>::value,
-			"traits.cpp : test failed");
+			fail_msg);
 	static_assert(std::is_same<fea::back_t<int, double, float>, float>::value,
-			"traits.cpp : test failed");
+			fail_msg);
 }
 } // namespace
