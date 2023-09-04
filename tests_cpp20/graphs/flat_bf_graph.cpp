@@ -204,41 +204,80 @@ TEST(flat_bf_graph, basics) {
 	EXPECT_TRUE(g.empty());
 	EXPECT_EQ(g.size(), 0);
 	EXPECT_EQ(g.breadth_size(), 0);
+	EXPECT_EQ(g.begin(), g.end());
+	EXPECT_EQ(g.cbegin(), g.cend());
+	EXPECT_EQ(g.key_begin(), g.key_end());
+	EXPECT_EQ(g.key_cbegin(), g.key_cend());
 
-	{
-		EXPECT_EQ(g.begin(), g.end());
-		EXPECT_EQ(g.cbegin(), g.cend());
-		EXPECT_EQ(g.key_begin(), g.key_end());
-		EXPECT_EQ(g.key_cbegin(), g.key_cend());
+	g.insert(0u, node{});
+	g.insert(1u, node{});
+	g.insert(2u, node{});
+	EXPECT_FALSE(g.empty());
+	EXPECT_EQ(g.size(), 3);
+	EXPECT_EQ(g.breadth_size(), 1);
+	EXPECT_EQ(g.breadth_size(0), 3);
+	for (unsigned i = 0; i < 3; ++i) {
+		EXPECT_EQ(g.breadth_keys(0)[i], i);
 	}
+	EXPECT_EQ(g.begin() + 3, g.end());
+	EXPECT_EQ(g.cbegin() + 3, g.cend());
+	EXPECT_EQ(g.key_begin() + 3, g.key_end());
+	EXPECT_EQ(g.key_cbegin() + 3, g.key_cend());
 
-	{
-		g.insert(0u, node{});
-		g.insert(1u, node{});
-		g.insert(2u, node{});
-		EXPECT_FALSE(g.empty());
-		EXPECT_EQ(g.size(), 3);
-		EXPECT_EQ(g.breadth_size(), 1);
-		EXPECT_EQ(g.breadth_size(0), 3);
-		for (unsigned i = 0; i < 3; ++i) {
-			EXPECT_EQ(g.breadth_keys(0)[i], i);
-		}
+	g.clear();
+	EXPECT_TRUE(g.empty());
+	EXPECT_EQ(g.size(), 0);
+	EXPECT_EQ(g.begin(), g.end());
+	EXPECT_EQ(g.cbegin(), g.cend());
+	EXPECT_EQ(g.key_begin(), g.key_end());
+	EXPECT_EQ(g.key_cbegin(), g.key_cend());
+	EXPECT_EQ(g.breadth_size(), 0);
+	// EXPECT_EQ(g.breadth_size(0), 0);
 
-		EXPECT_EQ(g.begin() + 3, g.end());
-		EXPECT_EQ(g.cbegin() + 3, g.cend());
-		EXPECT_EQ(g.key_begin() + 3, g.key_end());
-		EXPECT_EQ(g.key_cbegin() + 3, g.key_cend());
+	g.insert(std::initializer_list<unsigned>{ 0u, 2u, 4u },
+			std::vector<node>{ { 0 }, { 1 }, { 2 } });
 
-		g.clear();
-		EXPECT_TRUE(g.empty());
-		EXPECT_EQ(g.size(), 0);
-		EXPECT_EQ(g.begin(), g.end());
-		EXPECT_EQ(g.cbegin(), g.cend());
-		EXPECT_EQ(g.key_begin(), g.key_end());
-		EXPECT_EQ(g.key_cbegin(), g.key_cend());
-		EXPECT_EQ(g.breadth_size(), 0);
-		// EXPECT_EQ(g.breadth_size(0), 0);
+	EXPECT_FALSE(g.empty());
+	EXPECT_EQ(g.size(), 3);
+	EXPECT_EQ(g.breadth_size(), 1);
+	EXPECT_EQ(g.breadth_size(0), 3);
+	for (unsigned i = 0; i < 3; ++i) {
+		EXPECT_EQ(g.breadth_keys(0)[i], i * 2);
 	}
+	EXPECT_EQ(g.begin() + 3, g.end());
+	EXPECT_EQ(g.cbegin() + 3, g.cend());
+	EXPECT_EQ(g.key_begin() + 3, g.key_end());
+	EXPECT_EQ(g.key_cbegin() + 3, g.key_cend());
+
+	g.erase(0u);
+	EXPECT_FALSE(g.empty());
+	EXPECT_EQ(g.size(), 2);
+	EXPECT_EQ(g.breadth_size(), 1);
+	EXPECT_EQ(g.breadth_size(0), 2);
+	for (unsigned i = 0; i < 2; ++i) {
+		EXPECT_EQ(g.breadth_keys(0)[i], (i + 1) * 2);
+	}
+	EXPECT_EQ(g.begin() + 2, g.end());
+	EXPECT_EQ(g.cbegin() + 2, g.cend());
+	EXPECT_EQ(g.key_begin() + 2, g.key_end());
+	EXPECT_EQ(g.key_cbegin() + 2, g.key_cend());
+
+	// g.erase(std::initializer_list<unsigned>{ 2u, 4u });
+
+	// g.clear();
+	// EXPECT_TRUE(g.empty());
+	// EXPECT_EQ(g.size(), 0);
+	// EXPECT_EQ(g.begin(), g.end());
+	// EXPECT_EQ(g.cbegin(), g.cend());
+	// EXPECT_EQ(g.key_begin(), g.key_end());
+	// EXPECT_EQ(g.key_cbegin(), g.key_cend());
+	// EXPECT_EQ(g.breadth_size(), 0);
+	//  EXPECT_EQ(g.breadth_size(0), 0);
+}
+
+TEST(flat_bf_graph, insertion) {
+	fea::flat_bf_graph<unsigned, node> g;
+	std::unordered_map<unsigned, node> expecter;
 
 	{
 		unsigned k = 0u;
@@ -653,9 +692,6 @@ TEST(flat_bf_graph, basics) {
 			EXPECT_EQ(values[i], expecter.at(keys[i]));
 		}
 	}
-
-	// g.insert(std::initializer_list<unsigned>{ 0u, 2u, 4u },
-	//		std::vector<int>{ 0, 1, 2 });
 }
 
 TEST(flat_bf_graph, offsets) {

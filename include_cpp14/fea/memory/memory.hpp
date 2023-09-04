@@ -247,12 +247,12 @@ constexpr OutputIt copy_or_move_backward(
 
 // inline size_t page_size()
 //{
-//#if FEA_WINDOWS
+// #if FEA_WINDOWS
 //        SYSTEM_INFO SystemInfo;
 //        GetSystemInfo(&SystemInfo);
 //        return SystemInfo.dwAllocationGranularity;
-//#else
+// #else
 //        return sysconf(_SC_PAGE_SIZE);
-//#endif
+// #endif
 //}
 } // namespace fea
