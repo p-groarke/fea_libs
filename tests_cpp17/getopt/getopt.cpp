@@ -1197,4 +1197,32 @@ TEST(fea_getopt, basics) {
 		}
 	}
 }
+
+TEST(fea_getopt, always_execute) {
+	bool executed1 = false;
+	bool executed2 = false;
+
+	fea::get_opt<char> opt;
+	opt.add_default_arg_option(
+			"testme",
+			[&](std::string&&) {
+				executed1 = true;
+				return true;
+			},
+			"testme", "good", 't', true);
+	opt.add_default_arg_option(
+			"testme2",
+			[&](std::string&&) {
+				executed2 = true;
+				return true;
+			},
+			"testme2", "good", 'b', false);
+	opt.no_options_is_ok();
+
+	const char* argv[] = { "bla" };
+	bool success = opt.parse_options(1, argv);
+	EXPECT_TRUE(success);
+	EXPECT_TRUE(executed1);
+	EXPECT_FALSE(executed2);
+}
 } // namespace
