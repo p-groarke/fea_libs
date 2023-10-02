@@ -366,4 +366,48 @@ template <class T>
 FEA_NODISCARD constexpr T stars_and_bars_zero(T n, T k) {
 	return binomial_coeff(n + k - 1, k - 1);
 }
+
+// Returns the percentage of v, given the range [a, b].
+template <class T>
+T percentage(const T& v, const T& a, const T& b) {
+	return (v - a) / (b - a);
+}
+
+// Linearly interpolates between [a, b], given per percentage.
+template <class T>
+T lerp(const T& per, const T& a, const T& b) {
+	return a + per * (b - a);
+}
+
+// Linearly interpolates between [to_a, to_b], given v a value between [from_a,
+// from_b].
+template <class T>
+T lerp(const T& v, const T& from_a, const T& from_b, const T& to_a,
+		const T& to_b) {
+	T per = fea::percentage(v, from_a, from_b);
+	return fea::lerp(per, to_a, to_b);
+}
+
+// Returns magnitude of vector.
+// TODO : variadic
+template <class T>
+T magnitude(const T& x, const T& y) {
+	return std::sqrt(x * x + y * y);
+}
+
+// Normalizes vector.
+template <class T>
+// TODO : variadic
+void normalize(T& x, T& y) {
+	T mag = magnitude(x, y);
+	x /= mag;
+	y /= mag;
+}
+
+// For ints and unsigned ints, divides with proper rounding.
+template <class T>
+constexpr T divide_round(const T& dividend, const T& divisor) {
+	return (dividend + (divisor - T(1))) / divisor;
+}
+
 } // namespace fea

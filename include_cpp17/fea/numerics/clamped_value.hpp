@@ -33,8 +33,13 @@
 
 #pragma once
 #include "fea/numerics/numerics.hpp"
+#include "fea/utils/platform.hpp"
 
 #include <cassert>
+
+#if defined(FEA_CPP20)
+#include <format> // Hook up std::formatter.
+#endif
 
 /*
 clamped_values clamps your fundamental types to a
@@ -54,23 +59,22 @@ template <class T>
 struct clamp_v<T> {
 	using value_type = T;
 
-	clamp_v() = default;
-	~clamp_v() = default;
-
-	clamp_v(T minimum, T maximum)
+	constexpr clamp_v(T minimum, T maximum)
 			: _minimum(minimum)
 			, _maximum(maximum)
 			, _value(minimum) {
 		assert(_minimum <= _maximum);
 	}
 
-	clamp_v(T value, T minimum, T maximum)
+	constexpr clamp_v(T value, T minimum, T maximum)
 			: _minimum(minimum)
 			, _maximum(maximum)
 			, _value(std::clamp(value, _minimum, _maximum)) {
 		assert(_minimum <= _maximum);
 	}
 
+	constexpr clamp_v() = default;
+	~clamp_v() = default;
 	clamp_v(const clamp_v&) = default;
 	clamp_v(clamp_v&&) noexcept = default;
 	clamp_v& operator=(const clamp_v&) = default;
@@ -251,10 +255,12 @@ struct clamp_v<T, Min, Max> {
 	static_assert(minimum_v < maximum_v,
 			"clamp_v : Minimum value must be less than Maximum.");
 
-	clamp_v(T value)
+	constexpr clamp_v(T value)
 			: _value(std::clamp(value, minimum_v, maximum_v)) {
 	}
 
+	constexpr clamp_v() = default;
+	~clamp_v() = default;
 	clamp_v(const clamp_v&) = default;
 	clamp_v(clamp_v&&) noexcept = default;
 	clamp_v& operator=(const clamp_v&) = default;
@@ -399,3 +405,16 @@ using clamped_value = clamp_v<T>;
 // template <class T, T Min, T Max>
 // using clamped_value = clamp_v<T, Min, Max>;
 } // namespace fea
+
+
+#if defined(FEA_CPP20)
+// Enable direct use in std::format.
+template <class T, T... Ts, class CharT>
+struct std::formatter<fea::clamp_v<T, Ts...>, CharT>
+		: std::formatter<T, CharT> {
+	template <class FormatContext>
+	auto format(const fea::clamp_v<T, Ts...>& v, FormatContext& fc) const {
+		return std::formatter<T, CharT>::format(v.get(), fc);
+	}
+};
+#endif

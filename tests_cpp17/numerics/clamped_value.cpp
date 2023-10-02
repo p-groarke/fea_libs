@@ -1,6 +1,11 @@
 #include <fea/meta/tuple.hpp>
 #include <fea/numerics/clamped_value.hpp>
+#include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
+
+#if defined(FEA_CPP20)
+#include <format>
+#endif
 
 namespace {
 TEST(clamped_value, basics) {
@@ -468,4 +473,20 @@ TEST(clamped_value, template_basics) {
 		EXPECT_EQ(v, v.minimum());
 	}
 }
+
+#if defined(FEA_CPP20)
+TEST(clamped_value, fmt) {
+	{
+		fea::clamp_v<int> v(42, 0, 100);
+		std::string str = std::format("{} happy", v);
+		EXPECT_EQ(str, "42 happy");
+	}
+
+	{
+		fea::clamp_v<int, 0, 100> v(42);
+		std::string str = std::format("{} happy", v);
+		EXPECT_EQ(str, "42 happy");
+	}
+}
+#endif
 } // namespace
