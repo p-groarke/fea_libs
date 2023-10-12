@@ -53,7 +53,8 @@ namespace fea {
 template <class T>
 struct is_bitmask : std::false_type {};
 
-#if FEA_CPP17
+// c++17, this file is included in platform so don't use macro.
+#if __cplusplus >= 201703L
 template <class T>
 inline constexpr bool is_bitmask_v = is_bitmask<T>::value;
 #else

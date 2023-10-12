@@ -12,6 +12,11 @@ namespace {
 constexpr unsigned sentinel = (std::numeric_limits<unsigned>::max)();
 unsigned counter = 0;
 
+template <class T>
+bool operator==(std::span<T> lhs, std::span<T> rhs) {
+	return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
+}
+
 #if FEA_MACOS
 template <class T, class A>
 constexpr auto operator<=>(
@@ -235,7 +240,7 @@ TEST(flat_bf_graph, basics) {
 	// EXPECT_EQ(g.breadth_size(0), 0);
 
 	g.insert(std::initializer_list<unsigned>{ 0u, 2u, 4u },
-			std::vector<node>{ { 0 }, { 1 }, { 2 } });
+			std::vector<node>{ { 0 }, { 2 }, { 4 } });
 
 	EXPECT_FALSE(g.empty());
 	EXPECT_EQ(g.size(), 3);
@@ -249,18 +254,43 @@ TEST(flat_bf_graph, basics) {
 	EXPECT_EQ(g.key_begin() + 3, g.key_end());
 	EXPECT_EQ(g.key_cbegin() + 3, g.key_cend());
 
+	// Add some children.
+	for (unsigned k = 0u; k < 6u; k += 2u) {
+		unsigned child_k = k + 6u;
+		g.insert(k, child_k, node{ child_k });
+		child_k = k + 7u;
+		g.insert(k, child_k, node{ child_k });
+	}
+	EXPECT_EQ(g.size(), 9);
+	EXPECT_EQ(g.breadth_size(), 2);
+	EXPECT_EQ(g.breadth_size(0), 3);
+	EXPECT_EQ(g.breadth_size(1), 6);
+
+	// asldkjf;
+	//  TODO : make this work, add the loop to erase (currently isn't deleting
+	//  children).
+
 	g.erase(0u);
 	EXPECT_FALSE(g.empty());
-	EXPECT_EQ(g.size(), 2);
-	EXPECT_EQ(g.breadth_size(), 1);
-	EXPECT_EQ(g.breadth_size(0), 2);
-	for (unsigned i = 0; i < 2; ++i) {
-		EXPECT_EQ(g.breadth_keys(0)[i], (i + 1) * 2);
+	EXPECT_EQ(g.size(), 6u);
+	EXPECT_EQ(g.breadth_size(), 2u);
+	EXPECT_EQ(g.breadth_size(0), 2u);
+	EXPECT_EQ(g.breadth_size(1), 4u);
+	{
+		std::vector<unsigned> got(
+				g.breadth_keys(0).begin(), g.breadth_keys(0).end());
+		std::vector<unsigned> expected{ 2u, 4u };
+		EXPECT_EQ(got, expected);
+
+		got = std::vector<unsigned>(
+				g.breadth_keys(1).begin(), g.breadth_keys(1).end());
+		expected = { 8u, 9u, 10u, 11u };
+		EXPECT_EQ(got, expected);
 	}
-	EXPECT_EQ(g.begin() + 2, g.end());
-	EXPECT_EQ(g.cbegin() + 2, g.cend());
-	EXPECT_EQ(g.key_begin() + 2, g.key_end());
-	EXPECT_EQ(g.key_cbegin() + 2, g.key_cend());
+	EXPECT_EQ(g.begin() + 6, g.end());
+	EXPECT_EQ(g.cbegin() + 6, g.cend());
+	EXPECT_EQ(g.key_begin() + 6, g.key_end());
+	EXPECT_EQ(g.key_cbegin() + 6, g.key_cend());
 
 	// g.erase(std::initializer_list<unsigned>{ 2u, 4u });
 

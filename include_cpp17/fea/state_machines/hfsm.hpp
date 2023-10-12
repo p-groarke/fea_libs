@@ -80,6 +80,10 @@ Callbacks :
 		You can use auto& to simplify your callback signature.
 		[](auto& mymachine){}
 
+		TODO : The LAST argument should be the fsm, not the first. This is
+		required to allow using member functions and passing the object pointer
+		as first argument.
+
 	- Pass your own types at the end of the fsm and fsm_state template.
 		These will be passed on to your callbacks when you call update or
 		trigger.

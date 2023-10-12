@@ -37,6 +37,12 @@
 #include <cstdint>
 
 namespace fea {
+//#define FEA_CPP20 0
+//#define FEA_CPP17 0
+//#define FEA_CPP14 0
+//#define FEA_CPP11 0
+//#define FEA_CPP98 0
+
 // Nicer way to check for C++ versions.
 #if __cplusplus >= 202002L
 #undef FEA_CPP20
