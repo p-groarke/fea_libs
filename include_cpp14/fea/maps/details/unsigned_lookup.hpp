@@ -42,14 +42,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace fea {
 namespace detail {
 
-// A flat unsigned lookup, to use in various maps and whatnot.
+// A flat unsigned lookup helper, used internally in various maps and whatnot.
+// This structure only takes care of ids and their indexes, it does not hold any
+// user data. You must synchronize the items according to this lookup yourself.
+
 template <class Key, class TAlloc = std::allocator<Key>>
 struct unsigned_lookup {
 	static_assert(std::is_unsigned<fea::detail::id_getter_t<Key>>::value,
 			"unsigned_map : key or id_getter return type must be unsigned "
 			"integer");
 
-	using hasher = fea::id_getter<Key>;
+	using hasher_type = fea::id_getter<Key>;
 	using underlying_key_type = fea::detail::id_getter_t<Key>;
 	using pos_type = underlying_key_type;
 	using pos_allocator_type = typename std::allocator_traits<
@@ -164,7 +167,7 @@ struct unsigned_lookup {
 	}
 
 
-	// Lookup
+	// Lookups, return the index of the item.
 	FEA_NODISCARD constexpr size_type at_prehashed(
 			underlying_key_type uk) const {
 		size_type ret = find_prehashed(uk, sentinel());
@@ -179,6 +182,7 @@ struct unsigned_lookup {
 		return at_prehashed(uk);
 	}
 
+	// Lookups, return the index of the item.
 	FEA_NODISCARD constexpr size_type at_unchecked_prehashed(
 			underlying_key_type uk) const noexcept {
 		assert(contains_prehashed(uk));
@@ -190,6 +194,7 @@ struct unsigned_lookup {
 		return at_unchecked_prehashed(uk);
 	}
 
+	// Lookups, return the index of the item.
 	// End size should be the size required so begin() + end_size == end().
 	FEA_NODISCARD constexpr size_type find_prehashed(
 			underlying_key_type uk, size_type end_size) const noexcept {
@@ -209,6 +214,7 @@ struct unsigned_lookup {
 		return find_prehashed(uk, end_size);
 	}
 
+	// Does key point to a valid item?
 	FEA_NODISCARD constexpr bool contains_prehashed(
 			underlying_key_type uk) const noexcept {
 		if (uk >= _indexes.size() || _indexes[uk] == sentinel()) {
@@ -235,7 +241,7 @@ struct unsigned_lookup {
 
 	FEA_NODISCARD static constexpr underlying_key_type hash(
 			const Key& k) noexcept {
-		return hasher{}(k);
+		return hasher_type{}(k);
 	}
 
 private:

@@ -408,13 +408,14 @@ using clamped_value = clamp_v<T>;
 
 
 #if FEA_CPP20
+namespace std {
 // Enable direct use in std::format.
 template <class T, T... Ts, class CharT>
-struct std::formatter<fea::clamp_v<T, Ts...>, CharT>
-		: std::formatter<T, CharT> {
+struct formatter<fea::clamp_v<T, Ts...>, CharT> : formatter<T, CharT> {
 	template <class FormatContext>
 	auto format(const fea::clamp_v<T, Ts...>& v, FormatContext& fc) const {
-		return std::formatter<T, CharT>::format(v.get(), fc);
+		return formatter<T, CharT>::format(v.get(), fc);
 	}
 };
+} // namespace std
 #endif

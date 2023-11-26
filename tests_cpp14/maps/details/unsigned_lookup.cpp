@@ -56,7 +56,7 @@ TEST(unsigned_lookup, basics) {
 		fea::detail::unsigned_lookup<size_t> ul;
 
 		using ul_t = std::decay_t<decltype(ul)>;
-		static_assert(std::is_same<typename ul_t::hasher,
+		static_assert(std::is_same<typename ul_t::hasher_type,
 							  fea::id_getter<size_t>>::value,
 				test_failed_msg);
 		static_assert(
@@ -127,7 +127,7 @@ TEST(unsigned_lookup, basics) {
 		fea::detail::unsigned_lookup<my_id> ul;
 
 		using ul_t = std::decay_t<decltype(ul)>;
-		static_assert(std::is_same<typename ul_t::hasher,
+		static_assert(std::is_same<typename ul_t::hasher_type,
 							  fea::id_getter<my_id>>::value,
 				test_failed_msg);
 		static_assert(std::is_same<typename ul_t::underlying_key_type,
