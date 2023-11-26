@@ -123,8 +123,8 @@ struct user_option {
 			, opt_type(t)
 			, one_arg_func(std::move(func))
 			, description(std::move(help))
-			, default_val(std::move(default_val))
-			, always_execute(always_execute) {
+			, always_execute(always_execute)
+			, default_val(std::move(default_val)) {
 	}
 	user_option(string&& longopt, CharT shortopt, user_option_e t,
 			std::function<bool(std::vector<string>&&)> func, string&& help)
