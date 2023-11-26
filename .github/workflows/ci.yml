@@ -82,7 +82,8 @@ jobs:
       matrix:
         build_type: [Release, Debug]
         config:
-          - { os: macos-13, xcode_ver: "15.0.1", fea_ver: "-DFEA_CPP20=On" } # tbd, xcode has bad c++ support
+          - { os: macos-13, xcode_ver: "15.0.1", fea_ver: "-DFEA_CPP17=On" } # no c++20
+          - { os: macos-13, xcode_ver: "15.0.1", fea_ver: "-DFEA_CPP14=On" }
           - { os: macos-13, xcode_ver: "14.3.1", fea_ver: "-DFEA_CPP17=On" }
           - { os: macos-13, xcode_ver: "14.3.1", fea_ver: "-DFEA_CPP14=On" }
           - { os: macos-12, xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP17=On" }

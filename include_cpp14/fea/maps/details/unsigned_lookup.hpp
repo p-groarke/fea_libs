@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fea/utils/throw.hpp"
 
 #include <algorithm>
+#include <limits>
 #include <memory>
 #include <type_traits>
 #include <vector>
