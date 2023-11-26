@@ -46,7 +46,7 @@
 namespace fea {
 // Returns the executable's directory. You must provide argv[0].
 inline std::filesystem::path executable_dir(const char* argv0) {
-#if defined(FEA_WINDOWS)
+#if FEA_WINDOWS
 	return std::filesystem::absolute(argv0).remove_filename();
 #else
 	std::filesystem::path c_path = std::filesystem::current_path();
@@ -63,7 +63,7 @@ inline std::filesystem::path executable_dir(const char* argv0) {
 #endif
 }
 inline std::filesystem::path executable_dir(const wchar_t* argv0) {
-#if defined(FEA_WINDOWS)
+#if FEA_WINDOWS
 	return std::filesystem::absolute(argv0).remove_filename();
 #else
 	std::filesystem::path c_path = std::filesystem::current_path();

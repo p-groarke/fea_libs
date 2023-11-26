@@ -3,7 +3,7 @@
 #include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 
-#if defined(FEA_CPP20)
+#if FEA_CPP20
 #include <format>
 #endif
 
@@ -484,7 +484,7 @@ TEST(clamped_value, template_basics) {
 	}
 }
 
-#if defined(FEA_CPP20)
+#if FEA_CPP20
 TEST(clamped_value, fmt) {
 	{
 		fea::clamp_v<int> v(42, 0, 100);

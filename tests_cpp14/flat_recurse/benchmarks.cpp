@@ -1,5 +1,5 @@
 ﻿#include <fea/utils/platform.hpp>
-#if defined(FEA_RELEASE) && defined(FEA_BENCHMARKS)
+#if FEA_RELEASE && defined(FEA_BENCHMARKS)
 #include "global.hpp"
 #include "small_obj.hpp"
 

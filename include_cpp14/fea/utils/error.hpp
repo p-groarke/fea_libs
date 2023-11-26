@@ -73,7 +73,7 @@ inline void maybe_throw(
 	fea::print_error_message(func_name, line, ec);
 	assert(false);
 
-#if !defined(FEA_NOTHROW)
+#if !FEA_NOTHROW
 	std::string msg
 			= "Error Code " + std::to_string(ec.value()) + ". " + ec.message();
 	throw std::system_error{ ec,

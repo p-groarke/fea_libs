@@ -50,7 +50,7 @@ TEST(utility_ai, basics) {
 		EXPECT_EQ(pass_func.predicates()[0], upred::always_true);
 		EXPECT_EQ(pass_func.predicates()[1], upred::always_false);
 
-#if FEA_DEBUG || defined(FEA_NOTHROW)
+#if FEA_DEBUG || FEA_NOTHROW
 		EXPECT_DEATH(pass_func.add_predicate(upred::always_true), "");
 #else
 		EXPECT_THROW(pass_func.add_predicate(upred::always_true),

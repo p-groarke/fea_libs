@@ -42,16 +42,16 @@
 
 // Define FEA_CODEPAGE_CONVERSIONS to get windows (only) codepage conversions.
 // Those are, helper functions for your current codepage to std::wstring.
-#if defined(FEA_WINDOWS) && defined(FEA_CODEPAGE_CONVERSIONS)
+#if FEA_WINDOWS && defined(FEA_CODEPAGE_CONVERSIONS)
 #include <windows.h>
 #endif
 
 // The standard doesn't provide codecvt equivalents. Use the old
 // functionality until they do.
-#if defined(FEA_WINDOWS)
+#if FEA_WINDOWS
 #pragma warning(push)
 #pragma warning(disable : 4996)
-#elif defined(FEA_MACOS)
+#elif FEA_MACOS
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #endif
@@ -396,7 +396,7 @@ inline std::string iso_8859_1_to_utf8(const std::string& str) {
 }
 
 
-#if defined(FEA_WINDOWS) && defined(FEA_CODEPAGE_CONVERSIONS)
+#if FEA_WINDOWS && defined(FEA_CODEPAGE_CONVERSIONS)
 // Provide a code page, for example CP_ACP
 inline std::wstring codepage_to_utf16_w(
 		UINT code_page, const std::string& str) {
@@ -428,9 +428,9 @@ inline std::string utf16_to_current_codepage(const std::wstring& str) {
 }
 #endif
 
-#if defined(FEA_WINDOWS)
+#if FEA_WINDOWS
 #pragma warning(pop)
-#elif defined(FEA_MACOS)
+#elif FEA_MACOS
 #pragma clang diagnostic pop
 #endif
 } // namespace fea

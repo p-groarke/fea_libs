@@ -37,7 +37,7 @@
 
 #include <cassert>
 
-#if defined(FEA_CPP20)
+#if FEA_CPP20
 #include <format> // Hook up std::formatter.
 #endif
 
@@ -407,7 +407,7 @@ using clamped_value = clamp_v<T>;
 } // namespace fea
 
 
-#if defined(FEA_CPP20)
+#if FEA_CPP20
 // Enable direct use in std::format.
 template <class T, T... Ts, class CharT>
 struct std::formatter<fea::clamp_v<T, Ts...>, CharT>

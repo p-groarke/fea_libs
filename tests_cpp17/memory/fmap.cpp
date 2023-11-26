@@ -54,7 +54,7 @@ TEST(fmap, basics) {
 
 			EXPECT_NO_THROW(fea::to_sv(ifm));
 
-#if FEA_DEBUG || defined(FEA_NOTHROW)
+#if FEA_DEBUG || FEA_NOTHROW
 			EXPECT_DEATH(fea::to_span<short>(ifm), "");
 			EXPECT_DEATH(fea::to_span<int>(ifm), "");
 			EXPECT_DEATH(fea::to_span<int64_t>(ifm), "");
@@ -151,7 +151,7 @@ TEST(fmap, basics) {
 
 			EXPECT_NO_THROW(fea::to_sv(ofm));
 
-#if FEA_DEBUG || defined(FEA_NOTHROW)
+#if FEA_DEBUG || FEA_NOTHROW
 			EXPECT_DEATH(fea::to_span<short>(ofm), "");
 			EXPECT_DEATH(fea::to_span<int>(ofm), "");
 			EXPECT_DEATH(fea::to_span<int64_t>(ofm), "");

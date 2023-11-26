@@ -67,7 +67,7 @@ struct next_bigger<unsigned short> {
 	using type = unsigned int;
 };
 
-#if defined(FEA_32BIT)
+#if FEA_32BIT
 template <>
 struct next_bigger<int> {
 	using type = int;
@@ -82,7 +82,7 @@ struct next_bigger<float> {
 	using type = float;
 };
 
-#elif defined(FEA_64BIT)
+#elif FEA_64BIT
 template <>
 struct next_bigger<int> {
 	using type = long long;

@@ -6,7 +6,7 @@
 #include <tbb/parallel_for.h>
 
 namespace {
-#if FEA_DEBUG || defined(FEA_NOTHROW)
+#if FEA_DEBUG || FEA_NOTHROW
 #define FEA_EXPECT_THROW(t, e) EXPECT_DEATH(t, "")
 #else
 #define FEA_EXPECT_THROW(t, e) EXPECT_THROW(t, e)

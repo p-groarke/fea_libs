@@ -1,6 +1,6 @@
 ﻿#include <fea/utils/platform.hpp>
 
-#if defined(FEA_WINDOWS) && (_MSC_VER >= 1920 /* VS 2019 */)
+#if FEA_WINDOWS && FEA_VS2019
 // Demo of VS2019 hack.
 // No need for macros since it supports static constexpr variables in functions.
 

@@ -27,7 +27,7 @@ TEST(math, basics) {
 	static_assert(
 			fea::stars_and_bars_pos(7, 3) == 15, "math.cpp : unit test failed");
 
-#if defined(FEA_64BIT)
+#if FEA_64BIT
 	// Overflows on 32 bits.
 	EXPECT_EQ(fea::stars_and_bars_zero(size_t(10), size_t(4)), size_t(286));
 #endif

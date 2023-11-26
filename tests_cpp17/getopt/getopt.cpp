@@ -6,7 +6,7 @@
 #include <gtest/gtest.h>
 #include <random>
 
-#if defined(FEA_WINDOWS)
+#if FEA_WINDOWS
 #include <windows.h> // for CP_UTF8
 #endif
 
@@ -986,7 +986,7 @@ void add_options(fea::get_opt<CharT, PrintFunc>& opts) {
 
 TEST(fea_getopt, printing) {
 
-#if defined(FEA_WINDOWS)
+#if FEA_WINDOWS
 	SetConsoleCP(CP_UTF8);
 	SetConsoleOutputCP(CP_UTF8);
 #endif

@@ -112,7 +112,7 @@ constexpr bool not_floating() {
 	return !std::is_floating_point_v<T> && !std::is_floating_point_v<U>;
 }
 
-#if defined(FEA_WINDOWS)
+#if FEA_WINDOWS
 // As far as I can tell, this is a problem with overzealous MSVC.
 // It doesn't take into consideration the runtime edge cases that are
 // eliminated. Gcc and clang are happy.
@@ -160,7 +160,7 @@ template <class Output, class Input>
 	return Output(input);
 }
 
-#if defined(FEA_WINDOWS)
+#if FEA_WINDOWS
 #pragma warning(pop)
 #endif
 } // namespace fea
