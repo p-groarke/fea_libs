@@ -328,9 +328,15 @@ TEST(clamped_value, template_basics) {
 	}
 
 	{
+#if FEA_CPP20
 		std::tuple<char, int8_t, int16_t, int32_t, int64_t, uint8_t, uint16_t,
 				uint32_t, uint64_t, float, double, long double>
 				test_types{};
+#else
+		std::tuple<char, int8_t, int16_t, int32_t, int64_t, uint8_t, uint16_t,
+				uint32_t, uint64_t>
+				test_types{};
+#endif
 
 		// std::tuple<uint8_t, uint16_t, uint32_t, uint64_t, float, double,
 		//		long double>
