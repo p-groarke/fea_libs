@@ -145,9 +145,9 @@ jobs:
         build_type: [Release, Debug]
         # build_arch: [x64, x86]
         config:
-          - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP20=On" } # bad c++20 support?
-          - { os: ubuntu-20.04, gcc_ver: "11", fea_ver: "-DFEA_CPP17=On" } # no c++20
-          - { os: ubuntu-20.04, gcc_ver: "11", fea_ver: "-DFEA_CPP14=On" }
+          # - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP20=On" } # bad c++20 support? onetbb doesn't compile
+          - { os: ubuntu-20.04, gcc_ver: "12", fea_ver: "-DFEA_CPP17=On" } # no c++20
+          - { os: ubuntu-20.04, gcc_ver: "11", fea_ver: "-DFEA_CPP14=On" } # just to double check
           - { os: ubuntu-20.04, gcc_ver: "10", fea_ver: "-DFEA_CPP17=On" }
           - { os: ubuntu-20.04, gcc_ver: "10", fea_ver: "-DFEA_CPP14=On" }
           - { os: ubuntu-20.04, gcc_ver: "9", fea_ver: "-DFEA_CPP17=On" }
