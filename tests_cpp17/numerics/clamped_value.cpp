@@ -338,7 +338,7 @@ TEST(clamped_value, template_basics) {
 
 		fea::tuple_for_each(
 				[](auto test) {
-					using T = decltype(test);
+					using T = std::decay_t<decltype(test)>;
 					constexpr bool is_unsigned = std::is_unsigned_v<T>;
 
 					{

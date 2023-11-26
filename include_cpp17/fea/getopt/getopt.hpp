@@ -121,9 +121,9 @@ struct user_option {
 			: long_name(longopt)
 			, short_name(shortopt)
 			, opt_type(t)
+			, always_execute(always_execute)
 			, one_arg_func(std::move(func))
 			, description(std::move(help))
-			, always_execute(always_execute)
 			, default_val(std::move(default_val)) {
 	}
 	user_option(string&& longopt, CharT shortopt, user_option_e t,
