@@ -39,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cassert>
 #include <cstdint>
 #include <functional>
+#include <limits>
 #include <tbb/task_group.h>
 #include <type_traits>
 #include <unordered_map>
