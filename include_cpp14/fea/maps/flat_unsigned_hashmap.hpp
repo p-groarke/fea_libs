@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
 #include <cassert>
+#include <limits>
 #include <numeric>
 #include <type_traits>
 #include <utility>
@@ -221,8 +222,8 @@ public:
 	flat_unsigned_hashmap(const flat_unsigned_hashmap&) = default;
 	flat_unsigned_hashmap(flat_unsigned_hashmap&&) noexcept = default;
 	flat_unsigned_hashmap& operator=(const flat_unsigned_hashmap&) = default;
-	flat_unsigned_hashmap& operator=(
-			flat_unsigned_hashmap&&) noexcept = default;
+	flat_unsigned_hashmap& operator=(flat_unsigned_hashmap&&) noexcept
+			= default;
 
 	explicit flat_unsigned_hashmap(size_t reserve_count) {
 		reserve(reserve_count);
