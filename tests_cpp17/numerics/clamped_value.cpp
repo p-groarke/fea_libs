@@ -342,7 +342,9 @@ TEST(clamped_value, template_basics) {
 					constexpr bool is_unsigned = std::is_unsigned_v<T>;
 
 					{
-						fea::clamp_v<T, T(0), T(10)> v(T(5));
+						constexpr T min = T(0);
+						constexpr T max = T(10);
+						fea::clamp_v<T, min, max> v(T(5));
 
 						v -= (std::numeric_limits<T>::max)();
 						EXPECT_EQ(v, v.minimum());
@@ -366,7 +368,9 @@ TEST(clamped_value, template_basics) {
 						}
 					}
 					{
-						fea::clamp_v<T, T(5), T(15)> v(T(10));
+						constexpr T min = T(5);
+						constexpr T max = T(15);
+						fea::clamp_v<T, min, max> v(T(10));
 
 						v -= (std::numeric_limits<T>::max)();
 						EXPECT_EQ(v, v.minimum());
@@ -392,7 +396,9 @@ TEST(clamped_value, template_basics) {
 
 					if constexpr (!is_unsigned) {
 						{
-							fea::clamp_v<T, T(-20), T(20)> v(T(0));
+							constexpr T min = T(-20);
+							constexpr T max = T(20);
+							fea::clamp_v<T, min, max> v(T(0));
 
 							v -= (std::numeric_limits<T>::max)();
 							EXPECT_EQ(v, v.minimum());
@@ -407,7 +413,9 @@ TEST(clamped_value, template_basics) {
 							EXPECT_EQ(v, v.minimum());
 						}
 						{
-							fea::clamp_v<T, T(-20), T(0)> v(T(-10));
+							constexpr T min = T(-20);
+							constexpr T max = T(0);
+							fea::clamp_v<T, min, max> v(T(-10));
 
 							v -= (std::numeric_limits<T>::max)();
 							EXPECT_EQ(v, v.minimum());
@@ -422,7 +430,9 @@ TEST(clamped_value, template_basics) {
 							EXPECT_EQ(v, v.minimum());
 						}
 						{
-							fea::clamp_v<T, T(-20), T(-10)> v(T(-15));
+							constexpr T min = T(-20);
+							constexpr T max = T(-10);
+							fea::clamp_v<T, min, max> v(T(-15));
 
 							v -= (std::numeric_limits<T>::max)();
 							EXPECT_EQ(v, v.minimum());
