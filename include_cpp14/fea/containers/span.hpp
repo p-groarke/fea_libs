@@ -41,7 +41,7 @@ using span = std::span<T, Extent>;
 
 // Defining the operator== could cause issues.
 // You may disable these by defining FEA_DISABLE_SPAN_EQ.
-#if !defined(FEA_DISABLE_SPAN_EQ)
+#if !defined(FEA_DISABLE_SPAN_EQ_DEF)
 namespace std {
 template <class U>
 [[nodiscard]] constexpr bool operator==(span<U> lhs, span<U> rhs) {

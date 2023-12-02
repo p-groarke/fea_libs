@@ -60,7 +60,7 @@ data. The destructor will check you emptied the serializer.
 
 //#define FEA_THROW_MSG(x) std::string{ __FUNCTION__ } + " : " + x
 
-#if !defined(FEA_SERIALIZE_SIZE_T)
+#if !defined(FEA_SERIALIZE_SIZE_T_DEF)
 #define FEA_SERIALIZE_SIZE_T size_t
 #endif
 static_assert(std::is_unsigned_v<FEA_SERIALIZE_SIZE_T>,

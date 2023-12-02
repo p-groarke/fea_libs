@@ -130,12 +130,14 @@ FEA_INLINE_VAR constexpr size_t arch = 64;
 // Disables exceptions in classes that support it.
 // TODO : Review all classes that throw, make sure exceptions can be disabled,
 // or trigger build warning if they can't and this is set.
-#if defined(FEA_NOTHROW)
+#undef FEA_NOTHROW
+#define FEA_NOTHROW 0
+
+#if defined(FEA_NOTHROW_DEF)
 #undef FEA_NOTHROW
 #define FEA_NOTHROW 1
 FEA_INLINE_VAR constexpr bool nothrow_build = true;
 #else
-#define FEA_NOTHROW 0
 FEA_INLINE_VAR constexpr bool nothrow_build = false;
 #endif
 
