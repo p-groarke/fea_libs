@@ -30,6 +30,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/utils/platform.hpp"
+
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
@@ -53,7 +55,7 @@ class invalid_argument;
 class out_of_range;
 } // namespace std
 
-#if !defined(FEA_NOTHROW)
+#if !FEA_NOTHROW
 #include <stdexcept>
 #endif
 
@@ -84,7 +86,7 @@ inline void maybe_throw(
 	fea::print_error_message(func_name, line, message);
 	assert(false);
 
-#if !defined(FEA_NOTHROW)
+#if !FEA_NOTHROW
 	throw Ex{ std::string{ func_name } + "(" + std::to_string(line) + ")"
 		+ " : " + message };
 #else

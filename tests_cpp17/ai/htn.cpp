@@ -183,7 +183,7 @@ TEST(htn, basics) {
 
 	{
 		auto t = htn.make_task();
-#if defined(FEA_NOTHROW) || defined(FEA_DEBUG)
+#if FEA_NOTHROW || FEA_DEBUG
 		EXPECT_DEATH(htn.add_task<task::exist>(std::move(t)), "");
 #else
 		EXPECT_THROW(
@@ -199,7 +199,7 @@ TEST(htn, basics) {
 		EXPECT_FALSE(maction.has_effects());
 		EXPECT_FALSE(maction.has_expected_effects());
 
-#if defined(FEA_NOTHROW) || defined(FEA_DEBUG)
+#if FEA_NOTHROW || FEA_DEBUG
 		EXPECT_DEATH(maction.validate(), "");
 #else
 		EXPECT_THROW(maction.validate(), std::invalid_argument);
@@ -251,7 +251,7 @@ TEST(htn, basics) {
 		EXPECT_EQ(meth.subtasks().size(), 0u);
 		EXPECT_EQ(meth.predicates().size(), 0u);
 
-#if defined(FEA_NOTHROW) || defined(FEA_DEBUG)
+#if FEA_NOTHROW || FEA_DEBUG
 		EXPECT_DEATH(meth.validate(), "");
 #else
 		EXPECT_THROW(meth.validate(), std::invalid_argument);
@@ -289,7 +289,7 @@ TEST(htn, basics) {
 	{
 		fea::htn_task<method> task;
 		EXPECT_EQ(task.methods().size(), 0u);
-#if defined(FEA_NOTHROW) || defined(FEA_DEBUG)
+#if FEA_NOTHROW || FEA_DEBUG
 		EXPECT_DEATH(htn.validate(task::exist), "");
 		EXPECT_DEATH(task.validate(), "");
 #else

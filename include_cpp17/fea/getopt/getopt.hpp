@@ -117,10 +117,11 @@ struct user_option {
 	}
 	user_option(string&& longopt, CharT shortopt, user_option_e t,
 			std::function<bool(string&&)> func, string&& help,
-			string&& default_val)
+			string&& default_val, bool always_execute)
 			: long_name(longopt)
 			, short_name(shortopt)
 			, opt_type(t)
+			, always_execute(always_execute)
 			, one_arg_func(std::move(func))
 			, description(std::move(help))
 			, default_val(std::move(default_val)) {
@@ -138,6 +139,7 @@ struct user_option {
 	string long_name;
 	CharT short_name;
 	user_option_e opt_type = user_option_e::count;
+	bool always_execute = false;
 
 	std::function<bool()> flag_func;
 	std::function<bool(string&&)> one_arg_func;
@@ -190,7 +192,8 @@ struct get_opt {
 	// ex : '--has_default arg' or '--has_default'
 	void add_default_arg_option(string&& long_name,
 			std::function<bool(string&&)>&& func, string&& help,
-			string&& default_value, CharT short_name = null_char);
+			string&& default_value, CharT short_name = null_char,
+			bool always_execute = false);
 
 	// An option that can accept a single argument or not.
 	// ex : '--optional arg' or '--optional'
@@ -288,6 +291,7 @@ private:
 	void on_parse_shortopt(fsm_t&);
 	void on_parse_concat(fsm_t&);
 	void on_parse_raw(fsm_t&);
+	void on_end(fsm_t&);
 	void on_print_error(fsm_t&);
 	void on_print_help(fsm_t&);
 
@@ -413,7 +417,8 @@ void get_opt<CharT, PrintfT>::add_optional_arg_option(string&& long_name,
 template <class CharT, class PrintfT>
 void get_opt<CharT, PrintfT>::add_default_arg_option(string&& long_name,
 		std::function<bool(string&&)>&& func, string&& help,
-		string&& default_value, CharT short_name /*= '\0'*/) {
+		string&& default_value, CharT short_name /*= '\0'*/,
+		bool always_execute /*= false*/) {
 	using namespace detail;
 
 	add_option(user_option<CharT>{
@@ -423,6 +428,7 @@ void get_opt<CharT, PrintfT>::add_default_arg_option(string&& long_name,
 			std::move(func),
 			std::move(help),
 			std::move(default_value),
+			always_execute,
 	});
 }
 
@@ -610,12 +616,16 @@ get_opt<CharT, PrintfT>::make_machine() const {
 	{
 		state_t end_state;
 		end_state.template add_transition<transition::help, state::end>();
+		end_state.template add_transition<transition::error, state::end>();
 
 		end_state.template add_event<fsm_event::on_enter_from,
 				transition::error>(&get_opt::on_print_error);
 		end_state
 				.template add_event<fsm_event::on_enter_from, transition::help>(
 						&get_opt::on_print_help);
+		end_state
+				.template add_event<fsm_event::on_enter_from, transition::exit>(
+						&get_opt::on_end);
 
 		ret->template add_state<state::end>(std::move(end_state));
 		ret->template set_finish_state<state::end>();
@@ -795,8 +805,12 @@ void get_opt<CharT, PrintfT>::on_parse_longopt(fsm_t& m) {
 	}
 
 	if (!success) {
-		print(FEA_LIT("'") + _parser_args.front()
-				+ FEA_LIT("' problem parsing argument.\n"));
+		if (!_parser_args.empty()) {
+			print(FEA_LIT("'") + _parser_args.front()
+					+ FEA_LIT("' problem parsing argument.\n"));
+		} else {
+			print(FEA_LIT("Problem parsing arguments.\n"));
+		}
 		return m.template trigger<transition::error>(this);
 	}
 
@@ -883,12 +897,38 @@ void get_opt<CharT, PrintfT>::on_parse_raw(fsm_t& m) {
 	return m.template trigger<transition::parse_next>(this);
 }
 
+template <class CharT, class PrintfT>
+void get_opt<CharT, PrintfT>::on_end(fsm_t& m) {
+	bool success = true;
+
+	// Parse default opts that always want to execute.
+	for (const std::pair<const string, detail::user_option<CharT>>& p :
+			_long_opt_to_user_opt) {
+		const detail::user_option<CharT> user_opt = p.second;
+		if (user_opt.opt_type != fea::detail::user_option_e::default_arg) {
+			continue;
+		}
+		if (!user_opt.always_execute || user_opt.has_been_parsed) {
+			continue;
+		}
+
+		string default_val = user_opt.default_val;
+		success = user_opt.one_arg_func(std::move(default_val));
+		if (!success) {
+			break;
+		}
+	}
+
+	if (!success) {
+		m.template trigger<transition::error>(this);
+	}
+}
 
 template <class CharT, class PrintfT>
 void get_opt<CharT, PrintfT>::on_print_error(fsm_t& m) {
 	// print(FEA_ML("problem parsing provided options :\n"));
 	// print(_error_message);
-	print(FEA_LIT("\n\n"));
+	print(FEA_LIT("\n"));
 	m.template trigger<transition::help>(this);
 }
 

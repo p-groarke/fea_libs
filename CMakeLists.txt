@@ -152,7 +152,7 @@ if (${FEA_TESTS})
 	fea_set_compile_options(${TEST_NAME_NOTHROW} PRIVATE)
 
 	# Set NOTHROW and other global defines that could impact tests.
-	target_compile_definitions(${TEST_NAME_NOTHROW} PRIVATE FEA_NOTHROW -DFEA_SERIALIZE_SIZE_T=uint16_t -DFEA_CODEPAGE_CONVERSIONS)
+	target_compile_definitions(${TEST_NAME_NOTHROW} PRIVATE FEA_NOTHROW_DEF -DFEA_SERIALIZE_SIZE_T=uint16_t -DFEA_CODEPAGE_CONVERSIONS_DEF)
 
 	# For the extreme serialization test.
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
@@ -177,8 +177,8 @@ if (${FEA_TESTS})
 	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include_cpp20 PREFIX "Header Files" FILES ${TEST_HEADERS_CPP20})
 
 	if (${FEA_BENCHMARKS})
-		target_compile_definitions(${TEST_NAME} PRIVATE FEA_BENCHMARKS)
-		target_compile_definitions(${TEST_NAME_NOTHROW} PRIVATE FEA_BENCHMARKS)
+		target_compile_definitions(${TEST_NAME} PRIVATE FEA_BENCHMARKS_DEF)
+		target_compile_definitions(${TEST_NAME_NOTHROW} PRIVATE FEA_BENCHMARKS_DEF)
 	endif()
 
 	# gtest_discover_tests(${TEST_NAME})

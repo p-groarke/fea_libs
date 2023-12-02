@@ -506,7 +506,7 @@ struct fsm_event_builder {
 			class NewFunc>
 	static constexpr auto make_event([[maybe_unused]] NewFunc newfunc) {
 
-#if defined(_MSC_VER) && defined(FEA_FSM_NO_EVENT_WRAPPER)
+#if defined(_MSC_VER) && defined(FEA_FSM_NO_EVENT_WRAPPER_DEF)
 		// Only works on MSVC.
 		// There is apparently a proposal to remove the restrictions on static
 		// constexpr variables in static constexpr functions.
@@ -586,7 +586,7 @@ struct fsm_builder {
 	static constexpr auto make_event([[maybe_unused]] Func func) {
 		static_assert(Event != fsm_event::count, "invalid event");
 
-#if defined(_MSC_VER) && defined(FEA_FSM_NO_EVENT_WRAPPER)
+#if defined(_MSC_VER) && defined(FEA_FSM_NO_EVENT_WRAPPER_DEF)
 		// This only works on MSVC.
 		// There is a proposal to remove the restrictions on static
 		// cosntexpr variables in static constexpr functions.

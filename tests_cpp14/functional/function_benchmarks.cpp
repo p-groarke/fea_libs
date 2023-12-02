@@ -1,5 +1,5 @@
 ﻿#include <fea/utils/platform.hpp>
-#if defined(FEA_RELEASE) && FEA_CPP17 && defined(FEA_BENCHMARKS)
+#if FEA_RELEASE && FEA_CPP17 && defined(FEA_BENCHMARKS_DEF)
 
 #include <fea/benchmark/benchmark.hpp>
 #include <fea/functional/callback.hpp>

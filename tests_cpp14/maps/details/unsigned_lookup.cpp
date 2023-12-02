@@ -1,6 +1,7 @@
 #include <fea/maps/details/unsigned_lookup.hpp>
 #include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
+#include <unordered_map>
 
 namespace {
 #define test_failed_msg "unsigned_lookup.cpp : Unit test failed."
@@ -29,6 +30,20 @@ struct id_getter<my_id> {
 };
 } // namespace fea
 
+namespace std {
+template <>
+struct hash<my_id> {
+	inline constexpr uint8_t operator()(const my_id& k) const noexcept {
+		return k.id;
+	}
+};
+
+// Will this happily convert return value to size_t?
+// std::unordered_map<my_id, int> testme;
+// testme.insert({ my_id{}, 0 });
+
+} // namespace std
+
 namespace {
 TEST(unsigned_lookup, basics) {
 	{
@@ -41,7 +56,7 @@ TEST(unsigned_lookup, basics) {
 		fea::detail::unsigned_lookup<size_t> ul;
 
 		using ul_t = std::decay_t<decltype(ul)>;
-		static_assert(std::is_same<typename ul_t::hasher,
+		static_assert(std::is_same<typename ul_t::hasher_type,
 							  fea::id_getter<size_t>>::value,
 				test_failed_msg);
 		static_assert(
@@ -112,7 +127,7 @@ TEST(unsigned_lookup, basics) {
 		fea::detail::unsigned_lookup<my_id> ul;
 
 		using ul_t = std::decay_t<decltype(ul)>;
-		static_assert(std::is_same<typename ul_t::hasher,
+		static_assert(std::is_same<typename ul_t::hasher_type,
 							  fea::id_getter<my_id>>::value,
 				test_failed_msg);
 		static_assert(std::is_same<typename ul_t::underlying_key_type,

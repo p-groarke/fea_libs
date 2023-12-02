@@ -1,11 +1,11 @@
 ﻿#include <fea/utils/platform.hpp>
 
-#if defined(FEA_WINDOWS) && (_MSC_VER >= 1920 /* VS 2019 */)
+#if FEA_WINDOWS && FEA_VS2019
 // Demo of VS2019 hack.
 // No need for macros since it supports static constexpr variables in functions.
 
 #include <cstdio>
-#define FEA_FSM_NO_EVENT_WRAPPER
+#define FEA_FSM_NO_EVENT_WRAPPER_DEF
 #include <fea/state_machines/constexpr_fsm.hpp>
 #include <gtest/gtest.h>
 
@@ -357,8 +357,8 @@ TEST(constexpr_fsm, generate_tuple_windows) {
 	using machine_tup_t = std::decay_t<decltype(tup)>;
 	using expected_tup_t = std::decay_t<decltype(test_tup)>;
 
-	static_assert(std::tuple_size_v<
-						  machine_tup_t> == std::tuple_size_v<expected_tup_t>,
+	static_assert(std::tuple_size_v<machine_tup_t>
+					== std::tuple_size_v<expected_tup_t>,
 			"unit test failed : tuples aren't the same size");
 
 	static_assert(std::is_same_v<machine_tup_t, expected_tup_t>,

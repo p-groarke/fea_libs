@@ -1,6 +1,6 @@
 ﻿#include <fea/utils/platform.hpp>
 
-#if defined(FEA_RELEASE) && defined(FEA_BENCHMARKS)
+#if FEA_RELEASE && defined(FEA_BENCHMARKS_DEF)
 #include <algorithm>
 #include <array>
 #include <cstdio>

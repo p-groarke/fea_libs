@@ -42,24 +42,26 @@
 
 // Define FEA_CODEPAGE_CONVERSIONS to get windows (only) codepage conversions.
 // Those are, helper functions for your current codepage to std::wstring.
-#if defined(FEA_WINDOWS) && defined(FEA_CODEPAGE_CONVERSIONS)
+#if FEA_WINDOWS && defined(FEA_CODEPAGE_CONVERSIONS_DEF)
 #include <windows.h>
 #endif
 
 // The standard doesn't provide codecvt equivalents. Use the old
 // functionality until they do.
-#if defined(FEA_WINDOWS)
+#if FEA_WINDOWS
 #pragma warning(push)
 #pragma warning(disable : 4996)
-#elif defined(FEA_MACOS)
+#elif FEA_MACOS
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #endif
 
 namespace fea {
 // VS 2015 and VS 2017 don't export codecvt symbols...
+#define FEA_MSVC_CODECVT_BUG 0
 #if (_MSC_VER >= 1900 /* VS 2015*/) && (_MSC_VER <= 1916 /* VS 2017 */)
-#define FEA_MSVC_CODECVT_BUG
+#undef FEA_MSVC_CODECVT_BUG
+#define FEA_MSVC_CODECVT_BUG 1
 using u16string_hack = std::basic_string<std::uint_least16_t,
 		std::char_traits<std::uint_least16_t>,
 		std::allocator<std::uint_least16_t>>;
@@ -73,7 +75,7 @@ using u32string_hack = std::basic_string<std::uint_least32_t,
 
 // UTF-8 to UTF-16
 inline std::u16string utf8_to_utf16(const std::string& s) {
-#if defined(FEA_MSVC_CODECVT_BUG)
+#if FEA_MSVC_CODECVT_BUG
 	std::wstring_convert<std::codecvt_utf8_utf16<std::uint_least16_t>,
 			std::uint_least16_t>
 			convert;
@@ -93,7 +95,7 @@ inline std::wstring utf8_to_utf16_w(const std::string& s) {
 
 // UTF-8 to UTF-16, encoded in 32bits. This is dumb, don't use this.
 inline std::u32string utf8_to_utf16_32bits(const std::string& s) {
-#if defined(FEA_MSVC_CODECVT_BUG)
+#if FEA_MSVC_CODECVT_BUG
 	std::wstring_convert<std::codecvt_utf8_utf16<std::uint_least32_t>,
 			std::uint_least32_t>
 			convert;
@@ -107,7 +109,7 @@ inline std::u32string utf8_to_utf16_32bits(const std::string& s) {
 
 // UTF-8 to UCS2, outdated format.
 inline std::u16string utf8_to_ucs2(const std::string& s) {
-#if defined(FEA_MSVC_CODECVT_BUG)
+#if FEA_MSVC_CODECVT_BUG
 	std::wstring_convert<std::codecvt_utf8<std::uint_least16_t>,
 			std::uint_least16_t>
 			convert;
@@ -127,7 +129,7 @@ inline std::wstring utf8_to_ucs2_w(const std::string& s) {
 
 // UTF-8 to UTF-32
 inline std::u32string utf8_to_utf32(const std::string& s) {
-#if defined(FEA_MSVC_CODECVT_BUG)
+#if FEA_MSVC_CODECVT_BUG
 	std::wstring_convert<std::codecvt_utf8<std::uint_least32_t>,
 			std::uint_least32_t>
 			conv;
@@ -144,7 +146,7 @@ inline std::u32string utf8_to_utf32(const std::string& s) {
 
 // UTF-16 to UTF-8
 inline std::string utf16_to_utf8(const std::u16string& s) {
-#if defined(FEA_MSVC_CODECVT_BUG)
+#if FEA_MSVC_CODECVT_BUG
 	std::wstring_convert<std::codecvt_utf8_utf16<std::uint_least16_t>,
 			std::uint_least16_t>
 			conv;
@@ -165,7 +167,7 @@ inline std::string utf16_to_utf8(const std::wstring& s) {
 
 // UTF-16 to UTF-8, using 32bit encoded UTF-16 (aka, dumb).
 inline std::string utf16_to_utf8(const std::u32string& s) {
-#if defined(FEA_MSVC_CODECVT_BUG)
+#if FEA_MSVC_CODECVT_BUG
 	std::wstring_convert<std::codecvt_utf8_utf16<std::uint_least32_t>,
 			std::uint_least32_t>
 			conv;
@@ -213,7 +215,7 @@ inline std::u32string utf16_to_utf32(const std::wstring& s) {
 
 // UCS2 to UTF-8
 inline std::string ucs2_to_utf8(const std::u16string& s) {
-#if defined(FEA_MSVC_CODECVT_BUG)
+#if FEA_MSVC_CODECVT_BUG
 	std::wstring_convert<std::codecvt_utf8<std::uint_least16_t>,
 			std::uint_least16_t>
 			conv;
@@ -277,7 +279,7 @@ inline std::u32string ucs2_to_utf32(const std::wstring& s) {
 
 // UTF-32 to UTF-8
 inline std::string utf32_to_utf8(const std::u32string& s) {
-#if defined(FEA_MSVC_CODECVT_BUG)
+#if FEA_MSVC_CODECVT_BUG
 	std::wstring_convert<std::codecvt_utf8<std::uint_least32_t>,
 			std::uint_least32_t>
 			conv;
@@ -396,7 +398,7 @@ inline std::string iso_8859_1_to_utf8(const std::string& str) {
 }
 
 
-#if defined(FEA_WINDOWS) && defined(FEA_CODEPAGE_CONVERSIONS)
+#if FEA_WINDOWS && defined(FEA_CODEPAGE_CONVERSIONS_DEF)
 // Provide a code page, for example CP_ACP
 inline std::wstring codepage_to_utf16_w(
 		UINT code_page, const std::string& str) {
@@ -428,9 +430,9 @@ inline std::string utf16_to_current_codepage(const std::wstring& str) {
 }
 #endif
 
-#if defined(FEA_WINDOWS)
+#if FEA_WINDOWS
 #pragma warning(pop)
-#elif defined(FEA_MACOS)
+#elif FEA_MACOS
 #pragma clang diagnostic pop
 #endif
 } // namespace fea

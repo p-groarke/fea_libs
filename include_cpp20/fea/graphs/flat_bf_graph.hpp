@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fea/maps/details/unsigned_lookup.hpp"
 #include "fea/maps/flat_unsigned_map.hpp"
 #include "fea/maps/id_getter.hpp"
+#include "fea/memory/memory.hpp"
 #include "fea/meta/traits.hpp"
 #include "fea/utils/throw.hpp"
 
@@ -57,7 +58,7 @@ there are memory jumps every breadth.
 Keys should be an unsigned number from 0 to N. Do NOT use this with key pointers
 or large hashes, lookup grows as big as N.
 
-TODO : Make graph builder to batch topo operations.
+TODO : Make graph builder to batch topo operations?
 */
 
 namespace fea {
@@ -211,7 +212,7 @@ public:
 		if (uk == _lookup.sentinel()) {
 			return breadth_size(0);
 		}
-		size_type pos = _lookup.find(k, size());
+		size_type pos = _lookup.find_prehashed(uk, size());
 		if (pos == size()) {
 			return 0;
 		}
@@ -275,14 +276,13 @@ public:
 	template <class K, class V>
 		requires std::ranges::forward_range<K> && std::ranges::forward_range<V>
 	constexpr void insert(K&& keys, V&& values) {
-		// TODO : Check for pre-existing
-		// if (std::any_of(std::ranges::begin(keys), std::ranges::end(keys),
-		// [this](const K& k) { 	return _lookup.contains(k);
-		//	}) {
-		//	fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
-		//			"Batch insert only supports non-existing keys. Use "
-		//			"insert_or_assign instead.");
-		// }
+		if (std::any_of(std::ranges::begin(keys), std::ranges::end(keys),
+					[this](const key_type& k) {
+						return _lookup.contains(k);
+					})) {
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"Batch inserted items must not exist.");
+		}
 
 		_insert(_lookup.sentinel(), std::forward<K>(keys),
 				std::forward<V>(values));
@@ -303,9 +303,11 @@ public:
 		}
 
 		underlying_key_type uk = _lookup.hash(parent_k);
-		return { _insert(uk, std::ranges::single_view{ std::forward<K>(k) },
-						 std::ranges::single_view{ std::forward<V>(v) }),
-			true };
+		return {
+			_insert(uk, std::ranges::single_view{ std::forward<K>(k) },
+					std::ranges::single_view{ std::forward<V>(v) }),
+			true,
+		};
 	}
 
 	// Inserts multiple children nodes.
@@ -317,8 +319,8 @@ public:
 					[this](const key_type& k) {
 						return _lookup.contains(k);
 					})) {
-			fea::maybe_throw<std::invalid_argument>(
-					__FUNCTION__, __LINE__, "Inserted items must not exist.");
+			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
+					"Batch inserted items must not exist.");
 		}
 
 		_insert(parent_k, std::forward<K>(keys), std::forward<V>(values));
@@ -347,23 +349,102 @@ public:
 	}
 
 
-	//// Inserts child node if it doesn't exist.
-	//// Assigns value if it does.
-	//// Perf note : Prefer batch calls when possible.
-	// template <class K, class V>
-	//	requires std::is_convertible_v<K, Key>
-	//		&& std::is_convertible_v<V, Value>
-	// constexpr void insert_or_assign(const key_type& parent, K&& k, V&& v) {
-	//	auto it = find(k);
-	//	if (it != end()) {
-	//		*it = std::forward<V>(v);
-	//		return { it, false };
-	//	}
-	//	return minsert(std::forward<K>(k), std::forward<V>(v));
-	// }
+	// Erases node and all its children.
+	// Q : Returns key? iterator past the erased item. key_end() if none erased.
+	template <class K>
+		requires std::is_convertible_v<K, Key>
+	constexpr void erase(K&& k) {
+		underlying_key_type uk = _lookup.hash(k);
+		size_type shift_begin = _lookup.find_prehashed(uk, size());
+		if (shift_begin == size()) {
+			return;
+		}
+		assert(shift_begin
+				== size_type(std::distance(key_begin(), find_key(k))));
+		assert(shift_begin == size_type(std::distance(begin(), find(k))));
+
+		const node_info& erased_n = _nodes[shift_begin];
+		ssize_type erased_children_size = _children_size(shift_begin, erased_n);
+
+		// We loop (aka recurse) and shift ranges until next hit to minimize
+		// moves. Any stored node and its accompanying data should be moved only
+		// once.
+		++shift_begin;
+		size_type shift_end = _children_begin_idx(uk);
+		ssize_type delta = 1;
+		size_type deleted_count = delta;
+
+		// Invalidate item.
+		{
+			_lookup.invalidate_prehashed(uk);
+			breadth_info& bi = _breadths[erased_n.breadth];
+			ssize_type new_size = ssize_type(bi.size) - delta;
+			assert(new_size >= 0);
+			bi.size = pos_type(new_size);
+		}
+
+		// Update expected position in lookup.
+		for (pos_type& pos : _lookup) {
+			if (pos == _lookup.sentinel() || pos < shift_begin
+					|| pos >= shift_end) {
+				continue;
+			}
+			ssize_type new_pos = ssize_type(pos) - delta;
+			assert(new_pos >= 0);
+			pos = pos_type(new_pos);
+		}
+
+		// Update child breadth begin.
+		if (size_t(erased_n.breadth + 1) < _breadths.size()) {
+			breadth_info& bi = _breadths[erased_n.breadth + 1];
+			ssize_type new_off = ssize_type(bi.offset) - delta;
+			assert(new_off >= 0);
+			bi.offset = pos_type(new_off);
+		}
+
+		// Update children offsets.
+		// For items of the same breadth, following the erased node, their
+		// children offsets are shifted by amount of deleted children.
+		//
+		// For items of following breadth (+1), preceding shift_end, nothing to
+		// do since they are placed before deleted children. They are handled by
+		// parent breadth size change.
+		if (size_t(erased_n.breadth + 1) < _breadths.size()
+				&& erased_children_size > 0) {
+			// We have children, do the update.
+			for (size_type i = shift_begin; i < shift_end; ++i) {
+				node_info& n = _nodes[i];
+				if (n.breadth != erased_n.breadth) {
+					// We have reached the children in between shift_begin and
+					// shift_end. Nothing to do.
+					break;
+				}
+
+				assert(n.children_offset != 0); // shouldn't be possible
+				ssize_type new_off
+						= ssize_type(n.children_offset) - erased_children_size;
+				assert(new_off >= 0);
+				n.children_offset = pos_type(new_off);
+			}
+		}
+
+		// Move everything.
+		_for_each_packed([&]<class T>(std::vector<T>& v) {
+			auto from_it = v.begin() + shift_begin;
+			auto to_it = v.begin() + shift_end;
+			fea::copy_or_move(from_it, to_it, from_it - delta);
+		});
+
+		delta += erased_children_size;
+
+		// Final resize to delete.
+		_for_each_packed([&]<class T>(std::vector<T>& v) {
+			assert(v.size() >= deleted_count);
+			v.resize(v.size() - deleted_count);
+		});
+	}
 
 
-	// erase
 	// swap
 	// extract?
 	// merge?
@@ -633,25 +714,25 @@ private:
 	}
 
 	//// Returns the absolute start index of children range.
-	//[[nodiscard]] constexpr size_type _children_begin_idx(
-	//		underlying_key_type parent_k) const noexcept {
-	//	if (parent_k == _lookup.sentinel()) {
-	//		return 0;
-	//	}
+	[[nodiscard]] constexpr size_type _children_begin_idx(
+			underlying_key_type parent_k) const noexcept {
+		if (parent_k == _lookup.sentinel()) {
+			return 0;
+		}
 
-	//	assert(_lookup.contains_prehashed(parent_k));
-	//	size_type pos = _lookup.find_prehashed(parent_k, size());
-	//	assert(pos < size());
+		assert(_lookup.contains_prehashed(parent_k));
+		size_type pos = _lookup.find_prehashed(parent_k, size());
 
-	//	const node_info& ninfo = _nodes[pos];
-	//	if (size_t(n.breadth) + 1 >= _breadths.size()) {
-	//		// No children breadth, no children.
-	//		return size();
-	//	}
-	//	return _breadths[n.breadth + 1].offset + ninfo.children_offset;
-	//}
+		assert(pos < size());
+		const node_info& n = _nodes[pos];
+		if (size_t(n.breadth) + 1 >= _breadths.size()) {
+			// No children breadth, no children.
+			return size();
+		}
+		return _breadths[n.breadth + 1].offset + n.children_offset;
+	}
 
-	// Returns the absolute start index of children range.
+	// Returns the absolute end index of children range.
 	[[nodiscard]] constexpr size_type _children_end_idx(
 			underlying_key_type parent_k) const noexcept {
 		if (parent_k == _lookup.sentinel()) {
@@ -754,7 +835,7 @@ private:
 
 
 		// Update all following nodes to "move" them (update to their final
-		// position). insert_idx must point to the first node after this nodes
+		// position). insert_idx must point to the first node after this node's
 		// children.
 		for (pos_type& pos : _lookup) {
 			if (pos == _lookup.sentinel() || pos < insert_idx) {
@@ -806,7 +887,7 @@ private:
 			}
 		}
 
-		// Update all the lookups (breadths, parents, lookup positions.
+		// Update all the lookups (breadths, parents, lookup positions).
 		_update_lookups(uk, ssize_type(count));
 
 		// TODO : recycle?

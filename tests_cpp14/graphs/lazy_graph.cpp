@@ -1828,7 +1828,7 @@ TEST(lazy_graph, fixed_size) {
 	{
 		fea::lazy_graph<unsigned, char, uint8_t, std::unordered_map, 2, 2>
 				graph;
-#if FEA_DEBUG || defined(FEA_NOTHROW)
+#if FEA_DEBUG || FEA_NOTHROW
 		EXPECT_DEATH(reset_graph(graph), "");
 #else
 		EXPECT_THROW(reset_graph(graph), std::runtime_error);
@@ -1841,7 +1841,7 @@ TEST(lazy_graph, fixed_size) {
 		graph.add_dependency(1, 0);
 		graph.add_dependency(2, 0);
 
-#if FEA_DEBUG || defined(FEA_NOTHROW)
+#if FEA_DEBUG || FEA_NOTHROW
 		EXPECT_DEATH(graph.add_dependency(3, 0), "");
 #else
 		EXPECT_THROW(graph.add_dependency(3, 0), std::runtime_error);
@@ -1854,7 +1854,7 @@ TEST(lazy_graph, fixed_size) {
 		graph.add_dependency(0, 1);
 		graph.add_dependency(0, 2);
 
-#if FEA_DEBUG || defined(FEA_NOTHROW)
+#if FEA_DEBUG || FEA_NOTHROW
 		EXPECT_DEATH(graph.add_dependency(0, 3), "");
 #else
 		EXPECT_THROW(graph.add_dependency(0, 3), std::runtime_error);

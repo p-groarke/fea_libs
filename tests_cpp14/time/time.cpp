@@ -21,7 +21,7 @@ TEST(time, basics) {
 
 	// Windows doesn't provide IANA database, and downloading in CI is
 	// problematic. This test is run on macOS and Linux.
-#if !defined(FEA_WINDOWS)
+#if !FEA_WINDOWS
 	std::tm test_localtm = fea::to_local_tm(now);
 	EXPECT_EQ(test_localtm.tm_sec, local_tm.tm_sec);
 	EXPECT_EQ(test_localtm.tm_min, local_tm.tm_min);

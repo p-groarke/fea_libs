@@ -1,4 +1,6 @@
-﻿#if defined(FEA_MACOS)
+﻿#include <fea/utils/platform.hpp>
+
+#if FEA_MACOS
 #pragma once
 #include <algorithm>
 #include <cstdio>

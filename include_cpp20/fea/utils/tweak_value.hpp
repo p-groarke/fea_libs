@@ -34,7 +34,7 @@
 #pragma once
 #include "fea/utils/platform.hpp"
 
-#if !defined(FEA_MACOS) // Missing std::from_chars float.
+#if !FEA_MACOS // Missing std::from_chars float.
 #include "fea/maps/flat_unsigned_hashmap.hpp"
 #include "fea/string/string.hpp"
 #include "fea/string/string_literal.hpp"

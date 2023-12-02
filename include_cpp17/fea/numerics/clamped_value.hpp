@@ -33,8 +33,13 @@
 
 #pragma once
 #include "fea/numerics/numerics.hpp"
+#include "fea/utils/platform.hpp"
 
 #include <cassert>
+
+#if FEA_CPP20
+#include <format> // Hook up std::formatter.
+#endif
 
 /*
 clamped_values clamps your fundamental types to a
@@ -42,32 +47,34 @@ specified minimum and maximum. The values saturate at both extremities.
 */
 
 namespace fea {
+template <class T, T...>
+struct clamp_v;
+
 // Runtime defined clamped value.
 // Clamps internal value between [minimum, maximum].
 // Is implicitely convertible to its underlying type.
 // Undefined if minimum > maximum.
 // Addition and substraction are mostly overflow safe.
 template <class T>
-struct clamp_v {
+struct clamp_v<T> {
 	using value_type = T;
 
-	clamp_v() = default;
-	~clamp_v() = default;
-
-	clamp_v(T minimum, T maximum)
+	constexpr clamp_v(T minimum, T maximum)
 			: _minimum(minimum)
 			, _maximum(maximum)
 			, _value(minimum) {
 		assert(_minimum <= _maximum);
 	}
 
-	clamp_v(T value, T minimum, T maximum)
+	constexpr clamp_v(T value, T minimum, T maximum)
 			: _minimum(minimum)
 			, _maximum(maximum)
 			, _value(std::clamp(value, _minimum, _maximum)) {
 		assert(_minimum <= _maximum);
 	}
 
+	constexpr clamp_v() = default;
+	~clamp_v() = default;
 	clamp_v(const clamp_v&) = default;
 	clamp_v(clamp_v&&) noexcept = default;
 	clamp_v& operator=(const clamp_v&) = default;
@@ -238,8 +245,176 @@ private:
 	T _value = {};
 };
 
+
+// Compile time defined clamp value.
+template <class T, T Min, T Max>
+struct clamp_v<T, Min, Max> {
+	using value_type = T;
+	static constexpr T minimum_v = Min;
+	static constexpr T maximum_v = Max;
+	static_assert(minimum_v < maximum_v,
+			"clamp_v : Minimum value must be less than Maximum.");
+
+	constexpr clamp_v(T value)
+			: _value(std::clamp(value, minimum_v, maximum_v)) {
+	}
+
+	constexpr clamp_v() = default;
+	~clamp_v() = default;
+	clamp_v(const clamp_v&) = default;
+	clamp_v(clamp_v&&) noexcept = default;
+	clamp_v& operator=(const clamp_v&) = default;
+	clamp_v& operator=(clamp_v&&) noexcept = default;
+
+	clamp_v& operator=(T v) {
+		_value = std::clamp(v, minimum_v, maximum_v);
+		return *this;
+	}
+
+	// Returns underlying value.
+	[[nodiscard]] operator T() const {
+		return _value;
+	}
+	[[nodiscard]] T get() const {
+		return _value;
+	}
+
+	[[nodiscard]] static constexpr T maximum() {
+		return maximum_v;
+	}
+	[[nodiscard]] static constexpr T minimum() {
+		return minimum_v;
+	}
+
+	clamp_v& operator+=(T v) {
+		if constexpr (!std::is_unsigned_v<T>) {
+			if (v < 0) {
+				return (*this) -= fea::abs(v);
+			}
+		}
+
+		// Prevent overflows.
+		T diff = maximum_v - _value;
+		if (v > diff) {
+			// Case : val + v could overflow
+			_value = maximum_v;
+			return *this;
+		}
+
+		_value += v;
+		return *this;
+	}
+
+	// For unsigned values, prevents underflow.
+	clamp_v& operator-=(T v) {
+		if constexpr (!std::is_unsigned_v<T>) {
+			if (v < 0) {
+				return (*this) += fea::abs(v);
+			}
+		}
+
+		// Prevent underflows.
+		T diff = _value - minimum_v;
+		if (v > diff) {
+			_value = minimum_v;
+			return *this;
+		}
+
+		_value -= v;
+		return *this;
+	}
+
+	clamp_v& operator*=(T v) {
+		_value *= v;
+		clampit();
+		return *this;
+	}
+
+	clamp_v& operator/=(T v) {
+		_value /= v;
+		clampit();
+		return *this;
+	}
+
+	clamp_v& operator%=(T v) {
+		_value %= v;
+		clampit();
+		return *this;
+	}
+
+	clamp_v& operator&=(T v) {
+		_value &= v;
+		clampit();
+		return *this;
+	}
+
+	clamp_v& operator|=(T v) {
+		_value |= v;
+		clampit();
+		return *this;
+	}
+
+	clamp_v& operator^=(T v) {
+		_value ^= v;
+		clampit();
+		return *this;
+	}
+
+	clamp_v& operator<<=(T v) {
+		_value <<= v;
+		clampit();
+		return *this;
+	}
+
+	clamp_v& operator>>=(T v) {
+		_value >>= v;
+		clampit();
+		return *this;
+	}
+
+	clamp_v& operator++() {
+		return (*this) += T(1);
+	}
+	clamp_v operator++(int) {
+		clamp_v ret = *this;
+		++(*this);
+		return ret;
+	}
+
+	clamp_v& operator--() {
+		return (*this) -= T(1);
+	}
+	clamp_v operator--(int) {
+		clamp_v ret = *this;
+		--(*this);
+		return ret;
+	}
+
+private:
+	void clampit() {
+		_value = std::clamp(_value, minimum_v, maximum_v);
+	}
+
+	T _value = {};
+};
+
 // Readability alias.
 template <class T>
 using clamped_value = clamp_v<T>;
 
+// template <class T, T Min, T Max>
+// using clamped_value = clamp_v<T, Min, Max>;
 } // namespace fea
+
+
+#if FEA_CPP20
+// Enable direct use in std::format.
+template <class T, T... Ts, class CharT>
+struct std::formatter<fea::clamp_v<T, Ts...>, CharT>
+		: std::formatter<T, CharT> {
+	template <class FormatContext>
+	auto format(const fea::clamp_v<T, Ts...>& v, FormatContext& fc) const {
+		return std::formatter<T, CharT>::format(v.get(), fc);
+	}
+};
+#endif

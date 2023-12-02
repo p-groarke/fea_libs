@@ -1,5 +1,5 @@
 #include <fea/utils/platform.hpp>
-#if !defined(FEA_MACOS)
+#if !FEA_MACOS
 
 #include <chrono>
 #include <fea/utils/scope.hpp>

@@ -49,7 +49,7 @@ Does nothing (but is still callable) on other OSes.
 #endif
 
 namespace fea {
-#if !defined(FEA_WINDOWS)
+#if !FEA_WINDOWS
 struct codepage_resetter {};
 FEA_NODISCARD inline codepage_resetter win_utf8_terminal(bool = false) {
 	return {};

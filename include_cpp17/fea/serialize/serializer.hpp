@@ -58,7 +58,7 @@ anything with the data. You must call 'extract()' to retrieve the serialized
 data. The destructor will check you emptied the serializer.
 */
 
-//#define FEA_THROW_MSG(x) std::string{ __FUNCTION__ } + " : " + x
+// #define FEA_THROW_MSG(x) std::string{ __FUNCTION__ } + " : " + x
 
 #if !defined(FEA_SERIALIZE_SIZE_T)
 #define FEA_SERIALIZE_SIZE_T size_t

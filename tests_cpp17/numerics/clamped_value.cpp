@@ -1,6 +1,11 @@
 #include <fea/meta/tuple.hpp>
 #include <fea/numerics/clamped_value.hpp>
+#include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
+
+#if FEA_CPP20
+#include <format>
+#endif
 
 namespace {
 TEST(clamped_value, basics) {
@@ -237,4 +242,263 @@ TEST(clamped_value, basics) {
 		EXPECT_EQ(v, v.minimum());
 	}
 }
+
+TEST(clamped_value, template_basics) {
+	{
+		fea::clamp_v<int, 0, 100> t(42);
+		EXPECT_EQ(t, int(42));
+		EXPECT_EQ(t.minimum(), 0);
+		EXPECT_EQ(t.maximum(), 100);
+		EXPECT_TRUE(t < 50);
+		EXPECT_TRUE(t <= 50);
+		EXPECT_FALSE(t > 50);
+		EXPECT_FALSE(t >= 50);
+		EXPECT_FALSE(t == 50);
+		EXPECT_TRUE(t != 50);
+
+		++t;
+		EXPECT_EQ(t, 43);
+		EXPECT_EQ(t++, 43);
+		EXPECT_EQ(t, 44);
+
+		--t;
+		EXPECT_EQ(t, 43);
+		EXPECT_EQ(t--, 43);
+		EXPECT_EQ(t, 42);
+
+		t += 1;
+		EXPECT_EQ(t, 43);
+
+		t -= 1;
+		EXPECT_EQ(t, 42);
+
+		t = 1;
+		t *= 2;
+		EXPECT_EQ(t, 2);
+		t /= 2;
+		EXPECT_EQ(t, 1);
+
+
+		t = 200;
+		EXPECT_EQ(t, t.maximum());
+
+		++t;
+		EXPECT_EQ(t, t.maximum());
+		EXPECT_EQ(t++, t.maximum());
+		EXPECT_EQ(t, t.maximum());
+
+		t += 1;
+		EXPECT_EQ(t, t.maximum());
+
+		t *= 2;
+		EXPECT_EQ(t, t.maximum());
+	}
+
+	{
+		fea::clamp_v<int, 10, 100> t(42);
+		t = -200;
+		EXPECT_EQ(t, t.minimum());
+
+		--t;
+		EXPECT_EQ(t, t.minimum());
+		EXPECT_EQ(t--, t.minimum());
+		EXPECT_EQ(t, t.minimum());
+
+		t -= 1;
+		EXPECT_EQ(t, t.minimum());
+
+		t /= 2;
+		EXPECT_EQ(t, t.minimum());
+	}
+
+	{
+		fea::clamp_v<int, 0, 30> t(42);
+		EXPECT_EQ(t.minimum(), 0);
+		EXPECT_EQ(t.get(), 30);
+		EXPECT_EQ(t.maximum(), 30);
+
+		fea::clamp_v<int, 0, 42> tcmp(50);
+		EXPECT_EQ(tcmp, 42);
+		EXPECT_TRUE(t < tcmp);
+		EXPECT_TRUE(t <= tcmp);
+		EXPECT_FALSE(t > tcmp);
+		EXPECT_FALSE(t >= tcmp);
+		EXPECT_FALSE(t == tcmp);
+		EXPECT_TRUE(t != tcmp);
+	}
+
+	{
+#if FEA_CPP20
+		std::tuple<char, int8_t, int16_t, int32_t, int64_t, uint8_t, uint16_t,
+				uint32_t, uint64_t, float, double>
+				test_types{};
+#else
+		std::tuple<char, int8_t, int16_t, int32_t, int64_t, uint8_t, uint16_t,
+				uint32_t, uint64_t>
+				test_types{};
+#endif
+
+		fea::tuple_for_each(
+				[](auto test) {
+					using T = std::decay_t<decltype(test)>;
+					constexpr bool is_unsigned = std::is_unsigned_v<T>;
+
+					{
+						constexpr T min = T(0);
+						constexpr T max = T(10);
+						fea::clamp_v<T, min, max> v(T(5));
+
+						v -= (std::numeric_limits<T>::max)();
+						EXPECT_EQ(v, v.minimum());
+
+						v += (std::numeric_limits<T>::max)();
+						EXPECT_EQ(v, v.maximum());
+
+						if constexpr (is_unsigned) {
+							auto v_bak = v;
+							v -= (std::numeric_limits<T>::lowest)();
+							EXPECT_EQ(v, v_bak);
+
+							v += (std::numeric_limits<T>::lowest)();
+							EXPECT_EQ(v, v_bak);
+						} else {
+							v -= (std::numeric_limits<T>::lowest)();
+							EXPECT_EQ(v, v.maximum());
+
+							v += (std::numeric_limits<T>::lowest)();
+							EXPECT_EQ(v, v.minimum());
+						}
+					}
+					{
+						constexpr T min = T(5);
+						constexpr T max = T(15);
+						fea::clamp_v<T, min, max> v(T(10));
+
+						v -= (std::numeric_limits<T>::max)();
+						EXPECT_EQ(v, v.minimum());
+
+						v += (std::numeric_limits<T>::max)();
+						EXPECT_EQ(v, v.maximum());
+
+						if constexpr (is_unsigned) {
+							auto v_bak = v;
+							v -= (std::numeric_limits<T>::lowest)();
+							EXPECT_EQ(v, v_bak);
+
+							v += (std::numeric_limits<T>::lowest)();
+							EXPECT_EQ(v, v_bak);
+						} else {
+							v -= (std::numeric_limits<T>::lowest)();
+							EXPECT_EQ(v, v.maximum());
+
+							v += (std::numeric_limits<T>::lowest)();
+							EXPECT_EQ(v, v.minimum());
+						}
+					}
+
+					if constexpr (!is_unsigned) {
+						{
+							constexpr T min = T(-20);
+							constexpr T max = T(20);
+							fea::clamp_v<T, min, max> v(T(0));
+
+							v -= (std::numeric_limits<T>::max)();
+							EXPECT_EQ(v, v.minimum());
+
+							v -= (std::numeric_limits<T>::lowest)();
+							EXPECT_EQ(v, v.maximum());
+
+							v += (std::numeric_limits<T>::max)();
+							EXPECT_EQ(v, v.maximum());
+
+							v += (std::numeric_limits<T>::lowest)();
+							EXPECT_EQ(v, v.minimum());
+						}
+						{
+							constexpr T min = T(-20);
+							constexpr T max = T(0);
+							fea::clamp_v<T, min, max> v(T(-10));
+
+							v -= (std::numeric_limits<T>::max)();
+							EXPECT_EQ(v, v.minimum());
+
+							v -= (std::numeric_limits<T>::lowest)();
+							EXPECT_EQ(v, v.maximum());
+
+							v += (std::numeric_limits<T>::max)();
+							EXPECT_EQ(v, v.maximum());
+
+							v += (std::numeric_limits<T>::lowest)();
+							EXPECT_EQ(v, v.minimum());
+						}
+						{
+							constexpr T min = T(-20);
+							constexpr T max = T(-10);
+							fea::clamp_v<T, min, max> v(T(-15));
+
+							v -= (std::numeric_limits<T>::max)();
+							EXPECT_EQ(v, v.minimum());
+
+							v -= (std::numeric_limits<T>::lowest)();
+							EXPECT_EQ(v, v.maximum());
+
+							v += (std::numeric_limits<T>::max)();
+							EXPECT_EQ(v, v.maximum());
+
+							v += (std::numeric_limits<T>::lowest)();
+							EXPECT_EQ(v, v.minimum());
+						}
+					}
+				},
+				test_types);
+	}
+
+	// unsigned screwyness
+	{
+		fea::clamp_v<uint8_t, 0u, 10u> v(5u);
+		v -= 10u;
+		EXPECT_EQ(v, v.minimum());
+
+		v += 20u;
+		EXPECT_EQ(v, v.maximum());
+
+		v -= (std::numeric_limits<uint8_t>::max)();
+		EXPECT_EQ(v, v.minimum());
+
+		v += (std::numeric_limits<uint8_t>::max)();
+		EXPECT_EQ(v, v.maximum());
+	}
+
+	{
+		fea::clamp_v<char, -10, 10> v(0);
+
+		v -= (std::numeric_limits<char>::max)();
+		EXPECT_EQ(v, v.minimum());
+
+		v -= (std::numeric_limits<char>::lowest)();
+		EXPECT_EQ(v, v.maximum());
+
+		v += (std::numeric_limits<char>::max)();
+		EXPECT_EQ(v, v.maximum());
+
+		v += (std::numeric_limits<char>::lowest)();
+		EXPECT_EQ(v, v.minimum());
+	}
+}
+
+#if FEA_CPP20
+TEST(clamped_value, fmt) {
+	{
+		fea::clamp_v<int> v(42, 0, 100);
+		std::string str = std::format("{} happy", v);
+		EXPECT_EQ(str, "42 happy");
+	}
+
+	{
+		fea::clamp_v<int, 0, 100> v(42);
+		std::string str = std::format("{} happy", v);
+		EXPECT_EQ(str, "42 happy");
+	}
+}
+#endif
 } // namespace

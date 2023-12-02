@@ -37,7 +37,26 @@
 #include <cstdint>
 
 namespace fea {
+// Reset everything and force #if FEA_BLA to prevent missing include.
+#undef FEA_CPP23
+#undef FEA_CPP20
+#undef FEA_CPP17
+#undef FEA_CPP14
+#undef FEA_CPP11
+#undef FEA_CPP98
+#define FEA_CPP23 0
+#define FEA_CPP20 0
+#define FEA_CPP17 0
+#define FEA_CPP14 0
+#define FEA_CPP11 0
+#define FEA_CPP98 0
+
 // Nicer way to check for C++ versions.
+#if __cplusplus >= 202302L
+#undef FEA_CPP23
+#define FEA_CPP23 1
+#endif
+
 #if __cplusplus >= 202002L
 #undef FEA_CPP20
 #define FEA_CPP20 1
@@ -79,32 +98,42 @@ namespace fea {
 
 // Pastes [[nodiscard]] attribute in C++ >= 17.
 #if FEA_CPP17
+#undef FEA_NODISCARD
 #define FEA_NODISCARD [[nodiscard]]
 #else
+#undef FEA_NODISCARD
 #define FEA_NODISCARD
 #endif
 
 // Are we building in 32 bits or 64 bits?
+#undef FEA_ARCH
+#undef FEA_32BIT
+#undef FEA_64BIT
+#define FEA_ARCH 0
+#define FEA_32BIT 0
+#define FEA_64BIT 0
+
 #if INTPTR_MAX == INT32_MAX
 #undef FEA_ARCH
-#define FEA_ARCH 32
-FEA_INLINE_VAR constexpr size_t arch = 32;
-
 #undef FEA_32BIT
+#define FEA_ARCH 32
 #define FEA_32BIT 1
+FEA_INLINE_VAR constexpr size_t arch = 32;
 #else
 #undef FEA_ARCH
-#define FEA_ARCH 64
-FEA_INLINE_VAR constexpr size_t arch = 64;
-
 #undef FEA_64BIT
+#define FEA_ARCH 64
 #define FEA_64BIT 1
+FEA_INLINE_VAR constexpr size_t arch = 64;
 #endif
 
 // Disables exceptions in classes that support it.
 // TODO : Review all classes that throw, make sure exceptions can be disabled,
 // or trigger build warning if they can't and this is set.
-#if defined(FEA_NOTHROW)
+#undef FEA_NOTHROW
+#define FEA_NOTHROW 0
+
+#if defined(FEA_NOTHROW_DEF)
 #undef FEA_NOTHROW
 #define FEA_NOTHROW 1
 FEA_INLINE_VAR constexpr bool nothrow_build = true;
@@ -116,17 +145,19 @@ FEA_INLINE_VAR constexpr bool nothrow_build = false;
 #define FEA_REGION(...)
 
 // NDEBUG is often double negative, offer alternatives.
+#undef FEA_RELEASE
+#undef FEA_DEBUG
+#define FEA_RELEASE 0
+#define FEA_DEBUG 0
+
 #if defined(NDEBUG)
 #undef FEA_RELEASE
 #define FEA_RELEASE 1
-
 FEA_INLINE_VAR constexpr bool release_build = true;
 FEA_INLINE_VAR constexpr bool debug_build = false;
-
 #else
 #undef FEA_DEBUG
 #define FEA_DEBUG 1
-
 FEA_INLINE_VAR constexpr bool release_build = false;
 FEA_INLINE_VAR constexpr bool debug_build = true;
 #endif
@@ -160,6 +191,27 @@ FEA_ENABLE_BITMASK_OPERATORS(platform_group_t)
 FEA_ENABLE_IS_BITMASK(platform_group_t)
 
 namespace fea {
+#undef FEA_AIX
+#undef FEA_BSD
+#undef FEA_HPUX
+#undef FEA_LINUX
+#undef FEA_IOS
+#undef FEA_MACOS
+#undef FEA_SOLARIS
+#undef FEA_WINDOWS
+#undef FEA_POSIX
+#undef FEA_UNIX
+#define FEA_AIX 0
+#define FEA_BSD 0
+#define FEA_HPUX 0
+#define FEA_LINUX 0
+#define FEA_IOS 0
+#define FEA_MACOS 0
+#define FEA_SOLARIS 0
+#define FEA_WINDOWS 0
+#define FEA_POSIX 0
+#define FEA_UNIX 0
+
 #if defined(_AIX)
 #undef FEA_AIX
 #define FEA_AIX 1
@@ -220,22 +272,32 @@ FEA_INLINE_VAR constexpr platform_t platform = platform_t::solaris;
 
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::windows;
 
-#if _MSC_VER >= 1930
+// Nicer VS versions.
+#undef FEA_VS2022
+#undef FEA_VS2019
+#undef FEA_VS2017
+#undef FEA_VS2015
+#define FEA_VS2022 0
+#define FEA_VS2019 0
+#define FEA_VS2017 0
+#define FEA_VS2015 0
+
+#if _MSC_VER >= 1930 && _MSC_VER < 1940
 #undef FEA_VS2022
 #define FEA_VS2022 1
 #endif
 
-#if _MSC_VER >= 1920
+#if _MSC_VER >= 1920 && _MSC_VER < 1930
 #undef FEA_VS2019
 #define FEA_VS2019 1
 #endif
 
-#if _MSC_VER >= 1910
+#if _MSC_VER >= 1910 && _MSC_VER < 1920
 #undef FEA_VS2017
 #define FEA_VS2017 1
 #endif
 
-#if _MSC_VER >= 1900
+#if _MSC_VER >= 1900 && _MSC_VER < 1910
 #undef FEA_VS2015
 #define FEA_VS2015 1
 #endif
@@ -286,10 +348,11 @@ FEA_INLINE_VAR constexpr platform_group_t platform_group
 // Strict data packing for cross-platform/cross-compiler support.
 // Use like so :
 // FEA_PACKED(struct my_struct {});
-#if defined(FEA_WINDOWS)
-#define FEA_PACKED(class_to_pack) \
-	__pragma(pack(push, 1)) class_to_pack __pragma(pack(pop))
+#if FEA_WINDOWS
+#undef FEA_PACKED
+#define FEA_PACKED(...) __pragma(pack(push, 1)) __VA_ARGS__ __pragma(pack(pop))
 #else
-#define FEA_PACKED(class_to_pack) class_to_pack __attribute__((__packed__))
+#undef FEA_PACKED
+#define FEA_PACKED(...) __VA_ARGS__ __attribute__((__packed__))
 #endif
 } // namespace fea
