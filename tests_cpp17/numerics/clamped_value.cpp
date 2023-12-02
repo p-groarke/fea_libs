@@ -338,10 +338,6 @@ TEST(clamped_value, template_basics) {
 				test_types{};
 #endif
 
-		// std::tuple<uint8_t, uint16_t, uint32_t, uint64_t, float, double,
-		//		long double>
-		//		test_types{};
-
 		fea::tuple_for_each(
 				[](auto test) {
 					using T = std::decay_t<decltype(test)>;
