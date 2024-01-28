@@ -366,9 +366,35 @@ public:
 		const node_info& erased_n = _nodes[shift_begin];
 		ssize_type erased_children_size = _children_size(shift_begin, erased_n);
 
-		// We loop (aka recurse) and shift ranges until next hit to minimize
-		// moves. Any stored node and its accompanying data should be moved only
-		// once.
+		// Build a temp data structure which holds ranges to shift,
+		// by how much, to where.
+		constexpr pos_type shift_sentinel
+				= (std::numeric_limits<pos_type>::max)();
+		struct shift_info {
+			pos_type shift_to = shift_sentinel;
+			pos_type shift_begin = shift_sentinel;
+			pos_type shift_end = shift_sentinel;
+		};
+
+		std::vector<shift_info> shift_ranges;
+		// Assume we'll have children in every breadth (Q: more precise way?)
+		shift_ranges.reserve(_breadths.size());
+
+		// Preheat with top-level parent.
+		shift_ranges.push_back(shift_info{
+				.shift_to = shift_begin,
+				.shift_begin = shift_begin + 1,
+				.shift_end = _children_begin_idx(uk),
+		});
+
+		for (size_t i = shift_ranges.back().shift_end; i < _nodes.size(); ++i) {
+			pos_type shift_to = i;
+		}
+
+
+		// We loop (aka recurse) and shift ranges until next hit to
+		// minimize moves. Any stored node and its accompanying data
+		// should be moved only once.
 		++shift_begin;
 		size_type shift_end = _children_begin_idx(uk);
 		ssize_type delta = 1;
@@ -384,6 +410,7 @@ public:
 		}
 
 		// Update expected position in lookup.
+		// TODO : Perf optim, able to run this loop only once?
 		for (pos_type& pos : _lookup) {
 			if (pos == _lookup.sentinel() || pos < shift_begin
 					|| pos >= shift_end) {
