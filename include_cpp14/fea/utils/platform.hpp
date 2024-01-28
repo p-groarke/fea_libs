@@ -344,15 +344,12 @@ FEA_INLINE_VAR constexpr platform_group_t platform_group
 // #else
 // #define FEA_WARNING(x) #warning x
 // #endif
-<<<<<<< HEAD
-=======
 
 #if defined(FEA_WINDOWS)
 #define FEA_FORCEINLINE __forceinline
 #else
 #define FEA_FORCEINLINE __attribute__((always_inline))
 #endif
->>>>>>> b843183 (wip : simd.)
 
 // Strict data packing for cross-platform/cross-compiler support.
 // Use like so :

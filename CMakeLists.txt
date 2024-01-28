@@ -162,7 +162,7 @@ if (${FEA_TESTS})
 	endif()
 
 	# g++ 8 needs to link with seperate filesystem library.
-	target_link_libraries(${TEST_NAME} PUBLIC ${PROJECT_NAME} GTest::GTest TBB::tbb
+	target_link_libraries(${TEST_NAME} PUBLIC ${PROJECT_NAME} GTest::GTest TBB::tbb pugixml::pugixml
 		$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:${CMAKE_CXX_COMPILER_VERSION},9.0>>:stdc++fs>
 	)
 	target_link_libraries(${TEST_NAME_NOTHROW} PUBLIC ${PROJECT_NAME} GTest::GTest TBB::tbb pugixml::pugixml

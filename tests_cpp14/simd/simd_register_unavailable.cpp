@@ -12,7 +12,7 @@
 #undef FEA_AVX
 #undef FEA_AVX2
 #undef FEA_AVX512F
-#include <fea/performance/simd_register.hpp>
+#include <fea/simd/simd_register.hpp>
 
 namespace {
 #define fail_msg "simd_register : Unit test failed."
