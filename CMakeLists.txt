@@ -187,4 +187,5 @@ if (${FEA_TESTS})
 
 	# Copy test data on build.
 	fea_copy_on_build(${TEST_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp17/data $<TARGET_FILE_DIR:${TEST_NAME}>/tests_data)
+	fea_copy_on_build(${TEST_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp20/data $<TARGET_FILE_DIR:${TEST_NAME}>/tests_data)
 endif()

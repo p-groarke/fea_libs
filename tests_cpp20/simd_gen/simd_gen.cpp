@@ -32,8 +32,7 @@ extern const char* argv0;
 namespace {
 
 // Parses the intel intrinsics guide to generate the api header.
-// Expects dataset (offline download) to be in bin folder, named :
-// 'Intel Intrinsics Guide/'
+// The guide is located in tests data.
 #if 1
 const std::unordered_map<std::string, size_t> intrin_name_to_desc_idx = []() {
 	std::unordered_map<std::string, size_t> ret;
