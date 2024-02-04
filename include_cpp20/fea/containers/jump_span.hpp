@@ -290,10 +290,8 @@ struct jump_span {
 		requires fea::is_contiguous_v<Container>
 			&& std::is_convertible_v<typename Container::value_type,
 					element_type>
-	constexpr jump_span(const Container& container)
-			: _spans{ std::span<element_type>{
-					container.data(), container.size() } } {
-		clean_empty();
+	constexpr jump_span(const Container& container) {
+		push_back(container);
 	}
 
 	// Accept any container<container<T>> with recursive data() and size().
@@ -302,9 +300,8 @@ struct jump_span {
 			&& fea::is_contiguous_v<typename Container::value_type>
 			&& std::is_convertible_v<typename Container::value_type::value_type,
 					element_type>
-	constexpr jump_span(const Container& container)
-			: _spans(container.begin(), container.end()) {
-		clean_empty();
+	constexpr jump_span(const Container& container) {
+		push_back(container);
 	}
 
 	// Accept any container<container<container<T>>> with recursive data() and
@@ -317,13 +314,7 @@ struct jump_span {
 					typename Container::value_type::value_type::value_type,
 					element_type>
 	constexpr jump_span(const Container& container) {
-		for (const auto& nested1 : container) {
-			for (const auto& nested2 : nested1) {
-				_spans.push_back(std::span<element_type>{
-						nested2.data(), nested2.size() });
-			}
-		}
-		clean_empty();
+		push_back(container);
 	}
 
 	// Accept any container<container<container<container<T>>>> with recursive
@@ -338,15 +329,7 @@ struct jump_span {
 											 value_type::value_type::value_type,
 					element_type>
 	constexpr jump_span(const Container& container) {
-		for (const auto& nested1 : container) {
-			for (const auto& nested2 : nested1) {
-				for (const auto& nested3 : nested2) {
-					_spans.push_back(std::span<element_type>{
-							nested3.data(), nested3.size() });
-				}
-			}
-		}
-		clean_empty();
+		push_back(container);
 	}
 
 	// Iterators
@@ -420,27 +403,85 @@ struct jump_span {
 
 	// Special jump_span functions.
 
-	constexpr void reserve(size_type new_cap) const {
+	// Reserve for the *subspans*, not elements.
+	constexpr void reserve(size_type new_cap) {
 		_spans.reserve(new_cap);
 	}
 
+	// Capacity for the *subspans*, not elements.
 	constexpr size_type capacity() const noexcept {
 		return _spans.capacity();
 	}
 
+	// Affects the *subspans* memory.
 	constexpr void shrink_to_fit() {
 		_spans.shrink_to_fit();
 	}
 
-	constexpr void push_back(const std::span<element_type>& s) {
-		if (s.empty()) {
+	// Push back any container<T> that has data() and size().
+	template <class Container>
+		requires fea::is_contiguous_v<Container>
+			&& std::is_convertible_v<typename Container::value_type,
+					element_type>
+	constexpr void push_back(const Container& container) {
+		if (container.empty()) {
 			return;
 		}
-		_spans.push_back(s);
+		_spans.push_back(
+				std::span<element_type>{ container.data(), container.size() });
 	}
 
-	constexpr void pop_back() {
-		_spans.pop_back();
+	// Push back any container<container<T>> with recursive data() and size().
+	template <class Container>
+		requires fea::is_contiguous_v<Container>
+			&& fea::is_contiguous_v<typename Container::value_type>
+			&& std::is_convertible_v<typename Container::value_type::value_type,
+					element_type>
+	constexpr void push_back(const Container& container) {
+		_spans.insert(_spans.end(), container.begin(), container.end());
+		clean_empty();
+	}
+
+	// Push back any container<container<container<T>>> with recursive data()
+	// and size().
+	template <class Container>
+		requires fea::is_contiguous_v<Container>
+			&& fea::is_contiguous_v<typename Container::value_type>
+			&& fea::is_contiguous_v<typename Container::value_type::value_type>
+			&& std::is_convertible_v<
+					typename Container::value_type::value_type::value_type,
+					element_type>
+	constexpr void push_back(const Container& container) {
+		for (const auto& nested1 : container) {
+			for (const auto& nested2 : nested1) {
+				_spans.push_back(std::span<element_type>{
+						nested2.data(), nested2.size() });
+			}
+		}
+		clean_empty();
+	}
+
+	// Push back any container<container<container<container<T>>>> with
+	// recursive data() and size().
+	template <class Container>
+		requires fea::is_contiguous_v<Container>
+			&& fea::is_contiguous_v<typename Container::value_type>
+			&& fea::is_contiguous_v<typename Container::value_type::value_type>
+			&& fea::is_contiguous_v<
+					typename Container::value_type::value_type::value_type>
+			&& std::is_convertible_v<typename Container::value_type::
+											 value_type::value_type::value_type,
+					element_type>
+	constexpr void push_back(const Container& container) {
+		for (const auto& nested1 : container) {
+			for (const auto& nested2 : nested1) {
+				for (const auto& nested3 : nested2) {
+					_spans.push_back(std::span<element_type>{
+							nested3.data(), nested3.size() });
+				}
+			}
+		}
+		clean_empty();
 	}
 
 private:

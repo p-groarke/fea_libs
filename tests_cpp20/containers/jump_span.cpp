@@ -13,6 +13,11 @@ TEST(jump_span, basics) {
 		EXPECT_EQ(js.size(), 0);
 		EXPECT_EQ(js.size_bytes(), 0);
 		EXPECT_TRUE(js.empty());
+		EXPECT_EQ(js.capacity(), 0);
+		js.reserve(10);
+		EXPECT_EQ(js.capacity(), 10);
+		js.shrink_to_fit();
+		EXPECT_EQ(js.capacity(), 0);
 	}
 
 	auto basics1 = []<class T>() {
@@ -59,6 +64,7 @@ TEST(jump_span, basics) {
 		EXPECT_EQ(js.size(), 20);
 		EXPECT_EQ(js.size_bytes(), 20 * sizeof(int));
 		EXPECT_FALSE(js.empty());
+		EXPECT_GE(js.capacity(), 4);
 
 		{
 			auto it = js.begin();
@@ -75,18 +81,20 @@ TEST(jump_span, basics) {
 		EXPECT_FALSE(fea::are_contiguous(js.end(), js.end() - 1));
 		EXPECT_TRUE(fea::are_contiguous(js.end() - 1, js.end() - 2));
 
-		int expected = 0;
-		for (int i : js) {
-			EXPECT_EQ(i, expected);
-			++expected;
-		}
-		for (auto it = js.rbegin(); it != js.rend(); ++it) {
-			--expected;
-			EXPECT_EQ(*it, expected);
-		}
-		for (size_t i = 0; i < js.size(); ++i) {
-			EXPECT_EQ(js[i], expected);
-			++expected;
+		{
+			int expected = 0;
+			for (int i : js) {
+				EXPECT_EQ(i, expected);
+				++expected;
+			}
+			for (auto it = js.rbegin(); it != js.rend(); ++it) {
+				--expected;
+				EXPECT_EQ(*it, expected);
+			}
+			for (size_t i = 0; i < js.size(); ++i) {
+				EXPECT_EQ(js[i], expected);
+				++expected;
+			}
 		}
 
 		// Do some light fuzzing.
@@ -139,6 +147,12 @@ TEST(jump_span, basics) {
 
 			it = it2;
 		}
+
+		//{
+		//	size_t expected = js.size() - js.data().back().size();
+		//	js.pop_back();
+		//	EXPECT_EQ(js.size(), expected);
+		//}
 	};
 
 	basics1.template operator()<const int>();
@@ -208,12 +222,20 @@ TEST(jump_span, basics) {
 		fea::jump_span<const int> js = { vec };
 		EXPECT_EQ(js.size(), 4);
 		EXPECT_EQ(js.data().size(), 1);
+
+		js.push_back(vec);
+		EXPECT_EQ(js.size(), 8);
+		EXPECT_EQ(js.data().size(), 2);
 	}
 	{
 		std::vector<std::vector<int>> vec(4, std::vector<int>(4));
 		fea::jump_span<const int> js = { vec };
 		EXPECT_EQ(js.size(), 16);
 		EXPECT_EQ(js.data().size(), 4);
+
+		js.push_back(vec);
+		EXPECT_EQ(js.size(), 32);
+		EXPECT_EQ(js.data().size(), 8);
 	}
 	{
 		std::vector<std::vector<std::vector<int>>> vec(
@@ -221,6 +243,10 @@ TEST(jump_span, basics) {
 		fea::jump_span<const int> js = { vec };
 		EXPECT_EQ(js.size(), 64);
 		EXPECT_EQ(js.data().size(), 16);
+
+		js.push_back(vec);
+		EXPECT_EQ(js.size(), 128);
+		EXPECT_EQ(js.data().size(), 32);
 	}
 	{
 		std::vector<std::vector<std::vector<std::vector<int>>>> vec(4,
@@ -230,6 +256,10 @@ TEST(jump_span, basics) {
 		fea::jump_span<const int> js = { vec };
 		EXPECT_EQ(js.size(), 256);
 		EXPECT_EQ(js.data().size(), 64);
+
+		js.push_back(vec);
+		EXPECT_EQ(js.size(), 512);
+		EXPECT_EQ(js.data().size(), 128);
 	}
 }
 
