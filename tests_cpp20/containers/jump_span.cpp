@@ -125,6 +125,18 @@ TEST(jump_span, basics) {
 				EXPECT_LT(diff2, 0);
 			}
 
+			if (it > js.begin()) {
+				size_t comp = it - js.begin();
+				--it;
+				EXPECT_EQ(it - js.begin(), comp - 1);
+			}
+
+			if (it < js.end()) {
+				size_t comp = js.end() - it;
+				++it;
+				EXPECT_EQ(js.end() - it, comp - 1);
+			}
+
 			it = it2;
 		}
 	};

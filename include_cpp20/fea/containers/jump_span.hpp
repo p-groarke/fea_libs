@@ -49,23 +49,21 @@
  */
 
 namespace fea {
-template <class, size_t, class>
+template <class, class>
 struct jump_span;
 
-template <class T, size_t Extent, class Alloc>
+template <class T, class Alloc>
 struct jump_span_iterator {
 	using value_type = std::remove_cv_t<T>;
 	using difference_type = std::ptrdiff_t;
 	using size_type = std::size_t;
 	using pointer = T*;
 	using reference = T&;
-	using iterator_category = std::random_access_iterator_tag; // not contiguous
+	using iterator_category = std::random_access_iterator_tag;
 	using iterator_concept = std::random_access_iterator_tag; // not contiguous
-	//  using iterator_concept = std::contiguous_iterator_tag; // not
-	//  contiguous
 
 	constexpr jump_span_iterator() noexcept = default;
-	constexpr jump_span_iterator(const jump_span<T, Extent, Alloc>& back_ref,
+	constexpr jump_span_iterator(const jump_span<T, Alloc>& back_ref,
 			size_type span_idx, size_type lcl_idx) noexcept
 			: _back_ptr(&back_ref)
 			, _span_idx(span_idx)
@@ -110,7 +108,7 @@ struct jump_span_iterator {
 
 	constexpr jump_span_iterator& operator+=(difference_type off) noexcept {
 		for (size_type i = _span_idx; i < _back_ptr->_spans.size(); ++i) {
-			const std::span<T, Extent>& s = _back_ptr->_spans[i];
+			const std::span<T>& s = _back_ptr->_spans[i];
 			if (_lcl_idx + off >= s.size()) {
 				off -= s.size() - _lcl_idx;
 				++_span_idx;
@@ -153,7 +151,7 @@ struct jump_span_iterator {
 		ret -= off;
 		return ret;
 	}
-	// TODO
+
 	[[nodiscard]] constexpr difference_type operator-(
 			const jump_span_iterator& right) const noexcept {
 		if (_span_idx == right._span_idx) {
@@ -165,8 +163,7 @@ struct jump_span_iterator {
 			size_type r_lcl_idx = right._lcl_idx;
 			for (size_type i = right._span_idx; i < _back_ptr->_spans.size();
 					++i) {
-				const std::span<T, Extent>& s = _back_ptr->_spans[i];
-
+				const std::span<T>& s = _back_ptr->_spans[i];
 				if (i != size_type(_span_idx)) {
 					ret += s.size() - r_lcl_idx;
 					r_lcl_idx = 0;
@@ -197,30 +194,30 @@ struct jump_span_iterator {
 		return _span_idx <=> right._span_idx;
 	}
 
-	template <class U, size_t V, class W>
+	template <class U, class W>
 	[[nodiscard]] friend constexpr bool are_contiguous(
-			const jump_span_iterator<U, V, W>& lhs,
-			const jump_span_iterator<U, V, W>& rhs);
+			const jump_span_iterator<U, W>& lhs,
+			const jump_span_iterator<U, W>& rhs) noexcept;
 
 
-	template <class U, size_t V, class W>
-	[[nodiscard]] friend constexpr typename std::span<U, V>::iterator
-	make_contiguous(const jump_span_iterator<U, V, W>& it);
+	template <class U, class W>
+	[[nodiscard]] friend constexpr typename std::span<U>::iterator
+	make_contiguous(const jump_span_iterator<U, W>& it);
 
 private:
-	const jump_span<T, Extent, Alloc>* _back_ptr = nullptr;
+	const jump_span<T, Alloc>* _back_ptr = nullptr;
 	difference_type _span_idx = 0;
 	size_type _lcl_idx = 0;
 };
 
-template <class T, size_t Extent, class Alloc>
-constexpr bool are_contiguous(const jump_span_iterator<T, Extent, Alloc>& lhs,
-		const jump_span_iterator<T, Extent, Alloc>& rhs) {
+template <class T, class Alloc>
+constexpr bool are_contiguous(const jump_span_iterator<T, Alloc>& lhs,
+		const jump_span_iterator<T, Alloc>& rhs) noexcept {
 	return lhs._span_idx == rhs._span_idx;
 }
 
 template <class It>
-constexpr bool are_contiguous(It, It) {
+constexpr bool are_contiguous(It, It) noexcept {
 	// wtf msvc
 	// return std::is_same_v<typename
 	// std::iterator_traits<It>::iterator_concept,
@@ -231,18 +228,15 @@ constexpr bool are_contiguous(It, It) {
 
 // By calling this, you promise that you've checked whether the iterators are
 // truly contiguous.
-template <class T, size_t Extent, class Alloc>
-constexpr typename std::span<T, Extent>::iterator make_contiguous(
-		const jump_span_iterator<T, Extent, Alloc>& it) {
-	if (it == it._back_ptr->end()) {
-		return it._back_ptr->data().back().end();
-	}
-	const std::span<T, Extent>& s = it._back_ptr->data()[it._span_idx];
+template <class T, class Alloc>
+constexpr typename std::span<T>::iterator make_contiguous(
+		const jump_span_iterator<T, Alloc>& it) noexcept {
+	const std::span<T>& s = it._back_ptr->data()[it._span_idx];
 	return s.begin() + it._lcl_idx;
 }
 
 template <class It>
-constexpr It make_contiguous(It it) {
+constexpr It make_contiguous(It it) noexcept {
 	// wtf msvc
 	// static_assert(
 	//		std::is_same_v<typename std::iterator_traits<It>::iterator_category,
@@ -256,8 +250,7 @@ constexpr It make_contiguous(It it) {
 }
 
 
-template <class T, size_t Extent = std::dynamic_extent,
-		class Alloc = std::allocator<std::span<T, Extent>>>
+template <class T, class Alloc = std::allocator<std::span<T>>>
 struct jump_span {
 	using element_type = T;
 	using value_type = std::remove_cv_t<T>;
@@ -267,18 +260,13 @@ struct jump_span {
 	using const_pointer = const T*;
 	using reference = T&;
 	using const_reference = const T&;
-	using iterator = jump_span_iterator<T, Extent, Alloc>;
+	using iterator = jump_span_iterator<T, Alloc>;
 	using reverse_iterator = std::reverse_iterator<iterator>;
 
-	static constexpr size_type extent = Extent;
-
 	// Ctors
-	constexpr jump_span() noexcept(noexcept(Alloc()))
-		requires(extent == 0 || extent == std::dynamic_extent)
-	= default;
+	constexpr jump_span() = default;
 
-	constexpr jump_span(
-			std::initializer_list<std::span<element_type, extent>>&& list)
+	constexpr jump_span(std::initializer_list<std::span<element_type>>&& list)
 			: _spans(list.begin(), list.end()) {
 		clean_empty();
 	}
@@ -290,7 +278,7 @@ struct jump_span {
 	}
 
 	template <size_t N>
-	constexpr jump_span(const std::array<std::span<element_type, extent>, N>& a)
+	constexpr jump_span(const std::array<std::span<element_type>, N>& a)
 			: _spans(a.begin(), a.end()) {
 		clean_empty();
 	}
@@ -301,25 +289,23 @@ struct jump_span {
 		clean_empty();
 	}
 
-	constexpr jump_span(
-			const std::vector<std::span<element_type, extent>, Alloc>& v)
+	constexpr jump_span(const std::vector<std::span<element_type>, Alloc>& v)
 			: _spans(v.begin(), v.end()) {
 		clean_empty();
 	}
 
-	constexpr jump_span(std::span<element_type, extent> s)
+	constexpr jump_span(const std::span<element_type>& s)
 			: _spans{ { s } } {
 		clean_empty();
 	}
 
-	constexpr jump_span(
-			const std::span<element_type, extent>* s, size_type count)
+	constexpr jump_span(const std::span<element_type>* s, size_type count)
 			: _spans(s, s + count) {
 		clean_empty();
 	}
 
 	// Special jump_span functions.
-	constexpr void push_back(std::span<element_type, extent> s) {
+	constexpr void push_back(const std::span<element_type>& s) {
 		if (s.empty()) {
 			return;
 		}
@@ -354,7 +340,7 @@ struct jump_span {
 		assert(idx < size());
 
 		size_type accum = 0; // modulo is expensive, go with addition.
-		for (const std::span<element_type, extent>& s : _spans) {
+		for (const std::span<element_type>& s : _spans) {
 			size_type lcl_idx = idx - accum;
 			if (lcl_idx < s.size()) {
 				return s[lcl_idx];
@@ -364,7 +350,7 @@ struct jump_span {
 		return _spans.back()[_spans.back().size()];
 	}
 
-	[[nodiscard]] constexpr std::span<const std::span<element_type, extent>>
+	[[nodiscard]] constexpr std::span<const std::span<element_type>>
 	data() const noexcept {
 		return { _spans };
 	}
@@ -372,21 +358,21 @@ struct jump_span {
 	// Observers
 	[[nodiscard]] constexpr size_type size() const noexcept {
 		size_type ret = 0;
-		for (const std::span<element_type, extent>& s : _spans) {
+		for (const std::span<element_type>& s : _spans) {
 			ret += s.size();
 		}
 		return ret;
 	}
 	[[nodiscard]] constexpr size_type size_bytes() const noexcept {
 		size_type ret = 0;
-		for (const std::span<element_type, extent>& s : _spans) {
+		for (const std::span<element_type>& s : _spans) {
 			ret += s.size_bytes();
 		}
 		return ret;
 	}
 	[[nodiscard]] constexpr bool empty() const noexcept {
 		bool ret = true;
-		for (const std::span<element_type, extent>& s : _spans) {
+		for (const std::span<element_type>& s : _spans) {
 			ret &= s.empty();
 		}
 		return ret;
@@ -396,16 +382,16 @@ struct jump_span {
 	// Ignored for time-being.
 
 private:
-	friend jump_span_iterator<T, Extent, Alloc>;
+	friend jump_span_iterator<T, Alloc>;
 
 	// Empty spans cause issues with iterators.
 	// Clean the vector to prevent slowing down iterators even more.
 	void clean_empty() {
 		auto new_end = std::remove_if(_spans.begin(), _spans.end(),
-				[](const std::span<T, Extent>& s) { return s.empty(); });
+				[](const std::span<T>& s) { return s.empty(); });
 		_spans.erase(new_end, _spans.end());
 	}
 
-	std::vector<std::span<T, Extent>, Alloc> _spans;
+	std::vector<std::span<T>, Alloc> _spans;
 };
 } // namespace fea
