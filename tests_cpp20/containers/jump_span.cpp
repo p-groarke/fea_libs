@@ -168,6 +168,69 @@ TEST(jump_span, basics) {
 		*it = -42;
 		EXPECT_EQ(js[13], -42);
 	}
+
+	// ctors
+	{
+		std::vector<int> vec{ 0, 1 };
+		fea::jump_span<const int> js = {
+			{ vec.data(), 1 },
+			{ vec.data() + 1, 1 },
+		};
+		EXPECT_EQ(js.size(), 2);
+		EXPECT_EQ(js.data().size(), 2);
+	}
+	{
+		std::vector<int> vec{ 0, 1 };
+		fea::jump_span<const int> js = { vec.data(), 2 };
+		EXPECT_EQ(js.size(), 2);
+		EXPECT_EQ(js.data().size(), 1);
+	}
+	{
+		int arr[2] = { 0, 1 };
+		fea::jump_span<const int> js = { arr };
+		EXPECT_EQ(js.size(), 2);
+		EXPECT_EQ(js.data().size(), 1);
+	}
+	{
+		std::array<int, 2> arr{ 0, 1 };
+		fea::jump_span<const int> js = { arr };
+		EXPECT_EQ(js.size(), 2);
+		EXPECT_EQ(js.data().size(), 1);
+	}
+	{
+		std::array<std::array<int, 2>, 2> arr{};
+		fea::jump_span<const int> js = { arr };
+		EXPECT_EQ(js.size(), 4);
+		EXPECT_EQ(js.data().size(), 2);
+	}
+	{
+		std::vector<int> vec(4);
+		fea::jump_span<const int> js = { vec };
+		EXPECT_EQ(js.size(), 4);
+		EXPECT_EQ(js.data().size(), 1);
+	}
+	{
+		std::vector<std::vector<int>> vec(4, std::vector<int>(4));
+		fea::jump_span<const int> js = { vec };
+		EXPECT_EQ(js.size(), 16);
+		EXPECT_EQ(js.data().size(), 4);
+	}
+	{
+		std::vector<std::vector<std::vector<int>>> vec(
+				4, std::vector<std::vector<int>>(4, std::vector<int>(4)));
+		fea::jump_span<const int> js = { vec };
+		EXPECT_EQ(js.size(), 64);
+		EXPECT_EQ(js.data().size(), 16);
+	}
+	{
+		std::vector<std::vector<std::vector<std::vector<int>>>> vec(4,
+				std::vector<std::vector<std::vector<int>>>(4,
+						std::vector<std::vector<int>>(4, std::vector<int>(4))));
+
+		fea::jump_span<const int> js = { vec };
+		EXPECT_EQ(js.size(), 256);
+		EXPECT_EQ(js.data().size(), 64);
+	}
 }
 
 } // namespace

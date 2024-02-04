@@ -31,6 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
+#include "fea/meta/traits.hpp"
+
 #include <array>
 #include <cassert>
 #include <initializer_list>
@@ -271,45 +273,80 @@ struct jump_span {
 		clean_empty();
 	}
 
-	template <size_t N>
-	constexpr jump_span(const std::array<value_type, N>& a)
-			: _spans({ a.begin(), a.end() }) {
+	template <class It>
+	constexpr jump_span(It first, size_type count)
+			: _spans{ std::span<element_type>{ first, count } } {
 		clean_empty();
 	}
 
 	template <size_t N>
-	constexpr jump_span(const std::array<std::span<element_type>, N>& a)
-			: _spans(a.begin(), a.end()) {
+	constexpr jump_span(std::type_identity_t<element_type> (&arr)[N])
+			: _spans{ std::span<element_type>{ arr[N] } } {
 		clean_empty();
 	}
 
-	template <class A>
-	constexpr jump_span(const std::vector<value_type, A>& v)
-			: _spans{ { v.begin(), v.end() } } {
+	// Accept any container<T> with data() and size().
+	template <class Container>
+		requires fea::is_contiguous_v<Container>
+			&& std::is_convertible_v<typename Container::value_type,
+					element_type>
+	constexpr jump_span(const Container& container)
+			: _spans{ std::span<element_type>{
+					container.data(), container.size() } } {
 		clean_empty();
 	}
 
-	constexpr jump_span(const std::vector<std::span<element_type>, Alloc>& v)
-			: _spans(v.begin(), v.end()) {
+	// Accept any container<container<T>> with recursive data() and size().
+	template <class Container>
+		requires fea::is_contiguous_v<Container>
+			&& fea::is_contiguous_v<typename Container::value_type>
+			&& std::is_convertible_v<typename Container::value_type::value_type,
+					element_type>
+	constexpr jump_span(const Container& container)
+			: _spans(container.begin(), container.end()) {
 		clean_empty();
 	}
 
-	constexpr jump_span(const std::span<element_type>& s)
-			: _spans{ { s } } {
-		clean_empty();
-	}
-
-	constexpr jump_span(const std::span<element_type>* s, size_type count)
-			: _spans(s, s + count) {
-		clean_empty();
-	}
-
-	// Special jump_span functions.
-	constexpr void push_back(const std::span<element_type>& s) {
-		if (s.empty()) {
-			return;
+	// Accept any container<container<container<T>>> with recursive data() and
+	// size().
+	template <class Container>
+		requires fea::is_contiguous_v<Container>
+			&& fea::is_contiguous_v<typename Container::value_type>
+			&& fea::is_contiguous_v<typename Container::value_type::value_type>
+			&& std::is_convertible_v<
+					typename Container::value_type::value_type::value_type,
+					element_type>
+	constexpr jump_span(const Container& container) {
+		for (const auto& nested1 : container) {
+			for (const auto& nested2 : nested1) {
+				_spans.push_back(std::span<element_type>{
+						nested2.data(), nested2.size() });
+			}
 		}
-		_spans.push_back(s);
+		clean_empty();
+	}
+
+	// Accept any container<container<container<container<T>>>> with recursive
+	// data() and size().
+	template <class Container>
+		requires fea::is_contiguous_v<Container>
+			&& fea::is_contiguous_v<typename Container::value_type>
+			&& fea::is_contiguous_v<typename Container::value_type::value_type>
+			&& fea::is_contiguous_v<
+					typename Container::value_type::value_type::value_type>
+			&& std::is_convertible_v<typename Container::value_type::
+											 value_type::value_type::value_type,
+					element_type>
+	constexpr jump_span(const Container& container) {
+		for (const auto& nested1 : container) {
+			for (const auto& nested2 : nested1) {
+				for (const auto& nested3 : nested2) {
+					_spans.push_back(std::span<element_type>{
+							nested3.data(), nested3.size() });
+				}
+			}
+		}
+		clean_empty();
 	}
 
 	// Iterators
@@ -380,6 +417,31 @@ struct jump_span {
 
 	// Subviews
 	// Ignored for time-being.
+
+	// Special jump_span functions.
+
+	constexpr void reserve(size_type new_cap) const {
+		_spans.reserve(new_cap);
+	}
+
+	constexpr size_type capacity() const noexcept {
+		return _spans.capacity();
+	}
+
+	constexpr void shrink_to_fit() {
+		_spans.shrink_to_fit();
+	}
+
+	constexpr void push_back(const std::span<element_type>& s) {
+		if (s.empty()) {
+			return;
+		}
+		_spans.push_back(s);
+	}
+
+	constexpr void pop_back() {
+		_spans.pop_back();
+	}
 
 private:
 	friend jump_span_iterator<T, Alloc>;
