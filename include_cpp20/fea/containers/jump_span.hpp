@@ -202,7 +202,7 @@ struct jump_span_iterator {
 
 	template <class U, class W>
 	[[nodiscard]] friend constexpr typename std::span<U>::iterator
-	make_contiguous(const jump_span_iterator<U, W>& it);
+	make_contiguous(const jump_span_iterator<U, W>& it) noexcept;
 
 private:
 	const jump_span<T, Alloc>* _back_ptr = nullptr;
