@@ -114,13 +114,32 @@ template <class Str1, class Str2, class Str3>
 	return ret;
 }
 
+// Returns true if the character is an ascii letter.
+template <class CharT, class = std::enable_if_t<std::is_integral_v<CharT>>>
+[[nodiscard]] constexpr CharT is_letter_ascii(CharT ch) {
+	return (ch >= FEA_CH('a') && ch <= FEA_CH('z'))
+			|| (ch >= FEA_CH('A') && ch <= FEA_CH('Z'));
+}
+
+// Returns true if the character is a lower case ascii letter.
+template <class CharT, class = std::enable_if_t<std::is_integral_v<CharT>>>
+[[nodiscard]] constexpr CharT is_lower_letter_ascii(CharT ch) {
+	return ch >= FEA_CH('a') && ch <= FEA_CH('z');
+}
+
+// Returns true if the character is an upper case ascii letter.
+template <class CharT, class = std::enable_if_t<std::is_integral_v<CharT>>>
+[[nodiscard]] constexpr CharT is_upper_letter_ascii(CharT ch) {
+	return ch >= FEA_CH('A') && ch <= FEA_CH('Z');
+}
+
 // Lower case ASCII character.
 // C's tolower(int) is undefined for characters unrepresentable by unsigned
 // char.
 template <class CharT, class = std::enable_if_t<std::is_integral_v<CharT>>>
 [[nodiscard]] constexpr CharT to_lower_ascii(CharT ch) {
 	constexpr auto diff = FEA_CH('a') - FEA_CH('A');
-	if (ch <= FEA_CH('Z') && ch >= FEA_CH('A')) {
+	if (fea::is_upper_letter_ascii(ch)) {
 		return ch + diff;
 	}
 	return ch;
@@ -154,7 +173,7 @@ template <class Str, class = std::enable_if_t<!std::is_integral_v<Str>>>
 template <class CharT, class = std::enable_if_t<std::is_integral_v<CharT>>>
 [[nodiscard]] constexpr CharT to_upper_ascii(CharT ch) {
 	constexpr auto diff = FEA_CH('a') - FEA_CH('A');
-	if (ch >= FEA_CH('a') && ch <= FEA_CH('z')) {
+	if (fea::is_lower_letter_ascii(ch)) {
 		return ch - diff;
 	}
 	return ch;
@@ -182,6 +201,58 @@ template <class Str, class = std::enable_if_t<!std::is_integral_v<Str>>>
 
 /* TODO : Real utf to_upper. */
 
+// Capitalizes first character and lowercases the rest.
+template <template <class, class, class...> class Str, class CharT,
+		template <class> class Traits, class... Args>
+constexpr void capitalize_ascii_inplace(
+		Str<CharT, Traits<CharT>, Args...>& out) {
+	fea::to_lower_ascii_inplace(out);
+	out.front() = to_upper_ascii(out.front());
+}
+
+// Capitalizes first character and lowercases the rest.
+template <class Str, class = std::enable_if_t<!std::is_integral_v<Str>>>
+[[nodiscard]] auto capitalize_ascii(const Str& str) {
+	using CharT = typename detail::str_view<Str>::char_type;
+	using Traits = typename detail::str_view<Str>::traits_type;
+	std::basic_string<CharT, Traits> ret{ str };
+
+	capitalize_ascii_inplace(ret);
+	return ret;
+}
+
+// Capitalizes first letter of each word and lowercases the rest.
+template <template <class, class, class...> class Str, class CharT,
+		template <class> class Traits, class... Args>
+constexpr void capitalize_words_ascii_inplace(
+		Str<CharT, Traits<CharT>, Args...>& out) {
+	bool prev_space = true;
+	for (CharT& ch : out) {
+		if (prev_space) {
+			ch = fea::to_upper_ascii(ch);
+		} else {
+			ch = fea::to_lower_ascii(ch);
+		}
+
+		// Consider everything that isn't an ascii letter to be a "space".
+		if (!is_letter_ascii(ch)) {
+			prev_space = true;
+		} else {
+			prev_space = false;
+		}
+	}
+}
+
+// Capitalizes first letter of each word and lowercases the rest.
+template <class Str, class = std::enable_if_t<!std::is_integral_v<Str>>>
+[[nodiscard]] auto capitalize_words_ascii(const Str& str) {
+	using CharT = typename detail::str_view<Str>::char_type;
+	using Traits = typename detail::str_view<Str>::traits_type;
+	std::basic_string<CharT, Traits> ret{ str };
+
+	capitalize_words_ascii_inplace(ret);
+	return ret;
+}
 
 // Removes any of the leading trim_chars.
 template <class CharT>
