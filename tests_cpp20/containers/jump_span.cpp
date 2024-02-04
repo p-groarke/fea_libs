@@ -26,6 +26,10 @@ TEST(jump_span, basics) {
 			{ v.begin() + 15, v.begin() + 20 },
 		};
 
+		EXPECT_EQ(*(js.begin()), *(js.begin().operator->()));
+
+		EXPECT_TRUE(js.begin() + 5 == js.end() - 15);
+		EXPECT_TRUE(js.begin() + 15 == js.end() - 5);
 		EXPECT_TRUE(js.begin() < js.end());
 		EXPECT_FALSE(js.end() < js.begin());
 		EXPECT_FALSE(js.begin() > js.end());
@@ -56,6 +60,16 @@ TEST(jump_span, basics) {
 		EXPECT_EQ(js.size_bytes(), 20 * sizeof(int));
 		EXPECT_FALSE(js.empty());
 
+		{
+			auto it = js.begin();
+			EXPECT_EQ(*(++it), 1);
+			EXPECT_EQ(*(it++), 1);
+			EXPECT_EQ(*(it), 2);
+			EXPECT_EQ(*(--it), 1);
+			EXPECT_EQ(*(it--), 1);
+			EXPECT_EQ(*(it), 0);
+		}
+
 		int expected = 0;
 		for (int i : js) {
 			EXPECT_EQ(i, expected);
@@ -82,13 +96,31 @@ TEST(jump_span, basics) {
 			EXPECT_GE(it, js.begin());
 			EXPECT_LT(it, js.end());
 
-			size_t beg = std::distance(js.begin(), it);
+			auto it2 = it;
+			size_t beg = std::distance(js.begin(), it2);
 			off = fea::random_val(size_t(0), beg);
-			it -= off;
+			it2 -= off;
 			assert(it >= js.begin() && it < js.end());
 			EXPECT_EQ(std::distance(js.begin(), it), *it);
 			EXPECT_GE(it, js.begin());
 			EXPECT_LT(it, js.end());
+
+			ptrdiff_t diff1 = it - it2;
+			ptrdiff_t diff2 = it2 - it;
+			EXPECT_TRUE(std::abs(diff1) <= 20);
+			EXPECT_TRUE(std::abs(diff2) <= 20);
+			if (it == it2) {
+				EXPECT_EQ(diff1, 0);
+				EXPECT_EQ(diff2, 0);
+			} else if (it < it2) {
+				EXPECT_LT(diff1, 0);
+				EXPECT_GT(diff2, 0);
+			} else {
+				EXPECT_GT(diff1, 0);
+				EXPECT_LT(diff2, 0);
+			}
+
+			it = it2;
 		}
 	};
 

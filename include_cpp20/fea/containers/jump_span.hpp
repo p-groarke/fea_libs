@@ -84,7 +84,7 @@ struct jump_span_iterator {
 		}
 		return *this;
 	}
-	constexpr jump_span_iterator& operator++(int) noexcept {
+	constexpr jump_span_iterator operator++(int) noexcept {
 		jump_span_iterator ret{ *this };
 		++*this;
 		return ret;
@@ -99,7 +99,7 @@ struct jump_span_iterator {
 		}
 		return *this;
 	}
-	constexpr jump_span_iterator& operator--(int) noexcept {
+	constexpr jump_span_iterator operator--(int) noexcept {
 		jump_span_iterator ret{ *this };
 		--*this;
 		return ret;
