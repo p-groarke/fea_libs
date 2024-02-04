@@ -280,39 +280,49 @@ struct jump_span {
 	constexpr jump_span(
 			std::initializer_list<std::span<element_type, extent>>&& list)
 			: _spans(list.begin(), list.end()) {
+		clean_empty();
 	}
 
 	template <size_t N>
 	constexpr jump_span(const std::array<value_type, N>& a)
 			: _spans({ a.begin(), a.end() }) {
+		clean_empty();
 	}
 
 	template <size_t N>
 	constexpr jump_span(const std::array<std::span<element_type, extent>, N>& a)
 			: _spans(a.begin(), a.end()) {
+		clean_empty();
 	}
 
 	template <class A>
 	constexpr jump_span(const std::vector<value_type, A>& v)
 			: _spans{ { v.begin(), v.end() } } {
+		clean_empty();
 	}
 
 	constexpr jump_span(
 			const std::vector<std::span<element_type, extent>, Alloc>& v)
 			: _spans(v.begin(), v.end()) {
+		clean_empty();
 	}
 
 	constexpr jump_span(std::span<element_type, extent> s)
 			: _spans{ { s } } {
+		clean_empty();
 	}
 
 	constexpr jump_span(
 			const std::span<element_type, extent>* s, size_type count)
 			: _spans(s, s + count) {
+		clean_empty();
 	}
 
 	// Special jump_span functions.
 	constexpr void push_back(std::span<element_type, extent> s) {
+		if (s.empty()) {
+			return;
+		}
 		_spans.push_back(s);
 	}
 
@@ -387,6 +397,14 @@ struct jump_span {
 
 private:
 	friend jump_span_iterator<T, Extent, Alloc>;
+
+	// Empty spans cause issues with iterators.
+	// Clean the vector to prevent slowing down iterators even more.
+	void clean_empty() {
+		auto new_end = std::remove_if(_spans.begin(), _spans.end(),
+				[](const std::span<T, Extent>& s) { return s.empty(); });
+		_spans.erase(new_end, _spans.end());
+	}
 
 	std::vector<std::span<T, Extent>, Alloc> _spans;
 };
