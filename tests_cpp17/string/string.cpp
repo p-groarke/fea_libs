@@ -397,6 +397,103 @@ TEST(string, to_lower_to_upper_ascii) {
 	});
 }
 
+TEST(string, capitalize_ascii) {
+	gen_tests(testcases, "A B C", "bla bla bla", "bLA Bla blA", "a", "AA",
+			"BcD", "BoBBy", "+-/", "\naaaAAbbBB", "bla");
+
+	gen_tests(capitalize_answers, "A b c", "Bla bla bla", "Bla bla bla", "A",
+			"Aa", "Bcd", "Bobby", "+-/", "\naaaaabbbb", "Bla");
+
+	gen_tests(capitalize_words_answers, "A B C", "Bla Bla Bla", "Bla Bla Bla",
+			"A", "Aa", "Bcd", "Bobby", "+-/", "\nAaaaabbbb", "Bla");
+
+	constexpr size_t s = std::tuple_size_v<decltype(testcases)>;
+	fea::static_for<s>([&](auto const_i) {
+		constexpr size_t i = const_i;
+		const auto& test_arr = std::get<i>(testcases);
+		const auto& cap_arr = std::get<i>(capitalize_answers);
+		const auto& cap_words_arr = std::get<i>(capitalize_words_answers);
+		ASSERT_EQ(cap_arr.size(), cap_words_arr.size());
+
+		for (size_t j = 0; j < cap_arr.size(); ++j) {
+			const auto& str = test_arr[j];
+			{
+				auto new_str = fea::capitalize_ascii(str);
+				EXPECT_EQ(cap_arr[j], new_str);
+
+				new_str = fea::capitalize_words_ascii(str);
+				EXPECT_EQ(cap_words_arr[j], new_str);
+
+				new_str = fea::capitalize_ascii(str);
+				EXPECT_EQ(cap_arr[j], new_str);
+				new_str = fea::capitalize_words_ascii(str);
+				EXPECT_EQ(cap_words_arr[j], new_str);
+			}
+
+			{
+				using char_t = std::decay_t<decltype(str[0])>;
+				auto temp_str = std::basic_string<char_t>{ str };
+				fea::capitalize_ascii_inplace(temp_str);
+				EXPECT_EQ(cap_arr[j], temp_str);
+
+				temp_str = std::basic_string<char_t>{ str };
+				fea::capitalize_words_ascii_inplace(temp_str);
+				EXPECT_EQ(cap_words_arr[j], temp_str);
+
+				fea::capitalize_ascii_inplace(temp_str);
+				EXPECT_EQ(cap_arr[j], temp_str);
+				fea::capitalize_words_ascii_inplace(temp_str);
+				EXPECT_EQ(cap_words_arr[j], temp_str);
+			}
+		}
+	});
+}
+
+TEST(string, is_letter) {
+	gen_tests(valid_search, "a", "B", "c", "Z", "A", "z", "C");
+	fea::tuple_for_each(
+			[](const auto& str_tup) {
+				for (const auto& str : str_tup) {
+					EXPECT_TRUE(fea::is_letter_ascii(str[0]));
+				}
+			},
+			valid_search);
+
+	gen_tests(lower_search, "a", "b", "c", "z");
+	fea::tuple_for_each(
+			[](const auto& str_tup) {
+				for (const auto& str : str_tup) {
+					EXPECT_TRUE(fea::is_letter_ascii(str[0]));
+					EXPECT_TRUE(fea::is_lower_letter_ascii(str[0]));
+					EXPECT_FALSE(fea::is_upper_letter_ascii(str[0]));
+				}
+			},
+			lower_search);
+
+	gen_tests(upper_search, "A", "B", "C", "Z");
+	fea::tuple_for_each(
+			[](const auto& str_tup) {
+				for (const auto& str : str_tup) {
+					EXPECT_TRUE(fea::is_letter_ascii(str[0]));
+					EXPECT_FALSE(fea::is_lower_letter_ascii(str[0]));
+					EXPECT_TRUE(fea::is_upper_letter_ascii(str[0]));
+				}
+			},
+			upper_search);
+
+	gen_tests(invalid_search, "0", "9", "!", "-", " ", "/", "$", "#", "\n",
+			"\r", "\t");
+	fea::tuple_for_each(
+			[](const auto& str_tup) {
+				for (const auto& str : str_tup) {
+					EXPECT_FALSE(fea::is_letter_ascii(str[0]));
+					EXPECT_FALSE(fea::is_lower_letter_ascii(str[0]));
+					EXPECT_FALSE(fea::is_upper_letter_ascii(str[0]));
+				}
+			},
+			invalid_search);
+}
+
 TEST(string, is_number) {
 	gen_tests(valid_search, "0", "12", "1234", "5555", "4242", "69");
 	fea::tuple_for_each(
