@@ -31,16 +31,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
+#include <array>
 #include <cassert>
 #include <initializer_list>
 #include <iterator>
 #include <memory>
 #include <span>
+#include <type_traits>
 #include <vector>
 
-
 /**
- * jump_span : An ALLOCATING span like structure which refers to multiple
+ * jump_span : An *allocating* span like structure which refers to multiple
  * contiguous spans. Iteratable as you would a contiguous container.
  * Basically, an iterator api around std::vector<std::span<T>>.
  *
@@ -58,8 +59,10 @@ struct jump_span_iterator {
 	using size_type = std::size_t;
 	using pointer = T*;
 	using reference = T&;
-	using iterator_category = std::random_access_iterator_tag;
+	using iterator_category = std::random_access_iterator_tag; // not contiguous
 	using iterator_concept = std::random_access_iterator_tag; // not contiguous
+	//  using iterator_concept = std::contiguous_iterator_tag; // not
+	//  contiguous
 
 	constexpr jump_span_iterator() noexcept = default;
 	constexpr jump_span_iterator(const jump_span<T, Extent, Alloc>& back_ref,
@@ -194,11 +197,64 @@ struct jump_span_iterator {
 		return _span_idx <=> right._span_idx;
 	}
 
+	template <class U, size_t V, class W>
+	[[nodiscard]] friend constexpr bool are_contiguous(
+			const jump_span_iterator<U, V, W>& lhs,
+			const jump_span_iterator<U, V, W>& rhs);
+
+
+	template <class U, size_t V, class W>
+	[[nodiscard]] friend constexpr typename std::span<U, V>::iterator
+	make_contiguous(const jump_span_iterator<U, V, W>& it);
+
 private:
 	const jump_span<T, Extent, Alloc>* _back_ptr = nullptr;
 	difference_type _span_idx = 0;
 	size_type _lcl_idx = 0;
 };
+
+template <class T, size_t Extent, class Alloc>
+constexpr bool are_contiguous(const jump_span_iterator<T, Extent, Alloc>& lhs,
+		const jump_span_iterator<T, Extent, Alloc>& rhs) {
+	return lhs._span_idx == rhs._span_idx;
+}
+
+template <class It>
+constexpr bool are_contiguous(It, It) {
+	// wtf msvc
+	// return std::is_same_v<typename
+	// std::iterator_traits<It>::iterator_concept,
+	//		std::contiguous_iterator_tag>;
+	return std::is_same_v<typename std::iterator_traits<It>::iterator_category,
+			std::random_access_iterator_tag>;
+}
+
+// By calling this, you promise that you've checked whether the iterators are
+// truly contiguous.
+template <class T, size_t Extent, class Alloc>
+constexpr typename std::span<T, Extent>::iterator make_contiguous(
+		const jump_span_iterator<T, Extent, Alloc>& it) {
+	if (it == it._back_ptr->end()) {
+		return it._back_ptr->data().back().end();
+	}
+	const std::span<T, Extent>& s = it._back_ptr->data()[it._span_idx];
+	return s.begin() + it._lcl_idx;
+}
+
+template <class It>
+constexpr It make_contiguous(It it) {
+	// wtf msvc
+	// static_assert(
+	//		std::is_same_v<typename std::iterator_traits<It>::iterator_category,
+	//				std::contiguous_iterator_tag>,
+	//		"make_contiguous : Cannot make unknown iterators contiguous.");
+	static_assert(
+			std::is_same_v<typename std::iterator_traits<It>::iterator_category,
+					std::random_access_iterator_tag>,
+			"make_contiguous : Cannot make unknown iterators contiguous.");
+	return it;
+}
+
 
 template <class T, size_t Extent = std::dynamic_extent,
 		class Alloc = std::allocator<std::span<T, Extent>>>
@@ -224,6 +280,40 @@ struct jump_span {
 	constexpr jump_span(
 			std::initializer_list<std::span<element_type, extent>>&& list)
 			: _spans(list.begin(), list.end()) {
+	}
+
+	template <size_t N>
+	constexpr jump_span(const std::array<value_type, N>& a)
+			: _spans({ a.begin(), a.end() }) {
+	}
+
+	template <size_t N>
+	constexpr jump_span(const std::array<std::span<element_type, extent>, N>& a)
+			: _spans(a.begin(), a.end()) {
+	}
+
+	template <class A>
+	constexpr jump_span(const std::vector<value_type, A>& v)
+			: _spans{ { v.begin(), v.end() } } {
+	}
+
+	constexpr jump_span(
+			const std::vector<std::span<element_type, extent>, Alloc>& v)
+			: _spans(v.begin(), v.end()) {
+	}
+
+	constexpr jump_span(std::span<element_type, extent> s)
+			: _spans{ { s } } {
+	}
+
+	constexpr jump_span(
+			const std::span<element_type, extent>* s, size_type count)
+			: _spans(s, s + count) {
+	}
+
+	// Special jump_span functions.
+	constexpr void push_back(std::span<element_type, extent> s) {
+		_spans.push_back(s);
 	}
 
 	// Iterators

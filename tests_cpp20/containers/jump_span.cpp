@@ -70,6 +70,11 @@ TEST(jump_span, basics) {
 			EXPECT_EQ(*(it), 0);
 		}
 
+		EXPECT_FALSE(fea::are_contiguous(js.begin(), js.end()));
+		EXPECT_TRUE(fea::are_contiguous(js.begin(), js.begin() + 2));
+		EXPECT_FALSE(fea::are_contiguous(js.end(), js.end() - 1));
+		EXPECT_TRUE(fea::are_contiguous(js.end() - 1, js.end() - 2));
+
 		int expected = 0;
 		for (int i : js) {
 			EXPECT_EQ(i, expected);
