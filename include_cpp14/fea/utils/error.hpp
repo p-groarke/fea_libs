@@ -55,13 +55,12 @@ inline std::error_code last_os_error() {
 
 // Prints error message.
 inline void print_error_message(
-	const char* func_name, size_t line, const std::error_code& ec) {
+		const char* func_name, size_t line, const std::error_code& ec) {
 	std::string msg
 			= "Error Code " + std::to_string(ec.value()) + ". " + ec.message();
 	fea::print_error_message(func_name, line, msg);
 }
 
-// Prints error message.
 // Throws if FEA_NOTHROW is not defined, else exits with error code.
 // Provide __FUNCTION__, __LINE__, std::error_code.
 inline void maybe_throw(
@@ -82,5 +81,12 @@ inline void maybe_throw(
 #else
 	std::exit(EXIT_FAILURE);
 #endif
+}
+
+// If there is a system error, throws if FEA_NOTHROW is not defined, else exits
+// with error code. Prints last error message.
+// Provide __FUNCTION__, __LINE__.
+inline void maybe_throw_on_os_error(const char* func_name, size_t line) {
+	maybe_throw(func_name, line, fea::last_os_error());
 }
 } // namespace fea
