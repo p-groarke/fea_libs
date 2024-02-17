@@ -53,6 +53,11 @@ inline std::error_code last_os_error() {
 #endif
 }
 
+// Some windows function report in errno. Use this to force errno on windows.
+inline std::error_code last_errno_error() {
+	return std::error_code{ errno, std::system_category() };
+}
+
 // Prints error message.
 inline void print_error_message(
 		const char* func_name, size_t line, const std::error_code& ec) {
@@ -86,7 +91,47 @@ inline void maybe_throw(
 // If there is a system error, throws if FEA_NOTHROW is not defined, else exits
 // with error code. Prints last error message.
 // Provide __FUNCTION__, __LINE__.
+// Uses GetLastError on windows, errno on posix.
 inline void maybe_throw_on_os_error(const char* func_name, size_t line) {
 	maybe_throw(func_name, line, fea::last_os_error());
 }
+
+// If there is a system error, throws if FEA_NOTHROW is not defined, else exits
+// with error code. Prints last error message.
+// Provide __FUNCTION__, __LINE__.
+// Uses errno on all platforms.
+inline void maybe_throw_on_errno(const char* func_name, size_t line) {
+	maybe_throw(func_name, line, fea::last_errno_error());
+}
+
+// Prints message and exits with error code.
+// Use this when you absolutely can't throw (from destructors for example).
+// Provide __FUNCTION__, __LINE__, "your message".
+inline void error_exit(
+		const char* func_name, size_t line, const std::error_code& ec) {
+	if (!ec) {
+		return;
+	}
+
+	fea::print_error_message(func_name, line, ec);
+	assert(false);
+	std::exit(EXIT_FAILURE);
+}
+
+// Prints message and exits with error code.
+// Use this when you absolutely can't throw (from destructors for example).
+// Provide __FUNCTION__, __LINE__.
+// Uses GetLastError on windows, errno on posix.
+inline void error_exit_on_os_error(const char* func_name, size_t line) {
+	error_exit(func_name, line, fea::last_os_error());
+}
+
+// Prints message and exits with error code.
+// Use this when you absolutely can't throw (from destructors for example).
+// Provide __FUNCTION__, __LINE__.
+// Uses errno on all platforms.
+inline void error_exit_on_errno(const char* func_name, size_t line) {
+	error_exit(func_name, line, fea::last_errno_error());
+}
+
 } // namespace fea

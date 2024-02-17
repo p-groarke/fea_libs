@@ -73,6 +73,7 @@ jobs:
         cd ${{ github.workspace }}/build
         ./bin/fea_libs_tests
         ./bin/fea_libs_nothrow_tests
+        ./bin/fea_libs_pipe_tests
 
 
   Clang:
@@ -135,6 +136,7 @@ jobs:
         cd ${{ github.workspace }}/build
         ./bin/fea_libs_tests
         ./bin/fea_libs_nothrow_tests
+        ./bin/fea_libs_pipe_tests
 
 
   Gcc:
@@ -205,3 +207,4 @@ jobs:
         cd ${{ github.workspace }}/build
         ./bin/fea_libs_tests
         ./bin/fea_libs_nothrow_tests
+        ./bin/fea_libs_pipe_tests
