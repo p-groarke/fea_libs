@@ -156,6 +156,9 @@ if (FEA_TESTS)
 	fea_set_compile_options(${TEST_NAME_NOTHROW} PRIVATE)
 	fea_set_compile_options(${TEST_NAME_PIPE} PRIVATE)
 
+	file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/bin/tests_data/pipe.txt" PIPE_FILEPATH)
+	set_target_properties(${TEST_NAME_PIPE} PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "< \"${PIPE_FILEPATH}\"")
+
 	# Set NOTHROW and other global defines that could impact tests.
 	target_compile_definitions(${TEST_NAME_NOTHROW} PRIVATE FEA_NOTHROW_DEF -DFEA_SERIALIZE_SIZE_T=uint16_t -DFEA_CODEPAGE_CONVERSIONS_DEF)
 
@@ -195,4 +198,5 @@ if (FEA_TESTS)
 
 	# Copy test data on build.
 	fea_copy_on_build(${TEST_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp17/data $<TARGET_FILE_DIR:${TEST_NAME}>/tests_data)
+	fea_copy_on_build(${TEST_NAME_PIPE} ${CMAKE_CURRENT_SOURCE_DIR}/tests_pipe/data $<TARGET_FILE_DIR:${TEST_NAME_PIPE}>/tests_data)
 endif()

@@ -1,5 +1,4 @@
 ﻿#include <fea/terminal/utf8.hpp>
-#include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
 #include <iostream>
 
@@ -12,6 +11,8 @@ int main(int argc, char** argv) {
 	std::wcin.sync_with_stdio(false);
 	std::wcout.sync_with_stdio(false);
 	std::wcerr.sync_with_stdio(false);
+
+	[[maybe_unused]] auto e = fea::utf8_terminal();
 
 	argv0 = argv[0];
 

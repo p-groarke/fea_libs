@@ -46,10 +46,12 @@
 namespace fea {
 namespace detail {
 template <class CinT, class StringT>
-inline void read_pipe_text(CinT& mcin, StringT& out) {
-	fea::on_exit e = [&]() {
+inline void read_pipe_text(CinT& mcin, StringT& out, bool clear) {
+	fea::on_exit e = [&, clear]() {
 		// Clear and flush pipe.
-		mcin.clear();
+		if (clear) {
+			mcin.clear();
+		}
 	};
 
 	// Check if we have anything in cin.
@@ -69,23 +71,37 @@ inline void read_pipe_text(CinT& mcin, StringT& out) {
 }
 } // namespace detail
 
+
 // If there is any text in application pipe, read it.
-inline void read_pipe_text(std::wstring& out) {
+// Clears the pipe if clear_pipe is true.
+inline std::wstring wread_pipe_text(bool clear_pipe) {
 	// To fix pipe input, use U8TEXT (and not U16).
 	fea::translation_resetter tr
 			= fea::translate_io(fea::translation_mode::u8text);
 
-	detail::read_pipe_text(std::wcin, out);
+	std::wstring ret;
+	detail::read_pipe_text(std::wcin, ret, clear_pipe);
+	return ret;
 }
 
 // If there is any text in application pipe, read it.
-inline void read_pipe_text(std::string& out) {
-#if FEA_WINDOWS
-	std::wstring to_conv;
-	fea::read_pipe_text(to_conv);
-	out = fea::utf16_to_utf8(to_conv);
-#else
-	detail::read_pipe_text(std::cin, out);
-#endif
+// Clears the pipe.
+inline std::wstring wread_pipe_text() {
+	return fea::wread_pipe_text(true);
 }
+
+// If there is any text in application pipe, read it.
+// Clears the pipe if clear_pipe is true.
+inline std::string read_pipe_text(bool clear_pipe) {
+	std::string ret;
+	detail::read_pipe_text(std::cin, ret, clear_pipe);
+	return ret;
+}
+
+// If there is any text in application pipe, read it.
+// Clears the pipe.
+inline std::string read_pipe_text() {
+	return fea::read_pipe_text(true);
+}
+
 } // namespace fea
