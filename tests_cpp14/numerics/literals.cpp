@@ -1,5 +1,6 @@
 #include <fea/numerics/literals.hpp>
 #include <gtest/gtest.h>
+#include <type_traits>
 
 namespace {
 #define ERR_MSG "literals.cpp : Failed unit test."
