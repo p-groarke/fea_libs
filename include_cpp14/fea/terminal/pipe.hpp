@@ -34,6 +34,7 @@
 #include "fea/terminal/utf8.hpp"
 #include "fea/utils/platform.hpp"
 #include "fea/utils/scope.hpp"
+#include "fea/utils/unused.hpp"
 
 #include <iostream>
 #include <string>
@@ -46,12 +47,12 @@ namespace fea {
 namespace detail {
 template <class CinT, class StringT>
 inline void read_pipe_text(CinT& mcin, StringT& out, bool clear) {
-	fea::on_exit e = [&, clear]() {
+	auto e = fea::make_on_exit([&, clear]() {
 		// Clear and flush pipe.
 		if (clear) {
 			mcin.clear();
 		}
-	};
+	});
 
 	// Check if we have anything in cin.
 	mcin.seekg(0, mcin.end);
@@ -77,6 +78,7 @@ inline std::wstring wread_pipe_text(bool clear_pipe) {
 	// To fix pipe input, use U8TEXT (and not U16).
 	fea::translation_resetter tr
 			= fea::translate_io(fea::translation_mode::u8text);
+	fea::unused(tr);
 
 	std::wstring ret;
 	detail::read_pipe_text(std::wcin, ret, clear_pipe);

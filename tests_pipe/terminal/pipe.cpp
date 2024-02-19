@@ -3,8 +3,8 @@
 #include <string>
 
 namespace {
-constexpr std::string_view expected = "l1 🙂\nl2\n<>\né\n";
-constexpr std::wstring_view wexpected = L"l1 🙂\nl2\n<>\né\n";
+const std::string expected = "l1 🙂\nl2\n<>\né\n";
+const std::wstring wexpected = L"l1 🙂\nl2\n<>\né\n";
 
 TEST(pipe, basics) {
 	{
