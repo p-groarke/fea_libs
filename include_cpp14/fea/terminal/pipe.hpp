@@ -144,21 +144,23 @@ size_t pipe_available_bytes() {
 // If there is any text in application pipe, read it.
 // Clears the pipe if clear_pipe is true.
 inline std::wstring wread_pipe_text() {
+	std::wstring ret;
+
 	// To fix pipe input, use U8TEXT (and not U16).
 	fea::translation_resetter tr
 			= fea::translate_io(fea::translation_mode::u8text);
 	fea::unused(tr);
 
 #if FEA_WINDOWS
-	std::wstring ret;
 	detail::read_pipe_text(std::wcin, ret);
-	return ret;
 #else
 	// wcin is borked
-	std::string temp = read_pipe_text();
+	std::string temp;
+	detail::read_pipe_text(std::cin, temp);
 	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convert;
-	return convert.from_bytes(temp);
+	ret = convert.from_bytes(temp);
 #endif
+	return ret;
 }
 
 // If there is any text in application pipe, read it.
