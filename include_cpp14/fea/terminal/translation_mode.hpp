@@ -43,10 +43,10 @@
 #include <windows.h>
 #endif
 
-/**
- * translation_mode deals with the windows _setmode uglyness. Does nothing on
- * other platforms (for the time being).
- */
+/*
+Deals with window's _setmode uglyness. Does nothing on
+other platforms (for the time being).
+*/
 
 namespace fea {
 

@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
-#include "fea/terminal/utf8.hpp"
+#include "fea/terminal/translation_mode.hpp"
 #include "fea/utils/platform.hpp"
 #include "fea/utils/scope.hpp"
 #include "fea/utils/unused.hpp"
@@ -124,7 +124,7 @@ size_t pipe_available_bytes() {
 	} break;
 	}
 #else
-	ioctl(0, FIONREAD, &ret);
+	ioctl(fileno(stdin), FIONREAD, &ret);
 #endif
 
 	return ret;
