@@ -31,7 +31,6 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
-#include "fea/string/conversions.hpp"
 #include "fea/terminal/utf8.hpp"
 #include "fea/utils/platform.hpp"
 #include "fea/utils/scope.hpp"
