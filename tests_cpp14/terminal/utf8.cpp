@@ -28,6 +28,7 @@ TEST(utf8, translate_io) {
 	{
 		fea::translation_resetter r
 				= fea::translate_io(fea::translation_mode::binary);
+		fea::unused(r);
 
 #if FEA_WINDOWS
 		int new_in_mode = _setmode(_fileno(stdin), _O_WTEXT);
@@ -58,6 +59,7 @@ TEST(utf8, translate_io) {
 		fea::translation_resetter r = fea::translate_io(
 				fea::translation_mode::binary, fea::translation_mode::ignore,
 				fea::translation_mode::ignore);
+		fea::unused(r);
 
 #if FEA_WINDOWS
 		new_in_mode = _setmode(_fileno(stdin), _O_WTEXT);
