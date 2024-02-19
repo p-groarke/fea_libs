@@ -16,5 +16,6 @@ TEST(pipe, basics) {
 		std::wstring str = fea::wread_pipe_text(false);
 		EXPECT_EQ(str, wexpected);
 	}
+	std::wcout << std::endl;
 }
 } // namespace

@@ -9,13 +9,13 @@ namespace {
 #define MEXPECT_EQ(u, v) \
 	if (u != v) \
 		throw std::runtime_error { \
-			"Expected u == v" \
+			__LINE__ + " : Expected u == v" \
 		}
 
 #define MEXPECT_NE(u, v) \
 	if (u == v) \
 		throw std::runtime_error { \
-			"Expected u != v" \
+			__LINE__ + " : Expected u != v" \
 		}
 
 TEST(utf8, translate_io) {
@@ -118,7 +118,7 @@ TEST(utf8, utf8_terminal) {
 	{
 		auto e = fea::utf8_terminal();
 		fea::unused(e);
-		printf("Shouldn't assert.\n");
+		std::cout << "Shouldn't assert.\n";
 
 #if FEA_WINDOWS
 		EXPECT_NE(GetConsoleCP(), prev_in_cp);
@@ -160,7 +160,7 @@ TEST(utf8, utf8_terminal) {
 
 #if FEA_WINDOWS
 #if FEA_DEBUG
-		EXPECT_DEATH(printf("Should assert on windows.\n"), "");
+		EXPECT_DEATH(std::cout << "Should assert on windows.\n", "");
 #endif
 
 		// Can't use gtest, since it outputs to cout.
