@@ -38,6 +38,7 @@
 
 #include <codecvt>
 #include <iostream>
+#include <locale>
 #include <string>
 
 #if FEA_WINDOWS
