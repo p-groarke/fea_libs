@@ -90,6 +90,7 @@ TEST(utf8, translate_io) {
 
 	fea::translation_resetter tr3
 			= fea::translate_io(fea::translation_mode::text);
+	fea::unused(tr3);
 
 #if FEA_WINDOWS
 	MEXPECT_EQ(tr3.previous_stdin_mode(), fea::translation_mode::text);
