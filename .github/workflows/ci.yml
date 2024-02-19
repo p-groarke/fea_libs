@@ -73,9 +73,8 @@ jobs:
         cd ${{ github.workspace }}/build
         ./bin/fea_libs_tests
         ./bin/fea_libs_nothrow_tests
-        cat bin/tests_data/pipe.txt
-        ./bin/fea_libs_pipe_tests < "bin/tests_data/pipe.txt"
-        cat bin/tests_data/pipe.txt | ./bin/fea_libs_pipe_tests
+      - run: cat bin/tests_data/pipe.txt | ./bin/fea_libs_pipe_tests
+      - run: cmd /c './bin/fea_libs_pipe_tests < "bin/tests_data/pipe.txt"'
 
 
   Clang:
@@ -138,9 +137,8 @@ jobs:
         cd ${{ github.workspace }}/build
         ./bin/fea_libs_tests
         ./bin/fea_libs_nothrow_tests
-        cat bin/tests_data/pipe.txt
-        ./bin/fea_libs_pipe_tests < "bin/tests_data/pipe.txt"
-        cat bin/tests_data/pipe.txt | ./bin/fea_libs_pipe_tests
+      - run: cat bin/tests_data/pipe.txt | ./bin/fea_libs_pipe_tests
+      - run: ./bin/fea_libs_pipe_tests < bin/tests_data/pipe.txt
 
 
   Gcc:
@@ -211,6 +209,5 @@ jobs:
         cd ${{ github.workspace }}/build
         ./bin/fea_libs_tests
         ./bin/fea_libs_nothrow_tests
-        cat bin/tests_data/pipe.txt
-        ./bin/fea_libs_pipe_tests < "bin/tests_data/pipe.txt"
-        cat bin/tests_data/pipe.txt | ./bin/fea_libs_pipe_tests
+      - run: cat bin/tests_data/pipe.txt | ./bin/fea_libs_pipe_tests
+      - run: ./bin/fea_libs_pipe_tests < bin/tests_data/pipe.txt
