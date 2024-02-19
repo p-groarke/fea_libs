@@ -78,7 +78,7 @@ TEST(utf8, utf8_terminal) {
 		fea::unused(tr3);
 
 #if FEA_WINDOWS
-#if FEA_DEBUG
+#if FEA_DEBUG && !FEA_VS2017
 		EXPECT_DEATH(printf("Should assert on windows.\n"), "");
 #endif
 

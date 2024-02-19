@@ -39,34 +39,40 @@
 #include <iostream>
 #include <string>
 
+#if FEA_WINDOWS
+#include <fcntl.h>
+#include <io.h>
+#include <stdio.h>
+#include <windows.h>
+#else
+#include <sys/ioctl.h>
+#endif
+
 /**
  * If there is any text in the application pipe, reads it in the output string.
  */
 
 namespace fea {
+inline size_t pipe_available_bytes();
 namespace detail {
 template <class CinT, class StringT>
-inline void read_pipe_text(CinT& mcin, StringT& out, bool clear) {
+inline void read_pipe_text(CinT& mcin, StringT& out) {
 	// Q : assert on std::sync_with_stdio false? Needs to be called after this?
-
-	auto e = fea::make_on_exit([&, clear]() {
+	auto e = fea::make_on_exit([&]() {
 		// Clear and flush pipe.
-		if (clear) {
-			mcin.clear();
-			// std::clearerr(stdin);
-		}
+		mcin.clear();
 	});
 
+#if 0
 	// Check if we have anything in cin.
 	mcin.seekg(0, mcin.end);
 	std::streamoff cin_count = mcin.tellg();
 	mcin.seekg(0, mcin.beg);
-
-#if !FEA_WINDOWS
-	std::cout << "cin_count : " << cin_count << std::endl;
+#else
+	size_t cin_count = fea::pipe_available_bytes();
 #endif
 
-	if (cin_count <= 0) {
+	if (cin_count == 0) {
 		return;
 	}
 
@@ -79,37 +85,69 @@ inline void read_pipe_text(CinT& mcin, StringT& out, bool clear) {
 } // namespace detail
 
 
+// A non-blocking function that returns the number of bytes available in stdin.
+size_t pipe_available_bytes() {
+	size_t ret = 0;
+
+#if FEA_WINDOWS
+	HANDLE stdin_handle = GetStdHandle(STD_INPUT_HANDLE);
+	if (stdin_handle == INVALID_HANDLE_VALUE) {
+		fea::maybe_throw_on_os_error(__FUNCTION__, __LINE__);
+	}
+
+	switch (GetFileType(stdin_handle)) {
+	case FILE_TYPE_CHAR: {
+		// Unsupported. Please send me a use-case / example.
+	} break;
+	case FILE_TYPE_DISK: {
+		LARGE_INTEGER byte_size;
+		byte_size.QuadPart = 0;
+		if (GetFileSizeEx(stdin_handle, &byte_size) == 0) {
+			fea::maybe_throw_on_os_error(__FUNCTION__, __LINE__);
+		}
+		ret = size_t(byte_size.QuadPart);
+	} break;
+	case FILE_TYPE_PIPE: {
+		unsigned long avail = 0;
+		if (PeekNamedPipe(stdin_handle, nullptr, 0, nullptr, &avail, nullptr)
+				== 0) {
+			fea::maybe_throw_on_os_error(__FUNCTION__, __LINE__);
+		}
+		ret = size_t(avail);
+	} break;
+	case FILE_TYPE_REMOTE: {
+		// Unsupported. Please send me a use-case / example.
+	} break;
+	default: {
+		// GetLastError returns NO_ERROR on valid unknown.
+		fea::maybe_throw_on_os_error(__FUNCTION__, __LINE__);
+	} break;
+	}
+#else
+	ioctl(0, FIONREAD, &ret);
+#endif
+
+	return ret;
+}
+
 // If there is any text in application pipe, read it.
 // Clears the pipe if clear_pipe is true.
-inline std::wstring wread_pipe_text(bool clear_pipe) {
+inline std::wstring wread_pipe_text() {
 	// To fix pipe input, use U8TEXT (and not U16).
 	fea::translation_resetter tr
 			= fea::translate_io(fea::translation_mode::u8text);
 	fea::unused(tr);
 
 	std::wstring ret;
-	detail::read_pipe_text(std::wcin, ret, clear_pipe);
+	detail::read_pipe_text(std::wcin, ret);
 	return ret;
-}
-
-// If there is any text in application pipe, read it.
-// Clears the pipe.
-inline std::wstring wread_pipe_text() {
-	return fea::wread_pipe_text(true);
 }
 
 // If there is any text in application pipe, read it.
 // Clears the pipe if clear_pipe is true.
-inline std::string read_pipe_text(bool clear_pipe) {
+inline std::string read_pipe_text() {
 	std::string ret;
-	detail::read_pipe_text(std::cin, ret, clear_pipe);
+	detail::read_pipe_text(std::cin, ret);
 	return ret;
 }
-
-// If there is any text in application pipe, read it.
-// Clears the pipe.
-inline std::string read_pipe_text() {
-	return fea::read_pipe_text(true);
-}
-
 } // namespace fea
