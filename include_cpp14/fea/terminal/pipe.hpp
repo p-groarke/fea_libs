@@ -47,10 +47,13 @@ namespace fea {
 namespace detail {
 template <class CinT, class StringT>
 inline void read_pipe_text(CinT& mcin, StringT& out, bool clear) {
+	// Q : assert on std::sync_with_stdio false? Needs to be called after this?
+
 	auto e = fea::make_on_exit([&, clear]() {
 		// Clear and flush pipe.
 		if (clear) {
 			mcin.clear();
+			// std::clearerr(stdin);
 		}
 	});
 
@@ -58,6 +61,10 @@ inline void read_pipe_text(CinT& mcin, StringT& out, bool clear) {
 	mcin.seekg(0, mcin.end);
 	std::streamoff cin_count = mcin.tellg();
 	mcin.seekg(0, mcin.beg);
+
+#if !FEA_WINDOWS
+	std::cout << "cin_count : " << cin_count << std::endl;
+#endif
 
 	if (cin_count <= 0) {
 		return;
