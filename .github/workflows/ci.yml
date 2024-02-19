@@ -73,9 +73,10 @@ jobs:
         cd ${{ github.workspace }}/build
         ./bin/fea_libs_tests
         ./bin/fea_libs_nothrow_tests
-        echo "test test" | ./bin/fea_libs_pipe_tests
-    - run: cd ${{ github.workspace }}/build && cat bin/tests_data/pipe.txt | ./bin/fea_libs_pipe_tests
-    - run: cmd /c 'cd ${{ github.workspace }}/build && ./bin/fea_libs_pipe_tests < "bin/tests_data/pipe.txt"'
+        cat bin/tests_data/pipe.txt | ./bin/fea_libs_pipe_tests 0
+        cat bin/tests_data/pipe.txt | ./bin/fea_libs_pipe_tests 1
+        cmd /c 'cd ${{ github.workspace }}/build && ./bin/fea_libs_pipe_tests 0 < "bin/tests_data/pipe.txt"'
+        cmd /c 'cd ${{ github.workspace }}/build && ./bin/fea_libs_pipe_tests 1 < "bin/tests_data/pipe.txt"'
 
 
   Clang:
@@ -138,9 +139,10 @@ jobs:
         cd ${{ github.workspace }}/build
         ./bin/fea_libs_tests
         ./bin/fea_libs_nothrow_tests
-        echo "test test" | ./bin/fea_libs_pipe_tests
-    - run: cd ${{ github.workspace }}/build; cat bin/tests_data/pipe.txt | ./bin/fea_libs_pipe_tests
-    - run: cd ${{ github.workspace }}/build; ./bin/fea_libs_pipe_tests < bin/tests_data/pipe.txt
+        cat bin/tests_data/pipe.txt | ./bin/fea_libs_pipe_tests 0
+        cat bin/tests_data/pipe.txt | ./bin/fea_libs_pipe_tests 1
+        ./bin/fea_libs_pipe_tests 0 < bin/tests_data/pipe.txt
+        ./bin/fea_libs_pipe_tests 1 < bin/tests_data/pipe.txt
 
 
   Gcc:
@@ -211,6 +213,7 @@ jobs:
         cd ${{ github.workspace }}/build
         ./bin/fea_libs_tests
         ./bin/fea_libs_nothrow_tests
-        echo "test test" | ./bin/fea_libs_pipe_tests
-    - run: cd ${{ github.workspace }}/build; cat bin/tests_data/pipe.txt | ./bin/fea_libs_pipe_tests
-    - run: cd ${{ github.workspace }}/build; ./bin/fea_libs_pipe_tests < bin/tests_data/pipe.txt
+        cat bin/tests_data/pipe.txt | ./bin/fea_libs_pipe_tests 0
+        cat bin/tests_data/pipe.txt | ./bin/fea_libs_pipe_tests 1
+        ./bin/fea_libs_pipe_tests 0 < bin/tests_data/pipe.txt
+        ./bin/fea_libs_pipe_tests 1 < bin/tests_data/pipe.txt

@@ -86,7 +86,11 @@ TEST(utf8, utf8_terminal) {
 		MEXPECT_NE(GetConsoleCP(), prev_in_cp);
 		MEXPECT_NE(GetConsoleOutputCP(), prev_out_cp);
 
-		// Windows actually sets wtext instead of u16text...
+		std::wcout << int(fea::translation_mode::u8text) << std::endl;
+		std::wcout << _O_U8TEXT << std::endl;
+
+		// ~Windows actually sets wtext instead of u16text...~
+		// Windows actually does whatever the fuck it wants.
 #if FEA_VS2017
 		EXPECT_EQ(tr3.previous_stdin_mode(), fea::translation_mode::u8text);
 		EXPECT_EQ(tr3.previous_stdout_mode(), fea::translation_mode::u8text);
