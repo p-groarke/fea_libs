@@ -429,10 +429,10 @@ inline std::string utf16_to_current_codepage(const std::wstring& str) {
 	return utf16_to_codepage(GetACP(), str);
 }
 #endif
+} // namespace fea
 
 #if FEA_WINDOWS
 #pragma warning(pop)
 #elif FEA_MACOS
 #pragma clang diagnostic pop
 #endif
-} // namespace fea

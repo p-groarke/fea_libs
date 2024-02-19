@@ -36,6 +36,7 @@
 #include "fea/utils/scope.hpp"
 #include "fea/utils/unused.hpp"
 
+#include <codecvt>
 #include <iostream>
 #include <string>
 
@@ -48,9 +49,19 @@
 #include <sys/ioctl.h>
 #endif
 
-/**
- * If there is any text in the application pipe, reads it in the output string.
- */
+// The standard doesn't provide codecvt equivalents. Use the old
+// functionality until they do.
+#if FEA_WINDOWS
+#pragma warning(push)
+#pragma warning(disable : 4996)
+#elif FEA_MACOS
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
+/*
+Cross-platform stdin pipe helpers.
+*/
 
 namespace fea {
 inline size_t pipe_available_bytes();
@@ -138,9 +149,16 @@ inline std::wstring wread_pipe_text() {
 			= fea::translate_io(fea::translation_mode::u8text);
 	fea::unused(tr);
 
+#if FEA_WINDOWS
 	std::wstring ret;
 	detail::read_pipe_text(std::wcin, ret);
 	return ret;
+#else
+	// wcin is borked
+	std::string temp = read_pipe_text();
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convert;
+	return convert.from_bytes(temp);
+#endif
 }
 
 // If there is any text in application pipe, read it.
@@ -151,3 +169,9 @@ inline std::string read_pipe_text() {
 	return ret;
 }
 } // namespace fea
+
+#if FEA_WINDOWS
+#pragma warning(pop)
+#elif FEA_MACOS
+#pragma clang diagnostic pop
+#endif
