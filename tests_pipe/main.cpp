@@ -6,12 +6,12 @@
 const char* argv0;
 
 int main(int argc, char** argv) {
-	std::cin.sync_with_stdio(false);
-	std::cout.sync_with_stdio(false);
-	std::cerr.sync_with_stdio(false);
-	std::wcin.sync_with_stdio(false);
-	std::wcout.sync_with_stdio(false);
-	std::wcerr.sync_with_stdio(false);
+	// std::cin.sync_with_stdio(false);
+	// std::cout.sync_with_stdio(false);
+	// std::cerr.sync_with_stdio(false);
+	// std::wcin.sync_with_stdio(false);
+	// std::wcout.sync_with_stdio(false);
+	// std::wcerr.sync_with_stdio(false);
 
 	auto e = fea::utf8_terminal();
 	fea::unused(e);
