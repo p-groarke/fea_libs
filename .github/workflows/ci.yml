@@ -73,6 +73,7 @@ jobs:
         cd ${{ github.workspace }}/build
         ./bin/fea_libs_tests
         ./bin/fea_libs_nothrow_tests
+        echo "test test" | ./bin/fea_libs_pipe_tests
     - run: cd ${{ github.workspace }}/build && cat bin/tests_data/pipe.txt | ./bin/fea_libs_pipe_tests
     - run: cmd /c 'cd ${{ github.workspace }}/build && ./bin/fea_libs_pipe_tests < "bin/tests_data/pipe.txt"'
 
@@ -137,6 +138,7 @@ jobs:
         cd ${{ github.workspace }}/build
         ./bin/fea_libs_tests
         ./bin/fea_libs_nothrow_tests
+        echo "test test" | ./bin/fea_libs_pipe_tests
     - run: cd ${{ github.workspace }}/build; cat bin/tests_data/pipe.txt | ./bin/fea_libs_pipe_tests
     - run: cd ${{ github.workspace }}/build; ./bin/fea_libs_pipe_tests < bin/tests_data/pipe.txt
 
@@ -209,5 +211,6 @@ jobs:
         cd ${{ github.workspace }}/build
         ./bin/fea_libs_tests
         ./bin/fea_libs_nothrow_tests
+        echo "test test" | ./bin/fea_libs_pipe_tests
     - run: cd ${{ github.workspace }}/build; cat bin/tests_data/pipe.txt | ./bin/fea_libs_pipe_tests
     - run: cd ${{ github.workspace }}/build; ./bin/fea_libs_pipe_tests < bin/tests_data/pipe.txt

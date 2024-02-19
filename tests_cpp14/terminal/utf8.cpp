@@ -166,9 +166,15 @@ TEST(utf8, utf8_terminal) {
 		MEXPECT_NE(GetConsoleOutputCP(), prev_out_cp);
 
 		// Windows actually sets wtext instead of u16text...
+#if FEA_VS2017
+		EXPECT_EQ(tr3.previous_stdin_mode(), fea::translation_mode::u16text);
+		EXPECT_EQ(tr3.previous_stdout_mode(), fea::translation_mode::u16text);
+		EXPECT_EQ(tr3.previous_stderr_mode(), fea::translation_mode::u16text);
+#else
 		EXPECT_EQ(tr3.previous_stdin_mode(), fea::translation_mode::wtext);
 		EXPECT_EQ(tr3.previous_stdout_mode(), fea::translation_mode::wtext);
 		EXPECT_EQ(tr3.previous_stderr_mode(), fea::translation_mode::wtext);
+#endif
 #endif
 	}
 
