@@ -7,18 +7,18 @@ namespace {
 
 TEST(literals, basics) {
 	using namespace fea::literals;
-	static_assert(std::is_same_v<int8_t, decltype(42_8)>, ERR_MSG);
-	static_assert(std::is_same_v<int16_t, decltype(42_16)>, ERR_MSG);
-	static_assert(std::is_same_v<int32_t, decltype(42_32)>, ERR_MSG);
-	static_assert(std::is_same_v<int64_t, decltype(42_64)>, ERR_MSG);
-	static_assert(std::is_same_v<int8_t, decltype(42_i8)>, ERR_MSG);
-	static_assert(std::is_same_v<int16_t, decltype(42_i16)>, ERR_MSG);
-	static_assert(std::is_same_v<int32_t, decltype(42_i32)>, ERR_MSG);
-	static_assert(std::is_same_v<int64_t, decltype(42_i64)>, ERR_MSG);
-	static_assert(std::is_same_v<uint8_t, decltype(42_u8)>, ERR_MSG);
-	static_assert(std::is_same_v<uint16_t, decltype(42_u16)>, ERR_MSG);
-	static_assert(std::is_same_v<uint32_t, decltype(42_u32)>, ERR_MSG);
-	static_assert(std::is_same_v<uint64_t, decltype(42_u64)>, ERR_MSG);
+	static_assert(std::is_same<int8_t, decltype(42_8)>::value, ERR_MSG);
+	static_assert(std::is_same<int16_t, decltype(42_16)>::value, ERR_MSG);
+	static_assert(std::is_same<int32_t, decltype(42_32)>::value, ERR_MSG);
+	static_assert(std::is_same<int64_t, decltype(42_64)>::value, ERR_MSG);
+	static_assert(std::is_same<int8_t, decltype(42_i8)>::value, ERR_MSG);
+	static_assert(std::is_same<int16_t, decltype(42_i16)>::value, ERR_MSG);
+	static_assert(std::is_same<int32_t, decltype(42_i32)>::value, ERR_MSG);
+	static_assert(std::is_same<int64_t, decltype(42_i64)>::value, ERR_MSG);
+	static_assert(std::is_same<uint8_t, decltype(42_u8)>::value, ERR_MSG);
+	static_assert(std::is_same<uint16_t, decltype(42_u16)>::value, ERR_MSG);
+	static_assert(std::is_same<uint32_t, decltype(42_u32)>::value, ERR_MSG);
+	static_assert(std::is_same<uint64_t, decltype(42_u64)>::value, ERR_MSG);
 
 #if FEA_CPP23
 #if defined(__STDCPP_FLOAT16_T__)
