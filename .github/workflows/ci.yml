@@ -73,6 +73,7 @@ jobs:
         cd ${{ github.workspace }}/build
         ./bin/fea_libs_tests
         ./bin/fea_libs_nothrow_tests
+        cat bin/tests_data/pipe.txt
         cat bin/tests_data/pipe.txt | ./bin/fea_libs_pipe_tests
 
 
@@ -136,6 +137,7 @@ jobs:
         cd ${{ github.workspace }}/build
         ./bin/fea_libs_tests
         ./bin/fea_libs_nothrow_tests
+        cat bin/tests_data/pipe.txt
         cat bin/tests_data/pipe.txt | ./bin/fea_libs_pipe_tests
 
 
@@ -207,4 +209,5 @@ jobs:
         cd ${{ github.workspace }}/build
         ./bin/fea_libs_tests
         ./bin/fea_libs_nothrow_tests
+        cat bin/tests_data/pipe.txt
         cat bin/tests_data/pipe.txt | ./bin/fea_libs_pipe_tests
