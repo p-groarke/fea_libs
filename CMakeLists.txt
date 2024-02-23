@@ -156,6 +156,8 @@ if (FEA_TESTS)
 	fea_set_compile_options(${TEST_NAME_NOTHROW} PRIVATE)
 	fea_set_compile_options(${TEST_NAME_PIPE} PRIVATE)
 
+	set_target_properties(${TEST_NAME} PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "--gtest_catch_exceptions=0 --gtest_filter=*")
+	set_target_properties(${TEST_NAME_NOTHROW} PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "--gtest_catch_exceptions=0 --gtest_filter=*")
 	file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/bin/tests_data/pipe.txt" PIPE_FILEPATH)
 	set_target_properties(${TEST_NAME_PIPE} PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "< \"${PIPE_FILEPATH}\"")
 
