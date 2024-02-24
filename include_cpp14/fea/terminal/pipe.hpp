@@ -65,7 +65,8 @@ Cross-platform stdin pipe helpers.
 */
 
 namespace fea {
-inline size_t pipe_available_bytes();
+inline size_t available_pipe_bytes();
+
 namespace detail {
 template <class CinT, class StringT>
 inline void read_pipe_text(CinT& mcin, StringT& out) {
@@ -81,7 +82,7 @@ inline void read_pipe_text(CinT& mcin, StringT& out) {
 	std::streamoff cin_count = mcin.tellg();
 	mcin.seekg(0, mcin.beg);
 #else
-	size_t cin_count = fea::pipe_available_bytes();
+	size_t cin_count = fea::available_pipe_bytes();
 #endif
 
 	if (cin_count == 0) {
@@ -98,7 +99,7 @@ inline void read_pipe_text(CinT& mcin, StringT& out) {
 
 
 // A non-blocking function that returns the number of bytes available in stdin.
-size_t pipe_available_bytes() {
+size_t available_pipe_bytes() {
 	size_t ret = 0;
 
 #if FEA_WINDOWS
@@ -152,15 +153,17 @@ inline std::wstring wread_pipe_text() {
 			= fea::translate_io(fea::translation_mode::u8text);
 	fea::unused(tr);
 
-	// #if FEA_WINDOWS
+#if FEA_WINDOWS
 	detail::read_pipe_text(std::wcin, ret);
-	// #else
-	//	// wcin is borked
-	//	std::string temp;
-	//	detail::read_pipe_text(std::cin, temp);
-	//	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convert;
-	//	ret = convert.from_bytes(temp);
-	// #endif
+#else
+	// wcin is borked
+	std::string temp;
+	detail::read_pipe_text(std::cin, temp);
+	std::cout << "std::string " << temp << std::endl;
+	// std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+	std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> convert;
+	ret = convert.from_bytes(temp);
+#endif
 	return ret;
 }
 

@@ -76,8 +76,8 @@ jobs:
         echo "test test" | bin\fea_libs_pipe_tests.exe
         cat bin\tests_data\pipe.txt | bin\fea_libs_pipe_tests.exe 0
         cat bin\tests_data\pipe.txt | bin\fea_libs_pipe_tests.exe 1
-        cmd /c 'cd ${{ github.workspace }}/build && ./bin/fea_libs_pipe_tests 0 < "bin/tests_data/pipe.txt"'
-        cmd /c 'cd ${{ github.workspace }}/build && ./bin/fea_libs_pipe_tests 1 < "bin/tests_data/pipe.txt"'
+        cmd /c 'cd ${{ github.workspace }}/build && bin\fea_libs_pipe_tests.exe 0 < "bin/tests_data/pipe.txt"'
+        cmd /c 'cd ${{ github.workspace }}/build && bin\fea_libs_pipe_tests.exe 1 < "bin/tests_data/pipe.txt"'
 
 
   Clang:
