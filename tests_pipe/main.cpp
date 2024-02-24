@@ -1,4 +1,4 @@
-﻿#include <fea/terminal/pipe.hpp>i
+﻿#include <fea/terminal/pipe.hpp>
 #include <fea/terminal/utf8.hpp>
 #include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
