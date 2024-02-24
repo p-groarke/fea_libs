@@ -18,6 +18,11 @@ TEST(pipe, basics) {
 		std::wstring str = fea::wread_pipe_text();
 		EXPECT_EQ(str, wexpected);
 	} break;
+	case 2: {
+		// make sure we are non-blocking
+		std::string str = fea::read_pipe_text();
+		EXPECT_EQ(str, std::string{});
+	} break;
 	default: {
 		assert(false);
 	} break;

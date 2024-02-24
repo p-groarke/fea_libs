@@ -180,6 +180,7 @@ inline std::string read_pipe_text() {
 
 	std::wstring temp;
 	detail::read_pipe_text(std::wcin, temp);
+	std::wcout << "temp : " << temp << std::endl;
 	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convert;
 	ret = convert.to_bytes(temp);
 #else
