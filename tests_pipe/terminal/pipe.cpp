@@ -22,7 +22,5 @@ TEST(pipe, basics) {
 		assert(false);
 	} break;
 	}
-
-	std::wcout << std::endl;
 }
 } // namespace
