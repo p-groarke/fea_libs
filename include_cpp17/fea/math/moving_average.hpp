@@ -43,7 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Averages.
 
 TODO : linear regression moving average,
-weighted moving average, moving median, ...
+moving median, ...
 https://en.wikipedia.org/wiki/Moving_average#Weighted_moving_average
 https://www.alglib.net/time-series/moving-average-filter.php
 https://www.incrediblecharts.com/indicators/linear_regression.php
@@ -190,4 +190,58 @@ template <class T>
 using ema = exponential_moving_average<T>;
 
 
+template <class T, size_t N>
+struct weighted_moving_average {
+	static constexpr bool is_int_v = std::is_integral_v<T>;
+	using mfloat_t = std::conditional_t<sizeof(T) == 8, double, float>;
+
+	T operator()(const T& in) {
+		using msize_t = typename std::make_signed<size_t>::type;
+
+		if (_size != _circle_buf.size()) {
+			_circle_buf[_size++] = mfloat_t(in);
+
+			mfloat_t ret = mfloat_t(0);
+			mfloat_t denom = (_size * (_size + 1)) / mfloat_t(2);
+			for (msize_t i = _size - 1; i >= 0; --i) {
+				ret += _circle_buf[i] * mfloat_t(i + 1);
+			}
+			ret /= denom;
+
+			if constexpr (is_int_v) {
+				return T(std::round(ret));
+			} else {
+				return T(ret);
+			}
+		}
+
+		_circle_buf[_playhead] = mfloat_t(in);
+		_playhead = _playhead + 1 == _circle_buf.size() ? 0 : _playhead + 1;
+
+		mfloat_t ret = mfloat_t(0);
+		mfloat_t w = mfloat_t(1);
+		for (size_t i = _playhead; i < _circle_buf.size(); ++i) {
+			ret += _circle_buf[i] * w++;
+		}
+		for (size_t i = 0; i < _playhead; ++i) {
+			ret += _circle_buf[i] * w++;
+		}
+		ret /= _denom;
+
+		if constexpr (is_int_v) {
+			return T(std::round(ret));
+		} else {
+			return T(ret);
+		}
+	}
+
+private:
+	mfloat_t _denom = (N * (N + 1)) / mfloat_t(2);
+	size_t _playhead = 0;
+	size_t _size = 0;
+	std::array<mfloat_t, N> _circle_buf{};
+};
+
+template <class T, size_t N>
+using wma = weighted_moving_average<T, N>;
 } // namespace fea

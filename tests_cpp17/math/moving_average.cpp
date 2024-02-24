@@ -45,7 +45,7 @@ TEST(moving_average, ca_unbounded) {
 		fea::ca<double> ca;
 		EXPECT_EQ(ca(1.0), 1.0);
 		EXPECT_EQ(ca(0.5), 0.75);
-		EXPECT_EQ(ca(0.5), 1.0 / 1.5);
+		EXPECT_EQ(ca(0.5), 2.0 / 3.0);
 		EXPECT_EQ(ca(0.5), 0.625);
 		EXPECT_EQ(ca(0.5), 0.6);
 		ca(0.5);
@@ -86,7 +86,7 @@ TEST(moving_average, ca_unbounded) {
 		fea::ca<double> ca(5);
 		EXPECT_EQ(ca(1.0), 1.0);
 		EXPECT_EQ(ca(0.5), 0.75);
-		EXPECT_EQ(ca(0.5), 1.0 / 1.5);
+		EXPECT_EQ(ca(0.5), 2.0 / 3.0);
 		EXPECT_EQ(ca(0.5), 0.625);
 		EXPECT_EQ(ca(0.5), 0.6);
 		EXPECT_EQ(ca(0.5), 0.58);
@@ -158,7 +158,7 @@ TEST(moving_average, sma) {
 		fea::simple_moving_average<double, 5> sma;
 		EXPECT_EQ(sma(1.0), 1.0);
 		EXPECT_EQ(sma(0.5), 0.75);
-		EXPECT_EQ(sma(0.5), 1.0 / 1.5);
+		EXPECT_EQ(sma(0.5), 2.0 / 3.0);
 		EXPECT_EQ(sma(0.5), 0.625);
 		EXPECT_EQ(sma(0.5), 0.6);
 		EXPECT_EQ(sma(0.5), 0.5);
@@ -240,6 +240,99 @@ TEST(moving_average, ema) {
 		EXPECT_EQ(ema(500), 531);
 		EXPECT_EQ(ema(500), 516);
 		EXPECT_EQ(ema(500), 508);
+	}
+}
+
+TEST(moving_average, wma) {
+	static_assert(fea::wma<double, 10>::is_int_v == false, ERROR_MSG);
+	static_assert(fea::wma<float, 10>::is_int_v == false, ERROR_MSG);
+	static_assert(fea::wma<int64_t, 10>::is_int_v == true, ERROR_MSG);
+	static_assert(fea::wma<int, 10>::is_int_v == true, ERROR_MSG);
+
+	static_assert(
+			std::is_same_v<typename fea::wma<double, 10>::mfloat_t, double>,
+			ERROR_MSG);
+	static_assert(std::is_same_v<typename fea::wma<float, 10>::mfloat_t, float>,
+			ERROR_MSG);
+	static_assert(
+			std::is_same_v<typename fea::wma<int64_t, 10>::mfloat_t, double>,
+			ERROR_MSG);
+	static_assert(std::is_same_v<typename fea::wma<int, 10>::mfloat_t, float>,
+			ERROR_MSG);
+
+	{
+		fea::weighted_moving_average<double, 2> wma;
+		EXPECT_EQ(wma(0.5), 0.5);
+		EXPECT_EQ(wma(0.5), 0.5);
+		EXPECT_EQ(wma(0.5), 0.5);
+		EXPECT_EQ(wma(0.5), 0.5);
+	}
+
+	{
+		fea::wma<double, 2> wma;
+		EXPECT_EQ(wma(1.0), 1.0);
+		EXPECT_EQ(wma(0.5), 2.0 / 3.0);
+		EXPECT_EQ(wma(0.5), 0.5);
+		EXPECT_EQ(wma(0.5), 0.5);
+		EXPECT_EQ(wma(0.5), 0.5);
+		EXPECT_EQ(wma(0.5), 0.5);
+		EXPECT_EQ(wma(1.0), 5.0 / 6.0);
+		EXPECT_EQ(wma(1.0), 1.0);
+		EXPECT_EQ(wma(0.5), 2.0 / 3.0);
+		EXPECT_EQ(wma(0.5), 0.5);
+		EXPECT_EQ(wma(0.5), 0.5);
+	}
+
+	{
+		fea::wma<double, 5> wma;
+		EXPECT_EQ(wma(1.0), 1.0);
+		EXPECT_EQ(wma(0.5), 2.0 / 3.0);
+		EXPECT_EQ(wma(0.5), 7.0 / 12.0);
+		EXPECT_EQ(wma(0.5), 0.55);
+		EXPECT_EQ(wma(0.5), 8.0 / 15.0);
+		EXPECT_EQ(wma(0.5), 0.5);
+		EXPECT_EQ(wma(0.5), 0.5);
+		EXPECT_EQ(wma(1.0), 2.0 / 3.0);
+		EXPECT_EQ(wma(1.0), 0.8);
+		EXPECT_EQ(wma(1.0), 0.9);
+		EXPECT_EQ(wma(1.0), 29.0 / 30.0);
+		EXPECT_EQ(wma(1.0), 1.0);
+		EXPECT_EQ(wma(1.0), 1.0);
+	}
+
+	{
+		fea::wma<int, 2> wma;
+		EXPECT_EQ(wma(1000), 1000);
+		EXPECT_EQ(wma(500), 667);
+		EXPECT_EQ(wma(500), 500);
+		EXPECT_EQ(wma(500), 500);
+		EXPECT_EQ(wma(500), 500);
+		EXPECT_EQ(wma(500), 500);
+		EXPECT_EQ(wma(500), 500);
+		EXPECT_EQ(wma(1000), 833);
+		EXPECT_EQ(wma(1000), 1000);
+		EXPECT_EQ(wma(500), 667);
+		EXPECT_EQ(wma(500), 500);
+		EXPECT_EQ(wma(500), 500);
+		EXPECT_EQ(wma(500), 500);
+		EXPECT_EQ(wma(500), 500);
+	}
+
+	{
+		fea::wma<int, 5> wma;
+		EXPECT_EQ(wma(1000), 1000);
+		EXPECT_EQ(wma(500), 667);
+		EXPECT_EQ(wma(500), 583);
+		EXPECT_EQ(wma(500), 550);
+		EXPECT_EQ(wma(500), 533);
+		EXPECT_EQ(wma(500), 500);
+		EXPECT_EQ(wma(500), 500);
+		EXPECT_EQ(wma(1000), 667);
+		EXPECT_EQ(wma(1000), 800);
+		EXPECT_EQ(wma(1000), 900);
+		EXPECT_EQ(wma(1000), 967);
+		EXPECT_EQ(wma(1000), 1000);
+		EXPECT_EQ(wma(1000), 1000);
 	}
 }
 } // namespace
