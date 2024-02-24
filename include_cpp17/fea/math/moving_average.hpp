@@ -93,6 +93,14 @@ struct cumulative_average {
 		}
 	}
 
+	T get() const {
+		if constexpr (is_int_v) {
+			return T(std::round(_last));
+		} else {
+			return T(_last);
+		}
+	}
+
 private:
 	size_t _n = 0;
 	size_t _size = 0;
@@ -132,6 +140,14 @@ struct simple_moving_average {
 		_circle_buf[_playhead] = mfloat_t(in);
 		_playhead = _playhead + 1 == _circle_buf.size() ? 0 : _playhead + 1;
 
+		if constexpr (is_int_v) {
+			return T(std::round(_last));
+		} else {
+			return T(_last);
+		}
+	}
+
+	T get() const {
 		if constexpr (is_int_v) {
 			return T(std::round(_last));
 		} else {
@@ -180,6 +196,14 @@ struct exponential_moving_average {
 		}
 	}
 
+	T get() const {
+		if constexpr (is_int_v) {
+			return T(std::round(_last));
+		} else {
+			return T(_last);
+		}
+	}
+
 private:
 	mfloat_t _alpha = 0.5;
 	mfloat_t _alpha_inv = mfloat_t(1) - _alpha;
@@ -201,42 +225,51 @@ struct weighted_moving_average {
 		if (_size != _circle_buf.size()) {
 			_circle_buf[_size++] = mfloat_t(in);
 
-			mfloat_t ret = mfloat_t(0);
+			_last = mfloat_t(0);
 			mfloat_t denom = (_size * (_size + 1)) / mfloat_t(2);
 			for (msize_t i = _size - 1; i >= 0; --i) {
-				ret += _circle_buf[i] * mfloat_t(i + 1);
+				_last += _circle_buf[i] * mfloat_t(i + 1);
 			}
-			ret /= denom;
+			_last /= denom;
 
 			if constexpr (is_int_v) {
-				return T(std::round(ret));
+				return T(std::round(_last));
 			} else {
-				return T(ret);
+				return T(_last);
 			}
 		}
 
 		_circle_buf[_playhead] = mfloat_t(in);
 		_playhead = _playhead + 1 == _circle_buf.size() ? 0 : _playhead + 1;
 
-		mfloat_t ret = mfloat_t(0);
+		_last = mfloat_t(0);
 		mfloat_t w = mfloat_t(1);
 		for (size_t i = _playhead; i < _circle_buf.size(); ++i) {
-			ret += _circle_buf[i] * w++;
+			_last += _circle_buf[i] * w++;
 		}
 		for (size_t i = 0; i < _playhead; ++i) {
-			ret += _circle_buf[i] * w++;
+			_last += _circle_buf[i] * w++;
 		}
-		ret /= _denom;
+		_last /= _denom;
 
 		if constexpr (is_int_v) {
-			return T(std::round(ret));
+			return T(std::round(_last));
 		} else {
-			return T(ret);
+			return T(_last);
+		}
+	}
+
+	T get() const {
+		if constexpr (is_int_v) {
+			return T(std::round(_last));
+		} else {
+			return T(_last);
 		}
 	}
 
 private:
 	mfloat_t _denom = (N * (N + 1)) / mfloat_t(2);
+	mfloat_t _last = mfloat_t(0);
 	size_t _playhead = 0;
 	size_t _size = 0;
 	std::array<mfloat_t, N> _circle_buf{};

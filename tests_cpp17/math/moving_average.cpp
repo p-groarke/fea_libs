@@ -23,6 +23,7 @@ TEST(moving_average, ca_unbounded) {
 	// unbounded
 	{
 		fea::cumulative_average<double> ca;
+		EXPECT_EQ(ca.get(), 0.0);
 		EXPECT_EQ(ca(0.5), 0.5);
 		EXPECT_EQ(ca(0.5), 0.5);
 		EXPECT_EQ(ca(0.5), 0.5);
@@ -39,10 +40,12 @@ TEST(moving_average, ca_unbounded) {
 		EXPECT_EQ(ca(0.5), 0.5);
 		EXPECT_EQ(ca(0.5), 0.5);
 		EXPECT_EQ(ca(0.5), 0.5);
+		EXPECT_EQ(ca.get(), 0.5);
 	}
 
 	{
 		fea::ca<double> ca;
+		EXPECT_EQ(ca.get(), 0.0);
 		EXPECT_EQ(ca(1.0), 1.0);
 		EXPECT_EQ(ca(0.5), 0.75);
 		EXPECT_EQ(ca(0.5), 2.0 / 3.0);
@@ -51,65 +54,78 @@ TEST(moving_average, ca_unbounded) {
 		ca(0.5);
 		ca(0.5);
 		EXPECT_EQ(ca(0.5), 0.5625);
+		EXPECT_EQ(ca.get(), 0.5625);
 	}
 
 	{
 		fea::ca<int> ca;
+		EXPECT_EQ(ca.get(), 0);
 		EXPECT_EQ(ca(1000), 1000);
 		EXPECT_EQ(ca(500), 750);
 		EXPECT_EQ(ca(500), 667);
 		EXPECT_EQ(ca(500), 625);
 		EXPECT_EQ(ca(500), 600);
 		EXPECT_EQ(ca(500), 583);
+		EXPECT_EQ(ca.get(), 583);
 	}
 
 	// bounded
 	{
 		fea::cumulative_average<double> ca(2);
+		EXPECT_EQ(ca.get(), 0.0);
 		EXPECT_EQ(ca(0.5), 0.5);
 		EXPECT_EQ(ca(0.5), 0.5);
 		EXPECT_EQ(ca(0.5), 0.5);
 		EXPECT_EQ(ca(0.5), 0.5);
+		EXPECT_EQ(ca.get(), 0.5);
 	}
 
 	{
 		fea::ca<double> ca(2);
+		EXPECT_EQ(ca.get(), 0.0);
 		EXPECT_EQ(ca(1.0), 1.0);
 		EXPECT_EQ(ca(0.5), 0.75);
 		EXPECT_EQ(ca(0.5), 0.625);
 		EXPECT_EQ(ca(0.5), 0.5625);
 		EXPECT_EQ(ca(0.5), 0.53125);
 		EXPECT_EQ(ca(0.5), 0.515625);
+		EXPECT_EQ(ca.get(), 0.515625);
 	}
 
 	{
 		fea::ca<double> ca(5);
+		EXPECT_EQ(ca.get(), 0.0);
 		EXPECT_EQ(ca(1.0), 1.0);
 		EXPECT_EQ(ca(0.5), 0.75);
 		EXPECT_EQ(ca(0.5), 2.0 / 3.0);
 		EXPECT_EQ(ca(0.5), 0.625);
 		EXPECT_EQ(ca(0.5), 0.6);
 		EXPECT_EQ(ca(0.5), 0.58);
+		EXPECT_EQ(ca.get(), 0.58);
 	}
 
 	{
 		fea::ca<int> ca(2);
+		EXPECT_EQ(ca.get(), 0);
 		EXPECT_EQ(ca(1000), 1000);
 		EXPECT_EQ(ca(500), 750);
 		EXPECT_EQ(ca(500), 625);
 		EXPECT_EQ(ca(500), 563);
 		EXPECT_EQ(ca(500), 531);
 		EXPECT_EQ(ca(500), 516);
+		EXPECT_EQ(ca.get(), 516);
 	}
 
 	{
 		fea::ca<int> ca(5);
+		EXPECT_EQ(ca.get(), 0);
 		EXPECT_EQ(ca(1000), 1000);
 		EXPECT_EQ(ca(500), 750);
 		EXPECT_EQ(ca(500), 667);
 		EXPECT_EQ(ca(500), 625);
 		EXPECT_EQ(ca(500), 600);
 		EXPECT_EQ(ca(500), 580);
+		EXPECT_EQ(ca.get(), 580);
 	}
 }
 
@@ -133,14 +149,17 @@ TEST(moving_average, sma) {
 
 	{
 		fea::simple_moving_average<double, 2> sma;
+		EXPECT_EQ(sma.get(), 0.0);
 		EXPECT_EQ(sma(0.5), 0.5);
 		EXPECT_EQ(sma(0.5), 0.5);
 		EXPECT_EQ(sma(0.5), 0.5);
 		EXPECT_EQ(sma(0.5), 0.5);
+		EXPECT_EQ(sma.get(), 0.5);
 	}
 
 	{
 		fea::simple_moving_average<double, 2> sma;
+		EXPECT_EQ(sma.get(), 0.0);
 		EXPECT_EQ(sma(1.0), 1.0);
 		EXPECT_EQ(sma(0.5), 0.75);
 		EXPECT_EQ(sma(0.5), 0.5);
@@ -152,20 +171,24 @@ TEST(moving_average, sma) {
 		EXPECT_EQ(sma(0.5), 0.75);
 		EXPECT_EQ(sma(0.5), 0.5);
 		EXPECT_EQ(sma(0.5), 0.5);
+		EXPECT_EQ(sma.get(), 0.5);
 	}
 
 	{
 		fea::simple_moving_average<double, 5> sma;
+		EXPECT_EQ(sma.get(), 0.0);
 		EXPECT_EQ(sma(1.0), 1.0);
 		EXPECT_EQ(sma(0.5), 0.75);
 		EXPECT_EQ(sma(0.5), 2.0 / 3.0);
 		EXPECT_EQ(sma(0.5), 0.625);
 		EXPECT_EQ(sma(0.5), 0.6);
 		EXPECT_EQ(sma(0.5), 0.5);
+		EXPECT_EQ(sma.get(), 0.5);
 	}
 
 	{
 		fea::sma<int, 2> sma;
+		EXPECT_EQ(sma.get(), 0);
 		EXPECT_EQ(sma(1000), 1000);
 		EXPECT_EQ(sma(500), 750);
 		EXPECT_EQ(sma(500), 500);
@@ -180,16 +203,19 @@ TEST(moving_average, sma) {
 		EXPECT_EQ(sma(500), 500);
 		EXPECT_EQ(sma(500), 500);
 		EXPECT_EQ(sma(500), 500);
+		EXPECT_EQ(sma.get(), 500);
 	}
 
 	{
 		fea::sma<int, 5> sma;
+		EXPECT_EQ(sma.get(), 0);
 		EXPECT_EQ(sma(1000), 1000);
 		EXPECT_EQ(sma(500), 750);
 		EXPECT_EQ(sma(500), 667);
 		EXPECT_EQ(sma(500), 625);
 		EXPECT_EQ(sma(500), 600);
 		EXPECT_EQ(sma(500), 500);
+		EXPECT_EQ(sma.get(), 500);
 	}
 }
 
@@ -211,16 +237,19 @@ TEST(moving_average, ema) {
 	{
 		// Alpha 0.5, init avg 0.0.
 		fea::exponential_moving_average<double> ema;
+		EXPECT_EQ(ema.get(), 0.0);
 		EXPECT_EQ(ema(0.5), 0.25);
 		EXPECT_EQ(ema(0.5), 0.375);
 		EXPECT_EQ(ema(0.5), 0.4375);
 		EXPECT_EQ(ema(0.5), 0.46875);
 		EXPECT_EQ(ema(0.5), 0.484375);
 		EXPECT_EQ(ema(0.5), 0.4921875);
+		EXPECT_EQ(ema.get(), 0.4921875);
 	}
 
 	{
 		fea::ema<double> ema{ 0.5, 1.0 };
+		EXPECT_EQ(ema.get(), 1.0);
 		EXPECT_EQ(ema(1.0), 1.0);
 		EXPECT_EQ(ema(1.0), 1.0);
 		EXPECT_EQ(ema(0.5), 0.75);
@@ -229,10 +258,12 @@ TEST(moving_average, ema) {
 		EXPECT_EQ(ema(0.5), 0.53125);
 		EXPECT_EQ(ema(0.5), 0.515625);
 		EXPECT_EQ(ema(0.5), 0.5078125);
+		EXPECT_EQ(ema.get(), 0.5078125);
 	}
 
 	{
 		fea::ema<int> ema{ 0.5, 1000 };
+		EXPECT_EQ(ema.get(), 1000);
 		EXPECT_EQ(ema(1000), 1000);
 		EXPECT_EQ(ema(500), 750);
 		EXPECT_EQ(ema(500), 625);
@@ -240,6 +271,7 @@ TEST(moving_average, ema) {
 		EXPECT_EQ(ema(500), 531);
 		EXPECT_EQ(ema(500), 516);
 		EXPECT_EQ(ema(500), 508);
+		EXPECT_EQ(ema.get(), 508);
 	}
 }
 
@@ -262,14 +294,17 @@ TEST(moving_average, wma) {
 
 	{
 		fea::weighted_moving_average<double, 2> wma;
+		EXPECT_EQ(wma.get(), 0.0);
 		EXPECT_EQ(wma(0.5), 0.5);
 		EXPECT_EQ(wma(0.5), 0.5);
 		EXPECT_EQ(wma(0.5), 0.5);
 		EXPECT_EQ(wma(0.5), 0.5);
+		EXPECT_EQ(wma.get(), 0.5);
 	}
 
 	{
 		fea::wma<double, 2> wma;
+		EXPECT_EQ(wma.get(), 0.0);
 		EXPECT_EQ(wma(1.0), 1.0);
 		EXPECT_EQ(wma(0.5), 2.0 / 3.0);
 		EXPECT_EQ(wma(0.5), 0.5);
@@ -281,10 +316,12 @@ TEST(moving_average, wma) {
 		EXPECT_EQ(wma(0.5), 2.0 / 3.0);
 		EXPECT_EQ(wma(0.5), 0.5);
 		EXPECT_EQ(wma(0.5), 0.5);
+		EXPECT_EQ(wma.get(), 0.5);
 	}
 
 	{
 		fea::wma<double, 5> wma;
+		EXPECT_EQ(wma.get(), 0.0);
 		EXPECT_EQ(wma(1.0), 1.0);
 		EXPECT_EQ(wma(0.5), 2.0 / 3.0);
 		EXPECT_EQ(wma(0.5), 7.0 / 12.0);
@@ -298,10 +335,12 @@ TEST(moving_average, wma) {
 		EXPECT_EQ(wma(1.0), 29.0 / 30.0);
 		EXPECT_EQ(wma(1.0), 1.0);
 		EXPECT_EQ(wma(1.0), 1.0);
+		EXPECT_EQ(wma.get(), 1.0);
 	}
 
 	{
 		fea::wma<int, 2> wma;
+		EXPECT_EQ(wma.get(), 0);
 		EXPECT_EQ(wma(1000), 1000);
 		EXPECT_EQ(wma(500), 667);
 		EXPECT_EQ(wma(500), 500);
@@ -316,10 +355,12 @@ TEST(moving_average, wma) {
 		EXPECT_EQ(wma(500), 500);
 		EXPECT_EQ(wma(500), 500);
 		EXPECT_EQ(wma(500), 500);
+		EXPECT_EQ(wma.get(), 500);
 	}
 
 	{
 		fea::wma<int, 5> wma;
+		EXPECT_EQ(wma.get(), 0);
 		EXPECT_EQ(wma(1000), 1000);
 		EXPECT_EQ(wma(500), 667);
 		EXPECT_EQ(wma(500), 583);
@@ -333,6 +374,7 @@ TEST(moving_average, wma) {
 		EXPECT_EQ(wma(1000), 967);
 		EXPECT_EQ(wma(1000), 1000);
 		EXPECT_EQ(wma(1000), 1000);
+		EXPECT_EQ(wma.get(), 1000);
 	}
 }
 } // namespace

@@ -152,15 +152,15 @@ inline std::wstring wread_pipe_text() {
 			= fea::translate_io(fea::translation_mode::u8text);
 	fea::unused(tr);
 
-#if FEA_WINDOWS
+	// #if FEA_WINDOWS
 	detail::read_pipe_text(std::wcin, ret);
-#else
-	// wcin is borked
-	std::string temp;
-	detail::read_pipe_text(std::cin, temp);
-	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convert;
-	ret = convert.from_bytes(temp);
-#endif
+	// #else
+	//	// wcin is borked
+	//	std::string temp;
+	//	detail::read_pipe_text(std::cin, temp);
+	//	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convert;
+	//	ret = convert.from_bytes(temp);
+	// #endif
 	return ret;
 }
 
