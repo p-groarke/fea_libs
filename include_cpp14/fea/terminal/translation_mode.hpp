@@ -45,7 +45,7 @@
 
 /*
 Deals with window's _setmode uglyness. Does nothing on
-other platforms (for the time being).
+other platforms.
 */
 
 namespace fea {

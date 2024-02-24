@@ -70,21 +70,12 @@ inline size_t available_pipe_bytes();
 namespace detail {
 template <class CinT, class StringT>
 inline void read_pipe_text(CinT& mcin, StringT& out) {
-	// Q : assert on std::sync_with_stdio false? Needs to be called after this?
 	auto e = fea::make_on_exit([&]() {
 		// Clear and flush pipe.
 		mcin.clear();
 	});
 
-#if 0
-	// Check if we have anything in cin.
-	mcin.seekg(0, mcin.end);
-	std::streamoff cin_count = mcin.tellg();
-	mcin.seekg(0, mcin.beg);
-#else
 	size_t cin_count = fea::available_pipe_bytes();
-#endif
-
 	if (cin_count == 0) {
 		return;
 	}
@@ -97,6 +88,18 @@ inline void read_pipe_text(CinT& mcin, StringT& out) {
 }
 } // namespace detail
 
+
+// Disables syncing with C io functions. Makes std::cout and friends fast.
+inline void fast_io() {
+	std::cin.sync_with_stdio(false);
+	std::cout.sync_with_stdio(false);
+	std::cerr.sync_with_stdio(false);
+	std::clog.sync_with_stdio(false);
+	std::wcin.sync_with_stdio(false);
+	std::wcout.sync_with_stdio(false);
+	std::wcerr.sync_with_stdio(false);
+	std::wclog.sync_with_stdio(false);
+}
 
 // A non-blocking function that returns the number of bytes available in stdin.
 size_t available_pipe_bytes() {
@@ -156,11 +159,9 @@ inline std::wstring wread_pipe_text() {
 #if FEA_WINDOWS
 	detail::read_pipe_text(std::wcin, ret);
 #else
-	// wcin is borked
+	// wcin is borked, use cin and convert to wstring (utf32).
 	std::string temp;
 	detail::read_pipe_text(std::cin, temp);
-	std::cout << "std::string " << temp << std::endl;
-	// std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
 	std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> convert;
 	ret = convert.from_bytes(temp);
 #endif
