@@ -69,15 +69,16 @@ jobs:
 
     - name: Test
       # working-directory: ${{ github.workspace }}/build
+      shell: cmd
       run: |
         cd ${{ github.workspace }}/build
-        ./bin/fea_libs_tests
-        ./bin/fea_libs_nothrow_tests
-        cmd /v /c 'cd ${{ github.workspace }}/build && cat bin\tests_data\pipe.txt | bin\fea_libs_pipe_tests.exe 0 & exit !ERRORLEVEL!'
+        bin\fea_libs_tests
+        bin\fea_libs_nothrow_tests
+        cat bin\tests_data\pipe.txt | bin\fea_libs_pipe_tests.exe 0
         cat bin\tests_data\pipe.txt | bin\fea_libs_pipe_tests.exe 1
-        cmd /v /c 'cd ${{ github.workspace }}/build && bin\fea_libs_pipe_tests.exe 0 < "bin/tests_data/pipe.txt" & exit !ERRORLEVEL!'
-        cmd /v /c 'cd ${{ github.workspace }}/build && bin\fea_libs_pipe_tests.exe 1 < "bin/tests_data/pipe.txt" & exit !ERRORLEVEL!'
-        ./bin/fea_libs_pipe_tests 2
+        bin\fea_libs_pipe_tests.exe 0 < "bin\tests_data\pipe.txt"
+        bin\fea_libs_pipe_tests.exe 1 < "bin\tests_data\pipe.txt"
+        bin\fea_libs_pipe_tests 2
 
 
   Clang:
