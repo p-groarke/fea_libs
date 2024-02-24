@@ -8,7 +8,7 @@ const char* argv0;
 int test_num = 0;
 
 int main(int argc, char** argv) {
-	fea::fast_io();
+	fea::fast_iostreams();
 
 	if (argc > 1) {
 		test_num = std::stoi(argv[1]);

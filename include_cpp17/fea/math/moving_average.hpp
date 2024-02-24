@@ -214,6 +214,7 @@ template <class T>
 using ema = exponential_moving_average<T>;
 
 
+// Computes the weighted moving average.
 template <class T, size_t N>
 struct weighted_moving_average {
 	static constexpr bool is_int_v = std::is_integral_v<T>;
@@ -277,4 +278,74 @@ private:
 
 template <class T, size_t N>
 using wma = weighted_moving_average<T, N>;
+
+
+// Compute moving median.
+// More stable than averages.
+template <class T, size_t N>
+struct moving_median {
+	static constexpr bool is_int_v = std::is_integral_v<T>;
+	using mfloat_t = std::conditional_t<sizeof(T) == 8, double, float>;
+
+	T operator()(const T& in) {
+		if (_size != N) {
+			_circle_buf[_size++] = mfloat_t(in);
+			std::copy(_circle_buf.begin(), _circle_buf.begin() + _size,
+					_sorted.begin());
+			std::sort(_sorted.begin(), _sorted.begin() + _size);
+
+			if (_size % 2 == 0) {
+				mfloat_t v1 = _sorted[(_size / 2) - 1];
+				mfloat_t v2 = _sorted[_size / 2];
+				_last = (v1 + v2) / mfloat_t(2);
+			} else {
+				_last = _sorted[(_size - 1) / 2];
+			}
+
+			if constexpr (is_int_v) {
+				return T(std::round(_last));
+			} else {
+				return T(_last);
+			}
+		}
+
+		_circle_buf[_playhead] = mfloat_t(in);
+		_playhead = _playhead + 1 == _circle_buf.size() ? 0 : _playhead + 1;
+
+		std::copy(_circle_buf.begin(), _circle_buf.end(), _sorted.begin());
+		std::sort(_sorted.begin(), _sorted.end());
+
+		if constexpr (N % 2 == 0) {
+			mfloat_t v1 = _sorted[(_size / 2) - 1];
+			mfloat_t v2 = _sorted[_size / 2];
+			_last = (v1 + v2) / mfloat_t(2);
+		} else {
+			_last = _sorted[(_size - 1) / 2];
+		}
+
+		if constexpr (is_int_v) {
+			return T(std::round(_last));
+		} else {
+			return T(_last);
+		}
+	}
+
+	T get() const {
+		if constexpr (is_int_v) {
+			return T(std::round(_last));
+		} else {
+			return T(_last);
+		}
+	}
+
+private:
+	mfloat_t _last = mfloat_t(0);
+	size_t _playhead = 0;
+	size_t _size = 0;
+	std::array<mfloat_t, N> _circle_buf{};
+	std::array<mfloat_t, N> _sorted{};
+};
+
+template <class T, size_t N>
+using mm = moving_median<T, N>;
 } // namespace fea

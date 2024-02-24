@@ -377,4 +377,107 @@ TEST(moving_average, wma) {
 		EXPECT_EQ(wma.get(), 1000);
 	}
 }
+
+TEST(moving_average, mm) {
+	static_assert(fea::mm<double, 10>::is_int_v == false, ERROR_MSG);
+	static_assert(fea::mm<float, 10>::is_int_v == false, ERROR_MSG);
+	static_assert(fea::mm<int64_t, 10>::is_int_v == true, ERROR_MSG);
+	static_assert(fea::mm<int, 10>::is_int_v == true, ERROR_MSG);
+
+	static_assert(
+			std::is_same_v<typename fea::mm<double, 10>::mfloat_t, double>,
+			ERROR_MSG);
+	static_assert(std::is_same_v<typename fea::mm<float, 10>::mfloat_t, float>,
+			ERROR_MSG);
+	static_assert(
+			std::is_same_v<typename fea::mm<int64_t, 10>::mfloat_t, double>,
+			ERROR_MSG);
+	static_assert(std::is_same_v<typename fea::mm<int, 10>::mfloat_t, float>,
+			ERROR_MSG);
+
+	{
+		fea::moving_median<double, 2> mm;
+		EXPECT_EQ(mm.get(), 0.0);
+		EXPECT_EQ(mm(0.5), 0.5);
+		EXPECT_EQ(mm(0.5), 0.5);
+		EXPECT_EQ(mm(0.5), 0.5);
+		EXPECT_EQ(mm(0.5), 0.5);
+		EXPECT_EQ(mm.get(), 0.5);
+	}
+
+	{
+		fea::mm<double, 2> mm;
+		EXPECT_EQ(mm.get(), 0.0);
+		EXPECT_EQ(mm(1.0), 1.0);
+		EXPECT_EQ(mm(0.5), 0.75);
+		EXPECT_EQ(mm(0.5), 0.5);
+		EXPECT_EQ(mm(0.5), 0.5);
+		EXPECT_EQ(mm(0.5), 0.5);
+		EXPECT_EQ(mm(0.5), 0.5);
+		EXPECT_EQ(mm(1.0), 0.75);
+		EXPECT_EQ(mm(1.0), 1.0);
+		EXPECT_EQ(mm(0.5), 0.75);
+		EXPECT_EQ(mm(0.5), 0.5);
+		EXPECT_EQ(mm(0.5), 0.5);
+		EXPECT_EQ(mm.get(), 0.5);
+	}
+
+	{
+		fea::mm<double, 5> mm;
+		EXPECT_EQ(mm.get(), 0.0);
+		EXPECT_EQ(mm(1.0), 1.0);
+		EXPECT_EQ(mm(0.5), 0.75);
+		EXPECT_EQ(mm(0.5), 0.5);
+		EXPECT_EQ(mm(0.5), 0.5);
+		EXPECT_EQ(mm(0.5), 0.5);
+		EXPECT_EQ(mm(0.5), 0.5);
+		EXPECT_EQ(mm(0.5), 0.5);
+		EXPECT_EQ(mm(1.0), 0.5);
+		EXPECT_EQ(mm(1.0), 0.5);
+		EXPECT_EQ(mm(1.0), 1.0);
+		EXPECT_EQ(mm(1.0), 1.0);
+		EXPECT_EQ(mm(1.0), 1.0);
+		EXPECT_EQ(mm(1.0), 1.0);
+		EXPECT_EQ(mm.get(), 1.0);
+	}
+
+	{
+		fea::mm<int, 2> mm;
+		EXPECT_EQ(mm.get(), 0);
+		EXPECT_EQ(mm(1000), 1000);
+		EXPECT_EQ(mm(500), 750);
+		EXPECT_EQ(mm(500), 500);
+		EXPECT_EQ(mm(500), 500);
+		EXPECT_EQ(mm(500), 500);
+		EXPECT_EQ(mm(500), 500);
+		EXPECT_EQ(mm(500), 500);
+		EXPECT_EQ(mm(1000), 750);
+		EXPECT_EQ(mm(1000), 1000);
+		EXPECT_EQ(mm(500), 750);
+		EXPECT_EQ(mm(500), 500);
+		EXPECT_EQ(mm(500), 500);
+		EXPECT_EQ(mm(500), 500);
+		EXPECT_EQ(mm(500), 500);
+		EXPECT_EQ(mm.get(), 500);
+	}
+
+	{
+		fea::mm<int, 5> mm;
+		EXPECT_EQ(mm.get(), 0);
+		EXPECT_EQ(mm(1000), 1000);
+		EXPECT_EQ(mm(500), 750);
+		EXPECT_EQ(mm(500), 500);
+		EXPECT_EQ(mm(500), 500);
+		EXPECT_EQ(mm(500), 500);
+		EXPECT_EQ(mm(500), 500);
+		EXPECT_EQ(mm(500), 500);
+		EXPECT_EQ(mm(1000), 500);
+		EXPECT_EQ(mm(1000), 500);
+		EXPECT_EQ(mm(1000), 1000);
+		EXPECT_EQ(mm(1000), 1000);
+		EXPECT_EQ(mm(1000), 1000);
+		EXPECT_EQ(mm(1000), 1000);
+		EXPECT_EQ(mm.get(), 1000);
+	}
+}
 } // namespace

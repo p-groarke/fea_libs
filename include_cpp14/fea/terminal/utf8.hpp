@@ -124,18 +124,6 @@ private:
 // mode for utf16. This is helpful for the legacy command prompt, and will
 // assert on any use of non 'w' prefixed input/output c++ functions.
 FEA_NODISCARD inline codepage_resetter utf8_terminal(bool force_wide) {
-	// constexpr const char* lcl = "C.UTF-8";
-	// std::locale::global();
-	// std::setlocale(LC_ALL, lcl);
-	// std::cin.imbue(std::locale(lcl));
-	// std::cout.imbue(std::locale(lcl));
-	// std::cerr.imbue(std::locale(lcl));
-	// std::clog.imbue(std::locale(lcl));
-	// std::wcin.imbue(std::locale(lcl));
-	// std::wcout.imbue(std::locale(lcl));
-	// std::wcerr.imbue(std::locale(lcl));
-	// std::wclog.imbue(std::locale(lcl));
-
 	unsigned in_cp_prev = GetConsoleCP();
 	if (in_cp_prev == 0) {
 		fea::maybe_throw_on_os_error(__FUNCTION__, __LINE__);

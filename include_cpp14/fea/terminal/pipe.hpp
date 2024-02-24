@@ -90,7 +90,7 @@ inline void read_pipe_text(CinT& mcin, StringT& out) {
 
 
 // Disables syncing with C io functions. Makes std::cout and friends fast.
-inline void fast_io() {
+inline void fast_iostreams() {
 	std::cin.sync_with_stdio(false);
 	std::cout.sync_with_stdio(false);
 	std::cerr.sync_with_stdio(false);
@@ -172,7 +172,15 @@ inline std::wstring wread_pipe_text() {
 // Clears the pipe if clear_pipe is true.
 inline std::string read_pipe_text() {
 	std::string ret;
+
+#if FEA_WINDOWS
+	std::wstring temp;
+	detail::read_pipe_text(std::wcin, temp);
+	std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> convert;
+	ret = convert.to_bytes(temp);
+#else
 	detail::read_pipe_text(std::cin, ret);
+#endif
 	return ret;
 }
 } // namespace fea
