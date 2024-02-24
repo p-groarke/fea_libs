@@ -74,10 +74,10 @@ jobs:
         cd ${{ github.workspace }}/build
         bin\fea_libs_tests
         bin\fea_libs_nothrow_tests
-        cat bin\tests_data\pipe.txt | bin\fea_libs_pipe_tests.exe 0
-        cat bin\tests_data\pipe.txt | bin\fea_libs_pipe_tests.exe 1
-        bin\fea_libs_pipe_tests.exe 0 < "bin\tests_data\pipe.txt"
-        bin\fea_libs_pipe_tests.exe 1 < "bin\tests_data\pipe.txt"
+        cat bin\tests_data\pipe.txt | bin\fea_libs_pipe_tests 0
+        cat bin\tests_data\pipe.txt | bin\fea_libs_pipe_tests 1
+        bin\fea_libs_pipe_tests 0 < "bin\tests_data\pipe.txt"
+        bin\fea_libs_pipe_tests 1 < "bin\tests_data\pipe.txt"
         bin\fea_libs_pipe_tests 2
 
 

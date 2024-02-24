@@ -117,13 +117,28 @@ size_t available_pipe_bytes() {
 	} break;
 	case FILE_TYPE_DISK: {
 		LARGE_INTEGER byte_size;
+#if FEA_32BIT
+		byte_size.LowPart = 0;
+#else
 		byte_size.QuadPart = 0;
+#endif
 		if (GetFileSizeEx(stdin_handle, &byte_size) == 0) {
 			fea::maybe_throw_on_os_error(__FUNCTION__, __LINE__);
 		}
+#if FEA_32BIT
+		ret = size_t(byte_size.LowPart);
+#else
 		ret = size_t(byte_size.QuadPart);
+#endif
 	} break;
 	case FILE_TYPE_PIPE: {
+		// For some obscure reason, we need to readfile first.
+		char buf[] = { 0 };
+		if (ReadFile(stdin_handle, &buf, 0, nullptr, nullptr) == 0) {
+			fea::maybe_throw_on_os_error(__FUNCTION__, __LINE__);
+		}
+
+		// Now peek size.
 		unsigned long avail = 0;
 		if (PeekNamedPipe(stdin_handle, nullptr, 0, nullptr, &avail, nullptr)
 				== 0) {
@@ -172,19 +187,7 @@ inline std::wstring wread_pipe_text() {
 // Clears the pipe if clear_pipe is true.
 inline std::string read_pipe_text() {
 	std::string ret;
-
-#if FEA_WINDOWS
-	fea::translation_resetter tr
-			= fea::translate_io(fea::translation_mode::u8text);
-	fea::unused(tr);
-
-	std::wstring temp;
-	detail::read_pipe_text(std::wcin, temp);
-	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>, wchar_t> convert;
-	ret = convert.to_bytes(temp);
-#else
 	detail::read_pipe_text(std::cin, ret);
-#endif
 	return ret;
 }
 } // namespace fea
