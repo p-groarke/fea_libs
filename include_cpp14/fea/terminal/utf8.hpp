@@ -31,6 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
+#include "fea/terminal/translation_mode.hpp"
 #include "fea/utils/platform.hpp"
 
 /*
@@ -39,7 +40,7 @@ Does nothing (but is still callable) on other OSes.
 */
 
 #if FEA_WINDOWS
-#include "fea/utils/unused.hpp"
+#include "fea/utils/error.hpp"
 #include <limits>
 
 #include <fcntl.h>
@@ -51,13 +52,17 @@ Does nothing (but is still callable) on other OSes.
 namespace fea {
 #if !FEA_WINDOWS
 struct codepage_resetter {};
-FEA_NODISCARD inline codepage_resetter win_utf8_terminal(bool = false) {
+FEA_NODISCARD inline codepage_resetter utf8_terminal(bool) {
+	return {};
+}
+FEA_NODISCARD inline codepage_resetter utf8_terminal() {
 	return {};
 }
 #else
+
 struct codepage_resetter {
-	codepage_resetter() = default;
-	codepage_resetter(unsigned in_cp, unsigned out_cp)
+	codepage_resetter() noexcept = default;
+	codepage_resetter(unsigned in_cp, unsigned out_cp) noexcept
 			: _in_cp(in_cp)
 			, _out_cp(out_cp) {
 	}
@@ -82,11 +87,19 @@ struct codepage_resetter {
 
 	~codepage_resetter() {
 		if (_in_cp != sentinel()) {
-			SetConsoleCP(_in_cp);
+			if (SetConsoleCP(_in_cp) == 0) {
+				fea::error_exit_on_os_error(__FUNCTION__, __LINE__);
+			}
 		}
 		if (_out_cp != sentinel()) {
-			SetConsoleOutputCP(_out_cp);
+			if (SetConsoleOutputCP(_out_cp) == 0) {
+				fea::error_exit_on_os_error(__FUNCTION__, __LINE__);
+			}
 		}
+	}
+
+	void reset_translation(translation_resetter&& r) {
+		_trans_reset = std::move(r);
 	}
 
 	static constexpr unsigned sentinel() {
@@ -96,6 +109,8 @@ struct codepage_resetter {
 private:
 	unsigned _in_cp = sentinel();
 	unsigned _out_cp = sentinel();
+
+	translation_resetter _trans_reset;
 };
 
 // Enables utf8 in windows terminal, as much as possible anyways...
@@ -106,23 +121,33 @@ private:
 // Capture the returning struct, which will reset the terminal when destroyed.
 //
 // If you set force_wide to true, the call also enables the terminal translation
-// mode for utf16. This is helpful for the legacy command prompt, but will
-// assert on any use of non 'w' prefixed out/input functions.
-FEA_NODISCARD inline codepage_resetter win_utf8_terminal(
-		bool force_wide = false) {
-	unsigned old_in_cp = GetConsoleCP();
-	unsigned old_out_cp = GetConsoleOutputCP();
-	codepage_resetter ret{ old_in_cp, old_out_cp };
+// mode for utf16. This is helpful for the legacy command prompt, and will
+// assert on any use of non 'w' prefixed input/output c++ functions.
+FEA_NODISCARD inline codepage_resetter utf8_terminal(bool force_wide) {
+	unsigned in_cp_prev = GetConsoleCP();
+	if (in_cp_prev == 0) {
+		fea::maybe_throw_on_os_error(__FUNCTION__, __LINE__);
+	}
+	unsigned out_cp_prev = GetConsoleOutputCP();
+	if (out_cp_prev == 0) {
+		fea::maybe_throw_on_os_error(__FUNCTION__, __LINE__);
+	}
+	codepage_resetter ret{ in_cp_prev, out_cp_prev };
 
-	SetConsoleCP(CP_UTF8);
-	SetConsoleOutputCP(CP_UTF8);
+	if (SetConsoleCP(CP_UTF8) == 0) {
+		fea::maybe_throw_on_os_error(__FUNCTION__, __LINE__);
+	}
+	if (SetConsoleOutputCP(CP_UTF8) == 0) {
+		fea::maybe_throw_on_os_error(__FUNCTION__, __LINE__);
+	}
 
 	if (force_wide) {
-		int res = _setmode(_fileno(stdin), _O_U16TEXT);
-		res = _setmode(_fileno(stdout), _O_U16TEXT);
-		fea::unused(res);
+		ret.reset_translation(translate_io(translation_mode::u16text));
 	}
 	return ret;
+}
+FEA_NODISCARD inline codepage_resetter utf8_terminal() {
+	return utf8_terminal(false);
 }
 #endif
 } // namespace fea

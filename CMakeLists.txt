@@ -33,7 +33,7 @@ if (${FEA_CMAKE_LOCAL})
 endif()
 FetchContent_Declare(fea_cmake
 	GIT_REPOSITORY https://github.com/p-groarke/fea_cmake.git
-	GIT_TAG c18194b32552a4f6ea44d8843470e8ae544cabdb
+	GIT_TAG main
 )
 FetchContent_MakeAvailable(fea_cmake)
 
@@ -117,15 +117,16 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 endif()
 
 # Tests
-if (${FEA_TESTS})
+if (FEA_TESTS)
 	# enable_testing()
 
 	# Tests external dependencies.
-	find_package(GTest CONFIG REQUIRED QUIET)
+	find_package(GTest CONFIG REQUIRED)
 
 	# Test Project
 	set(TEST_NAME ${PROJECT_NAME}_tests)
 	set(TEST_NAME_NOTHROW ${PROJECT_NAME}_nothrow_tests)
+	set(TEST_NAME_PIPE ${PROJECT_NAME}_pipe_tests)
 
 	file(GLOB_RECURSE TEST_HEADERS_CPP14 "include_cpp14/*.hpp")
 	file(GLOB_RECURSE TEST_HEADERS_CPP17 "include_cpp17/*.hpp")
@@ -134,6 +135,8 @@ if (${FEA_TESTS})
 	file(GLOB_RECURSE TEST_SOURCES_CPP14 "tests_cpp14/*.cpp" "tests_cpp14/*.hpp" "tests_cpp14/*.tpp")
 	file(GLOB_RECURSE TEST_SOURCES_CPP17 "tests_cpp17/*.cpp" "tests_cpp17/*.hpp" "tests_cpp17/*.tpp")
 	file(GLOB_RECURSE TEST_SOURCES_CPP20 "tests_cpp20/*.cpp" "tests_cpp20/*.hpp" "tests_cpp20/*.tpp")
+
+	file(GLOB_RECURSE PIPE_SOURCES "tests_pipe/*.cpp")
 
 	add_executable(${TEST_NAME} ${TEST_SOURCES_CPP14} ${TEST_HEADERS_CPP14}
 		"$<$<COMPILE_FEATURES:cxx_std_17>:${TEST_SOURCES_CPP17}>"
@@ -147,9 +150,16 @@ if (${FEA_TESTS})
 		"$<$<COMPILE_FEATURES:cxx_std_20>:${TEST_SOURCES_CPP20}>"
 		"$<$<COMPILE_FEATURES:cxx_std_20>:${TEST_HEADERS_CPP20}>"
 	)
+	add_executable(${TEST_NAME_PIPE} ${PIPE_SOURCES} ${TEST_HEADERS_CPP14})
 
 	fea_set_compile_options(${TEST_NAME} PRIVATE)
 	fea_set_compile_options(${TEST_NAME_NOTHROW} PRIVATE)
+	fea_set_compile_options(${TEST_NAME_PIPE} PRIVATE)
+
+	set_target_properties(${TEST_NAME} PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "--gtest_catch_exceptions=0 --gtest_filter=*")
+	set_target_properties(${TEST_NAME_NOTHROW} PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "--gtest_catch_exceptions=0 --gtest_filter=*")
+	file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/bin/tests_data/pipe.txt" PIPE_FILEPATH)
+	set_target_properties(${TEST_NAME_PIPE} PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "< \"${PIPE_FILEPATH}\"")
 
 	# Set NOTHROW and other global defines that could impact tests.
 	target_compile_definitions(${TEST_NAME_NOTHROW} PRIVATE FEA_NOTHROW_DEF -DFEA_SERIALIZE_SIZE_T=uint16_t -DFEA_CODEPAGE_CONVERSIONS_DEF)
@@ -167,7 +177,9 @@ if (${FEA_TESTS})
 	target_link_libraries(${TEST_NAME_NOTHROW} PUBLIC ${PROJECT_NAME} GTest::GTest TBB::tbb
 		$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:${CMAKE_CXX_COMPILER_VERSION},9.0>>:stdc++fs>
 	)
-
+	target_link_libraries(${TEST_NAME_PIPE} PUBLIC ${PROJECT_NAME} GTest::GTest TBB::tbb
+		$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:${CMAKE_CXX_COMPILER_VERSION},9.0>>:stdc++fs>
+	)
 
 	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp14 PREFIX "Source Files" FILES ${TEST_SOURCES_CPP14})
 	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include_cpp14 PREFIX "Header Files" FILES ${TEST_HEADERS_CPP14})
@@ -175,10 +187,12 @@ if (${FEA_TESTS})
 	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include_cpp17 PREFIX "Header Files" FILES ${TEST_HEADERS_CPP17})
 	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp20 PREFIX "Source Files" FILES ${TEST_SOURCES_CPP20})
 	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include_cpp20 PREFIX "Header Files" FILES ${TEST_HEADERS_CPP20})
+	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/tests_pipe PREFIX "Source Files" FILES ${PIPE_SOURCES})
 
 	if (${FEA_BENCHMARKS})
 		target_compile_definitions(${TEST_NAME} PRIVATE FEA_BENCHMARKS_DEF)
 		target_compile_definitions(${TEST_NAME_NOTHROW} PRIVATE FEA_BENCHMARKS_DEF)
+		target_compile_definitions(${TEST_NAME_PIPE} PRIVATE FEA_BENCHMARKS_DEF)
 	endif()
 
 	# gtest_discover_tests(${TEST_NAME})
@@ -186,4 +200,5 @@ if (${FEA_TESTS})
 
 	# Copy test data on build.
 	fea_copy_on_build(${TEST_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp17/data $<TARGET_FILE_DIR:${TEST_NAME}>/tests_data)
+	fea_copy_on_build(${TEST_NAME_PIPE} ${CMAKE_CURRENT_SOURCE_DIR}/tests_pipe/data $<TARGET_FILE_DIR:${TEST_NAME_PIPE}>/tests_data)
 endif()

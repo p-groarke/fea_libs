@@ -1,12 +1,19 @@
-﻿#include <fea/terminal/utf8.hpp>
+﻿#include <fea/terminal/pipe.hpp>
+#include <fea/terminal/utf8.hpp>
 #include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
+#include <iostream>
 
 const char* argv0;
-
+int test_num = 0;
 
 int main(int argc, char** argv) {
-	// Just test this here so we output utf and it compiles fine on other OSes.
+	fea::fast_iostreams();
+
+	if (argc > 1) {
+		test_num = std::stoi(argv[1]);
+	}
+
 	auto e = fea::utf8_terminal();
 	fea::unused(e);
 
