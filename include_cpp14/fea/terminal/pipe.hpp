@@ -71,7 +71,7 @@ namespace detail {
 template <class CinT, class StringT>
 inline void read_pipe_text(CinT& mcin, StringT& out) {
 	auto e = fea::make_on_exit([&]() {
-		// Clear and flush pipe.
+		// Clear pipe bits.
 		mcin.clear();
 	});
 
@@ -80,6 +80,7 @@ inline void read_pipe_text(CinT& mcin, StringT& out) {
 		return;
 	}
 
+	out.reserve((cin_count / sizeof(typename StringT::value_type)) + 1);
 	StringT line;
 	while (std::getline(mcin, line)) {
 		out.insert(out.end(), line.begin(), line.end());
@@ -135,7 +136,8 @@ size_t available_pipe_bytes() {
 		// For some obscure reason, we need to readfile first.
 		char buf[] = { 0 };
 		if (ReadFile(stdin_handle, &buf, 0, nullptr, nullptr) == 0) {
-			fea::maybe_throw_on_os_error(__FUNCTION__, __LINE__);
+			SetLastError(0);
+			return 0;
 		}
 
 		// Now peek size.
