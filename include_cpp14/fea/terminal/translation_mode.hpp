@@ -121,10 +121,6 @@ struct translation_resetter {
 
 	~translation_resetter() {
 		if (_in_mode != translation_mode::ignore) {
-			if (fflush(stdin) == EOF) {
-				fea::error_exit(
-						__FUNCTION__, __LINE__, "Couldn't flush stdin.");
-			}
 			if (_setmode(_fileno(stdin), int(_in_mode)) == -1) {
 				fea::error_exit_on_errno(__FUNCTION__, __LINE__);
 			}
@@ -175,9 +171,6 @@ FEA_NODISCARD inline translation_resetter translate_io(translation_mode in_mode,
 	int err_prev = -1;
 
 	if (in_mode != translation_mode::ignore) {
-		if (fflush(stdin) == EOF) {
-			fea::maybe_throw(__FUNCTION__, __LINE__, "Couldn't flush stdin.");
-		}
 		in_prev = _setmode(_fileno(stdin), int(in_mode));
 		if (in_prev == -1) {
 			fea::maybe_throw_on_errno(__FUNCTION__, __LINE__);

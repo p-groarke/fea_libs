@@ -281,7 +281,8 @@ using wma = weighted_moving_average<T, N>;
 
 
 // Compute moving median.
-// More stable than averages.
+// More stable than averages, but heavier.
+// If you use an even sample size, the average of central values is used.
 template <class T, size_t N>
 struct moving_median {
 	static constexpr bool is_int_v = std::is_integral_v<T>;
