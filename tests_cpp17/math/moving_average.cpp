@@ -2,6 +2,10 @@
 #include <fea/math/moving_average.hpp>
 #include <gtest/gtest.h>
 
+namespace fea {
+using namespace fea::moving_average::abbrev;
+}
+
 namespace {
 #define ERROR_MSG "average.cpp : Failed unit test."
 

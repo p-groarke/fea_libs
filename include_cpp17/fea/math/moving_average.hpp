@@ -40,12 +40,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <utility>
 
 /*
-Averages.
-
-TODO : linear regression moving average,
-moving median, ...
+Moving averages.
+When in doubt, use exponential moving average or moving median.
 https://en.wikipedia.org/wiki/Moving_average#Weighted_moving_average
-https://www.alglib.net/time-series/moving-average-filter.php
+
+TODO : linear regression moving average?
 https://www.incrediblecharts.com/indicators/linear_regression.php
 */
 
@@ -107,9 +106,6 @@ private:
 	mfloat_t _last = 0;
 };
 
-template <class T>
-using ca = cumulative_average<T>;
-
 
 // Computes the simple moving average of N samples.
 // Uncentered.
@@ -163,9 +159,6 @@ private:
 	std::array<mfloat_t, N> _circle_buf{};
 };
 
-template <class T, size_t N>
-using sma = simple_moving_average<T, N>;
-
 
 // Computes the exponential moving average.
 // Alpha defaults to 0.5 if it isn't provided.
@@ -209,9 +202,6 @@ private:
 	mfloat_t _alpha_inv = mfloat_t(1) - _alpha;
 	mfloat_t _last = 0.0;
 };
-
-template <class T>
-using ema = exponential_moving_average<T>;
 
 
 // Computes the weighted moving average.
@@ -275,9 +265,6 @@ private:
 	size_t _size = 0;
 	std::array<mfloat_t, N> _circle_buf{};
 };
-
-template <class T, size_t N>
-using wma = weighted_moving_average<T, N>;
 
 
 // Compute moving median.
@@ -347,6 +334,27 @@ private:
 	std::array<mfloat_t, N> _sorted{};
 };
 
+
+// Abbreviations / accronyms.
+// Enable with :
+// namespace fea { using namespace fea::...::abbrev; }
+namespace moving_average {
+namespace abbrev {
+template <class T>
+using ca = cumulative_average<T>;
+
+template <class T, size_t N>
+using sma = simple_moving_average<T, N>;
+
+template <class T>
+using ema = exponential_moving_average<T>;
+
+template <class T, size_t N>
+using wma = weighted_moving_average<T, N>;
+
 template <class T, size_t N>
 using mm = moving_median<T, N>;
+
+} // namespace abbrev
+} // namespace moving_average
 } // namespace fea
