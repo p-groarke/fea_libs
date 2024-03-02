@@ -1,7 +1,7 @@
 /*
 BSD 3-Clause License
 
-Copyright (c) 2023, Philippe Groarke
+Copyright (c) 2024, Philippe Groarke
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -86,7 +86,7 @@ protected:
 // moving average algorithm.
 template <class T>
 struct cumulative_average : detail::moving_avg_base<T> {
-	using detail::moving_avg_base<T>::mfloat_t;
+	using typename detail::moving_avg_base<T>::mfloat_t;
 	using detail::moving_avg_base<T>::is_int_v;
 	using detail::moving_avg_base<T>::get;
 
@@ -128,7 +128,7 @@ private:
 // Uncentered.
 template <class T, size_t N>
 struct simple_moving_average : detail::moving_avg_base<T> {
-	using detail::moving_avg_base<T>::mfloat_t;
+	using typename detail::moving_avg_base<T>::mfloat_t;
 	using detail::moving_avg_base<T>::is_int_v;
 	using detail::moving_avg_base<T>::get;
 
@@ -172,7 +172,7 @@ private:
 // Alpha defaults to 0.5 if it isn't provided.
 template <class T>
 struct exponential_moving_average : detail::moving_avg_base<T> {
-	using detail::moving_avg_base<T>::mfloat_t;
+	using typename detail::moving_avg_base<T>::mfloat_t;
 	using detail::moving_avg_base<T>::is_int_v;
 	using detail::moving_avg_base<T>::get;
 
@@ -203,7 +203,7 @@ private:
 // Computes the weighted moving average.
 template <class T, size_t N>
 struct weighted_moving_average : detail::moving_avg_base<T> {
-	using detail::moving_avg_base<T>::mfloat_t;
+	using typename detail::moving_avg_base<T>::mfloat_t;
 	using detail::moving_avg_base<T>::is_int_v;
 	using detail::moving_avg_base<T>::get;
 
@@ -259,7 +259,7 @@ private:
 // If you use an even sample size, the average of central values is used.
 template <class T, size_t N>
 struct moving_median : detail::moving_avg_base<T> {
-	using detail::moving_avg_base<T>::mfloat_t;
+	using typename detail::moving_avg_base<T>::mfloat_t;
 	using detail::moving_avg_base<T>::is_int_v;
 	using detail::moving_avg_base<T>::get;
 
