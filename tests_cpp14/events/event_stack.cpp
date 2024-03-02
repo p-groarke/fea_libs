@@ -133,12 +133,14 @@ TEST(event_stack, basics) {
 	t_two = 0;
 	t_three = 0;
 
+#if FEA_WITH_TBB
 	s.trigger_mt<e::one>();
 	EXPECT_EQ(5, t_one);
 	s.trigger_mt<e::two>();
 	EXPECT_EQ(5, t_two);
 	s.trigger_mt<e::three>(0.1f, 0.1);
 	EXPECT_EQ(5, t_three);
+#endif
 
 	EXPECT_EQ(0, s.at<e::one>(front_1)());
 	EXPECT_EQ(0, s.at<e::two>(front_2)());

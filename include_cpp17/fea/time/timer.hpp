@@ -31,12 +31,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 #include "fea/events/event_stack.hpp"
+#include "fea/performance/constants.hpp"
 #include "fea/state_machines/fsm.hpp"
 #include "fea/time/high_range_duration.hpp"
 #include "fea/time/time.hpp"
+#include "fea/utils/platform.hpp"
 #include "fea/utils/throw.hpp"
 
 #include <cassert>
+
+#if FEA_WITH_TBB
+#if FEA_WINDOWS
+#pragma warning(push)
+#pragma warning(disable : 4459)
+#include <tbb/parallel_for.h>
+#pragma warning(pop)
+#else
+#include <tbb/parallel_for.h>
+#endif
+#endif
 
 /*
 A timer and calendar.
@@ -487,16 +500,21 @@ private:
 					return false;
 				});
 
-		if constexpr (MultiThreaded) {
+		if constexpr (MultiThreaded && FEA_WITH_TBB) {
+#if FEA_WITH_TBB
 			size_t start_idx = new_end - _elapsed_callbacks.begin();
-			tbb::parallel_for(tbb::blocked_range<size_t>{ start_idx,
-									  _elapsed_callbacks.size() },
-					[&, this](const tbb::blocked_range<size_t>& range) {
-						for (size_t i = range.begin(); i < range.end(); ++i) {
-							_elapsed_callbacks[i].second(event_args...);
-						}
-					});
-
+			auto eval = [&, this](const tbb::blocked_range<size_t>& range) {
+				for (size_t i = range.begin(); i < range.end(); ++i) {
+					_elapsed_callbacks[i].second(event_args...);
+				}
+			};
+			tbb::blocked_range<size_t> range{
+				start_idx,
+				_elapsed_callbacks.size(),
+				fea::default_grainsize_small_v<true>,
+			};
+			tbb::parallel_for(range, eval, fea::default_partitioner_t<true>{});
+#endif
 		} else {
 			for (auto it = new_end; it != _elapsed_callbacks.end(); ++it) {
 				it->second(event_args...);
@@ -513,15 +531,21 @@ private:
 					return false;
 				});
 
-		if constexpr (MultiThreaded) {
+		if constexpr (MultiThreaded && FEA_WITH_TBB) {
+#if FEA_WITH_TBB
 			size_t start_idx = new_end2 - _time_callbacks.begin();
-			tbb::parallel_for(tbb::blocked_range<size_t>{ start_idx,
-									  _time_callbacks.size() },
-					[&, this](const tbb::blocked_range<size_t>& range) {
-						for (size_t i = range.begin(); i < range.end(); ++i) {
-							_time_callbacks[i].second(event_args...);
-						}
-					});
+			auto eval = [&, this](const tbb::blocked_range<size_t>& range) {
+				for (size_t i = range.begin(); i < range.end(); ++i) {
+					_time_callbacks[i].second(event_args...);
+				}
+			};
+			tbb::blocked_range<size_t> range{
+				start_idx,
+				_time_callbacks.size(),
+				fea::default_grainsize_small_v<true>,
+			};
+			tbb::parallel_for(range, eval, fea::default_partitioner_t<true>{});
+#endif
 		} else {
 			for (auto it = new_end2; it != _time_callbacks.end(); ++it) {
 				it->second(event_args...);

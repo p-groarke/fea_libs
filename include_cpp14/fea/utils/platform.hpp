@@ -162,6 +162,23 @@ FEA_INLINE_VAR constexpr bool release_build = false;
 FEA_INLINE_VAR constexpr bool debug_build = true;
 #endif
 
+// Used to set index type in serialization. Driven by build.
+#undef FEA_SERIALIZE_SIZE_T
+#define FEA_SERIALIZE_SIZE_T size_t
+
+#if defined(FEA_SERIALIZE_SIZE_T_DEF)
+#undef FEA_SERIALIZE_SIZE_T
+#define FEA_SERIALIZE_SIZE_T FEA_SERIALIZE_SIZE_T_DEF
+#endif
+
+// Used throughout to enable or disable tbb functionality.
+#undef FEA_WITH_TBB
+#define FEA_WITH_TBB 1
+
+#if defined(FEA_NO_TBB_DEF)
+#undef FEA_WITH_TBB
+#define FEA_WITH_TBB 0
+#endif
 
 /**
  * OS Detection

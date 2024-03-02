@@ -6,7 +6,7 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 include(GoogleTest)
 
-# User options
+# User options, build related.
 option(FEA_TESTS "Build and run tests." On)
 option(FEA_BENCHMARKS "Build and run bencharks, requires tests." Off)
 option(FEA_CPP17 "Use C++17 (default is C++20)." Off)
@@ -14,6 +14,9 @@ option(FEA_CPP14 "Use C++14 (default is C++20)." Off)
 option(FEA_PULL_CONAN "Executes conan install from cmake." On)
 option(FEA_CONAN2 "If pulling conan dependencies, are we running conan 2?" Off)
 option(FEA_CMAKE_LOCAL "Use local fea_cmake repo. Searches for '../fea_cmake'" Off)
+
+# Options that affect which modules and functionality are available.
+option(FEA_WITH_TBB "Pull oneTBB and use it." On)
 
 # C++ version.
 if ("cxx_std_20" IN_LIST CMAKE_CXX_COMPILE_FEATURES AND NOT FEA_CPP17 AND NOT FEA_CPP14)
@@ -40,6 +43,9 @@ FetchContent_MakeAvailable(fea_cmake)
 # Include cmake helpers.
 include(${fea_cmake_SOURCE_DIR}/CMakeLists.txt)
 
+# Use standard fea_cmake settings.
+fea_standard_settings()
+
 # Use fea clang-format file.
 fea_import_clangformat()
 
@@ -51,20 +57,21 @@ fea_set_output_dir(${CMAKE_BINARY_DIR}/bin)
 
 # External dependencies.
 if (${FEA_PULL_CONAN})
+	fea_bool_to_pybool(FEA_WITH_TBB _FEA_WITH_TBB_PYBOOL)
+
 	if (NOT ${FEA_CONAN2})
 		# Enable conan revisions (RREV).
 		fea_execute_process(COMMAND conan config set general.revisions_enabled=True
 			COMMAND_ECHO STDOUT
 			ERROR_MSG "Failed to set conan 1 revisions_enabled."
 		)
-		fea_pull_conan(CONAN_MSVC_TOOLSET "${CMAKE_VS_PLATFORM_TOOLSET}")
+		fea_pull_conan(CONAN_MSVC_TOOLSET "${CMAKE_VS_PLATFORM_TOOLSET}" CONAN_ARGS "-o fea_libs:with_tbb=${_FEA_WITH_TBB_PYBOOL}")
 	else()
-		fea_pull_conan2(CONAN_MSVC_TOOLSET "${CMAKE_VS_PLATFORM_TOOLSET}")
+		fea_pull_conan2(CONAN_MSVC_TOOLSET "${CMAKE_VS_PLATFORM_TOOLSET}" CONAN_ARGS "-o fea_libs:with_tbb=${_FEA_WITH_TBB_PYBOOL}")
 	endif()
 
 endif()
 
-find_package(TBB CONFIG REQUIRED QUIET)
 find_package(date CONFIG REQUIRED QUIET)
 
 
@@ -75,7 +82,15 @@ file(GLOB_RECURSE HEADER_FILES_CPP17 "include_cpp17/${INCLUDE_NAME}/*.hpp")
 file(GLOB_RECURSE HEADER_FILES_CPP20 "include_cpp20/${INCLUDE_NAME}/*.hpp")
 add_library(${PROJECT_NAME} INTERFACE)
 fea_set_compile_options(${PROJECT_NAME} INTERFACE)
-target_link_libraries(${PROJECT_NAME} INTERFACE TBB::tbb date::date)
+target_link_libraries(${PROJECT_NAME} INTERFACE date::date)
+
+if (FEA_WITH_TBB)
+	find_package(TBB CONFIG REQUIRED QUIET)
+	target_link_libraries(${PROJECT_NAME} INTERFACE TBB::tbb)
+else()
+	# default is on.
+	target_compile_definitions(${PROJECT_NAME} INTERFACE FEA_NO_TBB_DEF)
+endif()
 
 # To see files in IDE
 # target_sources(${PROJECT_NAME} INTERFACE
@@ -162,7 +177,12 @@ if (FEA_TESTS)
 	set_target_properties(${TEST_NAME_PIPE} PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "< \"${PIPE_FILEPATH}\"")
 
 	# Set NOTHROW and other global defines that could impact tests.
-	target_compile_definitions(${TEST_NAME_NOTHROW} PRIVATE FEA_NOTHROW_DEF -DFEA_SERIALIZE_SIZE_T=uint16_t -DFEA_CODEPAGE_CONVERSIONS_DEF)
+	target_compile_definitions(${TEST_NAME_NOTHROW} PRIVATE
+		FEA_NO_TBB_DEF
+		FEA_NOTHROW_DEF
+		FEA_CODEPAGE_CONVERSIONS_DEF
+		FEA_SERIALIZE_SIZE_T_DEF=uint16_t
+	)
 
 	# For the extreme serialization test.
 	if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")

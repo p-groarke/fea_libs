@@ -48,6 +48,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <utility>
 #include <vector>
 
+// WIP //
+
 /*
 flat_bf_graph is a flat breadth-first graph. It is slow to construct and modify
 (topology), but fast to evaluate. It is ordered.
@@ -382,14 +384,14 @@ public:
 
 		// Preheat with top-level parent.
 		shift_ranges.push_back(shift_info{
-				.shift_to = shift_begin,
-				.shift_begin = shift_begin + 1,
-				.shift_end = _children_begin_idx(uk),
+				.shift_to = pos_type(shift_begin),
+				.shift_begin = pos_type(shift_begin + 1),
+				.shift_end = pos_type(_children_begin_idx(uk)),
 		});
 
-		for (size_t i = shift_ranges.back().shift_end; i < _nodes.size(); ++i) {
-			pos_type shift_to = i;
-		}
+		// for (size_t i = shift_ranges.back().shift_end; i < _nodes.size();
+		// ++i) { 	pos_type shift_to = pos_type(i);
+		// }
 
 
 		// We loop (aka recurse) and shift ranges until next hit to

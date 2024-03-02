@@ -2,9 +2,12 @@
 #include <cstdint>
 #include <fea/graphs/lazy_graph.hpp>
 #include <fea/maps/unsigned_map.hpp>
+#include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 #include <mutex>
 #include <vector>
+
+#if FEA_WITH_TBB
 
 extern bool contains(const std::vector<unsigned>& vec, unsigned i);
 extern bool contains(
@@ -395,3 +398,4 @@ TEST(fea_lazy_graph, threading_max_parents) {
 	}
 }
 } // namespace
+#endif

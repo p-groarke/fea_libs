@@ -33,6 +33,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fea/containers/span.hpp"
 #include "fea/containers/stack_vector.hpp"
 #include "fea/functional/callback.hpp"
+#include "fea/performance/constants.hpp"
+#include "fea/utils/platform.hpp"
 #include "fea/utils/throw.hpp"
 
 #include <algorithm>
@@ -40,11 +42,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cstdint>
 #include <functional>
 #include <limits>
-#include <tbb/task_group.h>
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+#if FEA_WITH_TBB
+#include <tbb/task_group.h>
+#endif
 
 namespace fea {
 namespace detail {
@@ -678,6 +683,7 @@ struct lazy_graph {
 		}
 	}
 
+#if FEA_WITH_TBB
 	// Same as evaluate_dirty but threaded breaths.
 	template <class Func>
 	void evaluate_dirty_mt(Id id,
@@ -769,7 +775,7 @@ struct lazy_graph {
 
 		g.wait();
 	}
-
+#endif
 
 	// Update a node.
 	// Your lambda will be called recursively from parent to child.
@@ -815,6 +821,7 @@ struct lazy_graph {
 		}
 	}
 
+#if FEA_WITH_TBB
 	// Same as clean but threaded breadths.
 	template <class Func>
 	void clean_mt(Id id,
@@ -873,7 +880,7 @@ struct lazy_graph {
 			}
 		});
 	}
-
+#endif
 
 	// Data representing independance information for evaluation graphs.
 	struct independance_data {

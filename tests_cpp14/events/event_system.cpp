@@ -567,6 +567,7 @@ TEST(event_system, multithreading) {
 
 	std::atomic<int> test_event_one{ 0 };
 
+#if FEA_WITH_TBB
 	auto nid1 = s.add_notifier();
 	s.subscribe<events::one>(nid1, [&]() { ++test_event_one; });
 	s.subscribe<events::one>(nid1, [&]() { ++test_event_one; });
@@ -595,5 +596,6 @@ TEST(event_system, multithreading) {
 
 	s.trigger_mt<channels::one, events::one>();
 	EXPECT_EQ(test_event_one.load(), 20);
+#endif
 }
 } // namespace

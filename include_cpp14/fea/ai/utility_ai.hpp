@@ -3,6 +3,7 @@
 #include "fea/containers/stack_vector.hpp"
 #include "fea/functional/function.hpp"
 #include "fea/meta/static_for.hpp"
+#include "fea/performance/constants.hpp"
 #include "fea/utils/platform.hpp"
 #include "fea/utils/throw.hpp"
 
@@ -10,10 +11,11 @@
 #include <array>
 #include <cassert>
 #include <cstdio>
-#include <limits>
 #include <functional>
+#include <limits>
 #include <vector>
 
+#if FEA_WITH_TBB
 #if FEA_WINDOWS
 #pragma warning(push)
 #pragma warning(disable : 4459)
@@ -21,6 +23,7 @@
 #pragma warning(pop)
 #else
 #include <tbb/parallel_for.h>
+#endif
 #endif
 
 /*
@@ -224,19 +227,23 @@ struct utility_ai<FunctionEnum, PredicateEnum, float(PredArgs...),
 	// Same as trigger, but evaluates scores in multiple threads.
 	// Your predicates must be thread safe.
 	// The action is executed on the caller thread.
+#if FEA_WITH_TBB
 	ActionReturn trigger_mt(
 			ActionArgs... action_args, PredArgs... predicate_args) {
-
 		std::array<float, size_t(FunctionEnum::count)> scores;
-		tbb::parallel_for(
-				tbb::blocked_range<size_t>{ 0, size_t(FunctionEnum::count) },
-				[&, this](const tbb::blocked_range<size_t>& range) {
-					for (size_t i = range.begin(); i < range.end(); ++i) {
-						fea::span<const PredicateEnum> preds
-								= _utility_functions[i].predicates();
-						scores[i] = evaluate_score(preds, predicate_args...);
-					}
-				});
+		auto eval = [&, this](const tbb::blocked_range<size_t>& range) {
+			for (size_t i = range.begin(); i < range.end(); ++i) {
+				fea::span<const PredicateEnum> preds
+						= _utility_functions[i].predicates();
+				scores[i] = evaluate_score(preds, predicate_args...);
+			}
+		};
+		tbb::blocked_range<size_t> range{
+			0,
+			size_t(FunctionEnum::count),
+			fea::default_grainsize_small_v<true>,
+		};
+		tbb::parallel_for(range, eval, fea::default_partitioner_t<true>{});
 
 		size_t winner_idx = (std::numeric_limits<size_t>::max)();
 		float max_score = (std::numeric_limits<float>::lowest)();
@@ -255,6 +262,7 @@ struct utility_ai<FunctionEnum, PredicateEnum, float(PredArgs...),
 		return _utility_functions[winner_idx].execute(
 				std::forward<ActionArgs>(action_args)...);
 	}
+#endif
 
 private:
 	static_assert(std::is_enum<FunctionEnum>::value,

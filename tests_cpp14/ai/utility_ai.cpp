@@ -69,7 +69,9 @@ TEST(utility_ai, basics) {
 	// Should throw or assert, missing 1 utility function.
 #if FEA_DEBUG
 	EXPECT_DEATH(ai.trigger(), "");
+#if FEA_WITH_TBB
 	EXPECT_DEATH(ai.trigger_mt(), "");
+#endif
 #endif
 
 	{
@@ -83,8 +85,10 @@ TEST(utility_ai, basics) {
 	ai.trigger();
 	EXPECT_TRUE(test_passed);
 
+#if FEA_WITH_TBB
 	ai.trigger_mt();
 	EXPECT_TRUE(test_passed);
+#endif
 }
 
 struct cat {
@@ -141,7 +145,11 @@ struct cat {
 
 		// print();
 
+#if FEA_WITH_TBB
 		ai.trigger_mt(this, this);
+#else
+		ai.trigger(this, this);
+#endif
 	}
 
 	void print() const {
