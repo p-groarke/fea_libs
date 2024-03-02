@@ -565,9 +565,8 @@ TEST(event_system, multithreading) {
 	fea::event_system<events, channels, void(), void(int), void(float, double)>
 			s{};
 
-	std::atomic<int> test_event_one{ 0 };
-
 #if FEA_WITH_TBB
+	std::atomic<int> test_event_one{ 0 };
 	auto nid1 = s.add_notifier();
 	s.subscribe<events::one>(nid1, [&]() { ++test_event_one; });
 	s.subscribe<events::one>(nid1, [&]() { ++test_event_one; });

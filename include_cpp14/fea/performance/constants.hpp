@@ -36,14 +36,7 @@
 #include <cstdint>
 
 #if FEA_WITH_TBB
-// #if FEA_WINDOWS
-// #pragma warning(push)
-// #pragma warning(disable : 4459)
 #include <tbb/partitioner.h>
-// #pragma warning(pop)
-// #else
-// #include <tbb/partitioner.h>
-// #endif
 #endif
 
 /*
