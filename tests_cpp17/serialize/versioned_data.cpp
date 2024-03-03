@@ -2,6 +2,7 @@
 #include <fea/serialize/versioned_data.hpp>
 #include <gtest/gtest.h>
 
+#if FEA_VSYEAR > 2017
 namespace {
 enum class version_e : uint32_t {
 	v0,
@@ -132,3 +133,4 @@ TEST(versioned_data, basics) {
 	}
 }
 } // namespace
+#endif

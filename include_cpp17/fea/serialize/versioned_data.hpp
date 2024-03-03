@@ -31,6 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
+#include "fea/utils/platform.hpp"
+#if FEA_VSYEAR > 2017
 #include "fea/enum/utility.hpp"
 #include "fea/meta/static_for.hpp"
 
@@ -175,3 +177,4 @@ void upgrade(const DataT<FromVer>& from, DataT<ToVer>& to) {
 }
 } // namespace detail
 } // namespace fea
+#endif
