@@ -50,7 +50,7 @@ struct data<version_e::v5> {
 };
 
 // clang-format off
-fea::versioned_data<version_e
+constexpr fea::versioned_data<version_e
 	, data<version_e::v0>
 	, data<version_e::v1>
 	, data<version_e::v2>

@@ -80,7 +80,7 @@ struct versioned_data<VersionEnum, DataT<VEnums>...> {
 	// Could static assert that ToVer == latest, but it might prevent
 	// some user edge-cases.
 	template <VersionEnum FromVer, VersionEnum ToVer>
-	void upgrade(const DataT<FromVer>& from, DataT<ToVer>& to) {
+	static void upgrade(const DataT<FromVer>& from, DataT<ToVer>& to) {
 		using fea::detail::upgrade;
 		upgrade(from, to);
 	}
