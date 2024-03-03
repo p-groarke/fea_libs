@@ -299,9 +299,9 @@ FEA_INLINE_VAR constexpr platform_t platform = platform_t::windows;
 #define FEA_VS2017 0
 #define FEA_VS2015 0
 
-// The VS year of release (2022, 2019, 2017, 2015).
+// The VS year of release (..., 2022, 2019, 2017, 2015).
 #undef FEA_VSYEAR
-#define FEA_VSYEAR 0
+#define FEA_VSYEAR 0x7FFFFFFF
 
 #if _MSC_VER >= 1930 && _MSC_VER < 1940
 #undef FEA_VS2022
