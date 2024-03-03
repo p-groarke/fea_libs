@@ -86,7 +86,7 @@ private:
 	// If the write playhead would surpass the read playhead,
 	// pushes the read playhead forward.
 	void advance_write(size_t count) noexcept {
-		using ssize_t = typename std::make_signed<size_t>::type;
+		// using ssize_t = typename std::make_signed<size_t>::type;
 		assert(_write_idx < N);
 		assert(_read_idx < N);
 		assert(_read_idx != _write_idx);
