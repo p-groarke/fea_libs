@@ -130,7 +130,7 @@ private:
 	size_t _write_idx = 0;
 	size_t _read_idx = N - 1;
 
-	todo : _read_idx = 0;
+	// todo : _read_idx = 0;
 
 	std::array<T, N> _arr{};
 };

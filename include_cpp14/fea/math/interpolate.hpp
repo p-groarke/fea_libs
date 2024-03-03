@@ -37,7 +37,11 @@ namespace fea {
 // Returns the percentage of v, given the range [a, b].
 template <class T>
 T percentage(const T& v, const T& a, const T& b) {
-	return (v - a) / (b - a);
+	T mag = b - a;
+	if (mag == T(0)) {
+		return T(0);
+	}
+	return (v - a) / mag;
 }
 
 // Linearly interpolates between [a, b], given per percentage.

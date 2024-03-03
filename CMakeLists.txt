@@ -191,15 +191,21 @@ if (FEA_TESTS)
 	endif()
 
 	# g++ 8 needs to link with seperate filesystem library.
-	target_link_libraries(${TEST_NAME} PUBLIC ${PROJECT_NAME} GTest::GTest TBB::tbb
+	target_link_libraries(${TEST_NAME} PUBLIC ${PROJECT_NAME} GTest::GTest
 		$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:${CMAKE_CXX_COMPILER_VERSION},9.0>>:stdc++fs>
 	)
-	target_link_libraries(${TEST_NAME_NOTHROW} PUBLIC ${PROJECT_NAME} GTest::GTest TBB::tbb
+	target_link_libraries(${TEST_NAME_NOTHROW} PUBLIC ${PROJECT_NAME} GTest::GTest
 		$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:${CMAKE_CXX_COMPILER_VERSION},9.0>>:stdc++fs>
 	)
-	target_link_libraries(${TEST_NAME_PIPE} PUBLIC ${PROJECT_NAME} GTest::GTest TBB::tbb
+	target_link_libraries(${TEST_NAME_PIPE} PUBLIC ${PROJECT_NAME} GTest::GTest
 		$<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:${CMAKE_CXX_COMPILER_VERSION},9.0>>:stdc++fs>
 	)
+
+	if (FEA_WITH_TBB)
+		target_link_libraries(${TEST_NAME} PUBLIC TBB::tbb)
+		target_link_libraries(${TEST_NAME_NOTHROW} PUBLIC TBB::tbb)
+		target_link_libraries(${TEST_NAME_PIPE} PUBLIC TBB::tbb)
+	endif()
 
 	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp14 PREFIX "Source Files" FILES ${TEST_SOURCES_CPP14})
 	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include_cpp14 PREFIX "Header Files" FILES ${TEST_HEADERS_CPP14})
