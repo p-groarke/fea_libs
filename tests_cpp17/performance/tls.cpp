@@ -3,7 +3,10 @@
 #include <fea/performance/tls.hpp>
 #include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
+
+#if FEA_WITH_TBB
 #include <tbb/parallel_for.h>
+#endif
 
 namespace {
 #if FEA_DEBUG || FEA_NOTHROW
@@ -57,6 +60,7 @@ void fuzzit(size_t num_fuzz) {
 		}
 	}
 
+#if FEA_WITH_TBB
 	{
 		fea::tls<std::vector<int>> tls;
 
@@ -134,6 +138,7 @@ void fuzzit(size_t num_fuzz) {
 			EXPECT_EQ(num, 0u);
 		}
 	}
+#endif
 }
 
 TEST(tls, basics) {

@@ -458,12 +458,14 @@ public:
 				std::forward<Args>(args)...);
 	}
 
+#if FEA_WITH_TBB
 	// Multithreaded trigger of event of notifier nid.
 	template <EventEnum e, class... Args>
 	void trigger_mt(notifier_id nid, Args&&... args) {
 		_notifier_stacks.at(nid._id).template trigger_mt<e>(
 				std::forward<Args>(args)...);
 	}
+#endif
 
 	// Trigger event of specified channel.
 	template <ChannelEnum c, EventEnum e, class... Args>
@@ -472,12 +474,14 @@ public:
 				.template trigger<e>(std::forward<Args>(args)...);
 	}
 
+#if FEA_WITH_TBB
 	// Mulithreaded trigger of event of specified channel.
 	template <ChannelEnum c, EventEnum e, class... Args>
 	void trigger_mt(Args&&... args) {
 		std::get<size_t(c)>(_channel_stacks)
 				.template trigger_mt<e>(std::forward<Args>(args)...);
 	}
+#endif
 
 private:
 	// Notifier events.

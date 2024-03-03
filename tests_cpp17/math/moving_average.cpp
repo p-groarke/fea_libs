@@ -252,7 +252,8 @@ TEST(moving_average, ema) {
 	}
 
 	{
-		fea::ema<double> ema{ 0.5, 1.0 };
+		fea::ema<double> ema{ 0.5 };
+		ema.prime(1.0);
 		EXPECT_EQ(ema.get(), 1.0);
 		EXPECT_EQ(ema(1.0), 1.0);
 		EXPECT_EQ(ema(1.0), 1.0);
@@ -266,7 +267,8 @@ TEST(moving_average, ema) {
 	}
 
 	{
-		fea::ema<int> ema{ 0.5, 1000 };
+		fea::ema<int> ema{ 0.5 };
+		ema.prime(1000);
 		EXPECT_EQ(ema.get(), 1000);
 		EXPECT_EQ(ema(1000), 1000);
 		EXPECT_EQ(ema(500), 750);

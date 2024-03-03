@@ -1,6 +1,6 @@
+#include "flat_bf_graph.hpp"
 #include <algorithm>
 #include <compare>
-#include <fea/graphs/flat_bf_graph.hpp>
 #include <fea/numerics/random.hpp>
 #include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
@@ -266,15 +266,14 @@ TEST(flat_bf_graph, basics) {
 	EXPECT_EQ(g.breadth_size(0), 3);
 	EXPECT_EQ(g.breadth_size(1), 6);
 
-	//  TODO : make this work, add the loop to erase (currently isn't deleting
-	//  children).
-
-	//g.erase(0u);
-	//EXPECT_FALSE(g.empty());
-	//EXPECT_EQ(g.size(), 6u);
-	//EXPECT_EQ(g.breadth_size(), 2u);
-	//EXPECT_EQ(g.breadth_size(0), 2u);
-	//EXPECT_EQ(g.breadth_size(1), 4u);
+	////  TODO : make this work, add the loop to erase (currently isn't deleting
+	////  children).
+	// g.erase(0u);
+	// EXPECT_FALSE(g.empty());
+	// EXPECT_EQ(g.size(), 6u);
+	// EXPECT_EQ(g.breadth_size(), 2u);
+	// EXPECT_EQ(g.breadth_size(0), 2u);
+	// EXPECT_EQ(g.breadth_size(1), 4u);
 	//{
 	//	std::vector<unsigned> got(
 	//			g.breadth_keys(0).begin(), g.breadth_keys(0).end());
@@ -286,22 +285,22 @@ TEST(flat_bf_graph, basics) {
 	//	expected = { 8u, 9u, 10u, 11u };
 	//	EXPECT_EQ(got, expected);
 	//}
-	//EXPECT_EQ(g.begin() + 6, g.end());
-	//EXPECT_EQ(g.cbegin() + 6, g.cend());
-	//EXPECT_EQ(g.key_begin() + 6, g.key_end());
-	//EXPECT_EQ(g.key_cbegin() + 6, g.key_cend());
+	// EXPECT_EQ(g.begin() + 6, g.end());
+	// EXPECT_EQ(g.cbegin() + 6, g.cend());
+	// EXPECT_EQ(g.key_begin() + 6, g.key_end());
+	// EXPECT_EQ(g.key_cbegin() + 6, g.key_cend());
 
-	//// g.erase(std::initializer_list<unsigned>{ 2u, 4u });
+	// g.erase(std::initializer_list<unsigned>{ 2u, 4u });
 
-	//// g.clear();
-	//// EXPECT_TRUE(g.empty());
-	//// EXPECT_EQ(g.size(), 0);
-	//// EXPECT_EQ(g.begin(), g.end());
-	//// EXPECT_EQ(g.cbegin(), g.cend());
-	//// EXPECT_EQ(g.key_begin(), g.key_end());
-	//// EXPECT_EQ(g.key_cbegin(), g.key_cend());
-	//// EXPECT_EQ(g.breadth_size(), 0);
-	////  EXPECT_EQ(g.breadth_size(0), 0);
+	// g.clear();
+	// EXPECT_TRUE(g.empty());
+	// EXPECT_EQ(g.size(), 0);
+	// EXPECT_EQ(g.begin(), g.end());
+	// EXPECT_EQ(g.cbegin(), g.cend());
+	// EXPECT_EQ(g.key_begin(), g.key_end());
+	// EXPECT_EQ(g.key_cbegin(), g.key_cend());
+	// EXPECT_EQ(g.breadth_size(), 0);
+	//  EXPECT_EQ(g.breadth_size(0), 0);
 }
 
 TEST(flat_bf_graph, insertion) {

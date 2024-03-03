@@ -6,7 +6,6 @@
 #include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
 #include <mutex>
-#include <tbb/task_group.h>
 #include <vector>
 
 bool contains(const std::vector<unsigned>& vec, unsigned i) {
@@ -155,15 +154,24 @@ TEST(lazy_graph, advanced_example) {
 	// This cleans a node (walks its eval graph top to bottom) but schedules
 	// your function in a threaded breadth manner.
 	// It will lock between stages that aren't independent.
+#if FEA_WITH_TBB
 	graph.clean_mt(2, fea::make_callback([](const my_callback_data&) {}));
+#else
+	graph.clean(2, fea::make_callback([](const my_callback_data&) {}));
+#endif
 
 	// Clean multiple nodes in a multithreaded eval.
 	// This is the BEST call to make for maximum threading.
 	// It will launch independent eval graphs in seperate threads, plus thread
 	// the graphs' breadths as it can.
 	std::vector<my_id_t> my_nodes_to_clean{ 0, 1, 2 };
+#if FEA_WITH_TBB
 	graph.clean_mt(my_nodes_to_clean,
 			fea::make_callback([](const my_callback_data&) {}));
+#else
+	graph.clean(my_nodes_to_clean,
+			fea::make_callback([](const my_callback_data&) {}));
+#endif
 
 
 	// Even more advanced calls.
@@ -188,6 +196,7 @@ TEST(lazy_graph, advanced_example) {
 	auto ind_data = graph.are_eval_graphs_independent(my_nodes_to_clean);
 
 	// 'ind_data.independent_graphs' can be cleaned in parallel.
+#if FEA_WITH_TBB
 	tbb::task_group g;
 	for (my_id_t id : ind_data.independent_graphs) {
 		g.run([&, id]() {
@@ -205,6 +214,14 @@ TEST(lazy_graph, advanced_example) {
 					id, fea::make_callback([](const my_callback_data&) {}));
 		}
 	});
+#else
+	for (my_id_t id : ind_data.independent_graphs) {
+		graph.clean(id, fea::make_callback([](const my_callback_data&) {}));
+	}
+	for (my_id_t id : ind_data.independent_graphs) {
+		graph.clean(id, fea::make_callback([](const my_callback_data&) {}));
+	}
+#endif
 }
 
 /**
@@ -759,6 +776,7 @@ TEST(lazy_graph, dirtyness_mt) {
 	std::vector<unsigned> cleaned_ids;
 	std::mutex m;
 
+#if FEA_WITH_TBB
 	graph.evaluate_dirty_mt(
 			4, fea::make_callback([&](const my_callback_data& d) {
 				std::lock_guard<std::mutex> g{ m };
@@ -770,6 +788,18 @@ TEST(lazy_graph, dirtyness_mt) {
 		EXPECT_EQ(num_dirty(d.parents), d.parents.size());
 		cleaned_ids.push_back(d.id);
 	}));
+#else
+	graph.evaluate_dirty(4, fea::make_callback([&](const my_callback_data& d) {
+		std::lock_guard<std::mutex> g{ m };
+		evaled_ids.push_back(d.id);
+	}));
+	graph.clean(4, fea::make_callback([&](const my_callback_data& d) {
+		std::lock_guard<std::mutex> g{ m };
+		test_parents(d.id, d.parents);
+		EXPECT_EQ(num_dirty(d.parents), d.parents.size());
+		cleaned_ids.push_back(d.id);
+	}));
+#endif
 
 
 	// Test the order of evaluation.
@@ -823,12 +853,21 @@ TEST(lazy_graph, dirtyness_mt) {
 
 	// Clean it again.
 	cleaned_ids.clear();
+#if FEA_WITH_TBB
 	graph.clean_mt(7, fea::make_callback([&](const my_callback_data& d) {
 		std::lock_guard<std::mutex> g{ m };
 		test_parents(d.id, d.parents);
 		EXPECT_EQ(num_dirty(d.parents), d.parents.size());
 		cleaned_ids.push_back(d.id);
 	}));
+#else
+	graph.clean(7, fea::make_callback([&](const my_callback_data& d) {
+		std::lock_guard<std::mutex> g{ m };
+		test_parents(d.id, d.parents);
+		EXPECT_EQ(num_dirty(d.parents), d.parents.size());
+		cleaned_ids.push_back(d.id);
+	}));
+#endif
 
 	// Test the order of evaluation.
 	EXPECT_GT(get_index(cleaned_ids, 2), get_index(cleaned_ids, 1));
@@ -891,6 +930,7 @@ TEST(lazy_graph, dirtyness_mt) {
 
 	evaled_ids.clear();
 	cleaned_ids.clear();
+#if FEA_WITH_TBB
 	graph.evaluate_dirty_mt(
 			2, fea::make_callback([&](const my_callback_data& d) {
 				std::lock_guard<std::mutex> g{ m };
@@ -902,6 +942,18 @@ TEST(lazy_graph, dirtyness_mt) {
 		EXPECT_EQ(num_dirty(d.parents), d.parents.size());
 		cleaned_ids.push_back(d.id);
 	}));
+#else
+	graph.evaluate_dirty(2, fea::make_callback([&](const my_callback_data& d) {
+		std::lock_guard<std::mutex> g{ m };
+		evaled_ids.push_back(d.id);
+	}));
+	graph.clean(2, fea::make_callback([&](const my_callback_data& d) {
+		std::lock_guard<std::mutex> g{ m };
+		test_parents(d.id, d.parents);
+		EXPECT_EQ(num_dirty(d.parents), d.parents.size());
+		cleaned_ids.push_back(d.id);
+	}));
+#endif
 
 
 	// Test the order of evaluation.
@@ -937,6 +989,7 @@ TEST(lazy_graph, dirtyness_mt) {
 	evaled_ids.clear();
 	cleaned_ids.clear();
 
+#if FEA_WITH_TBB
 	graph.evaluate_dirty_mt(
 			5, fea::make_callback([&](const my_callback_data& d) {
 				std::lock_guard<std::mutex> g{ m };
@@ -948,6 +1001,18 @@ TEST(lazy_graph, dirtyness_mt) {
 		EXPECT_EQ(num_dirty(d.parents), d.parents.size());
 		cleaned_ids.push_back(d.id);
 	}));
+#else
+	graph.evaluate_dirty(5, fea::make_callback([&](const my_callback_data& d) {
+		std::lock_guard<std::mutex> g{ m };
+		evaled_ids.push_back(d.id);
+	}));
+	graph.clean(5, fea::make_callback([&](const my_callback_data& d) {
+		std::lock_guard<std::mutex> g{ m };
+		test_parents(d.id, d.parents);
+		EXPECT_EQ(num_dirty(d.parents), d.parents.size());
+		cleaned_ids.push_back(d.id);
+	}));
+#endif
 
 
 	// Test the order of evaluation.
@@ -985,7 +1050,11 @@ TEST(lazy_graph, dirtyness_mt) {
 	EXPECT_FALSE(contains(cleaned_ids, 7u));
 
 	// Clean everything
+#if FEA_WITH_TBB
 	graph.clean_mt(7, fea::make_callback([](const my_callback_data&) {}));
+#else
+	graph.clean(7, fea::make_callback([](const my_callback_data&) {}));
+#endif
 	EXPECT_FALSE(graph.is_dirty(0));
 	EXPECT_FALSE(graph.is_dirty(1));
 	EXPECT_FALSE(graph.is_dirty(2));
@@ -1008,12 +1077,21 @@ TEST(lazy_graph, dirtyness_mt) {
 	EXPECT_TRUE(graph.is_dirty(7));
 
 	cleaned_ids.clear();
+#if FEA_WITH_TBB
 	graph.clean_mt(6, fea::make_callback([&](const my_callback_data& d) {
 		std::lock_guard<std::mutex> g{ m };
 		test_parents(d.id, d.parents);
 		EXPECT_EQ(num_dirty(d.parents), d.parents.size());
 		cleaned_ids.push_back(d.id);
 	}));
+#else
+	graph.clean(6, fea::make_callback([&](const my_callback_data& d) {
+		std::lock_guard<std::mutex> g{ m };
+		test_parents(d.id, d.parents);
+		EXPECT_EQ(num_dirty(d.parents), d.parents.size());
+		cleaned_ids.push_back(d.id);
+	}));
+#endif
 
 
 	// Only should clean 6.
@@ -1539,6 +1617,7 @@ TEST(lazy_graph, dirtyness_mt_max_parents) {
 	std::vector<unsigned> evaled_ids;
 	std::vector<unsigned> cleaned_ids;
 	std::mutex m;
+#if FEA_WITH_TBB
 	graph.evaluate_dirty_mt(
 			4, fea::make_callback([&](const my_callback_data& d) {
 				std::lock_guard<std::mutex> g{ m };
@@ -1550,6 +1629,18 @@ TEST(lazy_graph, dirtyness_mt_max_parents) {
 		EXPECT_EQ(num_dirty(d.parents), d.parents.size());
 		cleaned_ids.push_back(d.id);
 	}));
+#else
+	graph.evaluate_dirty(4, fea::make_callback([&](const my_callback_data& d) {
+		std::lock_guard<std::mutex> g{ m };
+		evaled_ids.push_back(d.id);
+	}));
+	graph.clean(4, fea::make_callback([&](const my_callback_data& d) {
+		std::lock_guard<std::mutex> g{ m };
+		test_parents(d.id, d.parents);
+		EXPECT_EQ(num_dirty(d.parents), d.parents.size());
+		cleaned_ids.push_back(d.id);
+	}));
+#endif
 
 
 	// Test the order of evaluation.
@@ -1603,12 +1694,21 @@ TEST(lazy_graph, dirtyness_mt_max_parents) {
 
 	// Clean it again.
 	cleaned_ids.clear();
+#if FEA_WITH_TBB
 	graph.clean_mt(7, fea::make_callback([&](const my_callback_data& d) {
 		std::lock_guard<std::mutex> g{ m };
 		test_parents(d.id, d.parents);
 		EXPECT_EQ(num_dirty(d.parents), d.parents.size());
 		cleaned_ids.push_back(d.id);
 	}));
+#else
+	graph.clean(7, fea::make_callback([&](const my_callback_data& d) {
+		std::lock_guard<std::mutex> g{ m };
+		test_parents(d.id, d.parents);
+		EXPECT_EQ(num_dirty(d.parents), d.parents.size());
+		cleaned_ids.push_back(d.id);
+	}));
+#endif
 
 	// Test the order of evaluation.
 	EXPECT_GT(get_index(cleaned_ids, 2), get_index(cleaned_ids, 1));
@@ -1672,6 +1772,7 @@ TEST(lazy_graph, dirtyness_mt_max_parents) {
 	evaled_ids.clear();
 	cleaned_ids.clear();
 
+#if FEA_WITH_TBB
 	graph.evaluate_dirty_mt(
 			2, fea::make_callback([&](const my_callback_data& d) {
 				std::lock_guard<std::mutex> g{ m };
@@ -1683,6 +1784,18 @@ TEST(lazy_graph, dirtyness_mt_max_parents) {
 		EXPECT_EQ(num_dirty(d.parents), d.parents.size());
 		cleaned_ids.push_back(d.id);
 	}));
+#else
+	graph.evaluate_dirty(2, fea::make_callback([&](const my_callback_data& d) {
+		std::lock_guard<std::mutex> g{ m };
+		evaled_ids.push_back(d.id);
+	}));
+	graph.clean(2, fea::make_callback([&](const my_callback_data& d) {
+		std::lock_guard<std::mutex> g{ m };
+		test_parents(d.id, d.parents);
+		EXPECT_EQ(num_dirty(d.parents), d.parents.size());
+		cleaned_ids.push_back(d.id);
+	}));
+#endif
 
 
 	// Test the order of evaluation.
@@ -1716,12 +1829,21 @@ TEST(lazy_graph, dirtyness_mt_max_parents) {
 
 	graph.make_dirty(0);
 	cleaned_ids.clear();
+#if FEA_WITH_TBB
 	graph.clean_mt(5, fea::make_callback([&](const my_callback_data& d) {
 		std::lock_guard<std::mutex> g{ m };
 		test_parents(d.id, d.parents);
 		EXPECT_EQ(num_dirty(d.parents), d.parents.size());
 		cleaned_ids.push_back(d.id);
 	}));
+#else
+	graph.clean(5, fea::make_callback([&](const my_callback_data& d) {
+		std::lock_guard<std::mutex> g{ m };
+		test_parents(d.id, d.parents);
+		EXPECT_EQ(num_dirty(d.parents), d.parents.size());
+		cleaned_ids.push_back(d.id);
+	}));
+#endif
 
 
 	// Test the order of evaluation.
@@ -1756,7 +1878,11 @@ TEST(lazy_graph, dirtyness_mt_max_parents) {
 	EXPECT_FALSE(contains(cleaned_ids, 7u));
 
 	// Clean everything
+#if FEA_WITH_TBB
 	graph.clean_mt(7, fea::make_callback([](const my_callback_data&) {}));
+#else
+	graph.clean(7, fea::make_callback([](const my_callback_data&) {}));
+#endif
 	EXPECT_FALSE(graph.is_dirty(0));
 	EXPECT_FALSE(graph.is_dirty(1));
 	EXPECT_FALSE(graph.is_dirty(2));
@@ -1781,6 +1907,7 @@ TEST(lazy_graph, dirtyness_mt_max_parents) {
 	evaled_ids.clear();
 	cleaned_ids.clear();
 
+#if FEA_WITH_TBB
 	graph.evaluate_dirty_mt(
 			6, fea::make_callback([&](const my_callback_data& d) {
 				std::lock_guard<std::mutex> g{ m };
@@ -1792,6 +1919,18 @@ TEST(lazy_graph, dirtyness_mt_max_parents) {
 		EXPECT_EQ(num_dirty(d.parents), d.parents.size());
 		cleaned_ids.push_back(d.id);
 	}));
+#else
+	graph.evaluate_dirty(6, fea::make_callback([&](const my_callback_data& d) {
+		std::lock_guard<std::mutex> g{ m };
+		evaled_ids.push_back(d.id);
+	}));
+	graph.clean(6, fea::make_callback([&](const my_callback_data& d) {
+		std::lock_guard<std::mutex> g{ m };
+		test_parents(d.id, d.parents);
+		EXPECT_EQ(num_dirty(d.parents), d.parents.size());
+		cleaned_ids.push_back(d.id);
+	}));
+#endif
 
 
 	// Only should clean 6.

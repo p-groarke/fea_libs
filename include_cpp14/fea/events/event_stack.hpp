@@ -34,6 +34,7 @@
 #pragma once
 #include "fea/maps/unsigned_map.hpp"
 #include "fea/meta/tuple.hpp"
+#include "fea/performance/constants.hpp"
 #include "fea/utils/platform.hpp"
 
 #include <algorithm>
@@ -44,6 +45,7 @@
 #include <type_traits>
 #include <utility>
 
+#if FEA_WITH_TBB
 #if FEA_WINDOWS
 #pragma warning(push)
 #pragma warning(disable : 4459)
@@ -51,6 +53,7 @@
 #pragma warning(pop)
 #else
 #include <tbb/parallel_for.h>
+#endif
 #endif
 
 
@@ -273,30 +276,40 @@ public:
 		}
 	}
 
+#if FEA_WITH_TBB
 	// Trigger event e callbacks in parallel with arguments func_args.
 	template <EventEnum e, class... FuncArgs>
 	void trigger_mt(FuncArgs&&... func_args) const {
 		const auto& map = std::get<size_t(e)>(_stacks);
-		tbb::parallel_for(tbb::blocked_range<size_t>{ 0, map.size() },
-				[&, this](const tbb::blocked_range<size_t>& range) {
-					for (size_t i = range.begin(); i < range.end(); ++i) {
-						map.data()[i].second(
-								std::forward<FuncArgs>(func_args)...);
-					}
-				});
+		auto eval = [&, this](const tbb::blocked_range<size_t>& range) {
+			for (size_t i = range.begin(); i < range.end(); ++i) {
+				map.data()[i].second(std::forward<FuncArgs>(func_args)...);
+			}
+		};
+		tbb::blocked_range<size_t> range{
+			0,
+			map.size(),
+			fea::default_grainsize_small_v<true>,
+		};
+		tbb::parallel_for(range, eval, fea::default_partitioner_t<true>{});
 	}
 	// Trigger event e callbacks in parallel with arguments func_args.
 	template <EventEnum e, class... FuncArgs>
 	void trigger_mt(FuncArgs&&... func_args) {
 		auto& map = std::get<size_t(e)>(_stacks);
-		tbb::parallel_for(tbb::blocked_range<size_t>{ 0, map.size() },
-				[&](const tbb::blocked_range<size_t>& range) {
-					for (size_t i = range.begin(); i < range.end(); ++i) {
-						map.data()[i].second(
-								std::forward<FuncArgs>(func_args)...);
-					}
-				});
+		auto eval = [&](const tbb::blocked_range<size_t>& range) {
+			for (size_t i = range.begin(); i < range.end(); ++i) {
+				map.data()[i].second(std::forward<FuncArgs>(func_args)...);
+			}
+		};
+		tbb::blocked_range<size_t> range{
+			0,
+			map.size(),
+			fea::default_grainsize_small_v<true>,
+		};
+		tbb::parallel_for(range, eval, fea::default_partitioner_t<true>{});
 	}
+#endif
 
 private:
 	event_tuple_t _stacks{};

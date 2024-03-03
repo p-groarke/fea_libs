@@ -1,7 +1,7 @@
 /*
 BSD 3-Clause License
 
-Copyright (c) 2023, Philippe Groarke
+Copyright (c) 2024, Philippe Groarke
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -50,6 +50,32 @@ https://www.incrediblecharts.com/indicators/linear_regression.php
 
 
 namespace fea {
+namespace detail {
+template <class T>
+struct moving_avg_base {
+	static constexpr bool is_int_v = std::is_integral_v<T>;
+	using mfloat_t = std::conditional_t<sizeof(T) == 8, double, float>;
+
+	// Prime the average to an initial value.
+	void prime(const T& v) {
+		_last = mfloat_t(v);
+	}
+
+	// Get the latest average.
+	T get() const {
+		if constexpr (is_int_v) {
+			return T(std::round(_last));
+		} else {
+			return T(_last);
+		}
+	}
+
+protected:
+	mfloat_t _last = mfloat_t(0);
+};
+} // namespace detail
+
+
 // Computes the cumulative average (rolling / running average).
 // Providing n makes the computation bounded, else it is unbounded (infinite).
 //
@@ -59,14 +85,15 @@ namespace fea {
 // This can become quite imprecise, and it is recommended to use a different
 // moving average algorithm.
 template <class T>
-struct cumulative_average {
-	static constexpr bool is_int_v = std::is_integral_v<T>;
-	using mfloat_t = std::conditional_t<sizeof(T) == 8, double, float>;
+struct cumulative_average : detail::moving_avg_base<T> {
+	using typename detail::moving_avg_base<T>::mfloat_t;
+	using detail::moving_avg_base<T>::is_int_v;
+	using detail::moving_avg_base<T>::get;
 
+	cumulative_average() noexcept = default;
 	cumulative_average(size_t n) noexcept
 			: _n(n) {
 	}
-	cumulative_average() noexcept = default;
 
 	T operator()(const T& in) {
 		// Unbounded.
@@ -85,34 +112,25 @@ struct cumulative_average {
 		_last -= _last / _n;
 		_last += mfloat_t(in) / _n;
 
-		if constexpr (is_int_v) {
-			return T(std::round(_last));
-		} else {
-			return T(_last);
-		}
-	}
-
-	T get() const {
-		if constexpr (is_int_v) {
-			return T(std::round(_last));
-		} else {
-			return T(_last);
-		}
+		return get();
 	}
 
 private:
+	using detail::moving_avg_base<T>::prime;
+	using detail::moving_avg_base<T>::_last;
+
 	size_t _n = 0;
 	size_t _size = 0;
-	mfloat_t _last = 0;
 };
 
 
 // Computes the simple moving average of N samples.
 // Uncentered.
 template <class T, size_t N>
-struct simple_moving_average {
-	static constexpr bool is_int_v = std::is_integral_v<T>;
-	using mfloat_t = std::conditional_t<sizeof(T) == 8, double, float>;
+struct simple_moving_average : detail::moving_avg_base<T> {
+	using typename detail::moving_avg_base<T>::mfloat_t;
+	using detail::moving_avg_base<T>::is_int_v;
+	using detail::moving_avg_base<T>::get;
 
 	simple_moving_average() noexcept = default;
 
@@ -136,24 +154,14 @@ struct simple_moving_average {
 		_circle_buf[_playhead] = mfloat_t(in);
 		_playhead = _playhead + 1 == _circle_buf.size() ? 0 : _playhead + 1;
 
-		if constexpr (is_int_v) {
-			return T(std::round(_last));
-		} else {
-			return T(_last);
-		}
-	}
-
-	T get() const {
-		if constexpr (is_int_v) {
-			return T(std::round(_last));
-		} else {
-			return T(_last);
-		}
+		return get();
 	}
 
 private:
+	using detail::moving_avg_base<T>::prime;
+	using detail::moving_avg_base<T>::_last;
+
 	mfloat_t _divider = mfloat_t(1) / mfloat_t(N);
-	mfloat_t _last = mfloat_t(0);
 	size_t _playhead = 0;
 	size_t _size = 0;
 	std::array<mfloat_t, N> _circle_buf{};
@@ -163,20 +171,15 @@ private:
 // Computes the exponential moving average.
 // Alpha defaults to 0.5 if it isn't provided.
 template <class T>
-struct exponential_moving_average {
-	static constexpr bool is_int_v = std::is_integral_v<T>;
-	using mfloat_t = std::conditional_t<sizeof(T) == 8, double, float>;
+struct exponential_moving_average : detail::moving_avg_base<T> {
+	using typename detail::moving_avg_base<T>::mfloat_t;
+	using detail::moving_avg_base<T>::is_int_v;
+	using detail::moving_avg_base<T>::get;
 
-	exponential_moving_average(mfloat_t alpha, T first_value) noexcept
-			: _alpha(alpha)
-			, _last(mfloat_t(first_value)) {
-		assert(_alpha > mfloat_t(0) && _alpha < mfloat_t(1));
-	}
+	exponential_moving_average() noexcept = default;
 	exponential_moving_average(mfloat_t alpha) noexcept
-			: exponential_moving_average(alpha, mfloat_t(0)) {
-	}
-	exponential_moving_average() noexcept
-			: exponential_moving_average(mfloat_t(0.5), mfloat_t(0)) {
+			: _alpha(alpha) {
+		assert(_alpha > mfloat_t(0) && _alpha < mfloat_t(1));
 	}
 
 	T operator()(const T& in) {
@@ -189,26 +192,20 @@ struct exponential_moving_average {
 		}
 	}
 
-	T get() const {
-		if constexpr (is_int_v) {
-			return T(std::round(_last));
-		} else {
-			return T(_last);
-		}
-	}
-
 private:
-	mfloat_t _alpha = 0.5;
+	using detail::moving_avg_base<T>::_last;
+
+	mfloat_t _alpha = mfloat_t(0.5);
 	mfloat_t _alpha_inv = mfloat_t(1) - _alpha;
-	mfloat_t _last = 0.0;
 };
 
 
 // Computes the weighted moving average.
 template <class T, size_t N>
-struct weighted_moving_average {
-	static constexpr bool is_int_v = std::is_integral_v<T>;
-	using mfloat_t = std::conditional_t<sizeof(T) == 8, double, float>;
+struct weighted_moving_average : detail::moving_avg_base<T> {
+	using typename detail::moving_avg_base<T>::mfloat_t;
+	using detail::moving_avg_base<T>::is_int_v;
+	using detail::moving_avg_base<T>::get;
 
 	T operator()(const T& in) {
 		using msize_t = typename std::make_signed<size_t>::type;
@@ -243,24 +240,14 @@ struct weighted_moving_average {
 		}
 		_last /= _denom;
 
-		if constexpr (is_int_v) {
-			return T(std::round(_last));
-		} else {
-			return T(_last);
-		}
-	}
-
-	T get() const {
-		if constexpr (is_int_v) {
-			return T(std::round(_last));
-		} else {
-			return T(_last);
-		}
+		return get();
 	}
 
 private:
+	using detail::moving_avg_base<T>::prime;
+	using detail::moving_avg_base<T>::_last;
+
 	mfloat_t _denom = (N * (N + 1)) / mfloat_t(2);
-	mfloat_t _last = mfloat_t(0);
 	size_t _playhead = 0;
 	size_t _size = 0;
 	std::array<mfloat_t, N> _circle_buf{};
@@ -271,9 +258,10 @@ private:
 // More stable than averages, but heavier.
 // If you use an even sample size, the average of central values is used.
 template <class T, size_t N>
-struct moving_median {
-	static constexpr bool is_int_v = std::is_integral_v<T>;
-	using mfloat_t = std::conditional_t<sizeof(T) == 8, double, float>;
+struct moving_median : detail::moving_avg_base<T> {
+	using typename detail::moving_avg_base<T>::mfloat_t;
+	using detail::moving_avg_base<T>::is_int_v;
+	using detail::moving_avg_base<T>::get;
 
 	T operator()(const T& in) {
 		if (_size != N) {
@@ -311,23 +299,13 @@ struct moving_median {
 			_last = _sorted[(_size - 1) / 2];
 		}
 
-		if constexpr (is_int_v) {
-			return T(std::round(_last));
-		} else {
-			return T(_last);
-		}
-	}
-
-	T get() const {
-		if constexpr (is_int_v) {
-			return T(std::round(_last));
-		} else {
-			return T(_last);
-		}
+		return get();
 	}
 
 private:
-	mfloat_t _last = mfloat_t(0);
+	using detail::moving_avg_base<T>::prime;
+	using detail::moving_avg_base<T>::_last;
+
 	size_t _playhead = 0;
 	size_t _size = 0;
 	std::array<mfloat_t, N> _circle_buf{};
