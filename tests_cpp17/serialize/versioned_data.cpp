@@ -3,7 +3,7 @@
 #include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 
-#if FEA_VSYEAR > 2017
+#if FEA_WINDOWS && FEA_VSYEAR > 2017
 namespace {
 enum class version_e : uint32_t {
 	v0,
