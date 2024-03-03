@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <fea/serialize/versioned_data.hpp>
+#include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 
 #if FEA_VSYEAR > 2017
