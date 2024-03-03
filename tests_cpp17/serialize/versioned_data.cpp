@@ -90,6 +90,7 @@ void upgrade(const data<version_e::v4>& from, data<version_e::v5>& to) {
 }
 
 TEST(versioned_data, basics) {
+	// Test going through the versions one by one.
 	{
 		data<version_e::v0> datav0{};
 		data<version_e::v5> datav5{};
@@ -117,6 +118,7 @@ TEST(versioned_data, basics) {
 	using v4data_t = data<version_e::v4>;
 	using v5data_t = data<version_e::v5>;
 
+	// Test bypassing the system and calling a single update function.
 	{
 		v0data_t datav0{};
 		v1data_t datav1{};

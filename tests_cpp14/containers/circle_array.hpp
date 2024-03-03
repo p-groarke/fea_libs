@@ -123,7 +123,7 @@ private:
 
 	// The read playhead is never allowed to surpass the write playhead,
 	// so this may do nothing.
-	void advance_read(size_t count) noexcept {
+	void advance_read(size_t) noexcept {
 	}
 
 	// The write index "pushes" the read index if you loop around.
