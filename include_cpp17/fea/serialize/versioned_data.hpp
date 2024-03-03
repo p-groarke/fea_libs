@@ -58,6 +58,11 @@ See unit tests for examples. It looks complicated but it really isn't.
 
 
 namespace fea {
+namespace detail {
+template <template <auto> class DataT, auto FromVer, auto ToVer>
+void upgrade(const DataT<FromVer>&, DataT<ToVer>&);
+} // namespace detail
+
 template <class VersionEnum, class...>
 struct versioned_data;
 
@@ -75,9 +80,15 @@ struct versioned_data<VersionEnum, DataT<VEnums>...> {
 	// Could static assert that ToVer == latest, but it might prevent
 	// some user edge-cases.
 	template <VersionEnum FromVer, VersionEnum ToVer>
-	friend void upgrade(const DataT<FromVer>& from, DataT<ToVer>& to);
+	void upgrade(const DataT<FromVer>& from, DataT<ToVer>& to) {
+		using fea::detail::upgrade;
+		upgrade(from, to);
+	}
 
 private:
+	template <template <auto> class T, auto FromVer, auto ToVer>
+	friend void detail::upgrade(const T<FromVer>&, T<ToVer>&);
+
 	static constexpr bool do_asserts() {
 		constexpr bool size_ok = size == size_t(VersionEnum::count);
 		static_assert(size_ok,
@@ -114,7 +125,6 @@ constexpr auto make_versioned_data(std::index_sequence<Idxes...>) {
 template <class VersionEnum, template <VersionEnum> class DataT, size_t N>
 using versioned_data_t = decltype(make_versioned_data<VersionEnum, DataT>(
 		std::make_index_sequence<N>{}));
-} // namespace detail
 
 template <template <auto> class DataT, auto FromVer, auto ToVer>
 void upgrade(const DataT<FromVer>& from, DataT<ToVer>& to) {
@@ -163,4 +173,5 @@ void upgrade(const DataT<FromVer>& from, DataT<ToVer>& to) {
 		to = std::get<DataT<ToVer>>(converted_datas);
 	}
 }
+} // namespace detail
 } // namespace fea

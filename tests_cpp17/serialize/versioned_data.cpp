@@ -94,9 +94,7 @@ TEST(versioned_data, basics) {
 	{
 		data<version_e::v0> datav0{};
 		data<version_e::v5> datav5{};
-
-		using fea::upgrade;
-		upgrade(datav0, datav5);
+		version_map.upgrade(datav0, datav5);
 
 		const std::vector<version_e> expected{
 			version_e::v1,
@@ -107,29 +105,30 @@ TEST(versioned_data, basics) {
 		};
 		EXPECT_EQ(datav5.test, expected);
 
-		// Shouldn't compile.
-		// upgrade(datav5, datav0);
+		//// Shouldn't compile.
+		// version_map.upgrade(datav5, datav0);
 	}
 
 	using v0data_t = data<version_e::v0>;
 	using v1data_t = data<version_e::v1>;
-	using v2data_t = data<version_e::v2>;
-	using v3data_t = data<version_e::v3>;
-	using v4data_t = data<version_e::v4>;
-	using v5data_t = data<version_e::v5>;
+	// using v2data_t = data<version_e::v2>;
+	// using v3data_t = data<version_e::v3>;
+	// using v4data_t = data<version_e::v4>;
+	// using v5data_t = data<version_e::v5>;
 
 	// Test bypassing the system and calling a single update function.
 	{
 		v0data_t datav0{};
 		v1data_t datav1{};
-
-		using fea::upgrade;
-		upgrade(datav0, datav1);
+		version_map.upgrade(datav0, datav1);
 
 		const std::vector<version_e> expected{
 			version_e::v1,
 		};
 		EXPECT_EQ(datav1.test, expected);
+
+		//// Shouldn't compile.
+		// version_map.upgrade(datav1, datav0);
 	}
 }
 } // namespace
