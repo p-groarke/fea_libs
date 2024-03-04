@@ -1,7 +1,7 @@
 ﻿/**
  * BSD 3-Clause License
  *
- * Copyright (c) 2023, Philippe Groarke
+ * Copyright (c) 2024, Philippe Groarke
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -299,24 +299,42 @@ FEA_INLINE_VAR constexpr platform_t platform = platform_t::windows;
 #define FEA_VS2017 0
 #define FEA_VS2015 0
 
+// The VS year of release (..., 2022, 2019, 2017, 2015).
+#if FEA_WINDOWS
+#undef FEA_VSYEAR
+#define FEA_VSYEAR 0
+#endif
+
 #if _MSC_VER >= 1930 && _MSC_VER < 1940
 #undef FEA_VS2022
 #define FEA_VS2022 1
+
+#undef FEA_VSYEAR
+#define FEA_VSYEAR 2022
 #endif
 
 #if _MSC_VER >= 1920 && _MSC_VER < 1930
 #undef FEA_VS2019
 #define FEA_VS2019 1
+
+#undef FEA_VSYEAR
+#define FEA_VSYEAR 2019
 #endif
 
 #if _MSC_VER >= 1910 && _MSC_VER < 1920
 #undef FEA_VS2017
 #define FEA_VS2017 1
+
+#undef FEA_VSYEAR
+#define FEA_VSYEAR 2017
 #endif
 
 #if _MSC_VER >= 1900 && _MSC_VER < 1910
 #undef FEA_VS2015
 #define FEA_VS2015 1
+
+#undef FEA_VSYEAR
+#define FEA_VSYEAR 2015
 #endif
 
 #else

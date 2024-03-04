@@ -1,7 +1,7 @@
 ﻿/*
 BSD 3-Clause License
 
-Copyright (c) 2023, Philippe Groarke
+Copyright (c) 2024, Philippe Groarke
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -50,13 +50,6 @@ Features :
 		Overrides event behavior when coming from/going to specified states or
 		transitions.
 	- Supports user arguments in the callbacks (explained below).
-	//- DelayedTrigger. // Removed till bug fix
-	//	Trigger will happen next time you call fsm::update.
-	- Define FEA_FSM_NOTHROW to assert instead of throw.
-	- Does NOT provide a "get_current_state" function.
-		Checking the current state of an fsm is a major smell and usually points
-		to either a misuse, misunderstanding or incomplete implementation of the
-		fsm. Do not do that, rethink your states and transitions instead.
 
 Callbacks :
 	- The last argument of your callback is always a ref to the fsm itself.
@@ -87,12 +80,22 @@ Notes :
 		(by providing empty callbacks). IMHO this is one of the bigest source of
 		bugs and broken behavior when working with FSMs. Throwing makes
 		debugging much faster and easier.
+	- Define FEA_FSM_NOTHROW to assert instead of throw.
+	- Does NOT provide a "get_current_state" function.
+		Checking the current state of an fsm is a major smell and usually points
+		to either a misuse, misunderstanding or incomplete implementation of the
+		fsm. Do not do that, rethink your states and transitions instead.
 
 TODO :
 	- Yield/History state
-	- Anonymous transition (1 runtime transition per state).
-	- Auto transition guards?
+	- Auto transition guards (anonymous / completion event)?
+		- 1 runtime transition per state
 	- Guard transitions maybe?
+	//- DelayedTrigger. // Removed till bug fix
+	//	Trigger will happen next time you call fsm::update.
+
+https://statecharts.dev/glossary/
+https://live.boost.org/doc/libs/1_83_0/libs/msm/doc/HTML/ch02s02.html
 */
 
 enum class fsm_event : uint8_t {
@@ -249,17 +252,17 @@ struct fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 
 private:
 	std::array<StateEnum, size_t(TransitionEnum::count)> _transitions;
-	fsm_func_t _on_enter_func;
-	fsm_func_t _on_update_func;
-	fsm_func_t _on_exit_func;
-
 	std::array<fsm_func_t, size_t(StateEnum::count)> _on_enter_from_state_funcs;
 	std::array<fsm_func_t, size_t(StateEnum::count)> _on_exit_to_state_funcs;
-
 	std::array<fsm_func_t, size_t(TransitionEnum::count)>
 			_on_enter_from_transition_funcs;
 	std::array<fsm_func_t, size_t(TransitionEnum::count)>
 			_on_exit_to_transition_funcs;
+
+	fsm_func_t _on_enter_func;
+	fsm_func_t _on_update_func;
+	fsm_func_t _on_exit_func;
+
 
 	// TBD, makes it heavy but helps debuggability
 	// const char* _name;
@@ -317,32 +320,12 @@ struct fsm<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 		_current_state = StateEnum::count;
 	}
 
-	// TODO : Fix retrigger on_exit.
-	//// First come first served.
-	//// Trigger will be called next update(...).
-	//// Calling this prevents subsequent triggers to be executed.
-	//// Allows more relaxed trigger argument requirements.
-	// template <TransitionEnum Transition>
-	// void delayed_trigger() {
-	//	if (_has_delayed_trigger)
-	//		return;
-
-	//	_has_delayed_trigger = true;
-	//	_delayed_trigger_func = [](fsm& f, FuncArgs... func_args) {
-	//		f._has_delayed_trigger = false;
-	//		f.trigger<Transition>(func_args...);
-	//	};
-	//}
-
 	// Trigger a transition.
 	// Throws on bad transition (or asserts, if you defined FEA_FSM_NOTHROW).
 	// If you had previously called delayed_trigger, this
 	// won't do anything.
 	template <TransitionEnum Transition>
 	void trigger(FuncArgs... func_args) {
-		if (_has_delayed_trigger)
-			return;
-
 		maybe_init(func_args...);
 
 		StateEnum from_state_e = _current_state;
@@ -378,10 +361,6 @@ struct fsm<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 	// Calls on_update on the current state.
 	// Processes delay_trigger if that was called.
 	FuncRet update(FuncArgs... func_args) {
-		while (_has_delayed_trigger) {
-			_delayed_trigger_func(func_args..., *this);
-		}
-
 		maybe_init(func_args...);
 
 		return get_state(_current_state)
@@ -429,15 +408,13 @@ private:
 	}
 
 	std::array<state_t, size_t(StateEnum::count)> _states;
-	std::bitset<size_t(StateEnum::count)> _state_valid;
+	// Could be bitset.
+	std::array<uint8_t, size_t(StateEnum::count)> _state_valid{};
 	StateEnum _current_state = StateEnum::count;
 	StateEnum _default_state = StateEnum::count;
 	StateEnum _finish_state = StateEnum::count;
 
 	bool _in_on_exit = false;
-
-	fsm_func_t _delayed_trigger_func = {};
-	bool _has_delayed_trigger = false;
 };
 
 template <class, class, class>

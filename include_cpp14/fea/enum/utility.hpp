@@ -30,11 +30,15 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  **/
-
 #pragma once
+#include <type_traits>
 
 namespace fea {
-template <class... Args>
-constexpr void unused(Args&&...) {
+template <class Enum>
+constexpr typename std::underlying_type<Enum>::type to_underlying(Enum e) {
+	static_assert(std::is_enum<Enum>::value,
+			"fea::to_underlying : Only supports casting enums.");
+	return static_cast<typename std::underlying_type<Enum>::type>(e);
 }
+
 } // namespace fea
