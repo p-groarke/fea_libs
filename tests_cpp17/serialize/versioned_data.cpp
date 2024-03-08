@@ -6,131 +6,119 @@
 #if !FEA_WINDOWS || (FEA_VSYEAR > 2017)
 
 namespace {
-enum class version_e : uint32_t {
-	v0,
-	v1,
-	v2,
-	v3,
-	v4,
-	v5,
-	count, // must be at end
-};
+#define ERROR_MSG "versioned_data.cpp : Unit test failed."
 
-template <version_e>
-struct data;
-
-template <>
-struct data<version_e::v0> {
+struct data_v0 {
+	static constexpr uint32_t version = 0;
 	int v = 0;
-	std::vector<version_e> test;
+	std::vector<uint32_t> test;
 };
-template <>
-struct data<version_e::v1> {
+struct data_v1 {
+	static constexpr uint32_t version = 1;
 	int v = 1;
-	std::vector<version_e> test;
+	std::vector<uint32_t> test;
 };
-template <>
-struct data<version_e::v2> {
+namespace potato {
+struct data_v2 {
+	static constexpr uint32_t version = 2;
 	int v = 2;
-	std::vector<version_e> test;
+	std::vector<uint32_t> test;
 };
-template <>
-struct data<version_e::v3> {
+} // namespace potato
+struct data_v3 {
+	static constexpr uint32_t version = 3;
 	int v = 3;
-	std::vector<version_e> test;
+	std::vector<uint32_t> test;
 };
-template <>
-struct data<version_e::v4> {
+struct data_v4 {
+	static constexpr uint32_t version = 4;
 	int v = 4;
-	std::vector<version_e> test;
+	std::vector<uint32_t> test;
 };
-template <>
-struct data<version_e::v5> {
+struct data_v5 {
+	static constexpr uint32_t version = 5;
 	int v = 5;
-	std::vector<version_e> test;
+	std::vector<uint32_t> test;
 };
 
 // clang-format off
-constexpr fea::versioned_data<version_e
-	, data<version_e::v0>
-	, data<version_e::v1>
-	, data<version_e::v2>
-	, data<version_e::v3>
-	, data<version_e::v4>
-	, data<version_e::v5>
+constexpr fea::versioned_data<
+	  data_v0
+	, data_v1
+	, potato::data_v2
+	, data_v3
+	, data_v4
+	, data_v5
 > version_map{};
 // clang-format on
 
-void upgrade(const data<version_e::v0>& from, data<version_e::v1>& to) {
+void upgrade(const data_v0& from, data_v1& to) {
 	EXPECT_EQ(from.v, 0);
 	EXPECT_EQ(to.v, 1);
 	to.test = from.test;
-	to.test.push_back(version_e::v1);
+	to.test.push_back(to.version);
 }
-void upgrade(const data<version_e::v1>& from, data<version_e::v2>& to) {
+// void deserialize(int whatever, data_v0& to) {
+// }
+
+void upgrade(const data_v1& from, potato::data_v2& to) {
 	EXPECT_EQ(from.v, 1);
 	EXPECT_EQ(to.v, 2);
 	to.test = from.test;
-	to.test.push_back(version_e::v2);
+	to.test.push_back(to.version);
 }
-void upgrade(const data<version_e::v2>& from, data<version_e::v3>& to) {
+namespace potato {
+void upgrade(const data_v2& from, data_v3& to) {
 	EXPECT_EQ(from.v, 2);
 	EXPECT_EQ(to.v, 3);
 	to.test = from.test;
-	to.test.push_back(version_e::v3);
+	to.test.push_back(to.version);
 }
-void upgrade(const data<version_e::v3>& from, data<version_e::v4>& to) {
+} // namespace potato
+void upgrade(const data_v3& from, data_v4& to) {
 	EXPECT_EQ(from.v, 3);
 	EXPECT_EQ(to.v, 4);
 	to.test = from.test;
-	to.test.push_back(version_e::v4);
+	to.test.push_back(to.version);
 }
-void upgrade(const data<version_e::v4>& from, data<version_e::v5>& to) {
+void upgrade(const data_v4& from, data_v5& to) {
 	EXPECT_EQ(from.v, 4);
 	EXPECT_EQ(to.v, 5);
 	to.test = from.test;
-	to.test.push_back(version_e::v5);
+	to.test.push_back(to.version);
 }
 
 TEST(versioned_data, basics) {
+	// Foundations
+	{
+		static_assert(
+				fea::is_detected_v<fea::detail::has_upgrade, data_v0, data_v1>,
+				ERROR_MSG);
+	}
+
 	// Test going through the versions one by one.
 	{
-		data<version_e::v0> datav0{};
-		data<version_e::v5> datav5{};
+		data_v0 datav0{};
+		data_v5 datav5{};
 		version_map.upgrade(datav0, datav5);
 
-		const std::vector<version_e> expected{
-			version_e::v1,
-			version_e::v2,
-			version_e::v3,
-			version_e::v4,
-			version_e::v5,
-		};
+		const std::vector<uint32_t> expected{ 1, 2, 3, 4, 5 };
 		EXPECT_EQ(datav5.test, expected);
 
 		//// Shouldn't compile.
 		// version_map.upgrade(datav5, datav0);
 	}
 
-	using v0data_t = data<version_e::v0>;
-	using v1data_t = data<version_e::v1>;
-	// using v2data_t = data<version_e::v2>;
-	// using v3data_t = data<version_e::v3>;
-	// using v4data_t = data<version_e::v4>;
-	// using v5data_t = data<version_e::v5>;
-
 	// Test bypassing the system and calling a single update function.
 	{
-		v0data_t datav0{};
-		v1data_t datav1{};
+		data_v0 datav0{};
+		data_v1 datav1{};
 		version_map.upgrade(datav0, datav1);
 
-		const std::vector<version_e> expected{
-			version_e::v1,
-		};
+		const std::vector<uint32_t> expected{ 1 };
 		EXPECT_EQ(datav1.test, expected);
 
-		//// Shouldn't compile.
+		// Shouldn't compile.
 		// version_map.upgrade(datav1, datav0);
 	}
 }
