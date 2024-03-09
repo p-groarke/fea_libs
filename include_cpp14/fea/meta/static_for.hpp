@@ -199,6 +199,7 @@ constexpr auto static_for(Func&& func) {
 	return detail::static_for(func, std::make_index_sequence<N>{});
 }
 
+#if FEA_CPP17
 // Same as static_for, but reversed.
 // Starts at N - 1, ends at 0.
 template <size_t N, class Func>
@@ -207,6 +208,7 @@ constexpr auto static_for_reversed(Func&& func) {
 	return detail::static_for(
 			func, typename fea::reverse_index_sequence<idx_seq_t>::type{});
 }
+#endif
 
 
 // "std::apply index_sequence"
