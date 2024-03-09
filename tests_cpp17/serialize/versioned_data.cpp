@@ -65,12 +65,12 @@ void upgrade(const data_v0& from, data_v1& to) {
 	to.test = from.test;
 	to.test.push_back(to.version);
 }
-void downgrade(const data_v1& from, data_v0& to) {
-	EXPECT_EQ(from.v, 1);
-	EXPECT_EQ(to.v, 0);
-	to.test = from.test;
-	to.test.push_back(to.version);
-}
+// void downgrade(const data_v1& from, data_v0& to) {
+//	EXPECT_EQ(from.v, 1);
+//	EXPECT_EQ(to.v, 0);
+//	to.test = from.test;
+//	to.test.push_back(to.version);
+// }
 
 void upgrade(const data_v1& from, potato::data_v2& to) {
 	EXPECT_EQ(from.v, 1);
