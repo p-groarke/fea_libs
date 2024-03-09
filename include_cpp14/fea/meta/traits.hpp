@@ -397,18 +397,18 @@ using reverse_t = typename detail::reverse<Ts...>::type;
 template <class...>
 struct index_sequence_cat;
 
+template <template <class, size_t...> class LastT, class T, size_t... Idxes>
+struct index_sequence_cat<LastT<T, Idxes...>> {
+	using type = LastT<T, Idxes...>;
+};
+
 template <template <class, size_t...> class FirstT,
 		template <class, size_t...> class SecondT, class... Rest, class T,
 		size_t... FirstIdxes, size_t... SecondIdxes>
 struct index_sequence_cat<FirstT<T, FirstIdxes...>, SecondT<T, SecondIdxes...>,
 		Rest...> {
-	using type = index_sequence_cat<SecondT<T, FirstIdxes..., SecondIdxes...>,
-			Rest...>::type;
-};
-
-template <template <class, size_t...> class LastT, class T, size_t... Idxes>
-struct index_sequence_cat<LastT<T, Idxes...>> {
-	using type = LastT<T, Idxes...>;
+	using type = typename index_sequence_cat<
+			SecondT<T, FirstIdxes..., SecondIdxes...>, Rest...>::type;
 };
 
 
