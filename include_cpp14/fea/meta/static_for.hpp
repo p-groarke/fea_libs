@@ -205,8 +205,8 @@ constexpr auto static_for(Func&& func) {
 template <size_t N, class Func>
 constexpr auto static_for_reversed(Func&& func) {
 	using idx_seq_t = std::make_index_sequence<N>;
-	return detail::static_for(
-			func, typename fea::reverse_index_sequence<idx_seq_t>::type{});
+	using rev_seq_t = typename fea::reverse_index_sequence<idx_seq_t>::type;
+	return detail::static_for(func, rev_seq_t{});
 }
 #endif
 
