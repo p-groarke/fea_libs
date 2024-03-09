@@ -392,22 +392,33 @@ struct reverse<T> {
 template <class... Ts>
 using reverse_t = typename detail::reverse<Ts...>::type;
 
+
 // Given multiple integer sequences, cats them and returns the type through
 // ::type. No _t helper possible.
 template <class...>
-struct index_sequence_cat;
+struct integer_sequence_cat {
+	using type = void;
+};
 
 template <template <class, size_t...> class LastT, class T, size_t... Idxes>
-struct index_sequence_cat<LastT<T, Idxes...>> {
+struct integer_sequence_cat<LastT<T, Idxes...>> {
 	using type = LastT<T, Idxes...>;
 };
 
+// template <template <class, size_t...> class FirstT,
+//		template <class, size_t...> class SecondT, size_t... FirstIdxes,
+//		size_t... SecondIdxes>
+// struct index_sequence_cat<FirstT<size_t, FirstIdxes...>,
+//		SecondT<size_t, SecondIdxes...>> {
+//	using type = SecondT<size_t, FirstIdxes..., SecondIdxes...>;
+// };
+
 template <template <class, size_t...> class FirstT,
-		template <class, size_t...> class SecondT, class... Rest, class T,
+		template <class, size_t...> class SecondT, class T, class... Rest,
 		size_t... FirstIdxes, size_t... SecondIdxes>
-struct index_sequence_cat<FirstT<T, FirstIdxes...>, SecondT<T, SecondIdxes...>,
-		Rest...> {
-	using type = typename index_sequence_cat<
+struct integer_sequence_cat<FirstT<T, FirstIdxes...>,
+		SecondT<T, SecondIdxes...>, Rest...> {
+	using type = typename integer_sequence_cat<
 			SecondT<T, FirstIdxes..., SecondIdxes...>, Rest...>::type;
 };
 
