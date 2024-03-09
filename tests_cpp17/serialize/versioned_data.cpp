@@ -8,6 +8,8 @@
 namespace {
 #define ERROR_MSG "versioned_data.cpp : Unit test failed."
 
+struct mdeserializer {};
+
 struct data_v0 {
 	static constexpr uint32_t version = 0;
 
@@ -59,8 +61,9 @@ constexpr fea::versioned_data<
 > version_map{};
 // clang-format on
 
-// void deserialize(int whatever, data_v0& to) {
-// }
+// todo
+void deserialize(mdeserializer, data_v0&) {
+}
 void upgrade(const data_v0& from, data_v1& to) {
 	EXPECT_EQ(from.v, 0);
 	EXPECT_EQ(to.v, 1);

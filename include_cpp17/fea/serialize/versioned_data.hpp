@@ -63,11 +63,13 @@ caller.
 
 namespace fea {
 namespace detail {
-//// Should never be called.
-// template <class FromT, class ToT>
-// void upgrade(const FromT&, ToT&);
-// template <class FromT, class ToT>
-// void downgrade(const FromT&, ToT&);
+// Should never be called.
+template <class FromT, class ToT>
+std::enable_if_t<(ToT::version - FromT::version > 1)> upgrade(
+		const FromT&, ToT&);
+template <class FromT, class ToT>
+std::enable_if_t<(FromT::version - ToT::version > 1)> downgrade(
+		const FromT&, ToT&);
 
 template <class FromT, class ToT>
 using mhas_upgrade
@@ -147,8 +149,10 @@ struct versioned_data {
 					= size_t(ToT::version) - size_t(FromT::version);
 			fea::static_for<msize>([&](auto const_i) {
 				static constexpr size_t i = const_i + size_t(FromT::version);
-				using mfrom_t = std::tuple_element_t<i, data_tup_t>;
-				using mto_t = std::tuple_element_t<i + 1, data_tup_t>;
+				constexpr size_t from_idx = i;
+				constexpr size_t to_idx = i + 1;
+				using mfrom_t = std::tuple_element_t<from_idx, data_tup_t>;
+				using mto_t = std::tuple_element_t<to_idx, data_tup_t>;
 
 				static_assert(!std::is_same_v<mfrom_t, mto_t>,
 						"fea::versioned_data : 2 version datas are exactly the "
@@ -156,9 +160,9 @@ struct versioned_data {
 						"version struct.");
 
 				// Get the next version and call the upgrade function.
-				const auto& from = std::get<i>(converted_datas);
-				auto& to = std::get<i + 1>(converted_datas);
-				using ::upgrade;
+				const auto& from = std::get<from_idx>(converted_datas);
+				auto& to = std::get<to_idx>(converted_datas);
+				using fea::detail::upgrade;
 				upgrade(from, to);
 			});
 
@@ -172,8 +176,8 @@ struct versioned_data {
 	template <class FromT, class ToT>
 	static void downgrade(const FromT& from, ToT& to) {
 		static_assert(FromT::version >= ToT::version,
-				"fea::versioned_data : Downgrade only supports upgrading data "
-				"in one direction, new to old.");
+				"fea::versioned_data : Downgrade only supports downgrading "
+				"data in one direction, new to old.");
 
 		static_assert(detail::all_have_downgrade_v<DataTs...>,
 				"fea::versioned_data : One or more of the data types do not "
@@ -196,8 +200,10 @@ struct versioned_data {
 					= size_t(FromT::version) - size_t(ToT::version);
 			fea::static_for_reversed<msize>([&](auto const_i) {
 				static constexpr size_t i = const_i + size_t(ToT::version);
-				using mfrom_t = std::tuple_element_t<i + 1, data_tup_t>;
-				using mto_t = std::tuple_element_t<i, data_tup_t>;
+				constexpr size_t from_idx = i + 1;
+				constexpr size_t to_idx = i;
+				using mfrom_t = std::tuple_element_t<from_idx, data_tup_t>;
+				using mto_t = std::tuple_element_t<to_idx, data_tup_t>;
 
 				static_assert(!std::is_same_v<mfrom_t, mto_t>,
 						"fea::versioned_data : 2 version datas are exactly the "
@@ -205,9 +211,9 @@ struct versioned_data {
 						"version struct.");
 
 				// Get the next version and call the upgrade function.
-				const auto& from = std::get<i + 1>(converted_datas);
-				auto& to = std::get<i>(converted_datas);
-				using ::downgrade;
+				const auto& from = std::get<from_idx>(converted_datas);
+				auto& to = std::get<to_idx>(converted_datas);
+				using fea::detail::downgrade;
 				downgrade(from, to);
 			});
 
