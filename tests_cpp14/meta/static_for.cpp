@@ -159,6 +159,7 @@ TEST(static_for, return_type) {
 	}
 }
 
+#if FEA_CPP17
 TEST(static_for_reversed, basics) {
 	std::array<int, 6> got_arr{};
 	const std::array<int, 6> expected_arr{ 5, 4, 3, 2, 1, 0 };
@@ -171,27 +172,7 @@ TEST(static_for_reversed, basics) {
 		});
 		EXPECT_EQ(got_arr, expected_arr);
 	}
-
-	//{
-	//	int ans = foldit(0, 1, 2, 3);
-	//	EXPECT_EQ(ans, 6);
-	//}
-
-	//{
-	//	int ans = 0;
-	//	fea::static_for<4>([&](auto v) { ans += int(v()); });
-	//	EXPECT_EQ(ans, 6);
-	//}
-
-	//{
-	//	int ans = 0;
-	//	fea::apply_indexes<4>([&](auto... ic) {
-	//		auto l = [&](auto v) { ans += int(v()); };
-
-	//		fea::fold(l, ic...);
-	//	});
-	//	EXPECT_EQ(ans, 6);
-	//}
 }
+#endif
 
 } // namespace
