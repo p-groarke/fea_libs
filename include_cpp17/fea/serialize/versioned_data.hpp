@@ -63,6 +63,10 @@ caller.
 
 namespace fea {
 namespace detail {
+// Should never be called.
+template <class FromT, class ToT>
+void upgrade(const FromT&, ToT&);
+
 template <class FromT, class ToT>
 using mhas_upgrade
 		= decltype(upgrade(std::declval<const FromT&>(), std::declval<ToT&>()));
@@ -152,7 +156,7 @@ struct versioned_data {
 				// Get the next version and call the upgrade function.
 				const auto& from = std::get<i>(converted_datas);
 				auto& to = std::get<i + 1>(converted_datas);
-				using ::upgrade;
+				using fea::detail::upgrade;
 				upgrade(from, to);
 			});
 
