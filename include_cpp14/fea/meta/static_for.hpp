@@ -198,6 +198,13 @@ constexpr auto static_for(Func&& func) {
 	return detail::static_for(func, std::make_index_sequence<N>{});
 }
 
+// Same as static_for, but reversed.
+// Starts at N - 1, ends at 0.
+template <size_t N, class Func>
+constexpr auto static_for_reversed(Func&& func) {
+	return detail::static_for(func, std::make_index_sequence<N>{});
+}
+
 
 // "std::apply index_sequence"
 namespace detail {

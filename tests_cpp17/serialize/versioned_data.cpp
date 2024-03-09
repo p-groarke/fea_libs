@@ -13,11 +13,13 @@ struct data_v0 {
 	int v = 0;
 	std::vector<uint32_t> test;
 };
+
 struct data_v1 {
 	static constexpr uint32_t version = 1;
 	int v = 1;
 	std::vector<uint32_t> test;
 };
+
 namespace potato {
 struct data_v2 {
 	static constexpr uint32_t version = 2;
@@ -25,16 +27,19 @@ struct data_v2 {
 	std::vector<uint32_t> test;
 };
 } // namespace potato
+
 struct data_v3 {
 	static constexpr uint32_t version = 3;
 	int v = 3;
 	std::vector<uint32_t> test;
 };
+
 struct data_v4 {
 	static constexpr uint32_t version = 4;
 	int v = 4;
 	std::vector<uint32_t> test;
 };
+
 struct data_v5 {
 	static constexpr uint32_t version = 5;
 	int v = 5;
@@ -52,14 +57,20 @@ constexpr fea::versioned_data<
 > version_map{};
 // clang-format on
 
+// void deserialize(int whatever, data_v0& to) {
+// }
 void upgrade(const data_v0& from, data_v1& to) {
 	EXPECT_EQ(from.v, 0);
 	EXPECT_EQ(to.v, 1);
 	to.test = from.test;
 	to.test.push_back(to.version);
 }
-// void deserialize(int whatever, data_v0& to) {
-// }
+void downgrade(const data_v1& from, data_v0& to) {
+	EXPECT_EQ(from.v, 1);
+	EXPECT_EQ(to.v, 0);
+	to.test = from.test;
+	to.test.push_back(to.version);
+}
 
 void upgrade(const data_v1& from, potato::data_v2& to) {
 	EXPECT_EQ(from.v, 1);
@@ -67,6 +78,7 @@ void upgrade(const data_v1& from, potato::data_v2& to) {
 	to.test = from.test;
 	to.test.push_back(to.version);
 }
+
 namespace potato {
 void upgrade(const data_v2& from, data_v3& to) {
 	EXPECT_EQ(from.v, 2);
@@ -75,12 +87,14 @@ void upgrade(const data_v2& from, data_v3& to) {
 	to.test.push_back(to.version);
 }
 } // namespace potato
+
 void upgrade(const data_v3& from, data_v4& to) {
 	EXPECT_EQ(from.v, 3);
 	EXPECT_EQ(to.v, 4);
 	to.test = from.test;
 	to.test.push_back(to.version);
 }
+
 void upgrade(const data_v4& from, data_v5& to) {
 	EXPECT_EQ(from.v, 4);
 	EXPECT_EQ(to.v, 5);
@@ -92,7 +106,7 @@ TEST(versioned_data, basics) {
 	// Foundations
 	{
 		static_assert(
-				fea::is_detected_v<fea::detail::has_upgrade, data_v0, data_v1>,
+				fea::is_detected_v<fea::detail::mhas_upgrade, data_v0, data_v1>,
 				ERROR_MSG);
 	}
 
@@ -121,6 +135,21 @@ TEST(versioned_data, basics) {
 		// Shouldn't compile.
 		// version_map.upgrade(datav1, datav0);
 	}
+
+	// struct ini {
+	//	ini& operator[](std::string) {
+	//		return *this;
+	//	}
+	//	ini& operator,(std::string) {
+	//		return *this;
+	//	}
+	//	ini& operator=(int) {
+	//		return *this;
+	//	}
+	// };
+
+	// ini f;
+	// f["New Section"]["new-key"] = 1234, "a comment";
 }
 } // namespace
 #endif
