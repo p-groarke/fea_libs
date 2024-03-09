@@ -393,49 +393,42 @@ template <class... Ts>
 using reverse_t = typename detail::reverse<Ts...>::type;
 
 
-// Given multiple integer sequences, cats them and returns the type through
+#if FEA_CPP17
+// Given multiple index_sequences, cats them and returns the type through
 // ::type. No _t helper possible.
+//
+// integer_sequences require c++17 auto...
 template <class...>
-struct integer_sequence_cat {
-	using type = void;
-};
+struct integer_sequence_cat;
 
-template <template <class, size_t...> class LastT, class T, size_t... Idxes>
+template <template <class, auto...> class LastT, class T, T... Idxes>
 struct integer_sequence_cat<LastT<T, Idxes...>> {
 	using type = LastT<T, Idxes...>;
 };
 
-// template <template <class, size_t...> class FirstT,
-//		template <class, size_t...> class SecondT, size_t... FirstIdxes,
-//		size_t... SecondIdxes>
-// struct index_sequence_cat<FirstT<size_t, FirstIdxes...>,
-//		SecondT<size_t, SecondIdxes...>> {
-//	using type = SecondT<size_t, FirstIdxes..., SecondIdxes...>;
-// };
-
-template <template <class, size_t...> class FirstT,
-		template <class, size_t...> class SecondT, class T, class... Rest,
-		size_t... FirstIdxes, size_t... SecondIdxes>
+template <template <class, auto...> class FirstT,
+		template <class, auto...> class SecondT, class T, class... Rest,
+		T... FirstIdxes, T... SecondIdxes>
 struct integer_sequence_cat<FirstT<T, FirstIdxes...>,
 		SecondT<T, SecondIdxes...>, Rest...> {
 	using type = typename integer_sequence_cat<
 			SecondT<T, FirstIdxes..., SecondIdxes...>, Rest...>::type;
 };
 
+template <class>
+struct reverse_index_sequence;
 
-namespace detail {
-template <size_t...>
-struct reversed_index_sequence;
+template <template <class, auto> class Seq, class T, T Idx>
+struct reverse_index_sequence<Seq<T, Idx>> {
+	using type = Seq<T, Idx>;
+};
 
-// template <size_t Idx, size_t... Idxes>
-// struct reversed_index_sequence<Idxes...> {
-//	using type = std::index_sequence <
-// };
-//
-// template <size_t Idx>
-// struct reversed_index_sequence {
-//	static constexpr size_t value = Idx;
-// };
+template <template <class, auto...> class Seq, class T, T FirstIdx, T... Idxes>
+struct reverse_index_sequence<Seq<T, FirstIdx, Idxes...>> {
+	using type = typename integer_sequence_cat<
+			typename reverse_index_sequence<Seq<T, Idxes...>>::type,
+			Seq<T, FirstIdx>>::type;
+};
 
-} // namespace detail
+#endif
 } // namespace fea

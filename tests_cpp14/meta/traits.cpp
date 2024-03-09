@@ -168,12 +168,13 @@ TEST(traits, reverse) {
 	static_assert(std::is_same<got_t, expected_t>::value, fail_msg);
 }
 
+#if FEA_CPP17
 TEST(traits, reversed_index_sequence) {
 	{
-		using got_t = typename fea::integer_sequence_cat<
-				std::integer_sequence<int, 0, 1, 2>,
-				std::integer_sequence<int, 3, 4, 5>>::type;
-		using expected_t = std::integer_sequence<int, 0, 1, 2, 3, 4, 5>;
+		using got_t =
+				typename fea::integer_sequence_cat<std::index_sequence<0, 1, 2>,
+						std::index_sequence<3, 4, 5>>::type;
+		using expected_t = std::index_sequence<0, 1, 2, 3, 4, 5>;
 		static_assert(std::is_same<got_t, expected_t>::value, fail_msg);
 	}
 
@@ -185,5 +186,12 @@ TEST(traits, reversed_index_sequence) {
 		using expected_t = std::index_sequence<0, 1, 2, 3, 4, 5, 10, 2>;
 		static_assert(std::is_same<got_t, expected_t>::value, fail_msg);
 	}
+
+	{
+		using got_t = typename fea::reverse_index_sequence<
+				std::integer_sequence<size_t, 0, 1, 2, 3, 4>>::type;
+		using expected_t = std::index_sequence<4, 3, 2, 1, 0>;
+	}
 }
+#endif
 } // namespace

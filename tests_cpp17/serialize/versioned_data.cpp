@@ -10,6 +10,8 @@ namespace {
 
 struct data_v0 {
 	static constexpr uint32_t version = 0;
+
+	// You put whatever here, it only enforces version.
 	int v = 0;
 	std::vector<uint32_t> test;
 };
