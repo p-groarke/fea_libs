@@ -116,7 +116,6 @@ struct versioned_data {
 	// This does some checks to make sure you haven't forgotten anything.
 	template <class FromT, class ToT>
 	static void upgrade(const FromT& from, ToT& to) {
-		using ::upgrade;
 		static_assert(FromT::version <= ToT::version,
 				"fea::versioned_data : Upgrade only supports upgrading data in "
 				"one direction, old to new.");
@@ -153,6 +152,7 @@ struct versioned_data {
 				// Get the next version and call the upgrade function.
 				const auto& from = std::get<i>(converted_datas);
 				auto& to = std::get<i + 1>(converted_datas);
+				using ::upgrade;
 				upgrade(from, to);
 			});
 
@@ -165,7 +165,7 @@ struct versioned_data {
 	// This does some checks to make sure you haven't forgotten anything.
 	template <class FromT, class ToT>
 	static void downgrade(const FromT& from, ToT& to) {
-		using ::downgrade;
+		// using ::downgrade;
 		static_assert(FromT::version >= ToT::version,
 				"fea::versioned_data : Downgrade only supports upgrading data "
 				"in one direction, new to old.");
