@@ -415,15 +415,11 @@ struct integer_sequence_cat<FirstT<T, FirstIdxes...>,
 			SecondT<T, FirstIdxes..., SecondIdxes...>, Rest...>::type;
 };
 
+// Reverses an integer_sequence.
 template <class>
 struct reverse_index_sequence;
 
-template <template <class> class Seq, class T>
-struct reverse_index_sequence<Seq<T>> {
-	using type = Seq<T>;
-};
-
-template <template <class, auto> class Seq, class T, T Idx>
+template <template <class, auto...> class Seq, class T, T Idx>
 struct reverse_index_sequence<Seq<T, Idx>> {
 	using type = Seq<T, Idx>;
 };

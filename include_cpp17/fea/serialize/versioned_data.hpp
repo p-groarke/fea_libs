@@ -63,9 +63,11 @@ caller.
 
 namespace fea {
 namespace detail {
-// Should never be called.
-template <class FromT, class ToT>
-void upgrade(const FromT&, ToT&);
+//// Should never be called.
+// template <class FromT, class ToT>
+// void upgrade(const FromT&, ToT&);
+// template <class FromT, class ToT>
+// void downgrade(const FromT&, ToT&);
 
 template <class FromT, class ToT>
 using mhas_upgrade
@@ -88,7 +90,7 @@ struct upgrade_traits<T, U, DataTs...> {
 	static constexpr bool has_upgrade = fea::is_detected_v<mhas_upgrade, T, U>
 			&& upgrade_traits<U, DataTs...>::has_upgrade;
 	static constexpr bool has_downgrade
-			= fea::is_detected_v<mhas_downgrade, T, U>
+			= fea::is_detected_v<mhas_downgrade, U, T>
 			&& upgrade_traits<U, DataTs...>::has_downgrade;
 };
 
@@ -156,7 +158,7 @@ struct versioned_data {
 				// Get the next version and call the upgrade function.
 				const auto& from = std::get<i>(converted_datas);
 				auto& to = std::get<i + 1>(converted_datas);
-				using fea::detail::upgrade;
+				using ::upgrade;
 				upgrade(from, to);
 			});
 
@@ -169,7 +171,6 @@ struct versioned_data {
 	// This does some checks to make sure you haven't forgotten anything.
 	template <class FromT, class ToT>
 	static void downgrade(const FromT& from, ToT& to) {
-		// using ::downgrade;
 		static_assert(FromT::version >= ToT::version,
 				"fea::versioned_data : Downgrade only supports upgrading data "
 				"in one direction, new to old.");
@@ -192,11 +193,11 @@ struct versioned_data {
 			// Loop on FromVer to ToVer. Subsequently call upgrade functions one
 			// at a time.
 			static constexpr size_t msize
-					= size_t(ToT::version) - size_t(FromT::version);
-			fea::static_for<msize>([&](auto const_i) {
-				static constexpr size_t i = const_i + size_t(FromT::version);
-				using mfrom_t = std::tuple_element_t<i, data_tup_t>;
-				using mto_t = std::tuple_element_t<i + 1, data_tup_t>;
+					= size_t(FromT::version) - size_t(ToT::version);
+			fea::static_for_reversed<msize>([&](auto const_i) {
+				static constexpr size_t i = const_i + size_t(ToT::version);
+				using mfrom_t = std::tuple_element_t<i + 1, data_tup_t>;
+				using mto_t = std::tuple_element_t<i, data_tup_t>;
 
 				static_assert(!std::is_same_v<mfrom_t, mto_t>,
 						"fea::versioned_data : 2 version datas are exactly the "
@@ -204,9 +205,10 @@ struct versioned_data {
 						"version struct.");
 
 				// Get the next version and call the upgrade function.
-				const auto& from = std::get<i>(converted_datas);
-				auto& to = std::get<i + 1>(converted_datas);
-				upgrade(from, to);
+				const auto& from = std::get<i + 1>(converted_datas);
+				auto& to = std::get<i>(converted_datas);
+				using ::downgrade;
+				downgrade(from, to);
 			});
 
 			to = std::get<ToT>(converted_datas);

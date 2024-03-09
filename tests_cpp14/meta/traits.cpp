@@ -191,6 +191,7 @@ TEST(traits, reversed_index_sequence) {
 		using got_t = typename fea::reverse_index_sequence<
 				std::index_sequence<0, 1, 2, 3, 4>>::type;
 		using expected_t = std::index_sequence<4, 3, 2, 1, 0>;
+		static_assert(std::is_same<got_t, expected_t>::value, fail_msg);
 	}
 }
 #endif

@@ -32,6 +32,7 @@
  **/
 
 #pragma once
+#include "fea/meta/traits.hpp"
 #include "fea/utils/platform.hpp"
 #include "fea/utils/unused.hpp"
 
@@ -198,12 +199,14 @@ constexpr auto static_for(Func&& func) {
 	return detail::static_for(func, std::make_index_sequence<N>{});
 }
 
-//// Same as static_for, but reversed.
-//// Starts at N - 1, ends at 0.
-// template <size_t N, class Func>
-// constexpr auto static_for_reversed(Func&& func) {
-//	return detail::static_for(func, std::make_index_sequence<N>{});
-// }
+// Same as static_for, but reversed.
+// Starts at N - 1, ends at 0.
+template <size_t N, class Func>
+constexpr auto static_for_reversed(Func&& func) {
+	using idx_seq_t = std::make_index_sequence<N>;
+	return detail::static_for(
+			func, typename fea::reverse_index_sequence<idx_seq_t>::type{});
+}
 
 
 // "std::apply index_sequence"

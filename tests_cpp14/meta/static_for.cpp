@@ -158,4 +158,40 @@ TEST(static_for, return_type) {
 		EXPECT_EQ(*std::get<2>(ans), c);
 	}
 }
+
+TEST(static_for_reversed, basics) {
+	std::array<int, 6> got_arr{};
+	const std::array<int, 6> expected_arr{ 5, 4, 3, 2, 1, 0 };
+
+	{
+		size_t realidx = 0;
+		fea::static_for_reversed<6>([&](auto const_i) {
+			constexpr size_t i = const_i;
+			got_arr[realidx++] = int(i);
+		});
+		EXPECT_EQ(got_arr, expected_arr);
+	}
+
+	//{
+	//	int ans = foldit(0, 1, 2, 3);
+	//	EXPECT_EQ(ans, 6);
+	//}
+
+	//{
+	//	int ans = 0;
+	//	fea::static_for<4>([&](auto v) { ans += int(v()); });
+	//	EXPECT_EQ(ans, 6);
+	//}
+
+	//{
+	//	int ans = 0;
+	//	fea::apply_indexes<4>([&](auto... ic) {
+	//		auto l = [&](auto v) { ans += int(v()); };
+
+	//		fea::fold(l, ic...);
+	//	});
+	//	EXPECT_EQ(ans, 6);
+	//}
+}
+
 } // namespace

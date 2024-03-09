@@ -65,20 +65,26 @@ void upgrade(const data_v0& from, data_v1& to) {
 	EXPECT_EQ(from.v, 0);
 	EXPECT_EQ(to.v, 1);
 	to.test = from.test;
-	to.test.push_back(to.version);
+	to.test.push_back(from.version);
 }
-// void downgrade(const data_v1& from, data_v0& to) {
-//	EXPECT_EQ(from.v, 1);
-//	EXPECT_EQ(to.v, 0);
-//	to.test = from.test;
-//	to.test.push_back(to.version);
-// }
+void downgrade(const data_v1& from, data_v0& to) {
+	EXPECT_EQ(from.v, 1);
+	EXPECT_EQ(to.v, 0);
+	to.test = from.test;
+	to.test.push_back(from.version);
+}
 
 void upgrade(const data_v1& from, potato::data_v2& to) {
 	EXPECT_EQ(from.v, 1);
 	EXPECT_EQ(to.v, 2);
 	to.test = from.test;
-	to.test.push_back(to.version);
+	to.test.push_back(from.version);
+}
+void downgrade(const potato::data_v2& from, data_v1& to) {
+	EXPECT_EQ(from.v, 2);
+	EXPECT_EQ(to.v, 1);
+	to.test = from.test;
+	to.test.push_back(from.version);
 }
 
 namespace potato {
@@ -86,7 +92,13 @@ void upgrade(const data_v2& from, data_v3& to) {
 	EXPECT_EQ(from.v, 2);
 	EXPECT_EQ(to.v, 3);
 	to.test = from.test;
-	to.test.push_back(to.version);
+	to.test.push_back(from.version);
+}
+void downgrade(const data_v3& from, data_v2& to) {
+	EXPECT_EQ(from.v, 3);
+	EXPECT_EQ(to.v, 2);
+	to.test = from.test;
+	to.test.push_back(from.version);
 }
 } // namespace potato
 
@@ -94,14 +106,26 @@ void upgrade(const data_v3& from, data_v4& to) {
 	EXPECT_EQ(from.v, 3);
 	EXPECT_EQ(to.v, 4);
 	to.test = from.test;
-	to.test.push_back(to.version);
+	to.test.push_back(from.version);
+}
+void downgrade(const data_v4& from, data_v3& to) {
+	EXPECT_EQ(from.v, 4);
+	EXPECT_EQ(to.v, 3);
+	to.test = from.test;
+	to.test.push_back(from.version);
 }
 
 void upgrade(const data_v4& from, data_v5& to) {
 	EXPECT_EQ(from.v, 4);
 	EXPECT_EQ(to.v, 5);
 	to.test = from.test;
-	to.test.push_back(to.version);
+	to.test.push_back(from.version);
+}
+void downgrade(const data_v5& from, data_v4& to) {
+	EXPECT_EQ(from.v, 5);
+	EXPECT_EQ(to.v, 4);
+	to.test = from.test;
+	to.test.push_back(from.version);
 }
 
 TEST(versioned_data, basics) {
@@ -118,7 +142,7 @@ TEST(versioned_data, basics) {
 		data_v5 datav5{};
 		version_map.upgrade(datav0, datav5);
 
-		const std::vector<uint32_t> expected{ 1, 2, 3, 4, 5 };
+		const std::vector<uint32_t> expected{ 0, 1, 2, 3, 4 };
 		EXPECT_EQ(datav5.test, expected);
 
 		//// Shouldn't compile.
@@ -131,11 +155,37 @@ TEST(versioned_data, basics) {
 		data_v1 datav1{};
 		version_map.upgrade(datav0, datav1);
 
-		const std::vector<uint32_t> expected{ 1 };
+		const std::vector<uint32_t> expected{ 0 };
 		EXPECT_EQ(datav1.test, expected);
 
 		// Shouldn't compile.
 		// version_map.upgrade(datav1, datav0);
+	}
+
+	// Test going through the versions one by one.
+	{
+		data_v0 datav0{};
+		data_v5 datav5{};
+		version_map.downgrade(datav5, datav0);
+
+		const std::vector<uint32_t> expected{ 5, 4, 3, 2, 1 };
+		EXPECT_EQ(datav0.test, expected);
+
+		//// Shouldn't compile.
+		// version_map.downgrade(datav0, datav5);
+	}
+
+	// Test bypassing the system and calling a single update function.
+	{
+		data_v0 datav0{};
+		data_v1 datav1{};
+		version_map.downgrade(datav1, datav0);
+
+		const std::vector<uint32_t> expected{ 1 };
+		EXPECT_EQ(datav0.test, expected);
+
+		//// Shouldn't compile.
+		// version_map.downgrade(datav0, datav1);
 	}
 
 	// struct ini {
