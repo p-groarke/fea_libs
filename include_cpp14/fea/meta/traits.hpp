@@ -418,15 +418,21 @@ struct integer_sequence_cat<FirstT<T, FirstIdxes...>,
 template <class>
 struct reverse_index_sequence;
 
+template <template <class> class Seq, class T>
+struct reverse_index_sequence<Seq<T>> {
+	using type = Seq<T>;
+};
+
 template <template <class, auto> class Seq, class T, T Idx>
 struct reverse_index_sequence<Seq<T, Idx>> {
 	using type = Seq<T, Idx>;
 };
 
-template <template <class, auto...> class Seq, class T, T FirstIdx, T... Idxes>
-struct reverse_index_sequence<Seq<T, FirstIdx, Idxes...>> {
+template <template <class, auto...> class Seq, class T, T FirstIdx, T SecondIdx,
+		T... Idxes>
+struct reverse_index_sequence<Seq<T, FirstIdx, SecondIdx, Idxes...>> {
 	using type = typename integer_sequence_cat<
-			typename reverse_index_sequence<Seq<T, Idxes...>>::type,
+			typename reverse_index_sequence<Seq<T, SecondIdx, Idxes...>>::type,
 			Seq<T, FirstIdx>>::type;
 };
 
