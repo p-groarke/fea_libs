@@ -62,8 +62,8 @@ constexpr fea::versioned_data<
 // clang-format on
 
 // todo
-void deserialize(mdeserializer, data_v0&) {
-}
+// void deserialize(mdeserializer, data_v0&) {
+//}
 void upgrade(const data_v0& from, data_v1& to) {
 	EXPECT_EQ(from.v, 0);
 	EXPECT_EQ(to.v, 1);
