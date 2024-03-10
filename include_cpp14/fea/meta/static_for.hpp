@@ -202,6 +202,7 @@ constexpr auto static_for(Func&& func) {
 #if FEA_CPP17 && !FEA_VS2019
 // Same as static_for, but reversed.
 // Starts at N - 1, ends at 0.
+// VS2019 dies.
 template <size_t N, class Func>
 constexpr auto static_for_reversed(Func&& func) {
 	using idx_seq_t = std::make_index_sequence<N>;
