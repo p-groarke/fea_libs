@@ -394,26 +394,26 @@ using reverse_t = typename detail::reverse<Ts...>::type;
 
 
 #if FEA_CPP17
-// Given multiple index_sequences, cats them and returns the type through
-// ::type. No _t helper possible.
+//// Given multiple index_sequences, cats them and returns the type through
+//// ::type. No _t helper possible.
+////
+//// integer_sequences require c++17 auto...
+// template <class...>
+// struct integer_sequence_cat;
 //
-// integer_sequences require c++17 auto...
-template <class...>
-struct integer_sequence_cat;
-
-template <template <class, auto...> class LastT, class T, T... Idxes>
-struct integer_sequence_cat<LastT<T, Idxes...>> {
-	using type = LastT<T, Idxes...>;
-};
-
-template <template <class, auto...> class FirstT,
-		template <class, auto...> class SecondT, class T, class... Rest,
-		T... FirstIdxes, T... SecondIdxes>
-struct integer_sequence_cat<FirstT<T, FirstIdxes...>,
-		SecondT<T, SecondIdxes...>, Rest...> {
-	using type = typename integer_sequence_cat<
-			SecondT<T, FirstIdxes..., SecondIdxes...>, Rest...>::type;
-};
+// template <template <class, auto...> class LastT, class T, T... Idxes>
+// struct integer_sequence_cat<LastT<T, Idxes...>> {
+//	using type = LastT<T, Idxes...>;
+// };
+//
+// template <template <class, auto...> class FirstT,
+//		template <class, auto...> class SecondT, class T, class... Rest,
+//		T... FirstIdxes, T... SecondIdxes>
+// struct integer_sequence_cat<FirstT<T, FirstIdxes...>,
+//		SecondT<T, SecondIdxes...>, Rest...> {
+//	using type = typename integer_sequence_cat<
+//			SecondT<T, FirstIdxes..., SecondIdxes...>, Rest...>::type;
+// };
 
 namespace detail {
 // https://stackoverflow.com/questions/51408771/c-reversed-integer-sequence-implementation
