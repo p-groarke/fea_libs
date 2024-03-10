@@ -34,6 +34,7 @@
 #include "fea/enum/utility.hpp"
 #include "fea/meta/static_for.hpp"
 #include "fea/meta/traits.hpp"
+#include "fea/utils/platform.hpp"
 
 #include <array>
 #include <tuple>
@@ -170,6 +171,7 @@ struct versioned_data {
 		}
 	}
 
+#if !FEA_VS2019
 	// Call this to downgrade from a new version to an old version.
 	// Pass the new data struct and the old output data struct.
 	// This does some checks to make sure you haven't forgotten anything.
@@ -220,6 +222,7 @@ struct versioned_data {
 			to = std::get<ToT>(converted_datas);
 		}
 	}
+#endif
 
 private:
 	// Checks and enforcements.

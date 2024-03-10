@@ -415,22 +415,16 @@ struct integer_sequence_cat<FirstT<T, FirstIdxes...>,
 			SecondT<T, FirstIdxes..., SecondIdxes...>, Rest...>::type;
 };
 
-// Reverses an integer_sequence.
-template <class>
-struct reverse_index_sequence;
+namespace detail {
+// https://stackoverflow.com/questions/51408771/c-reversed-integer-sequence-implementation
+template <size_t... Is>
+constexpr auto reverse_index_sequence(std::index_sequence<Is...>)
+		-> decltype(std::index_sequence<sizeof...(Is) - 1U - Is...>{});
+} // namespace detail
 
-template <template <class, auto...> class Seq, class T, T Idx>
-struct reverse_index_sequence<Seq<T, Idx>> {
-	using type = Seq<T, Idx>;
-};
-
-template <template <class, auto...> class Seq, class T, T FirstIdx, T SecondIdx,
-		T... Idxes>
-struct reverse_index_sequence<Seq<T, FirstIdx, SecondIdx, Idxes...>> {
-	using type = typename integer_sequence_cat<
-			typename reverse_index_sequence<Seq<T, SecondIdx, Idxes...>>::type,
-			Seq<T, FirstIdx>>::type;
-};
-
+template <size_t N>
+using make_reverse_index_sequence = decltype(detail::reverse_index_sequence(
+		std::make_index_sequence<N>{}));
 #endif
+
 } // namespace fea

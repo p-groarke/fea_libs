@@ -165,6 +165,7 @@ TEST(versioned_data, basics) {
 		// version_map.upgrade(datav1, datav0);
 	}
 
+#if !FEA_VS2019
 	// Test going through the versions one by one.
 	{
 		data_v0 datav0{};
@@ -190,6 +191,7 @@ TEST(versioned_data, basics) {
 		//// Shouldn't compile.
 		// version_map.downgrade(datav0, datav1);
 	}
+#endif
 
 	// struct ini {
 	//	ini& operator[](std::string) {
