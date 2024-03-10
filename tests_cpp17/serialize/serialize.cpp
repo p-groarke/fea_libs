@@ -40,12 +40,12 @@ struct potato {
 		serialize(p.val, ofs);
 		serialize(p.vec, ofs);
 	}
-	friend bool deserialize(potato& p, fea::deserializer& ifs) {
+	friend bool deserialize(fea::deserializer& ifs, potato& p) {
 		using fea::deserialize;
-		if (!deserialize(p.val, ifs)) {
+		if (!deserialize(ifs, p.val)) {
 			return false;
 		}
-		return deserialize(p.vec, ifs);
+		return deserialize(ifs, p.vec);
 	}
 
 	friend bool operator==(const potato& lhs, const potato& rhs) {
@@ -100,7 +100,7 @@ TEST(serialize, basics) {
 
 	{
 		fea::deserializer ifs{ filepath() };
-		EXPECT_TRUE(deserialize(potatoes, ifs));
+		EXPECT_TRUE(deserialize(ifs, potatoes));
 	}
 
 	EXPECT_EQ(potatoes.size(), 4u);
@@ -123,7 +123,7 @@ TEST(serialize, basics) {
 	// Deserialize.
 	{
 		fea::deserializer ifs{ filepath() };
-		EXPECT_TRUE(deserialize(a_potato, ifs));
+		EXPECT_TRUE(deserialize(ifs, a_potato));
 	}
 
 	EXPECT_EQ(a_potato.val, potato{}.val);
@@ -157,7 +157,7 @@ TEST(serialize, array) {
 		{
 			arr_t c{};
 			fea::deserializer ifs{ filepath() };
-			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_TRUE(deserialize(ifs, c));
 			EXPECT_EQ(c, c_comp);
 		}
 	};
@@ -188,7 +188,7 @@ TEST(serialize, array) {
 		{
 			arr_t c{};
 			fea::deserializer ifs{ filepath() };
-			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_TRUE(deserialize(ifs, c));
 			EXPECT_EQ(c, c_comp);
 		}
 	};
@@ -214,7 +214,7 @@ TEST(serialize, vector_string) {
 		{
 			vec_t c{};
 			fea::deserializer ifs{ filepath() };
-			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_TRUE(deserialize(ifs, c));
 			EXPECT_EQ(c, c_comp);
 		}
 	};
@@ -250,7 +250,7 @@ TEST(serialize, vector_string) {
 		{
 			buf_t c{};
 			fea::deserializer ifs{ filepath() };
-			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_TRUE(deserialize(ifs, c));
 			EXPECT_EQ(c, c_comp);
 		}
 	};
@@ -285,7 +285,7 @@ TEST(serialize, map) {
 		{
 			map_t c{};
 			fea::deserializer ifs{ filepath() };
-			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_TRUE(deserialize(ifs, c));
 			EXPECT_EQ(c, c_comp);
 		}
 	};
@@ -326,7 +326,7 @@ TEST(serialize, map) {
 		{
 			map_t c{};
 			fea::deserializer ifs{ filepath() };
-			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_TRUE(deserialize(ifs, c));
 			EXPECT_EQ(c, c_comp);
 		}
 	};
@@ -366,7 +366,7 @@ TEST(serialize, set) {
 		{
 			set_t c{};
 			fea::deserializer ifs{ filepath() };
-			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_TRUE(deserialize(ifs, c));
 			EXPECT_EQ(c, c_comp);
 		}
 	};
@@ -402,7 +402,7 @@ TEST(serialize, set) {
 		{
 			set_t c{};
 			fea::deserializer ifs{ filepath() };
-			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_TRUE(deserialize(ifs, c));
 			EXPECT_EQ(c, c_comp);
 		}
 	};
@@ -444,7 +444,7 @@ TEST(serialize, pair_tuple) {
 		{
 			tup_t c{};
 			fea::deserializer ifs{ filepath() };
-			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_TRUE(deserialize(ifs, c));
 			EXPECT_EQ(c, c_comp);
 		}
 	};
@@ -490,7 +490,7 @@ TEST(serialize, pair_tuple) {
 		{
 			tup_t c{};
 			fea::deserializer ifs{ filepath() };
-			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_TRUE(deserialize(ifs, c));
 			EXPECT_EQ(c, c_comp);
 		}
 	};
@@ -538,7 +538,7 @@ TEST(serialize, deque) {
 		{
 			q_t c{};
 			fea::deserializer ifs{ filepath() };
-			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_TRUE(deserialize(ifs, c));
 			EXPECT_EQ(c, c_comp);
 		}
 	};
@@ -570,7 +570,7 @@ TEST(serialize, deque) {
 		{
 			q_t c{};
 			fea::deserializer ifs{ filepath() };
-			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_TRUE(deserialize(ifs, c));
 			EXPECT_EQ(c, c_comp);
 		}
 	};
@@ -601,7 +601,7 @@ TEST(serialize, queue) {
 		{
 			q_t c{};
 			fea::deserializer ifs{ filepath() };
-			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_TRUE(deserialize(ifs, c));
 			EXPECT_EQ(c, c_comp);
 		}
 	};
@@ -633,7 +633,7 @@ TEST(serialize, queue) {
 		{
 			q_t c{};
 			fea::deserializer ifs{ filepath() };
-			EXPECT_TRUE(deserialize(c, ifs));
+			EXPECT_TRUE(deserialize(ifs, c));
 			EXPECT_EQ(c, c_comp);
 		}
 	};
@@ -691,7 +691,7 @@ TEST(serialize, evewything) {
 	{
 		decltype(megadoodoo) c{};
 		fea::deserializer ifs{ filepath() };
-		EXPECT_TRUE(deserialize(c, ifs));
+		EXPECT_TRUE(deserialize(ifs, c));
 		EXPECT_EQ(c, megadoodoo);
 	}
 
