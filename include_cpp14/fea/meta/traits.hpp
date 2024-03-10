@@ -406,16 +406,6 @@ struct integer_sequence_cat<LastT<T, Idxes...>> {
 	using type = LastT<T, Idxes...>;
 };
 
-// Help MSVC.
-template <template <class, auto...> class FirstT,
-		template <class, auto...> class SecondT, class T, T... FirstIdxes,
-		T... SecondIdxes>
-struct integer_sequence_cat<FirstT<T, FirstIdxes...>,
-		SecondT<T, SecondIdxes...>> {
-	using type = typename integer_sequence_cat<
-			SecondT<T, FirstIdxes..., SecondIdxes...>>::type;
-};
-
 template <template <class, auto...> class FirstT,
 		template <class, auto...> class SecondT, class T, class... Rest,
 		T... FirstIdxes, T... SecondIdxes>

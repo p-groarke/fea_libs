@@ -159,7 +159,7 @@ TEST(static_for, return_type) {
 	}
 }
 
-#if FEA_CPP17
+#if FEA_CPP17 && !FEA_VS2019
 TEST(static_for_reversed, basics) {
 	std::array<int, 6> got_arr{};
 	const std::array<int, 6> expected_arr{ 5, 4, 3, 2, 1, 0 };

@@ -199,7 +199,7 @@ constexpr auto static_for(Func&& func) {
 	return detail::static_for(func, std::make_index_sequence<N>{});
 }
 
-#if FEA_CPP17
+#if FEA_CPP17 && !FEA_VS2019
 // Same as static_for, but reversed.
 // Starts at N - 1, ends at 0.
 template <size_t N, class Func>
