@@ -8,8 +8,9 @@
 namespace {
 #define ERROR_MSG "versioned_data.cpp : Unit test failed."
 
-struct mdeserializer {
-	std::vector<uint32_t> test;
+struct test_cerealizer {
+	std::vector<uint32_t> call_version;
+	std::vector<uint32_t> downgrade_visited;
 };
 
 struct data_v0 {
@@ -63,9 +64,14 @@ constexpr fea::versioned_data<
 > version_map{};
 // clang-format on
 
-void deserialize(mdeserializer& d, data_v0& to) {
-	d.test.push_back(to.version);
+void deserialize(test_cerealizer& d, data_v0& to) {
+	d.call_version.push_back(to.version);
 	to = {};
+}
+void serialize(const data_v0& from, test_cerealizer& s) {
+	s.call_version.push_back(from.version);
+	s.downgrade_visited.insert(
+			s.downgrade_visited.end(), from.test.begin(), from.test.end());
 }
 void upgrade(const data_v0& from, data_v1& to) {
 	EXPECT_EQ(from.v, 0);
@@ -80,9 +86,14 @@ void downgrade(const data_v1& from, data_v0& to) {
 	to.test.push_back(from.version);
 }
 
-void deserialize(mdeserializer& d, data_v1& to) {
-	d.test.push_back(to.version);
+void deserialize(test_cerealizer& d, data_v1& to) {
+	d.call_version.push_back(to.version);
 	to = {};
+}
+void serialize(const data_v1& from, test_cerealizer& s) {
+	s.call_version.push_back(from.version);
+	s.downgrade_visited.insert(
+			s.downgrade_visited.end(), from.test.begin(), from.test.end());
 }
 void upgrade(const data_v1& from, potato::data_v2& to) {
 	EXPECT_EQ(from.v, 1);
@@ -98,9 +109,14 @@ void downgrade(const potato::data_v2& from, data_v1& to) {
 }
 
 namespace potato {
-void deserialize(mdeserializer& d, data_v2& to) {
-	d.test.push_back(to.version);
+void deserialize(test_cerealizer& d, data_v2& to) {
+	d.call_version.push_back(to.version);
 	to = {};
+}
+void serialize(const data_v2& from, test_cerealizer& s) {
+	s.call_version.push_back(from.version);
+	s.downgrade_visited.insert(
+			s.downgrade_visited.end(), from.test.begin(), from.test.end());
 }
 void upgrade(const data_v2& from, data_v3& to) {
 	EXPECT_EQ(from.v, 2);
@@ -116,9 +132,14 @@ void downgrade(const data_v3& from, data_v2& to) {
 }
 } // namespace potato
 
-void deserialize(mdeserializer& d, data_v3& to) {
-	d.test.push_back(to.version);
+void deserialize(test_cerealizer& d, data_v3& to) {
+	d.call_version.push_back(to.version);
 	to = {};
+}
+void serialize(const data_v3& from, test_cerealizer& s) {
+	s.call_version.push_back(from.version);
+	s.downgrade_visited.insert(
+			s.downgrade_visited.end(), from.test.begin(), from.test.end());
 }
 void upgrade(const data_v3& from, data_v4& to) {
 	EXPECT_EQ(from.v, 3);
@@ -133,9 +154,14 @@ void downgrade(const data_v4& from, data_v3& to) {
 	to.test.push_back(from.version);
 }
 
-void deserialize(mdeserializer& d, data_v4& to) {
-	d.test.push_back(to.version);
+void deserialize(test_cerealizer& d, data_v4& to) {
+	d.call_version.push_back(to.version);
 	to = {};
+}
+void serialize(const data_v4& from, test_cerealizer& s) {
+	s.call_version.push_back(from.version);
+	s.downgrade_visited.insert(
+			s.downgrade_visited.end(), from.test.begin(), from.test.end());
 }
 void upgrade(const data_v4& from, data_v5& to) {
 	EXPECT_EQ(from.v, 4);
@@ -150,9 +176,14 @@ void downgrade(const data_v5& from, data_v4& to) {
 	to.test.push_back(from.version);
 }
 
-void deserialize(mdeserializer& d, data_v5& to) {
-	d.test.push_back(to.version);
+void deserialize(test_cerealizer& d, data_v5& to) {
+	d.call_version.push_back(to.version);
 	to = {};
+}
+void serialize(const data_v5& from, test_cerealizer& s) {
+	s.call_version.push_back(from.version);
+	s.downgrade_visited.insert(
+			s.downgrade_visited.end(), from.test.begin(), from.test.end());
 }
 
 TEST(versioned_data, basics) {
@@ -165,7 +196,7 @@ TEST(versioned_data, basics) {
 							  data_v0>,
 				ERROR_MSG);
 		static_assert(fea::is_detected_v<fea::detail::mhas_deserialize,
-							  mdeserializer, data_v0>,
+							  test_cerealizer, data_v0>,
 				ERROR_MSG);
 	}
 
@@ -221,28 +252,54 @@ TEST(versioned_data, basics) {
 		// version_map.downgrade(datav0, datav1);
 	}
 
+	// Deserialize
 	{
-		mdeserializer d;
+		test_cerealizer d;
 		data_v5 datav5{};
 		version_map.deserialize(0, d, datav5);
 
 		const std::vector<uint32_t> expected_d{ 0 };
-		EXPECT_EQ(d.test, expected_d);
+		EXPECT_EQ(d.call_version, expected_d);
 
 		const std::vector<uint32_t> expected{ 0, 1, 2, 3, 4 };
 		EXPECT_EQ(datav5.test, expected);
 	}
 
 	{
-		mdeserializer d;
+		test_cerealizer d;
 		data_v5 datav5{};
 		version_map.deserialize(5, d, datav5);
 
 		const std::vector<uint32_t> expected_d{ 5 };
-		EXPECT_EQ(d.test, expected_d);
+		EXPECT_EQ(d.call_version, expected_d);
 
 		const std::vector<uint32_t> expected{};
 		EXPECT_EQ(datav5.test, expected);
+	}
+
+	// Serialize
+	{
+		test_cerealizer s;
+		data_v5 datav5{};
+		version_map.serialize(0, datav5, s);
+
+		const std::vector<uint32_t> expected_d{ 0 };
+		EXPECT_EQ(s.call_version, expected_d);
+
+		const std::vector<uint32_t> expected{ 5, 4, 3, 2, 1 };
+		EXPECT_EQ(s.downgrade_visited, expected);
+	}
+
+	{
+		test_cerealizer s;
+		data_v5 datav5{};
+		version_map.serialize(5, datav5, s);
+
+		const std::vector<uint32_t> expected_d{ 5 };
+		EXPECT_EQ(s.call_version, expected_d);
+
+		const std::vector<uint32_t> expected{};
+		EXPECT_EQ(s.downgrade_visited, expected);
 	}
 }
 } // namespace

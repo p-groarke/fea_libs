@@ -68,23 +68,36 @@ namespace detail {
 template <class FromT, class ToT>
 std::enable_if_t<(ToT::version - FromT::version > 1)> upgrade(
 		const FromT&, ToT&);
+
 template <class FromT, class ToT>
 std::enable_if_t<(FromT::version - ToT::version > 1)> downgrade(
 		const FromT&, ToT&);
+
 template <class D, class T>
 std::enable_if_t<T::version
 		== (std::numeric_limits<decltype(T::version)>::max)()>
 deserialize(D&, T&);
 
+template <class F, class S>
+std::enable_if_t<F::version
+		== (std::numeric_limits<decltype(F::version)>::max)()>
+serialize(const F&, S&);
+
 template <class FromT, class ToT>
 using mhas_upgrade
 		= decltype(upgrade(std::declval<const FromT&>(), std::declval<ToT&>()));
+
 template <class FromT, class ToT>
 using mhas_downgrade = decltype(downgrade(
 		std::declval<const FromT&>(), std::declval<ToT&>()));
+
 template <class DeserializerT, class ToT>
 using mhas_deserialize = decltype(deserialize(
 		std::declval<DeserializerT&>(), std::declval<ToT&>()));
+
+template <class FromT, class SerializerT>
+using mhas_serialize = decltype(serialize(
+		std::declval<const FromT&>(), std::declval<SerializerT&>()));
 
 template <class, class...>
 struct upgrade_traits;
@@ -95,6 +108,8 @@ struct upgrade_traits<D, T> {
 	static constexpr bool has_downgrade = true;
 	static constexpr bool has_deserialize
 			= fea::is_detected_v<mhas_deserialize, D, T>;
+	static constexpr bool has_serialize
+			= fea::is_detected_v<mhas_serialize, T, D>;
 };
 
 template <class DeserializerT, class T, class U, class... DataTs>
@@ -107,6 +122,9 @@ struct upgrade_traits<DeserializerT, T, U, DataTs...> {
 	static constexpr bool has_deserialize
 			= fea::is_detected_v<mhas_deserialize, DeserializerT, T>
 			&& upgrade_traits<DeserializerT, U, DataTs...>::has_deserialize;
+	static constexpr bool has_serialize
+			= fea::is_detected_v<mhas_serialize, T, DeserializerT>
+			&& upgrade_traits<DeserializerT, U, DataTs...>::has_serialize;
 };
 
 template <class D, class... DataTs>
@@ -118,6 +136,9 @@ inline constexpr bool all_have_downgrade_v
 template <class D, class... DataTs>
 inline constexpr bool all_have_deserialize_v
 		= upgrade_traits<D, DataTs...>::has_deserialize;
+template <class D, class... DataTs>
+inline constexpr bool all_have_serialize_v
+		= upgrade_traits<D, DataTs...>::has_serialize;
 } // namespace detail
 
 template <class... DataTs>
@@ -242,15 +263,16 @@ struct versioned_data {
 	// In your serialized data, always store a version at the very beginning.
 	// This will allow you to use this all without knowing (or caring) about the
 	// actual data version.
-	// As always, you need 1 deserialize function per version.
+	//
+	// When using this, you need 1 deserialize function per version.
 	template <class DeserializerT>
-	static void deserialize(version_t version, DeserializerT& your_deserializer,
-			latest_data_t& latest_data) {
+	static void deserialize(version_t input_version,
+			DeserializerT& your_deserializer, latest_data_t& latest_data) {
 		static_assert(detail::all_have_deserialize_v<DeserializerT, DataTs...>,
 				"fea::versioned_data : One or more of the data types do not "
 				"have a deserialize function.\n");
 
-		if (version == latest) {
+		if (input_version == latest) {
 			using fea::detail::deserialize;
 			deserialize(your_deserializer, latest_data);
 			return;
@@ -259,18 +281,55 @@ struct versioned_data {
 		// Find the old version.
 		fea::static_for<size>([&](auto const_i) {
 			constexpr size_t i = const_i;
-			if (i != version) {
+			if (i != input_version) {
 				return;
 			}
 
 			// Deserializer to old data type.
-			using old_data_t = std::tuple_element_t<i, data_tup_t>;
-			old_data_t from{};
+			using input_data_t = std::tuple_element_t<i, data_tup_t>;
+			input_data_t from{};
 			using fea::detail::deserialize;
 			deserialize(your_deserializer, from);
 
 			// Then upgrade.
 			versioned_data::upgrade(from, latest_data);
+		});
+	}
+
+	// Call this function with a data version to trigger serialization and
+	// downgrade.
+	// If the target_version doesn't match the data version, automatically
+	// downgrades and calls the appropriate serialize function.
+	//
+	// When using this, you need 1 serialize function per version.
+	template <class SerializerT>
+	static void serialize(version_t output_version,
+			const latest_data_t& latest_data, SerializerT& your_serializer) {
+		static_assert(detail::all_have_serialize_v<SerializerT, DataTs...>,
+				"fea::versioned_data : One or more of the data types do not "
+				"have a serialize function.\n");
+
+		if (output_version == latest) {
+			using fea::detail::serialize;
+			serialize(latest_data, your_serializer);
+			return;
+		}
+
+		// Find the target version.
+		fea::static_for<size>([&](auto const_i) {
+			constexpr size_t i = const_i;
+			if (i != output_version) {
+				return;
+			}
+
+			// Downgrade to old version.
+			using output_data_t = std::tuple_element_t<i, data_tup_t>;
+			output_data_t to{};
+			versioned_data::downgrade(latest_data, to);
+
+			// Serialize it.
+			using fea::detail::serialize;
+			serialize(to, your_serializer);
 		});
 	}
 
