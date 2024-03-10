@@ -54,8 +54,8 @@ Your data classes are freeform and can hold whatever they want. They only need
 static constexpr (unsigned integer type) version. Version must start at 0 and
 grow consecutively.
 
-If you do not call one of upgrade, downgrade, deserialize, you do not need to
-have those functions declared.
+If you do not call one of upgrade, downgrade, deserialize, serialize, you do not
+need to have those functions declared. The checks are only ran on usage.
 
 See unit tests for examples. It looks complicated but it really isn't for the
 caller.
