@@ -262,7 +262,7 @@ struct versioned_data {
 
 			// Deserializer to old data type.
 			using old_data_t = std::tuple_element_t<i, data_tup_t>;
-			old_data_t from;
+			old_data_t from{};
 			using fea::detail::deserialize;
 			deserialize(your_deserializer, from);
 
