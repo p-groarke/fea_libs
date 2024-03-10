@@ -34,9 +34,9 @@
 #include "fea/enum/utility.hpp"
 #include "fea/meta/static_for.hpp"
 #include "fea/meta/traits.hpp"
-#include "fea/utils/platform.hpp"
 
 #include <array>
+#include <limits>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -71,7 +71,10 @@ std::enable_if_t<(ToT::version - FromT::version > 1)> upgrade(
 template <class FromT, class ToT>
 std::enable_if_t<(FromT::version - ToT::version > 1)> downgrade(
 		const FromT&, ToT&);
-inline void deserialize(int, int);
+template <class D, class T>
+std::enable_if_t<T::version
+		== (std::numeric_limits<decltype(T::version)>::max)()>
+deserialize(D&, T&);
 
 template <class FromT, class ToT>
 using mhas_upgrade
