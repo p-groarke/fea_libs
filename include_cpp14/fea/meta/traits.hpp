@@ -399,14 +399,21 @@ using reverse_t = typename detail::reverse<Ts...>::type;
 //
 // integer_sequences require c++17 auto...
 template <class...>
-struct integer_sequence_cat {
-	// Fix msvc compiler bug.
-	using type = void;
-};
+struct integer_sequence_cat;
 
 template <template <class, auto...> class LastT, class T, T... Idxes>
 struct integer_sequence_cat<LastT<T, Idxes...>> {
 	using type = LastT<T, Idxes...>;
+};
+
+// Help MSVC.
+template <template <class, auto...> class FirstT,
+		template <class, auto...> class SecondT, class T, T... FirstIdxes,
+		T... SecondIdxes>
+struct integer_sequence_cat<FirstT<T, FirstIdxes...>,
+		SecondT<T, SecondIdxes...>> {
+	using type = typename integer_sequence_cat<
+			SecondT<T, FirstIdxes..., SecondIdxes...>>::type;
 };
 
 template <template <class, auto...> class FirstT,
@@ -420,10 +427,7 @@ struct integer_sequence_cat<FirstT<T, FirstIdxes...>,
 
 // Reverses an integer_sequence.
 template <class>
-struct reverse_index_sequence {
-	// Fix msvc compiler bug.
-	using type = void;
-};
+struct reverse_index_sequence;
 
 template <template <class, auto...> class Seq, class T, T Idx>
 struct reverse_index_sequence<Seq<T, Idx>> {
