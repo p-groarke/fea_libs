@@ -64,13 +64,14 @@ caller.
 
 namespace fea {
 namespace detail {
-// Should never be called.
+// Should never be called. These are here only to trigger ADL.
 template <class FromT, class ToT>
 std::enable_if_t<(ToT::version - FromT::version > 1)> upgrade(
 		const FromT&, ToT&);
 template <class FromT, class ToT>
 std::enable_if_t<(FromT::version - ToT::version > 1)> downgrade(
 		const FromT&, ToT&);
+inline void deserialize(int, int);
 
 template <class FromT, class ToT>
 using mhas_upgrade
@@ -78,31 +79,42 @@ using mhas_upgrade
 template <class FromT, class ToT>
 using mhas_downgrade = decltype(downgrade(
 		std::declval<const FromT&>(), std::declval<ToT&>()));
+template <class DeserializerT, class ToT>
+using mhas_deserialize = decltype(deserialize(
+		std::declval<DeserializerT&>(), std::declval<ToT&>()));
 
-template <class...>
+template <class, class...>
 struct upgrade_traits;
 
-template <class T>
-struct upgrade_traits<T> {
+template <class D, class T>
+struct upgrade_traits<D, T> {
 	static constexpr bool has_upgrade = true;
 	static constexpr bool has_downgrade = true;
+	static constexpr bool has_deserialize
+			= fea::is_detected_v<mhas_deserialize, D, T>;
 };
 
-template <class T, class U, class... DataTs>
-struct upgrade_traits<T, U, DataTs...> {
+template <class DeserializerT, class T, class U, class... DataTs>
+struct upgrade_traits<DeserializerT, T, U, DataTs...> {
 	static constexpr bool has_upgrade = fea::is_detected_v<mhas_upgrade, T, U>
-			&& upgrade_traits<U, DataTs...>::has_upgrade;
+			&& upgrade_traits<DeserializerT, U, DataTs...>::has_upgrade;
 	static constexpr bool has_downgrade
 			= fea::is_detected_v<mhas_downgrade, U, T>
-			&& upgrade_traits<U, DataTs...>::has_downgrade;
+			&& upgrade_traits<DeserializerT, U, DataTs...>::has_downgrade;
+	static constexpr bool has_deserialize
+			= fea::is_detected_v<mhas_deserialize, DeserializerT, T>
+			&& upgrade_traits<DeserializerT, U, DataTs...>::has_deserialize;
 };
 
-template <class... DataTs>
+template <class D, class... DataTs>
 inline constexpr bool all_have_upgrade_v
-		= upgrade_traits<DataTs...>::has_upgrade;
-template <class... DataTs>
+		= upgrade_traits<D, DataTs...>::has_upgrade;
+template <class D, class... DataTs>
 inline constexpr bool all_have_downgrade_v
-		= upgrade_traits<DataTs...>::has_downgrade;
+		= upgrade_traits<D, DataTs...>::has_downgrade;
+template <class D, class... DataTs>
+inline constexpr bool all_have_deserialize_v
+		= upgrade_traits<D, DataTs...>::has_deserialize;
 } // namespace detail
 
 template <class... DataTs>
@@ -111,14 +123,14 @@ struct versioned_data {
 	using version_t = std::decay_t<decltype(fea::front_t<DataTs...>::version)>;
 	// Latest version.
 	static constexpr version_t latest = fea::back_t<DataTs...>::version;
+	// Latest version data type.
+	using latest_data_t = fea::back_t<DataTs...>;
 	// Total number of data structs.
 	static constexpr size_t size = sizeof...(DataTs);
 	// All versions in an array.
 	static constexpr std::array<version_t, size> versions{ DataTs::version... };
 	// Tuple of all consecutive data structs.
 	using data_tup_t = std::tuple<DataTs...>;
-	//// Tuple of all consecutive data structs, reversed.
-	// using reversed_data_tup_t = fea::reverse_t<DataTs...>;
 
 	// Call this to upgrade an old version to a newer version.
 	// Pass the old data struct and the new output data struct.
@@ -129,7 +141,7 @@ struct versioned_data {
 				"fea::versioned_data : Upgrade only supports upgrading data in "
 				"one direction, old to new.");
 
-		static_assert(detail::all_have_upgrade_v<DataTs...>,
+		static_assert(detail::all_have_upgrade_v<void, DataTs...>,
 				"fea::versioned_data : One or more of the data types do not "
 				"have an upgrade function.\n");
 
@@ -171,7 +183,6 @@ struct versioned_data {
 		}
 	}
 
-#if !FEA_VS2019
 	// Call this to downgrade from a new version to an old version.
 	// Pass the new data struct and the old output data struct.
 	// This does some checks to make sure you haven't forgotten anything.
@@ -181,7 +192,7 @@ struct versioned_data {
 				"fea::versioned_data : Downgrade only supports downgrading "
 				"data in one direction, new to old.");
 
-		static_assert(detail::all_have_downgrade_v<DataTs...>,
+		static_assert(detail::all_have_downgrade_v<void, DataTs...>,
 				"fea::versioned_data : One or more of the data types do not "
 				"have a downgrade function.\n");
 
@@ -222,7 +233,43 @@ struct versioned_data {
 			to = std::get<ToT>(converted_datas);
 		}
 	}
-#endif
+
+	// Call this function with a data version to trigger deserialization and
+	// upgrade.
+	// In your serialized data, always store a version at the very beginning.
+	// This will allow you to use this all without knowing (or caring) about the
+	// actual data version.
+	// As always, you need 1 deserialize function per version.
+	template <class DeserializerT>
+	static void deserialize(version_t version, DeserializerT& your_deserializer,
+			latest_data_t& latest_data) {
+		static_assert(detail::all_have_deserialize_v<DeserializerT, DataTs...>,
+				"fea::versioned_data : One or more of the data types do not "
+				"have a deserialize function.\n");
+
+		if (version == latest) {
+			using fea::detail::deserialize;
+			deserialize(your_deserializer, latest_data);
+			return;
+		}
+
+		// Find the old version.
+		fea::static_for<size>([&](auto const_i) {
+			constexpr size_t i = const_i;
+			if (i != version) {
+				return;
+			}
+
+			// Deserializer to old data type.
+			using old_data_t = std::tuple_element_t<i, data_tup_t>;
+			old_data_t from;
+			using fea::detail::deserialize;
+			deserialize(your_deserializer, from);
+
+			// Then upgrade.
+			versioned_data::upgrade(from, latest_data);
+		});
+	}
 
 private:
 	// Checks and enforcements.

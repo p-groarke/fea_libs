@@ -202,7 +202,6 @@ constexpr auto static_for(Func&& func) {
 #if FEA_CPP17
 // Same as static_for, but reversed.
 // Starts at N - 1, ends at 0.
-// VS2019 dies.
 template <size_t N, class Func>
 constexpr auto static_for_reversed(Func&& func) {
 	return detail::static_for(func, fea::make_reverse_index_sequence<N>{});

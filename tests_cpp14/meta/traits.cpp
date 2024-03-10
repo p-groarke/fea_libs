@@ -170,23 +170,6 @@ TEST(traits, reverse) {
 
 #if FEA_CPP17
 TEST(traits, reversed_index_sequence) {
-	//{
-	//	using got_t =
-	//			typename fea::integer_sequence_cat<std::index_sequence<0, 1, 2>,
-	//					std::index_sequence<3, 4, 5>>::type;
-	//	using expected_t = std::index_sequence<0, 1, 2, 3, 4, 5>;
-	//	static_assert(std::is_same<got_t, expected_t>::value, fail_msg);
-	//}
-
-	//{
-	//	using got_t =
-	//			typename fea::integer_sequence_cat<std::index_sequence<0, 1>,
-	//					std::index_sequence<2>, std::index_sequence<3, 4, 5>,
-	//					std::index_sequence<10, 2>>::type;
-	//	using expected_t = std::index_sequence<0, 1, 2, 3, 4, 5, 10, 2>;
-	//	static_assert(std::is_same<got_t, expected_t>::value, fail_msg);
-	//}
-
 	{
 		using got_t = fea::make_reverse_index_sequence<5>;
 		using expected_t = std::index_sequence<4, 3, 2, 1, 0>;
