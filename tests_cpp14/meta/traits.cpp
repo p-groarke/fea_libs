@@ -161,4 +161,20 @@ TEST(traits, front_back_t) {
 	static_assert(std::is_same<fea::back_t<int, double, float>, float>::value,
 			fail_msg);
 }
+
+TEST(traits, reverse) {
+	using expected_t = std::tuple<double, float, int, bool>;
+	using got_t = fea::reverse_t<bool, int, float, double>;
+	static_assert(std::is_same<got_t, expected_t>::value, fail_msg);
+}
+
+#if FEA_CPP17
+TEST(traits, reversed_index_sequence) {
+	{
+		using got_t = fea::make_reverse_index_sequence<5>;
+		using expected_t = std::index_sequence<4, 3, 2, 1, 0>;
+		static_assert(std::is_same<got_t, expected_t>::value, fail_msg);
+	}
+}
+#endif
 } // namespace

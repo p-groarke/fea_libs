@@ -33,8 +33,10 @@
 #pragma once
 #include "fea/enum/utility.hpp"
 #include "fea/meta/static_for.hpp"
+#include "fea/meta/traits.hpp"
 
 #include <array>
+#include <limits>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -45,133 +47,319 @@ versioned_data is a system that allows you to upgrade serialized data and load
 old file types.
 
 It enforces (as much as possible) keeping old version structs around and
-enforces upgrade functions between [ver - 1, ver]. Serializing your data using
-this scheme, you can always upgrade files to the latest version.
-Note, versioned_data only upgrades data forward (old to new).
+enforces upgrade/downgrade functions between versions. Serializing your data
+using this scheme, you can always upgrade files to the latest version.
 
 Your data classes are freeform and can hold whatever they want. They only need
-to be templated to a version enum. It is recommended to use reasonable default
-values as well. You must serialize the version enum to file of course.
+static constexpr (unsigned integer type) version. Version must start at 0 and
+grow consecutively.
 
-See unit tests for examples. It looks complicated but it really isn't.
+If you do not call one of upgrade, downgrade, deserialize, serialize, you do not
+need to have those functions declared. The checks are only ran on usage.
+
+See unit tests for examples. It looks complicated but it really isn't for the
+caller.
 */
 
 
 namespace fea {
 namespace detail {
-template <template <auto> class DataT, auto FromVer, auto ToVer>
-void upgrade(const DataT<FromVer>&, DataT<ToVer>&);
+// Should never be called. These are here only to trigger ADL.
+template <class FromT, class ToT>
+std::enable_if_t<(ToT::version - FromT::version > 1)> upgrade(
+		const FromT&, ToT&);
+
+template <class FromT, class ToT>
+std::enable_if_t<(FromT::version - ToT::version > 1)> downgrade(
+		const FromT&, ToT&);
+
+template <class D, class T>
+std::enable_if_t<T::version
+		== (std::numeric_limits<decltype(T::version)>::max)()>
+deserialize(D&, T&);
+
+template <class F, class S>
+std::enable_if_t<F::version
+		== (std::numeric_limits<decltype(F::version)>::max)()>
+serialize(const F&, S&);
+
+template <class FromT, class ToT>
+using mhas_upgrade
+		= decltype(upgrade(std::declval<const FromT&>(), std::declval<ToT&>()));
+
+template <class FromT, class ToT>
+using mhas_downgrade = decltype(downgrade(
+		std::declval<const FromT&>(), std::declval<ToT&>()));
+
+template <class DeserializerT, class ToT>
+using mhas_deserialize = decltype(deserialize(
+		std::declval<DeserializerT&>(), std::declval<ToT&>()));
+
+template <class FromT, class SerializerT>
+using mhas_serialize = decltype(serialize(
+		std::declval<const FromT&>(), std::declval<SerializerT&>()));
+
+template <class, class...>
+struct upgrade_traits;
+
+template <class D, class T>
+struct upgrade_traits<D, T> {
+	static constexpr bool has_upgrade = true;
+	static constexpr bool has_downgrade = true;
+	static constexpr bool has_deserialize
+			= fea::is_detected_v<mhas_deserialize, D, T>;
+	static constexpr bool has_serialize
+			= fea::is_detected_v<mhas_serialize, T, D>;
+};
+
+template <class DeserializerT, class T, class U, class... DataTs>
+struct upgrade_traits<DeserializerT, T, U, DataTs...> {
+	static constexpr bool has_upgrade = fea::is_detected_v<mhas_upgrade, T, U>
+			&& upgrade_traits<DeserializerT, U, DataTs...>::has_upgrade;
+	static constexpr bool has_downgrade
+			= fea::is_detected_v<mhas_downgrade, U, T>
+			&& upgrade_traits<DeserializerT, U, DataTs...>::has_downgrade;
+	static constexpr bool has_deserialize
+			= fea::is_detected_v<mhas_deserialize, DeserializerT, T>
+			&& upgrade_traits<DeserializerT, U, DataTs...>::has_deserialize;
+	static constexpr bool has_serialize
+			= fea::is_detected_v<mhas_serialize, T, DeserializerT>
+			&& upgrade_traits<DeserializerT, U, DataTs...>::has_serialize;
+};
+
+template <class D, class... DataTs>
+inline constexpr bool all_have_upgrade_v
+		= upgrade_traits<D, DataTs...>::has_upgrade;
+template <class D, class... DataTs>
+inline constexpr bool all_have_downgrade_v
+		= upgrade_traits<D, DataTs...>::has_downgrade;
+template <class D, class... DataTs>
+inline constexpr bool all_have_deserialize_v
+		= upgrade_traits<D, DataTs...>::has_deserialize;
+template <class D, class... DataTs>
+inline constexpr bool all_have_serialize_v
+		= upgrade_traits<D, DataTs...>::has_serialize;
 } // namespace detail
 
-template <class VersionEnum, class...>
-struct versioned_data;
+template <class... DataTs>
+struct versioned_data {
+	// My version type.
+	using version_t = std::decay_t<decltype(fea::front_t<DataTs...>::version)>;
+	// Latest version.
+	static constexpr version_t latest = fea::back_t<DataTs...>::version;
+	// Latest version data type.
+	using latest_data_t = fea::back_t<DataTs...>;
+	// Total number of data structs.
+	static constexpr size_t size = sizeof...(DataTs);
+	// All versions in an array.
+	static constexpr std::array<version_t, size> versions{ DataTs::version... };
+	// Tuple of all consecutive data structs.
+	using data_tup_t = std::tuple<DataTs...>;
 
-template <class VersionEnum, template <VersionEnum> class DataT,
-		VersionEnum... VEnums>
-struct versioned_data<VersionEnum, DataT<VEnums>...> {
-	using version_t = VersionEnum;
-	static constexpr VersionEnum latest
-			= VersionEnum(fea::to_underlying(VersionEnum::count) - 1);
+	// Call this to upgrade an old version to a newer version.
+	// Pass the old data struct and the new output data struct.
+	// This does some checks to make sure you haven't forgotten anything.
+	template <class FromT, class ToT>
+	static void upgrade(const FromT& from, ToT& to) {
+		static_assert(FromT::version <= ToT::version,
+				"fea::versioned_data : Upgrade only supports upgrading data in "
+				"one direction, old to new.");
 
-	static constexpr size_t size = sizeof...(VEnums);
-	static constexpr std::array<VersionEnum, size> versions{ VEnums... };
-	inline static std::tuple<DataT<VEnums>...> data{};
+		static_assert(detail::all_have_upgrade_v<void, DataTs...>,
+				"fea::versioned_data : One or more of the data types do not "
+				"have an upgrade function.\n");
 
-	// Could static assert that ToVer == latest, but it might prevent
-	// some user edge-cases.
-	template <VersionEnum FromVer, VersionEnum ToVer>
-	static void upgrade(const DataT<FromVer>& from, DataT<ToVer>& to) {
-		using fea::detail::upgrade;
-		upgrade(from, to);
+		if constexpr (FromT::version == ToT::version) {
+			// Nothing to do.
+			to = from;
+		} else {
+			// Initialize our objects we'll use to hold intermediate
+			// conversions. std::tuple<DataT<v0>, DataT<v1>, ...>
+			data_tup_t converted_datas{};
+
+			// Prime the starting version data.
+			std::get<FromT>(converted_datas) = from;
+
+			// Loop on FromVer to ToVer. Subsequently call upgrade functions one
+			// at a time.
+			static constexpr size_t msize
+					= size_t(ToT::version) - size_t(FromT::version);
+			fea::static_for<msize>([&](auto const_i) {
+				static constexpr size_t i = const_i + size_t(FromT::version);
+				constexpr size_t from_idx = i;
+				constexpr size_t to_idx = i + 1;
+				using mfrom_t = std::tuple_element_t<from_idx, data_tup_t>;
+				using mto_t = std::tuple_element_t<to_idx, data_tup_t>;
+
+				static_assert(!std::is_same_v<mfrom_t, mto_t>,
+						"fea::versioned_data : 2 version datas are exactly the "
+						"same. This happens if you forgot to backup an old "
+						"version struct.");
+
+				// Get the next version and call the upgrade function.
+				const auto& from = std::get<from_idx>(converted_datas);
+				auto& to = std::get<to_idx>(converted_datas);
+				using fea::detail::upgrade;
+				upgrade(from, to);
+			});
+
+			to = std::get<ToT>(converted_datas);
+		}
+	}
+
+	// Call this to downgrade from a new version to an old version.
+	// Pass the new data struct and the old output data struct.
+	// This does some checks to make sure you haven't forgotten anything.
+	template <class FromT, class ToT>
+	static void downgrade(const FromT& from, ToT& to) {
+		static_assert(FromT::version >= ToT::version,
+				"fea::versioned_data : Downgrade only supports downgrading "
+				"data in one direction, new to old.");
+
+		static_assert(detail::all_have_downgrade_v<void, DataTs...>,
+				"fea::versioned_data : One or more of the data types do not "
+				"have a downgrade function.\n");
+
+		if constexpr (FromT::version == ToT::version) {
+			// Nothing to do.
+			to = from;
+		} else {
+			// Initialize our objects we'll use to hold intermediate
+			// conversions. std::tuple<DataT<v0>, DataT<v1>, ...>
+			data_tup_t converted_datas{};
+
+			// Prime the starting version data.
+			std::get<FromT>(converted_datas) = from;
+
+			// Loop on FromVer to ToVer. Subsequently call upgrade functions one
+			// at a time.
+			static constexpr size_t msize
+					= size_t(FromT::version) - size_t(ToT::version);
+			fea::static_for_reversed<msize>([&](auto const_i) {
+				static constexpr size_t i = const_i + size_t(ToT::version);
+				constexpr size_t from_idx = i + 1;
+				constexpr size_t to_idx = i;
+				using mfrom_t = std::tuple_element_t<from_idx, data_tup_t>;
+				using mto_t = std::tuple_element_t<to_idx, data_tup_t>;
+
+				static_assert(!std::is_same_v<mfrom_t, mto_t>,
+						"fea::versioned_data : 2 version datas are exactly the "
+						"same. This happens if you forgot to backup an old "
+						"version struct.");
+
+				// Get the next version and call the upgrade function.
+				const auto& from = std::get<from_idx>(converted_datas);
+				auto& to = std::get<to_idx>(converted_datas);
+				using fea::detail::downgrade;
+				downgrade(from, to);
+			});
+
+			to = std::get<ToT>(converted_datas);
+		}
+	}
+
+	// Call this function with a data version to trigger deserialization and
+	// upgrade.
+	// In your serialized data, always store a version at the very beginning.
+	// This will allow you to use this all without knowing (or caring) about the
+	// actual data version.
+	//
+	// When using this, you need 1 deserialize function per version.
+	template <class DeserializerT>
+	static void deserialize(version_t input_version,
+			DeserializerT& your_deserializer, latest_data_t& latest_data) {
+		static_assert(detail::all_have_deserialize_v<DeserializerT, DataTs...>,
+				"fea::versioned_data : One or more of the data types do not "
+				"have a deserialize function.\n");
+
+		if (input_version == latest) {
+			using fea::detail::deserialize;
+			deserialize(your_deserializer, latest_data);
+			return;
+		}
+
+		// Find the old version.
+		fea::static_for<size>([&](auto const_i) {
+			constexpr size_t i = const_i;
+			if (i != input_version) {
+				return;
+			}
+
+			// Deserializer to old data type.
+			using input_data_t = std::tuple_element_t<i, data_tup_t>;
+			input_data_t from{};
+			using fea::detail::deserialize;
+			deserialize(your_deserializer, from);
+
+			// Then upgrade.
+			versioned_data::upgrade(from, latest_data);
+		});
+	}
+
+	// Call this function with a data version to trigger serialization and
+	// downgrade.
+	// If the target_version doesn't match the data version, automatically
+	// downgrades and calls the appropriate serialize function.
+	//
+	// When using this, you need 1 serialize function per version.
+	template <class SerializerT>
+	static void serialize(version_t output_version,
+			const latest_data_t& latest_data, SerializerT& your_serializer) {
+		static_assert(detail::all_have_serialize_v<SerializerT, DataTs...>,
+				"fea::versioned_data : One or more of the data types do not "
+				"have a serialize function.\n");
+
+		if (output_version == latest) {
+			using fea::detail::serialize;
+			serialize(latest_data, your_serializer);
+			return;
+		}
+
+		// Find the target version.
+		fea::static_for<size>([&](auto const_i) {
+			constexpr size_t i = const_i;
+			if (i != output_version) {
+				return;
+			}
+
+			// Downgrade to old version.
+			using output_data_t = std::tuple_element_t<i, data_tup_t>;
+			output_data_t to{};
+			versioned_data::downgrade(latest_data, to);
+
+			// Serialize it.
+			using fea::detail::serialize;
+			serialize(to, your_serializer);
+		});
 	}
 
 private:
-	template <template <auto> class T, auto FromVer, auto ToVer>
-	friend void detail::upgrade(const T<FromVer>&, T<ToVer>&);
-
+	// Checks and enforcements.
 	static constexpr bool do_asserts() {
-		constexpr bool size_ok = size == size_t(VersionEnum::count);
-		static_assert(size_ok,
-				"fea::versioned_data : VersionEnum must have member 'count', "
-				"and it must be equal to the total number of versions.");
+		using mversion_t
+				= std::decay_t<decltype(fea::front_t<DataTs...>::version)>;
 
-		constexpr bool unsigned_ok
-				= std::is_unsigned_v<std::underlying_type_t<VersionEnum>>;
-		static_assert(unsigned_ok,
-				"fea::versioned_data : VersionEnum must be unsigned.");
+		constexpr bool unsigned_ok = std::is_unsigned_v<mversion_t>;
+		static_assert(
+				unsigned_ok, "fea::versioned_data : Version must be unsigned.");
 
-		using index_seq_t = std::index_sequence<size_t(VEnums)...>;
-		using expected_index_seq_t = decltype(std::make_index_sequence<size>{});
-		constexpr bool ordered_ok
-				= std::is_same_v<index_seq_t, expected_index_seq_t>;
+		constexpr version_t first = fea::front_t<DataTs...>::version;
+		constexpr bool first_zero = first == 0;
+		static_assert(first_zero,
+				"fea::versioned_data : First version must be zero.");
+
+		using index_seq_t = std::index_sequence<size_t(DataTs::version)...>;
+		using expected_seq_t
+				= decltype(std::make_index_sequence<sizeof...(DataTs)>{});
+		constexpr bool ordered_ok = std::is_same_v<index_seq_t, expected_seq_t>;
 		static_assert(ordered_ok,
 				"fea::versioned_data : Data structs must be ordered in the "
-				"same order as version enum (start at v0 up to vN).");
+				"same order as their version, starting at 0 to N.");
 
-		return size_ok & unsigned_ok & ordered_ok;
+		return unsigned_ok & first_zero & ordered_ok;
 	}
 
 	static_assert(do_asserts(),
 			"fea::versioned_data : Failed to create versioned_data.");
 };
-
-namespace detail {
-template <class VersionEnum, template <VersionEnum> class DataT,
-		size_t... Idxes>
-constexpr auto make_versioned_data(std::index_sequence<Idxes...>) {
-	return fea::versioned_data<VersionEnum, DataT<VersionEnum(Idxes)>...>{};
-}
-
-template <class VersionEnum, template <VersionEnum> class DataT, size_t N>
-using versioned_data_t = decltype(make_versioned_data<VersionEnum, DataT>(
-		std::make_index_sequence<N>{}));
-
-template <template <auto> class DataT, auto FromVer, auto ToVer>
-void upgrade(const DataT<FromVer>& from, DataT<ToVer>& to) {
-	using VersionEnum = std::decay_t<decltype(FromVer)>;
-	using map_t = detail::versioned_data_t<VersionEnum, DataT,
-			size_t(VersionEnum::count)>;
-	using tup_t = std::decay_t<decltype(map_t::data)>;
-
-	static_assert(size_t(FromVer) <= size_t(ToVer),
-			"fea::versioned_data : Only supports upgrading data in one "
-			"direction, old to new.");
-	static_assert(size_t(ToVer) - size_t(FromVer) > 1,
-			"fea::versioned_data : This overload shouldn't have been "
-			"called. You are probably missing an upgrade() "
-			"function for a combination of versions.");
-
-	if constexpr (FromVer == ToVer) {
-		to = from;
-	} else {
-		// Initialize our objects we'll use to hold intermediate
-		// conversions. std::tuple<DataT<v0>, DataT<v1>, ...>
-		tup_t converted_datas{};
-
-		// Prime the starting version data.
-		std::get<DataT<FromVer>>(converted_datas) = from;
-
-		// Loop on FromVer to ToVer. Subsequently call upgrade functions one
-		// at a time.
-		static constexpr size_t msize = size_t(ToVer) - size_t(FromVer);
-		fea::static_for<msize>([&](auto const_i) {
-			static constexpr size_t i = const_i + size_t(FromVer);
-			constexpr VersionEnum from_ver = VersionEnum(i);
-			constexpr VersionEnum to_ver = VersionEnum(i + 1);
-			static_assert(!std::is_same_v<DataT<from_ver>, DataT<to_ver>>,
-					"fea::versioned_data : 2 version datas are exactly the "
-					"same. This happens if you forgot to backup an old "
-					"version struct.");
-
-			// Get the next version and call the upgrade function.
-			const DataT<from_ver>& from
-					= std::get<DataT<from_ver>>(converted_datas);
-			DataT<to_ver>& to = std::get<DataT<to_ver>>(converted_datas);
-			upgrade(from, to);
-		});
-
-		to = std::get<DataT<ToVer>>(converted_datas);
-	}
-}
-} // namespace detail
 } // namespace fea
