@@ -4,6 +4,37 @@
 #include <iostream>
 
 namespace {
+TEST(ini, example) {
+	// LOL
+	const float default_float = 69.f;
+	fea::ini f{ std::filesystem::path{ "file.ini" } };
+	f.general_help(false);
+
+	// Return type overload.
+	// If the variable isn't found, returns | default.
+	// Assigns the default if ini object isn't const (and it doesn't contain
+	// "a_float").
+	[[maybe_unused]] float b = f["section"]["a_float"] | default_float;
+
+	// Assignement.
+	// Also adds a comment to the output.
+	f["section"]["an_int"] = 42, "Int comment";
+
+	// Add a section comment.
+	f["section"], "Section Comment";
+
+	// Write to "file.ini".
+	f.write();
+
+	/* Outputs :
+	; Section Comment
+	[section]
+	a_float = 69.0
+	  ; Int comment
+	an_int = 42
+	*/
+}
+
 constexpr std::string_view test_basics = R"(
 	 global_var = 1 ; int
 
@@ -199,29 +230,33 @@ TEST(ini, basics) {
 
 	// Invalid types.
 	{
-		// Wrong return type. Should cast internally.
+		// Wrong return type. Should cast to return type.
+		// No internal type change.
 		int boolval = test["bla"]["bla"];
 		EXPECT_EQ(boolval, int(true));
 
 		// Wrong return type and default value.
 		// Since we already contain the value :
-		// It's type will be changed to float.
+		// It's internal type will be changed to float.
 		// It will be cast to the return capture int.
 		boolval = test["bla"]["bla"] | float(0);
 		EXPECT_EQ(boolval, int(true));
 
+		// Return value cast, no internal type change.
 		float intval = test["bla"]["blee"];
 		EXPECT_EQ(intval, 42.f);
 
-		// Transforms internally to string, ignores default value.
+		// Transforms internally to string, ignores default value, casts return
+		// value to float.
 		intval = test["bla"]["blee"] | "42.5";
 		EXPECT_EQ(intval, 42.f);
 
-		// Transforms internally to string, reconverts to float.
+		// Transforms internally to string, converts return value to float.
+		// Default ignored.
 		float floatval = test["fla"]["flee"] | "42.0";
 		EXPECT_EQ(floatval, -5.5f);
 
-		// Transforms internally to int, reconverts to float.
+		// Transforms internally to int, cast return to float.
 		floatval = test["fla"]["flee"] | int(0);
 		EXPECT_EQ(floatval, -5.f);
 	}
@@ -262,36 +297,6 @@ TEST(ini, basics) {
 
 		//  std::cout << fea::to_string(test) << std::endl;
 		test.write("test_output.ini");
-	}
-
-	{
-		// LOL
-		const float default_float = 69.f;
-		fea::ini f{ std::filesystem::path{ "file.ini" } };
-		f.general_help(false);
-
-		// Return type overload.
-		// If the variable isn't found, returns | default and assigns it if f
-		// isn't const.
-		[[maybe_unused]] float b = f["section"]["a_float"] | default_float;
-
-		// Assignement. Adds a comment to the output.
-		f["section"]["an_int"] = 42, "Int comment";
-
-		// Add a section comment.
-		f["section"], "Section Comment";
-
-		f.write();
-
-		/* Output :
-
-		; Section Comment
-		[section]
-		a_float = 69.0
-		  ; Int comment
-		an_int = 42
-
-		*/
 	}
 }
 } // namespace
