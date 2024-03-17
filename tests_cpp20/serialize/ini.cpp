@@ -1,5 +1,7 @@
 ﻿#include <fea/serialize/ini.hpp>
+#include <fstream>
 #include <gtest/gtest.h>
+#include <iostream>
 
 namespace {
 constexpr std::string_view test_basics = R"(
@@ -28,7 +30,7 @@ shouldbemerged = true
 )";
 
 TEST(ini, basics) {
-	fea::ifini test{ test_basics };
+	fea::ini test{ test_basics };
 
 	EXPECT_TRUE(test.contains(""));
 	EXPECT_TRUE(test.contains("test!.test~"));
@@ -92,7 +94,6 @@ TEST(ini, basics) {
 
 	// Test expected.
 	{
-
 		int global_var = test[""]["global_var"];
 		EXPECT_EQ(global_var, 1);
 
@@ -121,24 +122,88 @@ TEST(ini, basics) {
 		EXPECT_EQ(shouldbemerged, true);
 	}
 
-	//[type_tests]
-	// a_bool = true
-	// an_int = 42
-	// a_float = 69.0
-	// a_string = "potato"
-	//
-	//		[test!][test~]]]]test
-	// shouldbemerged = true
+	// Writing.
+	{
+		test["bla"]["bla"] = true, "bla.bla comment";
+		bool boolval = test["bla"]["bla"];
+		EXPECT_EQ(boolval, true);
 
-	// EXPECT_TRUE(test.contains("🤣.bla", "🙂"));
-	// EXPECT_TRUE(test.contains("bad_section", "var"));
-	// EXPECT_FALSE(test.contains("bad_section", "unsaveable line"));
-	// EXPECT_FALSE(test.contains("bad_section", "unsaveable"));
-	// EXPECT_FALSE(test.contains("bad_section", "line"));
-	// EXPECT_TRUE(test.contains("type_tests", "a_bool"));
-	// EXPECT_TRUE(test.contains("type_tests", "an_int"));
-	// EXPECT_TRUE(test.contains("type_tests", "a_float"));
-	// EXPECT_TRUE(test.contains("type_tests", "a_string"));
-	// EXPECT_TRUE(test.contains("test!.test~", "shouldbemerged"));
+		test["bla"]["blee"] = 42, "bla.blee comment";
+		int intval = test["bla"]["blee"];
+		EXPECT_EQ(intval, 42);
+
+		test["bla"]["flee"] = size_t(101u), "bla.flee comment";
+		size_t sizetval = test["bla"]["flee"];
+		EXPECT_EQ(sizetval, 101u);
+
+		test["bla"]["blou"] = 2u, "bla.blou comment";
+		unsigned uintval = test["bla"]["blou"];
+		EXPECT_EQ(uintval, 2u);
+
+		test["fla"]["flee"] = -5.f, "fla.flee comment";
+		float floatval = test["fla"]["flee"];
+		EXPECT_EQ(floatval, -5.f);
+
+		test["fla"]["flou"] = "test write", "fla.flou comment";
+		std::string_view stringval = test["fla"]["flou"];
+		EXPECT_EQ(stringval, "test write");
+
+		test["fla"]["flou2"] = std::string{ "test write2" },
+		"fla.flou2 comment";
+		std::string stringval2 = test["fla"]["flou2"];
+		EXPECT_EQ(stringval2, "test write2");
+
+		test["fla"]["flou3"] = std::string_view{ "test write3" },
+		"fla.flou3 comment";
+		std::string_view stringval3 = test["fla"]["flou3"];
+		EXPECT_EQ(stringval3, "test write3");
+	}
+
+	EXPECT_TRUE(test.contains("bla", "bla"));
+	EXPECT_TRUE(test.contains("bla", "blee"));
+	EXPECT_TRUE(test.contains("bla", "flee"));
+	EXPECT_TRUE(test.contains("bla", "blou"));
+	EXPECT_TRUE(test.contains("fla", "flee"));
+	EXPECT_TRUE(test.contains("fla", "flou"));
+	EXPECT_TRUE(test.contains("fla", "flou2"));
+	EXPECT_TRUE(test.contains("fla", "flou3"));
+
+	// Comments and output.
+	{
+		test["bla"], "bla comment";
+		test["fla"], "fla comment";
+
+		std::string got = fea::to_string(test);
+		EXPECT_NE(got.find("; bla comment"), got.npos);
+		EXPECT_NE(got.find("; fla comment"), got.npos);
+		EXPECT_NE(got.find("; bla.bla comment"), got.npos);
+		EXPECT_NE(got.find("; bla.blee comment"), got.npos);
+		EXPECT_NE(got.find("; bla.flee comment"), got.npos);
+		EXPECT_NE(got.find("; fla.flou comment"), got.npos);
+		EXPECT_NE(got.find("; fla.flou2 comment"), got.npos);
+		EXPECT_NE(got.find("; fla.flou3 comment"), got.npos);
+
+		test.general_help(true);
+		got = fea::to_string(test);
+		EXPECT_NE(got.find(fea::detail::ini::general_help), got.npos);
+
+		test.general_help(false);
+		got = fea::to_string(test);
+		EXPECT_EQ(got.find(fea::detail::ini::general_help), got.npos);
+
+		// Update if modifying variable help string.
+		test.variable_help(true);
+		got = fea::to_string(test);
+		EXPECT_NE(got.find(" expects a "), got.npos);
+
+		test.variable_help(false);
+		got = fea::to_string(test);
+		EXPECT_EQ(got.find(" expects a "), got.npos);
+
+		//  std::cout << fea::to_string(test) << std::endl;
+
+		std::ofstream ofs{ "test_output.ini" };
+		ofs << fea::to_string(test);
+	}
 }
 } // namespace
