@@ -53,12 +53,7 @@
 #include <unordered_map>
 #include <variant>
 
-/*
-A simple ini parser.
-
-Entries are ordered by declaration order, not sorted alphabetically. Supports
-output comments. Supports automatic comments.
-*/
+/* ini.hpp internals */
 
 namespace fea {
 struct ini;
@@ -72,7 +67,7 @@ using variant_t
 
 inline constexpr std::string_view general_help = R"(; INI Help
 ; An INI file stores user settings in a simple format.
-; It consists of sections and entries.
+; It consists of sections and entries (and sometimes comments).
 ; Entries are meant to be changed.
 ; Sections shouldn't be changed.
 ;
@@ -82,6 +77,10 @@ inline constexpr std::string_view general_help = R"(; INI Help
 ;   For example :
 ;     [This is a section]
 ;     [This.is.also.a.section]
+;
+; Comments
+;   Lines that start with ';' are comments, like this one!
+;   They are completely ignored.
 ;
 ; Entries
 ;   Entries hold values.
@@ -183,19 +182,23 @@ struct ini_data {
 };
 
 inline std::string variant_to_helpstr(const entry& e) {
-	constexpr std::string_view variable_help = "; {} expects a {}.";
+	constexpr std::string_view variable_help = "  ; Expects a {}.\n";
 
 	if (std::holds_alternative<bool>(e.value)) {
-		return std::format(variable_help, e.entry_name, "boolean");
+		// return std::format(variable_help, e.entry_name, "boolean");
+		return std::format(variable_help, "boolean");
 	}
 	if (std::holds_alternative<intmax_t>(e.value)) {
-		return std::format(variable_help, e.entry_name, "number");
+		// return std::format(variable_help, e.entry_name, "number");
+		return std::format(variable_help, "number");
 	}
 	if (std::holds_alternative<float_t>(e.value)) {
-		return std::format(variable_help, e.entry_name, "decimal number");
+		// return std::format(variable_help, e.entry_name, "decimal number");
+		return std::format(variable_help, "decimal number");
 	}
 	if (std::holds_alternative<std::string>(e.value)) {
-		return std::format(variable_help, e.entry_name, "string");
+		// return std::format(variable_help, e.entry_name, "string");
+		return std::format(variable_help, "string");
 	}
 	return "";
 }
@@ -218,48 +221,38 @@ inline std::string to_string(const variant_t& v) {
 
 inline std::string to_string(const entry& e, bool var_help) {
 	constexpr std::string_view endline = "\n";
-	constexpr std::string_view val_fmt = "{} = {}";
+	constexpr std::string_view comment_fmt = "  ; {}\n";
+	constexpr std::string_view val_fmt = "{} = {}\n";
 
 	assert(!e.entry_name.empty());
 	assert(!std::holds_alternative<std::nullptr_t>(e.value));
 
 	std::string ret;
 	if (!e.comment.empty()) {
-		// ret += endline;
-		ret += "; ";
-		ret += e.comment;
-		ret += endline;
+		ret += std::format(comment_fmt, e.comment);
 	}
 
 	if (var_help) {
-		// if (e.comment.empty()) {
-		//	ret += endline;
-		// }
 		ret += variant_to_helpstr(e);
-		ret += endline;
 	}
 
 	ret += std::format(val_fmt, e.entry_name, to_string(e.value));
-	ret += endline;
 	return ret;
 }
 
 inline std::string to_string(const section& s, bool var_help) {
 	constexpr std::string_view endline = "\n";
-	constexpr std::string_view s_fmt = "[{}]";
+	constexpr std::string_view comment_fmt = "\n; {}";
+	constexpr std::string_view s_fmt = "\n[{}]\n";
 
 	std::string ret;
-	ret += endline;
 	if (!s.comment.empty()) {
-		ret += "; ";
-		ret += s.comment;
-		ret += endline;
+		ret += std::format(comment_fmt, s.comment);
 	}
 
 	if (!s.section_name.empty()) {
 		// Not global section.
 		ret += std::format(s_fmt, s.section_name);
-		ret += endline;
 	}
 
 	for (const entry& e : s.entry_map) {

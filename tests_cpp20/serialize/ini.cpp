@@ -192,18 +192,18 @@ TEST(ini, basics) {
 		EXPECT_EQ(got.find(fea::detail::ini::general_help), got.npos);
 
 		// Update if modifying variable help string.
-		test.variable_help(true);
-		got = fea::to_string(test);
-		EXPECT_NE(got.find(" expects a "), got.npos);
-
 		test.variable_help(false);
 		got = fea::to_string(test);
-		EXPECT_EQ(got.find(" expects a "), got.npos);
+		EXPECT_EQ(got.find("Expects a "), got.npos);
+
+		// Update if modifying variable help string.
+		test.variable_help(true);
+		got = fea::to_string(test);
+		EXPECT_NE(got.find("Expects a "), got.npos);
+
 
 		//  std::cout << fea::to_string(test) << std::endl;
-
-		std::ofstream ofs{ "test_output.ini" };
-		ofs << fea::to_string(test);
+		test.write("test_output.ini");
 	}
 }
 } // namespace

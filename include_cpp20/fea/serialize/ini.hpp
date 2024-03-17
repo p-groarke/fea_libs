@@ -57,10 +57,10 @@ Supported types :
 - strings.
 
 Example :
-fea::ini f{"file.ini"};
+fea::ini f{ "file.ini" };
 bool b = f["section"]["a_bool"] | default_bool_val;
 f["section"]["an_int"] = 42, "an_int comment";
-
+f.write();
 */
 
 namespace fea {
@@ -68,6 +68,7 @@ struct ini {
 	using section_id_t = detail::ini::section_id_t;
 	using entry_id_t = detail::ini::entry_id_t;
 	using entry_t = detail::ini::entry;
+	using section_t = detail::ini::section;
 	using variant_t = detail::ini::variant_t;
 
 	ini(const std::filesystem::path& filepath)
@@ -124,11 +125,12 @@ struct ini {
 				sid_it->second) };
 	}
 
-	// Reads or writes ini values.
+	// Write ini values.
 	// Non-throwing.
 	// Missing sections or entries are created on demand.
-	/* [[nodiscard]]*/ detail::ini::section_ret<detail::ini::section>
-	operator[](std::string_view section_name) {
+	// Use operator, to add comments.
+	detail::ini::section_ret<detail::ini::section> operator[](
+			std::string_view section_name) {
 		auto sid_it = _ini_data.section_name_to_id.find(section_name);
 		if (sid_it == _ini_data.section_name_to_id.end()) {
 			section_id_t new_id = _next_section_id++;
@@ -142,19 +144,6 @@ struct ini {
 		}
 		return detail::ini::section_ret{ &_ini_data.section_map.at(
 				sid_it->second) };
-	}
-
-	// Prints a generalized help at the top of the INI file,
-	// for users who aren't familiar with the format.
-	void general_help(bool b) noexcept {
-		_print_general_help = b;
-	}
-
-	// For each variable, prints a comment denoting what data type it expects.
-	// Has no effect on user comments, which are always output if they have been
-	// set.
-	void variable_help(bool b) noexcept {
-		_print_var_help = b;
 	}
 
 	// Writes to file provided in constructor.
@@ -175,6 +164,19 @@ struct ini {
 			return;
 		}
 		ofs << to_string(*this);
+	}
+
+	// Prints a generalized help at the top of the INI file,
+	// for users who aren't familiar with the format.
+	void general_help(bool b) noexcept {
+		_print_general_help = b;
+	}
+
+	// For each variable, prints a comment denoting what data type it expects.
+	// Has no effect on user comments, which are always output if they have been
+	// set.
+	void variable_help(bool b) noexcept {
+		_print_var_help = b;
 	}
 
 private:
