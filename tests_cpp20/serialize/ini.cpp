@@ -52,7 +52,7 @@ TEST(ini, basics) {
 	EXPECT_TRUE(test.contains("type_tests", "a_string"));
 	EXPECT_TRUE(test.contains("test!.test~", "shouldbemerged"));
 
-	// Test invalid values.
+	// Test non-existing values (defaulted).
 	{
 		bool boolval = test["bla"]["bla"];
 		EXPECT_EQ(boolval, false);
@@ -115,7 +115,7 @@ TEST(ini, basics) {
 		float a_float = test["type_tests"]["a_float"];
 		EXPECT_EQ(a_float, 69.f);
 
-		std::string_view a_string = test["type_tests"]["a_string"];
+		std::string a_string = test["type_tests"]["a_string"];
 		EXPECT_EQ(a_string, "potato");
 
 		bool shouldbemerged = test["test!.test~"]["shouldbemerged"];
@@ -140,12 +140,12 @@ TEST(ini, basics) {
 		unsigned uintval = test["bla"]["blou"];
 		EXPECT_EQ(uintval, 2u);
 
-		test["fla"]["flee"] = -5.f, "fla.flee comment";
+		test["fla"]["flee"] = -5.5000f, "fla.flee comment";
 		float floatval = test["fla"]["flee"];
-		EXPECT_EQ(floatval, -5.f);
+		EXPECT_EQ(floatval, -5.5f);
 
 		test["fla"]["flou"] = "test write", "fla.flou comment";
-		std::string_view stringval = test["fla"]["flou"];
+		std::string stringval = test["fla"]["flou"];
 		EXPECT_EQ(stringval, "test write");
 
 		test["fla"]["flou2"] = std::string{ "test write2" },
@@ -155,7 +155,7 @@ TEST(ini, basics) {
 
 		test["fla"]["flou3"] = std::string_view{ "test write3" },
 		"fla.flou3 comment";
-		std::string_view stringval3 = test["fla"]["flou3"];
+		std::string stringval3 = test["fla"]["flou3"];
 		EXPECT_EQ(stringval3, "test write3");
 	}
 
@@ -167,6 +167,64 @@ TEST(ini, basics) {
 	EXPECT_TRUE(test.contains("fla", "flou"));
 	EXPECT_TRUE(test.contains("fla", "flou2"));
 	EXPECT_TRUE(test.contains("fla", "flou3"));
+
+	// Defaults after writing.
+	{
+		bool boolval = test["bla"]["bla"] | false;
+		EXPECT_EQ(boolval, true);
+
+		int intval = test["bla"]["blee"] | -1;
+		EXPECT_EQ(intval, 42);
+
+		size_t sizetval = test["bla"]["flee"] | size_t(0u);
+		EXPECT_EQ(sizetval, 101u);
+
+		unsigned uintval = test["bla"]["blou"] | 42u;
+		EXPECT_EQ(uintval, 2u);
+
+		float floatval = test["fla"]["flee"] | -1.f;
+		EXPECT_EQ(floatval, -5.5f);
+
+		std::string stringval = test["fla"]["flou"] | "default";
+		EXPECT_EQ(stringval, "test write");
+
+		std::string stringval2
+				= test["fla"]["flou2"] | std::string{ "default" };
+		EXPECT_EQ(stringval2, "test write2");
+
+		std::string stringval3
+				= test["fla"]["flou3"] | std::string_view{ "default" };
+		EXPECT_EQ(stringval3, "test write3");
+	}
+
+	// Invalid types.
+	{
+		// Wrong return type. Should cast internally.
+		int boolval = test["bla"]["bla"];
+		EXPECT_EQ(boolval, int(true));
+
+		// Wrong return type and default value.
+		// Since we already contain the value :
+		// It's type will be changed to float.
+		// It will be cast to the return capture int.
+		boolval = test["bla"]["bla"] | float(0);
+		EXPECT_EQ(boolval, int(true));
+
+		float intval = test["bla"]["blee"];
+		EXPECT_EQ(intval, 42.f);
+
+		// Transforms internally to string, ignores default value.
+		intval = test["bla"]["blee"] | "42.5";
+		EXPECT_EQ(intval, 42.f);
+
+		// Transforms internally to string, reconverts to float.
+		float floatval = test["fla"]["flee"] | "42.0";
+		EXPECT_EQ(floatval, -5.5f);
+
+		// Transforms internally to int, reconverts to float.
+		floatval = test["fla"]["flee"] | int(0);
+		EXPECT_EQ(floatval, -5.f);
+	}
 
 	// Comments and output.
 	{
@@ -204,6 +262,36 @@ TEST(ini, basics) {
 
 		//  std::cout << fea::to_string(test) << std::endl;
 		test.write("test_output.ini");
+	}
+
+	{
+		// LOL
+		const float default_float = 69.f;
+		fea::ini f{ std::filesystem::path{ "file.ini" } };
+		f.general_help(false);
+
+		// Return type overload.
+		// If the variable isn't found, returns | default and assigns it if f
+		// isn't const.
+		[[maybe_unused]] float b = f["section"]["a_float"] | default_float;
+
+		// Assignement. Adds a comment to the output.
+		f["section"]["an_int"] = 42, "Int comment";
+
+		// Add a section comment.
+		f["section"], "Section Comment";
+
+		f.write();
+
+		/* Output :
+
+		; Section Comment
+		[section]
+		a_float = 69.0
+		  ; Int comment
+		an_int = 42
+
+		*/
 	}
 }
 } // namespace

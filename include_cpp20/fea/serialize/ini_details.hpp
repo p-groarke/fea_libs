@@ -63,7 +63,7 @@ using entry_id_t = uint16_t;
 using section_id_t = uint16_t;
 using float_t = std::conditional_t<sizeof(intmax_t) == 8, double, float>;
 using variant_t
-		= std::variant<bool, intmax_t, float_t, std::nullptr_t, std::string>;
+		= std::variant<bool, intmax_t, float_t, std::string, std::nullptr_t>;
 
 inline constexpr std::string_view general_help = R"(; INI Help
 ; An INI file stores user settings in a simple format.
@@ -141,9 +141,6 @@ struct entry {
 	// The entry name.
 	std::string entry_name;
 
-	//// The entry string value. Q : needed?
-	// std::string str_value;
-
 	// Optional entry comment.
 	std::string comment;
 
@@ -203,6 +200,51 @@ inline std::string variant_to_helpstr(const entry& e) {
 	return "";
 }
 
+// Parse a string value to expected type.
+[[nodiscard]] variant_t from_string(std::string_view str) {
+	size_t single_idx = str.find('\'');
+	size_t double_idx = str.find('"');
+	if (single_idx != str.npos && double_idx == str.npos) {
+		size_t single_end = str.find_last_of('\'');
+		return variant_t{ std::string(
+				str.begin() + single_idx + 1, str.begin() + single_end) };
+	} else if (double_idx != str.npos && single_idx == str.npos) {
+		size_t double_end = str.find_last_of('\"');
+		return variant_t{ std::string(
+				str.begin() + double_idx + 1, str.begin() + double_end) };
+	} else if (single_idx != str.npos && double_idx != str.npos) {
+		size_t begin = single_idx < double_idx ? single_idx : double_idx;
+		size_t single_end = str.find_last_of('\'');
+		size_t double_end = str.find_last_of('"');
+		size_t end = single_end > double_end ? single_end : double_end;
+		assert(end != str.npos);
+		return variant_t{ std::string(
+				str.begin() + begin + 1, str.begin() + end) };
+	} else if (str == "true") {
+		return variant_t{ true };
+	} else if (str == "false") {
+		return variant_t{ false };
+	} else if (str.find('.') != str.npos) {
+		float_t val = float_t(0);
+		std::from_chars_result res
+				= std::from_chars(str.data(), str.data() + str.size(), val);
+		if (res.ec == std::errc{}) {
+			return variant_t{ val };
+		} else {
+			return variant_t{ std::nullptr_t{} };
+		}
+	} else {
+		intmax_t val = intmax_t(0);
+		std::from_chars_result res
+				= std::from_chars(str.data(), str.data() + str.size(), val);
+		if (res.ec == std::errc{}) {
+			return variant_t{ val };
+		} else {
+			return variant_t{ std::nullptr_t{} };
+		}
+	}
+}
+
 inline std::string to_string(const variant_t& v) {
 	if (std::holds_alternative<bool>(v)) {
 		return std::get<bool>(v) ? "true" : "false";
@@ -211,7 +253,17 @@ inline std::string to_string(const variant_t& v) {
 		return std::to_string(std::get<intmax_t>(v));
 	}
 	if (std::holds_alternative<float_t>(v)) {
-		return std::to_string(std::get<float_t>(v));
+		std::string ret = std::to_string(std::get<float_t>(v));
+		size_t idx = ret.find_last_not_of('0');
+		if (idx != ret.npos) {
+			if (ret[idx] == '.' && idx < ret.size() - 2) {
+				// Keep 1 zero.
+				ret.erase(idx + 2, ret.npos);
+			} else {
+				ret.erase(idx + 1, ret.npos);
+			}
+		}
+		return ret;
 	}
 	if (std::holds_alternative<std::string>(v)) {
 		return "\"" + std::get<std::string>(v) + "\"";
@@ -262,6 +314,7 @@ inline std::string to_string(const section& s, bool var_help) {
 	return ret;
 }
 
+
 // Return funkyness begins.
 // Because we can!
 template <class EntryT>
@@ -275,6 +328,163 @@ struct return_overload {
 			, _user_variant(std::move(mvariant)) {
 	}
 
+	template <class T>
+	[[nodiscard]] static auto to_variant_type() {
+		using m_t = std::decay_t<T>;
+		if constexpr (std::is_same_v<m_t, bool>) {
+			return bool{};
+		} else if constexpr (std::is_integral_v<m_t>
+				|| std::is_unsigned_v<m_t>) {
+			return intmax_t{};
+		} else if constexpr (std::is_floating_point_v<m_t>) {
+			return float_t{};
+		} else if constexpr (std::is_convertible_v<m_t, std::string>
+				|| std::is_constructible_v<std::string, m_t>) {
+			return std::string{};
+		} else {
+			return std::nullptr_t{};
+		}
+	}
+
+	template <class ToT>
+	[[nodiscard]] static bool can_cast(const variant_t& from) {
+		if (std::is_same_v<ToT, std::string_view>) {
+			// Cannot cast, needs back reference.
+			return false;
+		}
+
+		switch (from.index()) {
+		case 0: {
+			using inner_t = std::decay_t<decltype(std::get<0>(from))>;
+			return std::is_convertible_v<inner_t, ToT>
+					|| std::is_constructible_v<ToT, inner_t>;
+		} break;
+		case 1: {
+			using inner_t = std::decay_t<decltype(std::get<1>(from))>;
+			return std::is_convertible_v<inner_t, ToT>
+					|| std::is_constructible_v<ToT, inner_t>;
+		} break;
+		case 2: {
+			using inner_t = std::decay_t<decltype(std::get<2>(from))>;
+			return std::is_convertible_v<inner_t, ToT>
+					|| std::is_constructible_v<ToT, inner_t>;
+		} break;
+		case 3: {
+			using inner_t = std::decay_t<decltype(std::get<3>(from))>;
+			static_assert(std::is_same_v<inner_t, std::string>,
+					"can_cast : Need to update switch case.");
+
+			return std::is_convertible_v<inner_t, ToT>
+					|| std::is_constructible_v<ToT, inner_t>;
+		} break;
+		case 4: {
+			using inner_t = std::decay_t<decltype(std::get<4>(from))>;
+			static_assert(std::is_same_v<inner_t, std::nullptr_t>,
+					"can_cast : Need to update switch case.");
+			return false;
+		} break;
+		default: {
+			assert(false);
+			return false;
+		} break;
+		}
+	}
+
+	template <class ToT>
+	[[nodiscard]] static bool can_convert(const variant_t& from) {
+		if (std::is_same_v<ToT, std::string_view>) {
+			// Cannot cast, needs back reference.
+			return false;
+		}
+
+		if (std::is_same_v<ToT, std::string>) {
+			return from.index() != 4;
+		}
+
+		switch (from.index()) {
+		case 0:
+			[[fallthrough]];
+		case 1:
+			[[fallthrough]];
+		case 2: {
+			return false;
+		} break;
+		case 3: {
+			return true;
+		} break;
+		case 4: {
+			return false;
+		} break;
+		default: {
+			assert(false);
+			return false;
+		} break;
+		}
+	}
+
+	template <class ToT>
+	[[nodiscard]] static ToT cast(const variant_t& from) {
+		switch (from.index()) {
+		case 0: {
+			using inner_t = std::decay_t<decltype(std::get<0>(from))>;
+			if constexpr (std::is_convertible_v<inner_t, ToT>
+					|| std::is_constructible_v<ToT, inner_t>) {
+				return ToT(std::get<0>(from));
+			}
+		} break;
+		case 1: {
+			using inner_t = std::decay_t<decltype(std::get<1>(from))>;
+			if constexpr (std::is_convertible_v<inner_t, ToT>
+					|| std::is_constructible_v<ToT, inner_t>) {
+				return ToT(std::get<1>(from));
+			}
+		} break;
+		case 2: {
+			using inner_t = std::decay_t<decltype(std::get<2>(from))>;
+			if constexpr (std::is_convertible_v<inner_t, ToT>
+					|| std::is_constructible_v<ToT, inner_t>) {
+				return ToT(std::get<2>(from));
+			}
+		} break;
+		case 3: {
+			using inner_t = std::decay_t<decltype(std::get<3>(from))>;
+			if constexpr (std::is_convertible_v<inner_t, ToT>
+					|| std::is_constructible_v<ToT, inner_t>) {
+				return ToT(std::get<3>(from));
+			}
+		} break;
+		case 4: {
+			using inner_t = std::decay_t<decltype(std::get<4>(from))>;
+			if constexpr (std::is_convertible_v<inner_t, ToT>
+					|| std::is_constructible_v<ToT, inner_t>) {
+				return ToT(std::get<4>(from));
+			}
+		} break;
+		default: {
+			assert(false);
+		} break;
+		}
+		return ToT{};
+	}
+
+	template <class ToT>
+	[[nodiscard]] static ToT convert(const variant_t& from) {
+		if constexpr (std::is_same_v<ToT, std::string>) {
+			return to_string(from);
+		} else {
+			variant_t new_v = from_string(std::get<std::string>(from));
+			assert(can_cast<ToT>(new_v));
+			return cast<ToT>(new_v);
+		}
+	}
+
+	template <class T>
+	[[nodiscard]] static variant_t make_variant(T&& t) {
+		using m_t = std::decay_t<T>;
+		using inner_t = decltype(to_variant_type<T>());
+		return variant_t{ inner_t(std::forward<T>(t)) };
+	}
+
 	// User provided default.
 	template <class T>
 	[[nodiscard]] return_overload operator|(const T& t) const&& {
@@ -286,29 +496,49 @@ struct return_overload {
 			return *this;
 		}
 
-		// Replace the bad value.
-		return return_overload{ variant_t{ t } };
+		// Return temporary pointing to user default.
+		return return_overload{ make_variant(t) };
+	}
+
+	// On non-const access, assign default if entry is invalid.
+	template <class T>
+	[[nodiscard]] return_overload operator|(const T& t) && {
+		if (_entry == nullptr) {
+			// Return temporary pointing to user default.
+			return return_overload{ make_variant(t) };
+		}
+
+		if (_entry->value.valueless_by_exception()
+				|| std::holds_alternative<std::nullptr_t>(_entry->value)) {
+			// We contain an invalid value, set user default.
+			return this->operator=(t);
+		}
+
+		using user_t = decltype(to_variant_type<T>());
+		if (!std::holds_alternative<user_t>(_entry->value)) {
+			// Mismatch between held type and user provided type.
+			if (can_cast<user_t>(_entry->value)) {
+				// If possible, cast to user demanded type.
+				_entry->value = cast<user_t>(_entry->value);
+				return *this;
+			}
+
+			if (can_convert<user_t>(_entry->value)) {
+				// Try to convert (to / from string).
+				_entry->value = convert<user_t>(_entry->value);
+				return *this;
+			}
+		}
+
+		// We contain a value of expected type, ignore user default.
+		return *this;
 	}
 
 	// User assignement.
 	template <class T>
-	return_overload& operator=(T&& t) && {
+	return_overload& operator=(T&& t) {
 		assert(_entry != nullptr);
-		using m_t = std::decay_t<T>;
-
-		if constexpr (std::is_same_v<m_t, bool>) {
-			_entry->value = t;
-		} else if constexpr (std::is_integral_v<m_t>
-				|| std::is_unsigned_v<m_t>) {
-			_entry->value = intmax_t(t);
-		} else if constexpr (std::is_floating_point_v<m_t>) {
-			_entry->value = float_t(t);
-		} else if constexpr (std::is_convertible_v<m_t, std::string>
-				|| std::is_constructible_v<std::string, m_t>) {
-			_entry->value = std::string(std::forward<T>(t));
-		} else {
-			_entry->value = std::forward<T>(t);
-		}
+		_entry->value = make_variant<T>(std::forward<T>(t));
 		return *this;
 	}
 
@@ -365,11 +595,11 @@ struct return_overload {
 		return doit<std::string>();
 	}
 
-	[[nodiscard]] operator std::string_view() const&& {
-		const std::string& str = doit<std::string>();
-		return std::string_view(str.begin(), str.end());
-	}
-
+	// No can do because of casting / conversions.
+	//[[nodiscard]] operator std::string_view() const&& {
+	//	const std::string& str = doit<std::string>();
+	//	return std::string_view(str.begin(), str.end());
+	//}
 	//[[nodiscard]] operator const char*() const&& {
 	//	const std::string& str = doit<std::string>();
 	//	return str.c_str();
@@ -383,17 +613,28 @@ struct return_overload {
 	}
 
 	template <class T>
-	[[nodiscard]] const auto& doit() const {
-		const variant_t& mvariant
-				= _entry == nullptr ? _user_variant : _entry->value;
+	[[nodiscard]] T doit() const {
+		if (_entry != nullptr) {
+			// Try as best we can to return stored value.
+			if (is_valid<T>(_entry->value)) {
+				// Everythin gucci.
+				return std::get<T>(_entry->value);
+			}
 
-		if (is_valid<T>(mvariant)) {
-			return std::get<T>(mvariant);
+			if (can_cast<T>(_entry->value)) {
+				// Will be re-cast in conversion function.
+				return cast<T>(_entry->value);
+			}
+
+			if (can_convert<T>(_entry->value)) {
+				// Try to convert (to / from string).
+				return convert<T>(_entry->value);
+			}
 		}
 
-		if (is_valid<T>(mvariant)) {
+		if (is_valid<T>(_user_variant)) {
 			// Invalid entry variant, defer to user provided default.
-			return std::get<T>(mvariant);
+			return std::get<T>(_user_variant);
 		}
 
 		// No default provided and value doesn't exist or couldn't be
@@ -457,51 +698,6 @@ struct section_ret {
 
 	SectionT* s = nullptr;
 };
-
-// Parse a string value to expected type.
-[[nodiscard]] variant_t parse_value(std::string_view str) {
-	size_t single_idx = str.find('\'');
-	size_t double_idx = str.find('"');
-	if (single_idx != str.npos && double_idx == str.npos) {
-		size_t single_end = str.find_last_of('\'');
-		return variant_t{ std::string(
-				str.begin() + single_idx + 1, str.begin() + single_end) };
-	} else if (double_idx != str.npos && single_idx == str.npos) {
-		size_t double_end = str.find_last_of('\"');
-		return variant_t{ std::string(
-				str.begin() + double_idx + 1, str.begin() + double_end) };
-	} else if (single_idx != str.npos && double_idx != str.npos) {
-		size_t begin = single_idx < double_idx ? single_idx : double_idx;
-		size_t single_end = str.find_last_of('\'');
-		size_t double_end = str.find_last_of('"');
-		size_t end = single_end > double_end ? single_end : double_end;
-		assert(end != str.npos);
-		return variant_t{ std::string(
-				str.begin() + begin + 1, str.begin() + end) };
-	} else if (str == "true") {
-		return variant_t{ true };
-	} else if (str == "false") {
-		return variant_t{ false };
-	} else if (str.find('.') != str.npos) {
-		float_t val = float_t(0);
-		std::from_chars_result res
-				= std::from_chars(str.data(), str.data() + str.size(), val);
-		if (res.ec == std::errc{}) {
-			return variant_t{ val };
-		} else {
-			return variant_t{ std::nullptr_t{} };
-		}
-	} else {
-		intmax_t val = intmax_t(0);
-		std::from_chars_result res
-				= std::from_chars(str.data(), str.data() + str.size(), val);
-		if (res.ec == std::errc{}) {
-			return variant_t{ val };
-		} else {
-			return variant_t{ std::nullptr_t{} };
-		}
-	}
-}
 
 // Sanitize user text, both from a security perspective and ini perspective.
 [[nodiscard]] std::string sanitize(const std::u32string& text) {
@@ -769,7 +965,7 @@ struct section_ret {
 			std::string_view str_value = std::string_view(
 					line.begin() + equal_idx + 1, line.end());
 
-			variant_t value = parse_value(str_value);
+			variant_t value = from_string(str_value);
 			entry_id_t new_entry_id = current_section->next_entry_id++;
 			current_section->entry_name_to_id.insert({
 					std::string{ entry_name },

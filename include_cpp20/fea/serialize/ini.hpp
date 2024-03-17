@@ -45,16 +45,23 @@ Entries are ordered by declaration order, not sorted alphabetically. Supports
 output comments. Supports automatic comments. When parsing an ini file, comments
 are dropped.
 
+Since ini files are expected to be edited by users, this format tries everything
+in its power not to fail or throw.
+
+Reading
 fea::ini uses return type overloads to read values. It uses tortellini style
 operator| for read default values.
+WARNING : The type provided by operator| is assumed to be the expected type.
+Conversions may occur on incorrect user data.
 
-When writing, use operator, to add comments.
+Writing
+When writing, use operator ',' to add comments.
 
 Supported types :
 - bool (true, false)
 - int (intmax_t)
 - floats (floatmax_t)
-- strings.
+- std::string
 
 Example :
 fea::ini f{ "file.ini" };
