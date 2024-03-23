@@ -1,6 +1,8 @@
-﻿#include <fea/terminal/pipe.hpp>
+﻿#include <chrono>
+#include <fea/terminal/pipe.hpp>
 #include <gtest/gtest.h>
 #include <string>
+#include <thread>
 
 extern int test_num;
 
@@ -9,6 +11,9 @@ const std::string expected = "l1 🙂\nl2\n<>\né\n";
 const std::wstring wexpected = L"l1 🙂\nl2\n<>\né\n";
 
 TEST(pipe, basics) {
+	// Are we too quick?
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
 	switch (test_num) {
 	case 0: {
 		std::string str = fea::read_pipe_text();
