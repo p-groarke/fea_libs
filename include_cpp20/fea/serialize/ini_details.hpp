@@ -305,7 +305,6 @@ inline std::string to_string(const section& s, bool var_help) {
 		fea::for_each_line(s.comment, [&](std::string_view line) {
 			ret += std::format(comment_fmt, line);
 		});
-		// ret += std::format(comment_fmt, s.comment);
 	}
 
 	if (!s.section_name.empty()) {
@@ -833,9 +832,6 @@ struct section_ret {
 			if (!(single_lit_idx || double_lit_idx
 						|| section_begin != line.npos)
 					&& is_space(c)) {
-				// if (single_lit_idx || double_lit_idx) {
-				//	str.push_back(U' ');
-				// }
 				continue;
 			}
 
