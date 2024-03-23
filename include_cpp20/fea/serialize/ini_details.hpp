@@ -281,7 +281,10 @@ inline std::string to_string(const entry& e, bool var_help) {
 
 	std::string ret;
 	if (!e.comment.empty()) {
-		ret += std::format(comment_fmt, e.comment);
+		ret += "\n";
+		fea::for_each_line(e.comment, [&](std::string_view line) {
+			ret += std::format(comment_fmt, line);
+		});
 	}
 
 	if (var_help) {
@@ -299,7 +302,10 @@ inline std::string to_string(const section& s, bool var_help) {
 
 	std::string ret;
 	if (!s.comment.empty()) {
-		ret += std::format(comment_fmt, s.comment);
+		fea::for_each_line(s.comment, [&](std::string_view line) {
+			ret += std::format(comment_fmt, line);
+		});
+		// ret += std::format(comment_fmt, s.comment);
 	}
 
 	if (!s.section_name.empty()) {
@@ -822,7 +828,11 @@ struct section_ret {
 					double_lit_idx = i;
 				}
 			}
-			if (!(single_lit_idx || double_lit_idx) && is_space(c)) {
+			// If inside string or section name, don't clean spaces.
+			// Otherwise, remove spaces.
+			if (!(single_lit_idx || double_lit_idx
+						|| section_begin != line.npos)
+					&& is_space(c)) {
 				// if (single_lit_idx || double_lit_idx) {
 				//	str.push_back(U' ');
 				// }
