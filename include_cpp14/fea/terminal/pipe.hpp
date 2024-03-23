@@ -32,6 +32,7 @@
  **/
 #pragma once
 #include "fea/terminal/translation_mode.hpp"
+#include "fea/utils/error.hpp"
 #include "fea/utils/platform.hpp"
 #include "fea/utils/scope.hpp"
 #include "fea/utils/unused.hpp"
