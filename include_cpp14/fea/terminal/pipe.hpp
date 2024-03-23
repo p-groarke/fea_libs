@@ -32,6 +32,7 @@
  **/
 #pragma once
 #include "fea/terminal/translation_mode.hpp"
+#include "fea/utils/error.hpp"
 #include "fea/utils/platform.hpp"
 #include "fea/utils/scope.hpp"
 #include "fea/utils/unused.hpp"
@@ -157,7 +158,11 @@ size_t available_pipe_bytes() {
 	} break;
 	}
 #else
-	ioctl(fileno(stdin), FIONREAD, &ret);
+	int n = 0;
+	if (ioctl(fileno(stdin), FIONREAD, &n) != 0) {
+		fea::maybe_throw_on_errno(__FUNCTION__, __LINE__);
+	}
+	ret = size_t(n);
 #endif
 
 	return ret;

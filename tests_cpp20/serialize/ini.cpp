@@ -58,6 +58,8 @@ a_string = "potato"
 
 		[test!][test~]]]]test
 shouldbemerged = true
+
+[section with spaces]
 )";
 
 TEST(ini, basics) {
@@ -68,6 +70,7 @@ TEST(ini, basics) {
 	EXPECT_TRUE(test.contains("🤣.bla"));
 	EXPECT_TRUE(test.contains("bad_section"));
 	EXPECT_TRUE(test.contains("type_tests"));
+	EXPECT_TRUE(test.contains("section with spaces"));
 	EXPECT_FALSE(test.contains("potato"));
 
 	EXPECT_TRUE(test.contains("", "global_var"));
@@ -155,7 +158,7 @@ TEST(ini, basics) {
 
 	// Writing.
 	{
-		test["bla"]["bla"] = true, "bla.bla comment";
+		test["bla"]["bla"] = true, "bla.bla\ncomment";
 		bool boolval = test["bla"]["bla"];
 		EXPECT_EQ(boolval, true);
 
@@ -269,7 +272,7 @@ TEST(ini, basics) {
 		std::string got = fea::to_string(test);
 		EXPECT_NE(got.find("; bla comment"), got.npos);
 		EXPECT_NE(got.find("; fla comment"), got.npos);
-		EXPECT_NE(got.find("; bla.bla comment"), got.npos);
+		EXPECT_NE(got.find("; bla.bla\n  ; comment"), got.npos);
 		EXPECT_NE(got.find("; bla.blee comment"), got.npos);
 		EXPECT_NE(got.find("; bla.flee comment"), got.npos);
 		EXPECT_NE(got.find("; fla.flou comment"), got.npos);

@@ -41,6 +41,8 @@
 /*
 A simple ini parser.
 
+TODO : Deal with const better : |= etc.
+
 Entries are ordered by declaration order, not sorted alphabetically. Supports
 output comments. Supports automatic comments. When parsing an ini file, comments
 are dropped.
