@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 namespace {
-FEA_STRING_ENUM(my_enum, unsigned, potato, tomato);
+FEA_STRING_ENUM(my_enum, unsigned, potato, tomato)
 
 TEST(enum_to_strings, to_string) {
 	using namespace std::literals::string_view_literals;

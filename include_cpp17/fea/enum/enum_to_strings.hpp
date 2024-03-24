@@ -35,6 +35,7 @@
 #include "fea/macros/literals.hpp"
 #include "fea/macros/macros.hpp"
 #include "fea/meta/return_overload.hpp"
+#include "fea/utils/platform.hpp"
 
 #include <string>
 #include <string_view>
@@ -62,6 +63,11 @@ inline my_enum from_string(...);
 
 See unit tests for examples.
 */
+#if FEA_MACOS
+// Clang complains about braces around lambdas, which is silly.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-braces"
+#endif
 
 #define FEA_DETAIL_LOOKUP_PAIR(name) { FEA_STRINGIFY(name), enum_type::name },
 #define FEA_DETAIL_WLOOKUP_PAIR(name) { FEA_WSTRINGIFY(name), enum_type::name },
@@ -167,3 +173,7 @@ See unit tests for examples.
 			[=]() -> const std::u32string& { return u32str_arr[e__]; }, \
 		}; \
 	}
+
+#if FEA_MACOS
+#pragma clang diagnostic pop
+#endif

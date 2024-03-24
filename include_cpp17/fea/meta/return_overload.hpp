@@ -49,26 +49,25 @@ See unit tests for examples.
 namespace fea {
 namespace detail {
 template <class T>
-using has_const_paren = decltype(std::declval<const T&>().operator()());
+using has_const_paren = decltype(std::declval<const T&>()());
 
 template <class T, bool IsConst>
 struct ro_expose_const;
 
 template <class T>
 struct ro_expose_const<T, true> : T {
-	using overload_t = decltype(std::declval<T>().operator()());
+	using overload_t = decltype(std::declval<T>()());
 
-	operator overload_t() const
-			noexcept(noexcept(std::declval<T>().operator()())) {
+	operator overload_t() const noexcept(noexcept(std::declval<T>()())) {
 		return T::operator()();
 	}
 };
 
 template <class T>
 struct ro_expose_const<T, false> : T {
-	using overload_t = decltype(std::declval<T>().operator()());
+	using overload_t = decltype(std::declval<T>()());
 
-	operator overload_t() noexcept(noexcept(std::declval<T>().operator()())) {
+	operator overload_t() noexcept(noexcept(std::declval<T>()())) {
 		return T::operator()();
 	}
 };
