@@ -60,27 +60,27 @@ TEST(return_overload, basics) {
 	EXPECT_EQ(str, "string");
 
 	// operator=
-#if !FEA_MACOS
 	c = example_func();
-#endif
 	uc = example_func();
 	s = example_func();
 	us = example_func();
 	i = example_func();
 	ui = example_func();
 	f = example_func();
-	str = example_func();
-
 #if !FEA_MACOS
-	EXPECT_EQ(c, 0_i8);
+	str = example_func();
 #endif
+
+	EXPECT_EQ(c, 0_i8);
 	EXPECT_EQ(uc, 1_u8);
 	EXPECT_EQ(s, 2_i16);
 	EXPECT_EQ(us, 3_u16);
 	EXPECT_EQ(i, 4_i32);
 	EXPECT_EQ(ui, 5_u32);
 	EXPECT_EQ(f, 6.f);
+#if !FEA_MACOS
 	EXPECT_EQ(str, "string");
+#endif
 }
 
 auto example_func(int mi) {
@@ -116,27 +116,27 @@ TEST(return_overload, args) {
 	EXPECT_EQ(str, "string42");
 
 	// operator=
-#if !FEA_MACOS
 	c = example_func(42);
-#endif
 	uc = example_func(42);
 	s = example_func(42);
 	us = example_func(42);
 	i = example_func(42);
 	ui = example_func(42);
 	f = example_func(42);
-	str = example_func(42);
-
 #if !FEA_MACOS
-	EXPECT_EQ(c, 42_i8);
+	str = example_func(42);
 #endif
+
+	EXPECT_EQ(c, 42_i8);
 	EXPECT_EQ(uc, 43_u8);
 	EXPECT_EQ(s, 44_i16);
 	EXPECT_EQ(us, 45_u16);
 	EXPECT_EQ(i, 46_i32);
 	EXPECT_EQ(ui, 47_u32);
 	EXPECT_EQ(f, 48.f);
+#if !FEA_MACOS
 	EXPECT_EQ(str, "string42");
+#endif
 }
 
 struct obj {
@@ -267,27 +267,27 @@ TEST(return_overload, struct_basics) {
 		EXPECT_EQ(str, "string");
 
 		// operator=
-#if !FEA_MACOS
 		c = o.func();
-#endif
 		uc = o.func();
 		s = o.func();
 		us = o.func();
 		i = o.func();
 		ui = o.func();
 		f = o.func();
-		str = o.func();
-
 #if !FEA_MACOS
-		EXPECT_EQ(c, 0_i8);
+		str = o.func();
 #endif
+
+		EXPECT_EQ(c, 0_i8);
 		EXPECT_EQ(uc, 1_u8);
 		EXPECT_EQ(s, 2_i16);
 		EXPECT_EQ(us, 3_u16);
 		EXPECT_EQ(i, 4_i32);
 		EXPECT_EQ(ui, 5_u32);
 		EXPECT_EQ(f, 6.f);
+#if !FEA_MACOS
 		EXPECT_EQ(str, "string");
+#endif
 	}
 
 	{
@@ -321,38 +321,38 @@ TEST(return_overload, struct_basics) {
 		EXPECT_EQ(o.str, "string string");
 
 		// operator=
-#if !FEA_MACOS
 		c = o.func();
-#endif
 		uc = o.func();
 		s = o.func();
 		us = o.func();
 		i = o.func();
 		ui = o.func();
 		f = o.func();
-		str = o.func();
-
 #if !FEA_MACOS
-		EXPECT_EQ(c, 20_i8);
+		str = o.func();
 #endif
+
+		EXPECT_EQ(c, 20_i8);
 		EXPECT_EQ(uc, 21_u8);
 		EXPECT_EQ(s, 22_i16);
 		EXPECT_EQ(us, 23_u16);
 		EXPECT_EQ(i, 24_i32);
 		EXPECT_EQ(ui, 25_u32);
 		EXPECT_EQ(f, 26.f);
-		EXPECT_EQ(str, "string string string");
-
 #if !FEA_MACOS
-		EXPECT_EQ(o.c, 20_i8);
+		EXPECT_EQ(str, "string string string");
 #endif
+
+		EXPECT_EQ(o.c, 20_i8);
 		EXPECT_EQ(o.uc, 21_u8);
 		EXPECT_EQ(o.s, 22_i16);
 		EXPECT_EQ(o.us, 23_u16);
 		EXPECT_EQ(o.i, 24_i32);
 		EXPECT_EQ(o.ui, 25_u32);
 		EXPECT_EQ(o.f, 26.f);
+#if !FEA_MACOS
 		EXPECT_EQ(o.str, "string string string");
+#endif
 	}
 }
 
