@@ -68,18 +68,18 @@ See unit tests for examples.
 // Clang complains about braces around lambdas / initializers, whether they are
 // present or not.
 
-// clang-format off
 #define FEA_DETAIL_CLANG_BUG_BEGIN \
-#pragma clang diagnostic push \
-#pragma clang diagnostic ignored "-Wmissing-braces"
-// clang-format on
+	_Pragma("clang diagnostic push"); \
+	_Pragma("clang diagnostic ignored \"-Wmissing-braces\"")
 
-#define FEA_DETAIL_CLANG_BUG_END #pragma clang diagnostic pop
+#define FEA_DETAIL_CLANG_BUG_END _Pragma("clang diagnostic pop")
 #else
 #define FEA_DETAIL_CLANG_BUG_BEGIN
 #define FEA_DETAIL_CLANG_BUG_END
 #endif
 
+// Used internally.
+// Creates pairs of { "name", enum_type::name } for unordered_map.
 #define FEA_DETAIL_LOOKUP_PAIR(name) { FEA_STRINGIFY(name), enum_type::name },
 #define FEA_DETAIL_WLOOKUP_PAIR(name) { FEA_WSTRINGIFY(name), enum_type::name },
 #define FEA_DETAIL_U16LOOKUP_PAIR(name) \
