@@ -19,6 +19,11 @@ option(FEA_CMAKE_LOCAL "Use local fea_cmake repo. Searches for '../fea_cmake'" O
 option(FEA_WITH_TBB "Pull TBB (2020.3) and use it." On)
 option(FEA_WITH_ONETBB "Pull oneTBB (2020.10.0) and use it." Off)
 
+if (FEA_WITH_ONETBB)
+	# We prioritize onetbb throughout, but use the same defines in codebase.
+	set(FEA_WITH_TBB On)
+endif()
+
 # C++ version.
 if ("cxx_std_20" IN_LIST CMAKE_CXX_COMPILE_FEATURES AND NOT FEA_CPP17 AND NOT FEA_CPP14)
 	set(CMAKE_CXX_STANDARD 20)

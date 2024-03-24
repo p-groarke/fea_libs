@@ -289,7 +289,43 @@ FEA_INLINE_VAR constexpr platform_t platform = platform_t::solaris;
 
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::windows;
 
+#else
+FEA_INLINE_VAR constexpr platform_t platform = platform_t::count;
+#endif
+
+#if !defined(_WIN32) \
+		&& (defined(__unix__) || defined(__unix) \
+				|| (defined(__APPLE__) && defined(__MACH__)) \
+				|| defined(__CYGWIN__))
+} // namespace fea
+#include <unistd.h>
+namespace fea {
+
+#if defined(_POSIX_VERSION)
+#undef FEA_POSIX
+#define FEA_POSIX 1
+#undef FEA_UNIX
+#define FEA_UNIX 1
+
+FEA_INLINE_VAR constexpr platform_group_t platform_group
+		= platform_group_t::posix | platform_group_t::unixx;
+
+#else
+#undef FEA_UNIX
+#define FEA_UNIX 1
+
+FEA_INLINE_VAR constexpr platform_group_t platform_group
+		= platform_group_t::unixx;
+#endif
+
+#else
+FEA_INLINE_VAR constexpr platform_group_t platform_group
+		= platform_group_t::count;
+#endif
+
+
 // Nicer VS versions.
+#if FEA_WINDOWS
 #undef FEA_VS2022
 #undef FEA_VS2019
 #undef FEA_VS2017
@@ -336,39 +372,22 @@ FEA_INLINE_VAR constexpr platform_t platform = platform_t::windows;
 #undef FEA_VSYEAR
 #define FEA_VSYEAR 2015
 #endif
-
-#else
-FEA_INLINE_VAR constexpr platform_t platform = platform_t::count;
 #endif
 
-#if !defined(_WIN32) \
-		&& (defined(__unix__) || defined(__unix) \
-				|| (defined(__APPLE__) && defined(__MACH__)) \
-				|| defined(__CYGWIN__))
-} // namespace fea
-#include <unistd.h>
-namespace fea {
 
-#if defined(_POSIX_VERSION)
-#undef FEA_POSIX
-#define FEA_POSIX 1
-#undef FEA_UNIX
-#define FEA_UNIX 1
-
-FEA_INLINE_VAR constexpr platform_group_t platform_group
-		= platform_group_t::posix | platform_group_t::unixx;
-
+// x86 vs. arm architecture.
+#undef FEA_ARM
+#undef FEA_X86
+#define FEA_ARM 0
+#define FEA_X86 0
+#if defined(__arm__) || defined(__arm) || defined(__arm64__) \
+		|| defined(__arm64) \
+		|| (defined(TARGET_CPU_ARM64) && TARGET_CPU_ARM64 == 1)
+#undef FEA_ARM
+#define FEA_ARM 1
 #else
-#undef FEA_UNIX
-#define FEA_UNIX 1
-
-FEA_INLINE_VAR constexpr platform_group_t platform_group
-		= platform_group_t::unixx;
-#endif
-
-#else
-FEA_INLINE_VAR constexpr platform_group_t platform_group
-		= platform_group_t::count;
+#undef FEA_X86
+#define FEA_X86 1
 #endif
 
 
