@@ -357,19 +357,13 @@ FEA_INLINE_VAR constexpr platform_group_t platform_group
 #if _MSC_VER >= 1930 && _MSC_VER < 1940
 #undef FEA_DETAIL_VS_YEAR
 #define FEA_DETAIL_VS_YEAR 2022
-#endif
-
-#if _MSC_VER >= 1920 && _MSC_VER < 1930
+#elif _MSC_VER >= 1920 && _MSC_VER < 1930
 #undef FEA_DETAIL_VS_YEAR
 #define FEA_DETAIL_VS_YEAR 2019
-#endif
-
-#if _MSC_VER >= 1910 && _MSC_VER < 1920
+#elif _MSC_VER >= 1910 && _MSC_VER < 1920
 #undef FEA_DETAIL_VS_YEAR
 #define FEA_DETAIL_VS_YEAR 2017
-#endif
-
-#if _MSC_VER >= 1900 && _MSC_VER < 1910
+#elif _MSC_VER >= 1900 && _MSC_VER < 1910
 #undef FEA_DETAIL_VS_YEAR
 #define FEA_DETAIL_VS_YEAR 2015
 #endif

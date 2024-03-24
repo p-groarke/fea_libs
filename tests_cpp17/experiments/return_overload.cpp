@@ -432,6 +432,43 @@ TEST(return_overload, string_stringview) {
 	EXPECT_EQ(sv, "sv");
 	EXPECT_EQ(str, "string");
 }
+
+// Test the inner-workings.
+#define ERROR_MSG "return_overload.cpp : Unit test failed."
+template <class T>
+using is_char_const = decltype(std::declval<const T&>().operator char());
+template <class T>
+using is_short_const = decltype(std::declval<const T&>().operator short());
+template <class T>
+using is_int_const = decltype(std::declval<const T&>().operator int());
+template <class T>
+using is_float_const = decltype(std::declval<const T&>().operator float());
+
+TEST(return_overload, subtleties) {
+	auto r = fea::return_overload{
+		[]() noexcept -> char { return 42; },
+		[v = 42]() mutable noexcept -> short {
+			++v;
+			return 42;
+		},
+		[]() -> int { return 42; },
+		[v = 42]() mutable -> float {
+			++v;
+			return 42;
+		},
+	};
+	using ret_t = std::decay_t<decltype(r)>;
+
+	static_assert(noexcept(r.operator char()), ERROR_MSG);
+	static_assert(noexcept(r.operator short()), ERROR_MSG);
+	static_assert(!noexcept(r.operator int()), ERROR_MSG);
+	static_assert(!noexcept(r.operator float()), ERROR_MSG);
+
+	static_assert(fea::is_detected_v<is_char_const, ret_t>, ERROR_MSG);
+	static_assert(!fea::is_detected_v<is_short_const, ret_t>, ERROR_MSG);
+	static_assert(fea::is_detected_v<is_int_const, ret_t>, ERROR_MSG);
+	static_assert(!fea::is_detected_v<is_float_const, ret_t>, ERROR_MSG);
+}
 } // namespace
 
 #if FEA_MACOS

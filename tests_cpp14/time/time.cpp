@@ -157,36 +157,19 @@ TEST(time, basics) {
 #if FEA_CPP17
 	{
 		date::sys_days d{};
-		std::string s = fea::suffixed_day(d);
+		std::string_view s = fea::suffixed_day(d);
 		EXPECT_EQ("1st", s);
 
 		d += date::days{ 1 };
-		std::wstring s2 = fea::suffixed_day(d);
+		std::wstring_view s2 = fea::suffixed_day(d);
 		EXPECT_EQ(L"2nd", s2);
 
 		d += date::days{ 1 };
-		std::u16string s3 = fea::suffixed_day(d);
+		std::u16string_view s3 = fea::suffixed_day(d);
 		EXPECT_EQ(u"3rd", s3);
 
 		d += date::days{ 1 };
-		std::u32string s4 = fea::suffixed_day(d);
-		EXPECT_EQ(U"4th", s4);
-	}
-	{
-		date::sys_days d{};
-		const std::string& s = fea::suffixed_day(d);
-		EXPECT_EQ("1st", s);
-
-		d += date::days{ 1 };
-		const std::wstring& s2 = fea::suffixed_day(d);
-		EXPECT_EQ(L"2nd", s2);
-
-		d += date::days{ 1 };
-		const std::u16string& s3 = fea::suffixed_day(d);
-		EXPECT_EQ(u"3rd", s3);
-
-		d += date::days{ 1 };
-		const std::u32string& s4 = fea::suffixed_day(d);
+		std::u32string_view s4 = fea::suffixed_day(d);
 		EXPECT_EQ(U"4th", s4);
 	}
 #endif
