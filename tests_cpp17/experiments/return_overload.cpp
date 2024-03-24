@@ -7,6 +7,13 @@
 
 using namespace fea::literals;
 
+#if FEA_MACOS
+// Clang complains about braces around lambdas, which is a bug (potentially
+// fixed in recent versions).
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-braces"
+#endif
+
 namespace {
 auto example_func() {
 	return fea::return_overload{
@@ -387,3 +394,7 @@ TEST(return_overload, string_stringview) {
 	EXPECT_EQ(str, "string");
 }
 } // namespace
+
+#if FEA_MACOS
+#pragma clang diagnostic pop
+#endif
