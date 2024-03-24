@@ -15,10 +15,19 @@ using namespace fea::literals;
 #endif
 
 namespace {
+#if !FEA_MACOS
+#define DISABLE_MAC(...) __VA_ARGS__
+#else
+#define DISABLE_MAC(...)
+#endif
+
 auto example_func() {
+	// clang-format off
 	return fea::return_overload{
 		// When overloading with both char and std::string,
-		// use signed char to disambiguate std::string constructor.
+		// use signed char to disambiguate std::string operator=.
+		// On apple-clang, this doesn't work, which means
+		// you cannot mix std::string and chars in that situation.
 		[]() -> signed char { return 0; },
 		[]() -> unsigned char { return 1; },
 		[]() -> short { return 2; },
@@ -28,6 +37,7 @@ auto example_func() {
 		[]() -> float { return 6.f; },
 		[]() -> std::string { return "string"; },
 	};
+	// clang-format on
 }
 
 TEST(return_overload, basics) {
@@ -50,7 +60,9 @@ TEST(return_overload, basics) {
 	EXPECT_EQ(str, "string");
 
 	// operator=
+#if !FEA_MACOS
 	c = example_func();
+#endif
 	uc = example_func();
 	s = example_func();
 	us = example_func();
@@ -59,7 +71,9 @@ TEST(return_overload, basics) {
 	f = example_func();
 	str = example_func();
 
+#if !FEA_MACOS
 	EXPECT_EQ(c, 0_i8);
+#endif
 	EXPECT_EQ(uc, 1_u8);
 	EXPECT_EQ(s, 2_i16);
 	EXPECT_EQ(us, 3_u16);
@@ -102,7 +116,9 @@ TEST(return_overload, args) {
 	EXPECT_EQ(str, "string42");
 
 	// operator=
+#if !FEA_MACOS
 	c = example_func(42);
+#endif
 	uc = example_func(42);
 	s = example_func(42);
 	us = example_func(42);
@@ -111,7 +127,9 @@ TEST(return_overload, args) {
 	f = example_func(42);
 	str = example_func(42);
 
+#if !FEA_MACOS
 	EXPECT_EQ(c, 42_i8);
+#endif
 	EXPECT_EQ(uc, 43_u8);
 	EXPECT_EQ(s, 44_i16);
 	EXPECT_EQ(us, 45_u16);
@@ -249,7 +267,9 @@ TEST(return_overload, struct_basics) {
 		EXPECT_EQ(str, "string");
 
 		// operator=
+#if !FEA_MACOS
 		c = o.func();
+#endif
 		uc = o.func();
 		s = o.func();
 		us = o.func();
@@ -258,7 +278,9 @@ TEST(return_overload, struct_basics) {
 		f = o.func();
 		str = o.func();
 
+#if !FEA_MACOS
 		EXPECT_EQ(c, 0_i8);
+#endif
 		EXPECT_EQ(uc, 1_u8);
 		EXPECT_EQ(s, 2_i16);
 		EXPECT_EQ(us, 3_u16);
@@ -299,7 +321,9 @@ TEST(return_overload, struct_basics) {
 		EXPECT_EQ(o.str, "string string");
 
 		// operator=
+#if !FEA_MACOS
 		c = o.func();
+#endif
 		uc = o.func();
 		s = o.func();
 		us = o.func();
@@ -308,7 +332,9 @@ TEST(return_overload, struct_basics) {
 		f = o.func();
 		str = o.func();
 
+#if !FEA_MACOS
 		EXPECT_EQ(c, 20_i8);
+#endif
 		EXPECT_EQ(uc, 21_u8);
 		EXPECT_EQ(s, 22_i16);
 		EXPECT_EQ(us, 23_u16);
@@ -317,7 +343,9 @@ TEST(return_overload, struct_basics) {
 		EXPECT_EQ(f, 26.f);
 		EXPECT_EQ(str, "string string string");
 
+#if !FEA_MACOS
 		EXPECT_EQ(o.c, 20_i8);
+#endif
 		EXPECT_EQ(o.uc, 21_u8);
 		EXPECT_EQ(o.s, 22_i16);
 		EXPECT_EQ(o.us, 23_u16);
