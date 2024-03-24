@@ -61,7 +61,7 @@ TEST(return_overload, basics) {
 	i = example_func();
 	ui = example_func();
 	f = example_func();
-#if !FEA_MACOS
+#if !FEA_POSIX
 	str = example_func();
 #endif
 
@@ -72,7 +72,7 @@ TEST(return_overload, basics) {
 	EXPECT_EQ(i, 4_i32);
 	EXPECT_EQ(ui, 5_u32);
 	EXPECT_EQ(f, 6.f);
-#if !FEA_MACOS
+#if !FEA_POSIX
 	EXPECT_EQ(str, "string");
 #endif
 }
@@ -117,7 +117,7 @@ TEST(return_overload, args) {
 	i = example_func(42);
 	ui = example_func(42);
 	f = example_func(42);
-#if !FEA_MACOS
+#if !FEA_POSIX
 	str = example_func(42);
 #endif
 
@@ -128,7 +128,7 @@ TEST(return_overload, args) {
 	EXPECT_EQ(i, 46_i32);
 	EXPECT_EQ(ui, 47_u32);
 	EXPECT_EQ(f, 48.f);
-#if !FEA_MACOS
+#if !FEA_POSIX
 	EXPECT_EQ(str, "string42");
 #endif
 }
@@ -284,7 +284,7 @@ TEST(return_overload, struct_basics) {
 		i = o.func();
 		ui = o.func();
 		f = o.func();
-#if !FEA_MACOS
+#if !FEA_POSIX
 		str = o.func();
 #endif
 
@@ -295,7 +295,7 @@ TEST(return_overload, struct_basics) {
 		EXPECT_EQ(i, 4_i32);
 		EXPECT_EQ(ui, 5_u32);
 		EXPECT_EQ(f, 6.f);
-#if !FEA_MACOS
+#if !FEA_POSIX
 		EXPECT_EQ(str, "string");
 #endif
 	}
@@ -338,7 +338,7 @@ TEST(return_overload, struct_basics) {
 		i = o.func();
 		ui = o.func();
 		f = o.func();
-#if !FEA_MACOS
+#if !FEA_POSIX
 		str = o.func();
 #endif
 
@@ -349,7 +349,7 @@ TEST(return_overload, struct_basics) {
 		EXPECT_EQ(i, 24_i32);
 		EXPECT_EQ(ui, 25_u32);
 		EXPECT_EQ(f, 26.f);
-#if !FEA_MACOS
+#if !FEA_POSIX
 		EXPECT_EQ(str, "string string string");
 #endif
 
@@ -360,7 +360,7 @@ TEST(return_overload, struct_basics) {
 		EXPECT_EQ(o.i, 24_i32);
 		EXPECT_EQ(o.ui, 25_u32);
 		EXPECT_EQ(o.f, 26.f);
-#if !FEA_MACOS
+#if !FEA_POSIX
 		EXPECT_EQ(o.str, "string string string");
 #endif
 	}
