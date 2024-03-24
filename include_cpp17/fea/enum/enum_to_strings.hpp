@@ -63,11 +63,12 @@ inline my_enum from_string(...);
 
 See unit tests for examples.
 */
-// #if FEA_MACOS
-//// Clang complains about braces around lambdas, which is silly.
-// #pragma clang diagnostic push
-// #pragma clang diagnostic ignored "-Wmissing-braces"
-// #endif
+
+#if FEA_MACOS
+// Clang complains about braces around lambdas / initializers, which is silly.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-braces"
+#endif
 
 // Silence clang?
 #define FEA_DETAIL_STRINGIFY_SV(name) std::string_view{ FEA_STRINGIFY(name) },
@@ -100,31 +101,29 @@ See unit tests for examples.
 	enum class enum_t : underlying_t { __VA_ARGS__ }; \
 	/* Implement to_string for all supported string types. */ \
 	inline auto to_string(enum_t e__) { \
-		using namespace std::literals::string_view_literals; \
 		static constexpr size_t N = FEA_SIZEOF_VAARGS(__VA_ARGS__); \
 		static constexpr fea::enum_array<std::string_view, enum_t, N> sv_arr{ \
-			FEA_FOR_EACH(FEA_DETAIL_STRINGIFY_SV, __VA_ARGS__) \
+			FEA_FOR_EACH(FEA_STRINGIFY_COMMA, __VA_ARGS__) \
 		}; \
 		static constexpr fea::enum_array<std::wstring_view, enum_t, N> \
-				wsv_arr{ FEA_FOR_EACH( \
-						FEA_DETAIL_WSTRINGIFY_SV, __VA_ARGS__) }; \
+				wsv_arr{ FEA_FOR_EACH(FEA_WSTRINGIFY_COMMA, __VA_ARGS__) }; \
 		static constexpr fea::enum_array<std::u16string_view, enum_t, N> \
 				u16sv_arr{ FEA_FOR_EACH( \
-						FEA_DETAIL_U16STRINGIFY_SV, __VA_ARGS__) }; \
+						FEA_U16STRINGIFY_COMMA, __VA_ARGS__) }; \
 		static constexpr fea::enum_array<std::u32string_view, enum_t, N> \
 				u32sv_arr{ FEA_FOR_EACH( \
-						FEA_DETAIL_U32STRINGIFY_SV, __VA_ARGS__) }; \
+						FEA_U32STRINGIFY_COMMA, __VA_ARGS__) }; \
 		static const fea::enum_array<std::string, enum_t, N> str_arr{ \
-			FEA_FOR_EACH(FEA_DETAIL_STRINGIFY_STR, __VA_ARGS__) \
+			FEA_FOR_EACH(FEA_STRINGIFY_COMMA, __VA_ARGS__) \
 		}; \
 		static const fea::enum_array<std::wstring, enum_t, N> wstr_arr{ \
-			FEA_FOR_EACH(FEA_DETAIL_WSTRINGIFY_STR, __VA_ARGS__) \
+			FEA_FOR_EACH(FEA_WSTRINGIFY_COMMA, __VA_ARGS__) \
 		}; \
 		static const fea::enum_array<std::u16string, enum_t, N> u16str_arr{ \
-			FEA_FOR_EACH(FEA_DETAIL_U16STRINGIFY_STR, __VA_ARGS__) \
+			FEA_FOR_EACH(FEA_U16STRINGIFY_COMMA, __VA_ARGS__) \
 		}; \
 		static const fea::enum_array<std::u32string, enum_t, N> u32str_arr{ \
-			FEA_FOR_EACH(FEA_DETAIL_U32STRINGIFY_STR, __VA_ARGS__) \
+			FEA_FOR_EACH(FEA_U32STRINGIFY_COMMA, __VA_ARGS__) \
 		}; \
 		return fea::return_overload{ \
 			[=]() -> std::string_view { return sv_arr[e__]; }, \
@@ -195,6 +194,6 @@ See unit tests for examples.
 		return lookup.at(s__); \
 	}
 
-// #if FEA_MACOS
-// #pragma clang diagnostic pop
-// #endif
+#if FEA_MACOS
+#pragma clang diagnostic pop
+#endif
