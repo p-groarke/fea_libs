@@ -63,11 +63,26 @@ inline my_enum from_string(...);
 
 See unit tests for examples.
 */
-#if FEA_MACOS
-// Clang complains about braces around lambdas, which is silly.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-braces"
-#endif
+// #if FEA_MACOS
+//// Clang complains about braces around lambdas, which is silly.
+// #pragma clang diagnostic push
+// #pragma clang diagnostic ignored "-Wmissing-braces"
+// #endif
+
+// Silence clang?
+#define FEA_DETAIL_STRINGIFY_SV(name) std::string_view{ FEA_STRINGIFY(name) },
+#define FEA_DETAIL_WSTRINGIFY_SV(name) \
+	std::wstring_view{ FEA_WSTRINGIFY(name) },
+#define FEA_DETAIL_U16STRINGIFY_SV(name) \
+	std::u16string_view{ FEA_U16STRINGIFY(name) },
+#define FEA_DETAIL_U32STRINGIFY_SV(name) \
+	std::u32string_view{ FEA_U32STRINGIFY(name) },
+#define FEA_DETAIL_STRINGIFY_STR(name) std::string{ FEA_STRINGIFY(name) },
+#define FEA_DETAIL_WSTRINGIFY_STR(name) std::wstring{ FEA_WSTRINGIFY(name) },
+#define FEA_DETAIL_U16STRINGIFY_STR(name) \
+	std::u16string{ FEA_U16STRINGIFY(name) },
+#define FEA_DETAIL_U32STRINGIFY_STR(name) \
+	std::u32string{ FEA_U32STRINGIFY(name) },
 
 #define FEA_DETAIL_LOOKUP_PAIR(name) { FEA_STRINGIFY(name), enum_type::name },
 #define FEA_DETAIL_WLOOKUP_PAIR(name) { FEA_WSTRINGIFY(name), enum_type::name },
@@ -79,6 +94,45 @@ See unit tests for examples.
 #define FEA_STRING_ENUM(enum_t, underlying_t, ...) \
 	/* Declare your enum. */ \
 	enum class enum_t : underlying_t { __VA_ARGS__ }; \
+	/* Implement to_string for all supported string types. */ \
+	inline auto to_string(enum_t e__) { \
+		using namespace std::literals::string_view_literals; \
+		static constexpr size_t N = FEA_SIZEOF_VAARGS(__VA_ARGS__); \
+		static constexpr fea::enum_array<std::string_view, enum_t, N> sv_arr{ \
+			FEA_FOR_EACH(FEA_DETAIL_STRINGIFY_SV, __VA_ARGS__) \
+		}; \
+		static constexpr fea::enum_array<std::wstring_view, enum_t, N> \
+				wsv_arr{ FEA_FOR_EACH( \
+						FEA_DETAIL_WSTRINGIFY_SV, __VA_ARGS__) }; \
+		static constexpr fea::enum_array<std::u16string_view, enum_t, N> \
+				u16sv_arr{ FEA_FOR_EACH( \
+						FEA_DETAIL_U16STRINGIFY_SV, __VA_ARGS__) }; \
+		static constexpr fea::enum_array<std::u32string_view, enum_t, N> \
+				u32sv_arr{ FEA_FOR_EACH( \
+						FEA_DETAIL_U32STRINGIFY_SV, __VA_ARGS__) }; \
+		static const fea::enum_array<std::string, enum_t, N> str_arr{ \
+			FEA_FOR_EACH(FEA_DETAIL_STRINGIFY_STR, __VA_ARGS__) \
+		}; \
+		static const fea::enum_array<std::wstring, enum_t, N> wstr_arr{ \
+			FEA_FOR_EACH(FEA_DETAIL_WSTRINGIFY_STR, __VA_ARGS__) \
+		}; \
+		static const fea::enum_array<std::u16string, enum_t, N> u16str_arr{ \
+			FEA_FOR_EACH(FEA_DETAIL_U16STRINGIFY_STR, __VA_ARGS__) \
+		}; \
+		static const fea::enum_array<std::u32string, enum_t, N> u32str_arr{ \
+			FEA_FOR_EACH(FEA_DETAIL_U32STRINGIFY_STR, __VA_ARGS__) \
+		}; \
+		return fea::return_overload{ \
+			[=]() -> std::string_view { return sv_arr[e__]; }, \
+			[=]() -> std::wstring_view { return wsv_arr[e__]; }, \
+			[=]() -> std::u16string_view { return u16sv_arr[e__]; }, \
+			[=]() -> std::u32string_view { return u32sv_arr[e__]; }, \
+			[=]() -> const std::string& { return str_arr[e__]; }, \
+			[=]() -> const std::wstring& { return wstr_arr[e__]; }, \
+			[=]() -> const std::u16string& { return u16str_arr[e__]; }, \
+			[=]() -> const std::u32string& { return u32str_arr[e__]; }, \
+		}; \
+	} \
 	/* Implement from_string for all supported string types. */ \
 	inline enum_t from_string(std::string_view s__) { \
 		using enum_type = enum_t; \
@@ -135,45 +189,8 @@ See unit tests for examples.
 			FEA_FOR_EACH(FEA_DETAIL_U32LOOKUP_PAIR, __VA_ARGS__) \
 		}; \
 		return lookup.at(s__); \
-	} \
-	/* Implement to_string for all supported string types. */ \
-	inline auto to_string(enum_t e__) { \
-		static constexpr size_t N = FEA_SIZEOF_VAARGS(__VA_ARGS__); \
-		static constexpr fea::enum_array<std::string_view, enum_t, N> sv_arr{ \
-			FEA_FOR_EACH(FEA_STRINGIFY_COMMA, __VA_ARGS__) \
-		}; \
-		static constexpr fea::enum_array<std::wstring_view, enum_t, N> \
-				wsv_arr{ FEA_FOR_EACH(FEA_WSTRINGIFY_COMMA, __VA_ARGS__) }; \
-		static constexpr fea::enum_array<std::u16string_view, enum_t, N> \
-				u16sv_arr{ FEA_FOR_EACH( \
-						FEA_U16STRINGIFY_COMMA, __VA_ARGS__) }; \
-		static constexpr fea::enum_array<std::u32string_view, enum_t, N> \
-				u32sv_arr{ FEA_FOR_EACH( \
-						FEA_U32STRINGIFY_COMMA, __VA_ARGS__) }; \
-		static const fea::enum_array<std::string, enum_t, N> str_arr{ \
-			FEA_FOR_EACH(FEA_STRINGIFY_COMMA, __VA_ARGS__) \
-		}; \
-		static const fea::enum_array<std::wstring, enum_t, N> wstr_arr{ \
-			FEA_FOR_EACH(FEA_WSTRINGIFY_COMMA, __VA_ARGS__) \
-		}; \
-		static const fea::enum_array<std::u16string, enum_t, N> u16str_arr{ \
-			FEA_FOR_EACH(FEA_U16STRINGIFY_COMMA, __VA_ARGS__) \
-		}; \
-		static const fea::enum_array<std::u32string, enum_t, N> u32str_arr{ \
-			FEA_FOR_EACH(FEA_U32STRINGIFY_COMMA, __VA_ARGS__) \
-		}; \
-		return fea::return_overload{ \
-			[=]() -> std::string_view { return sv_arr[e__]; }, \
-			[=]() -> std::wstring_view { return wsv_arr[e__]; }, \
-			[=]() -> std::u16string_view { return u16sv_arr[e__]; }, \
-			[=]() -> std::u32string_view { return u32sv_arr[e__]; }, \
-			[=]() -> const std::string& { return str_arr[e__]; }, \
-			[=]() -> const std::wstring& { return wstr_arr[e__]; }, \
-			[=]() -> const std::u16string& { return u16str_arr[e__]; }, \
-			[=]() -> const std::u32string& { return u32str_arr[e__]; }, \
-		}; \
 	}
 
-#if FEA_MACOS
-#pragma clang diagnostic pop
-#endif
+// #if FEA_MACOS
+// #pragma clang diagnostic pop
+// #endif

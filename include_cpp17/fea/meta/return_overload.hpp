@@ -46,19 +46,27 @@ With return_overload, you can overload by return type.
 See unit tests for examples.
 */
 
+// #if FEA_MACOS
+//// Clang complains about braces around lambdas, which is silly.
+// #pragma clang diagnostic push
+// #pragma clang diagnostic ignored "-Wmissing-braces"
+// #endif
+
 namespace fea {
 namespace detail {
 template <class T>
 using has_const_paren = decltype(std::declval<const T&>()());
 
-template <class T, bool IsConst>
+template <class, bool IsConst>
 struct ro_expose_const;
 
 template <class T>
 struct ro_expose_const<T, true> : T {
 	using overload_t = decltype(std::declval<T>()());
 
-	operator overload_t() const noexcept(noexcept(std::declval<T>()())) {
+	// Fix VS2017?
+	operator decltype(std::declval<T>()())() const
+			noexcept(noexcept(std::declval<T>()())) {
 		return T::operator()();
 	}
 };
@@ -67,7 +75,8 @@ template <class T>
 struct ro_expose_const<T, false> : T {
 	using overload_t = decltype(std::declval<T>()());
 
-	operator overload_t() noexcept(noexcept(std::declval<T>()())) {
+	operator decltype(std::declval<T>()())() noexcept(
+			noexcept(std::declval<T>()())) {
 		return T::operator()();
 	}
 };
@@ -80,6 +89,11 @@ struct return_overload
 	using overload_t = typename base_t::overload_t;
 	using base_t::operator typename base_t::overload_t;
 };
+
+// Fix gcc?
+template <class T>
+using moverloaded_t = typename detail::return_overload<T>::overload_t;
+
 } // namespace detail
 
 template <class... Ts>
@@ -91,5 +105,13 @@ struct return_overload : detail::return_overload<Ts>... {
 
 template <class... Ts>
 return_overload(Ts...) -> return_overload<Ts...>;
+// template <class... Ts>
+// return_overload(const Ts&...) -> return_overload<Ts...>;
+// template <class... Ts>
+// return_overload(Ts&&...) -> return_overload<Ts...>;
 
 } // namespace fea
+
+// #if FEA_MACOS
+// #pragma clang diagnostic pop
+// #endif
