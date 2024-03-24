@@ -84,7 +84,6 @@ struct ro_make_operator<T, false, OT> : T {
 template <class T>
 struct ro_base
 		: ro_make_operator<T, fea::is_detected_v<has_const_operator, T>> {
-
 	using base_t
 			= ro_make_operator<T, fea::is_detected_v<has_const_operator, T>>;
 	using overload_t = typename base_t::overload_t;

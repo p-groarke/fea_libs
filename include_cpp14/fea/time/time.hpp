@@ -475,14 +475,6 @@ constexpr std::array<SV, 32> make_suffix_array() {
 // Ex, 1st, 2nd, 3rd, etc.
 // Return type overload magic. Supports all std strings (other than u8string).
 inline auto suffixed_day(date::sys_days tp) {
-	// static constexpr std::array<std::string_view, 32> str_arr
-	//		= detail::make_suffix_array<std::string_view>();
-	// static constexpr std::array<std::wstring_view, 32> wstr_arr
-	//		= detail::make_suffix_array<std::wstring_view>();
-	// static constexpr std::array<std::u16string_view, 32> u16str_arr
-	//		= detail::make_suffix_array<std::u16string_view>();
-	// static constexpr std::array<std::u32string_view, 32> u32str_arr
-	//		= detail::make_suffix_array<std::u32string_view>();
 	static constexpr auto str_arr
 			= detail::make_suffix_array<std::string_view>();
 	static constexpr auto wstr_arr
