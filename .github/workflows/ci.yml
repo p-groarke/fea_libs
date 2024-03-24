@@ -43,7 +43,7 @@ jobs:
     - name: Install Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.7'
+        python-version: '3.11'
         architecture: 'x64' # optional, x86
 
     - name: Install Conan
@@ -110,7 +110,7 @@ jobs:
     - name: Install Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.7'
+        python-version: '3.11'
         architecture: 'x64' # optional, x86
 
     - name: Install Conan
@@ -182,7 +182,7 @@ jobs:
     - name: Install Python
       uses: actions/setup-python@v2
       with:
-        python-version: '3.7'
+        python-version: '3.11'
         architecture: 'x64' # optional, x86
 
     - name: Install Conan
