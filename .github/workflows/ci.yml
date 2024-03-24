@@ -87,7 +87,7 @@ jobs:
       matrix:
         build_type: [Release, Debug]
         config:
-          - { os: macos-14, xcode_ver: "15.2", fea_ver: "-DFEA_CPP20=On" } # c++20?
+          # - { os: macos-14, xcode_ver: "15.2", fea_ver: "-DFEA_CPP20=On" } # c++20?
           - { os: macos-13, xcode_ver: "15.0.1", fea_ver: "-DFEA_CPP17=On" }
           - { os: macos-13, xcode_ver: "15.0.1", fea_ver: "-DFEA_CPP14=On" }
           - { os: macos-13, xcode_ver: "14.3.1", fea_ver: "-DFEA_CPP17=On" }

@@ -22,7 +22,6 @@ namespace {
 #endif
 
 auto example_func() {
-	// clang-format off
 	return fea::return_overload{
 		// When overloading with both char and std::string,
 		// use signed char to disambiguate std::string operator=.
@@ -37,7 +36,6 @@ auto example_func() {
 		[]() -> float { return 6.f; },
 		[]() -> std::string { return "string"; },
 	};
-	// clang-format on
 }
 
 TEST(return_overload, basics) {

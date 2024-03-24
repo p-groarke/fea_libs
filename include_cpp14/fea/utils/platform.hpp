@@ -288,11 +288,13 @@ FEA_INLINE_VAR constexpr platform_t platform = platform_t::solaris;
 #define FEA_WINDOWS 1
 
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::windows;
-
 #else
+// We are on an unknown platform :scream:
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::count;
 #endif
 
+
+// Check for posix.
 #if !defined(_WIN32) \
 		&& (defined(__unix__) || defined(__unix) \
 				|| (defined(__APPLE__) && defined(__MACH__)) \
