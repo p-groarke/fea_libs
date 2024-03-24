@@ -32,6 +32,7 @@
  **/
 #pragma once
 #include "fea/meta/traits.hpp"
+#include "fea/utils/platform.hpp"
 
 #include <type_traits>
 
@@ -46,17 +47,18 @@ With return_overload, you can overload by return type.
 See unit tests for examples.
 */
 
-// #if FEA_MACOS
-//// Clang complains about braces around lambdas, which is silly.
-// #pragma clang diagnostic push
-// #pragma clang diagnostic ignored "-Wmissing-braces"
-// #endif
+#if FEA_MACOS
+// Clang complains about braces around lambdas, which is silly.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-braces"
+#endif
 
 namespace fea {
 namespace detail {
 template <class T>
 using has_const_paren = decltype(std::declval<const T&>()());
 
+// Use OverloadT defaulted template param to fix VS2017 bug.
 template <class T, bool IsConst,
 		class OverloadT = decltype(std::declval<T>()())>
 struct ro_expose_const;
@@ -65,7 +67,6 @@ template <class T, class OT>
 struct ro_expose_const<T, true, OT> : T {
 	using overload_t = OT;
 
-	// Fix VS2017?
 	operator OT() const noexcept(noexcept(std::declval<T>()())) {
 		return T::operator()();
 	}
@@ -102,15 +103,11 @@ struct return_overload : detail::return_overload<Ts>... {
 			Ts>::operator typename detail::return_overload<Ts>::overload_t...;
 };
 
+// Not necessary in c++20.
 template <class... Ts>
 return_overload(Ts...) -> return_overload<Ts...>;
-// template <class... Ts>
-// return_overload(const Ts&...) -> return_overload<Ts...>;
-// template <class... Ts>
-// return_overload(Ts&&...) -> return_overload<Ts...>;
-
 } // namespace fea
 
-// #if FEA_MACOS
-// #pragma clang diagnostic pop
-// #endif
+#if FEA_MACOS
+#pragma clang diagnostic pop
+#endif

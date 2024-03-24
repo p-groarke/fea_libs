@@ -91,6 +91,10 @@ See unit tests for examples.
 #define FEA_DETAIL_U32LOOKUP_PAIR(name) \
 	{ FEA_U32STRINGIFY(name), enum_type::name },
 
+
+// Declare an enum of type enum_t, with underlying type underlying_t.
+// to_string and from_string are created for conversions.
+// Example : FEA_STRING_ENUM(my_enum, int, potato, tomato)
 #define FEA_STRING_ENUM(enum_t, underlying_t, ...) \
 	/* Declare your enum. */ \
 	enum class enum_t : underlying_t { __VA_ARGS__ }; \
