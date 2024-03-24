@@ -65,25 +65,20 @@ See unit tests for examples.
 */
 
 #if FEA_MACOS
-// Clang complains about braces around lambdas / initializers, which is silly.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-braces"
-#endif
+// Clang complains about braces around lambdas / initializers, whether they are
+// present or not.
 
-// Silence clang?
-#define FEA_DETAIL_STRINGIFY_SV(name) std::string_view{ FEA_STRINGIFY(name) },
-#define FEA_DETAIL_WSTRINGIFY_SV(name) \
-	std::wstring_view{ FEA_WSTRINGIFY(name) },
-#define FEA_DETAIL_U16STRINGIFY_SV(name) \
-	std::u16string_view{ FEA_U16STRINGIFY(name) },
-#define FEA_DETAIL_U32STRINGIFY_SV(name) \
-	std::u32string_view{ FEA_U32STRINGIFY(name) },
-#define FEA_DETAIL_STRINGIFY_STR(name) std::string{ FEA_STRINGIFY(name) },
-#define FEA_DETAIL_WSTRINGIFY_STR(name) std::wstring{ FEA_WSTRINGIFY(name) },
-#define FEA_DETAIL_U16STRINGIFY_STR(name) \
-	std::u16string{ FEA_U16STRINGIFY(name) },
-#define FEA_DETAIL_U32STRINGIFY_STR(name) \
-	std::u32string{ FEA_U32STRINGIFY(name) },
+// clang-format off
+#define FEA_DETAIL_CLANG_BUG_BEGIN \
+#pragma clang diagnostic push \
+#pragma clang diagnostic ignored "-Wmissing-braces"
+// clang-format on
+
+#define FEA_DETAIL_CLANG_BUG_END #pragma clang diagnostic pop
+#else
+#define FEA_DETAIL_CLANG_BUG_BEGIN
+#define FEA_DETAIL_CLANG_BUG_END
+#endif
 
 #define FEA_DETAIL_LOOKUP_PAIR(name) { FEA_STRINGIFY(name), enum_type::name },
 #define FEA_DETAIL_WLOOKUP_PAIR(name) { FEA_WSTRINGIFY(name), enum_type::name },
@@ -99,6 +94,8 @@ See unit tests for examples.
 #define FEA_STRING_ENUM(enum_t, underlying_t, ...) \
 	/* Declare your enum. */ \
 	enum class enum_t : underlying_t { __VA_ARGS__ }; \
+	/* Silence bugged clang warnings. */ \
+	FEA_DETAIL_CLANG_BUG_BEGIN \
 	/* Implement to_string for all supported string types. */ \
 	inline auto to_string(enum_t e__) { \
 		static constexpr size_t N = FEA_SIZEOF_VAARGS(__VA_ARGS__); \
@@ -136,6 +133,8 @@ See unit tests for examples.
 			[=]() -> const std::u32string& { return u32str_arr[e__]; }, \
 		}; \
 	} \
+	/* Silence bugged clang warnings. */ \
+	FEA_DETAIL_CLANG_BUG_END \
 	/* Implement from_string for all supported string types. */ \
 	inline enum_t from_string(std::string_view s__) { \
 		using enum_type = enum_t; \
@@ -193,7 +192,3 @@ See unit tests for examples.
 		}; \
 		return lookup.at(s__); \
 	}
-
-#if FEA_MACOS
-#pragma clang diagnostic pop
-#endif

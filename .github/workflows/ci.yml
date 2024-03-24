@@ -20,7 +20,6 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        # os: [windows-latest] # [ubuntu-20.04, ubuntu-18.04, windows-2019, windows-2016, macos-11, macos-10.15]
         build_type: [Release, Debug]
         build_arch: [x64, Win32]
         config:
@@ -157,15 +156,15 @@ jobs:
         build_type: [Release, Debug]
         # build_arch: [x64, x86]
         config:
-          - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DWITH_ONETBB=On" } # tbb doesn't compile
-          - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DWITH_ONETBB=On" }
-          - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP14=On", fea_tbb: "-DWITH_ONETBB=On" }
-          - { os: ubuntu-22.04, gcc_ver: "12", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DWITH_TBB=On" }
-          - { os: ubuntu-20.04, gcc_ver: "11", fea_ver: "-DFEA_CPP14=On", fea_tbb: "-DWITH_TBB=On" }
-          - { os: ubuntu-20.04, gcc_ver: "10", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DWITH_TBB=On" }
-          - { os: ubuntu-20.04, gcc_ver: "10", fea_ver: "-DFEA_CPP14=On", fea_tbb: "-DWITH_TBB=On" }
-          - { os: ubuntu-20.04, gcc_ver: "9", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DWITH_TBB=On" }
-          - { os: ubuntu-20.04, gcc_ver: "9", fea_ver: "-DFEA_CPP14=On", fea_tbb: "-DWITH_TBB=On" }
+          - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_ONETBB=On" } # tbb doesn't compile
+          - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_ONETBB=On" }
+          - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP14=On", fea_tbb: "-DFEA_WITH_ONETBB=On" }
+          - { os: ubuntu-22.04, gcc_ver: "12", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
+          - { os: ubuntu-20.04, gcc_ver: "11", fea_ver: "-DFEA_CPP14=On", fea_tbb: "-DFEA_WITH_TBB=On" }
+          - { os: ubuntu-20.04, gcc_ver: "10", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
+          - { os: ubuntu-20.04, gcc_ver: "10", fea_ver: "-DFEA_CPP14=On", fea_tbb: "-DFEA_WITH_TBB=On" }
+          - { os: ubuntu-20.04, gcc_ver: "9", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
+          - { os: ubuntu-20.04, gcc_ver: "9", fea_ver: "-DFEA_CPP14=On", fea_tbb: "-DFEA_WITH_TBB=On" }
 
     steps:
     - name: Git Line Endings
