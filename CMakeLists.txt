@@ -16,7 +16,8 @@ option(FEA_CONAN2 "If pulling conan dependencies, are we running conan 2?" Off)
 option(FEA_CMAKE_LOCAL "Use local fea_cmake repo. Searches for '../fea_cmake'" Off)
 
 # Options that affect which modules and functionality are available.
-option(FEA_WITH_TBB "Pull oneTBB and use it." On)
+option(FEA_WITH_TBB "Pull TBB (2020.3) and use it." On)
+option(FEA_WITH_ONETBB "Pull oneTBB (2020.10.0) and use it." Off)
 
 # C++ version.
 if ("cxx_std_20" IN_LIST CMAKE_CXX_COMPILE_FEATURES AND NOT FEA_CPP17 AND NOT FEA_CPP14)
@@ -58,6 +59,7 @@ fea_set_output_dir(${CMAKE_BINARY_DIR}/bin)
 # External dependencies.
 if (${FEA_PULL_CONAN})
 	fea_bool_to_pybool(FEA_WITH_TBB _FEA_WITH_TBB_PYBOOL)
+	fea_bool_to_pybool(FEA_WITH_ONETBB _FEA_WITH_ONETBB_PYBOOL)
 
 	if (NOT ${FEA_CONAN2})
 		# Enable conan revisions (RREV).
@@ -65,9 +67,12 @@ if (${FEA_PULL_CONAN})
 			COMMAND_ECHO STDOUT
 			ERROR_MSG "Failed to set conan 1 revisions_enabled."
 		)
-		fea_pull_conan(CONAN_MSVC_TOOLSET "${CMAKE_VS_PLATFORM_TOOLSET}" CONAN_ARGS "-o fea_libs:with_tbb=${_FEA_WITH_TBB_PYBOOL}")
+		fea_pull_conan(CONAN_MSVC_TOOLSET "${CMAKE_VS_PLATFORM_TOOLSET}"
+			CONAN_ARGS "-o fea_libs:with_tbb=${_FEA_WITH_TBB_PYBOOL} -o fea_libs:with_onetbb=${_FEA_WITH_ONETBB_PYBOOL}"
+		)
 	else()
-		fea_pull_conan2(CONAN_MSVC_TOOLSET "${CMAKE_VS_PLATFORM_TOOLSET}" CONAN_ARGS "-o fea_libs:with_tbb=${_FEA_WITH_TBB_PYBOOL}")
+		fea_pull_conan2(CONAN_MSVC_TOOLSET "${CMAKE_VS_PLATFORM_TOOLSET}"
+			CONAN_ARGS "-o fea_libs:with_tbb=${_FEA_WITH_TBB_PYBOOL} -o fea_libs:with_onetbb=${_FEA_WITH_ONETBB_PYBOOL}")
 	endif()
 
 endif()

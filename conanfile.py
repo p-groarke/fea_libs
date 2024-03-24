@@ -15,13 +15,18 @@ class FeaLibsConan(ConanFile):
     options = {
         "fPIC": [True, False],
         "with_tbb": [True, False],
+        "with_onetbb": [True, False],
     }
     default_options = {
         "fPIC": True,
         "with_tbb": True,
+        "with_onetbb": False,
         "gtest/*:build_gmock" : False,
         "date/*:use_system_tz_db" : True,
-        "tbb/*:tbbmalloc" : True
+        "tbb/*:tbbmalloc" : False,
+        "tbb/*:tbbproxy" : False,
+        "onetbb/*:tbbmalloc" : False,
+        "onetbb/*:tbbproxy" : False,
     }
     exports_sources = ["*", "!build/*", "!build_reports/*", "!Output/*", "!bin/*"]
 
@@ -30,6 +35,8 @@ class FeaLibsConan(ConanFile):
         self.requires("date/3.0.0#8fcb40f84e304971b86cae3c21d2ce99")
         if self.options.with_tbb:
             self.requires("onetbb/2020.3#47de209cf102270d266f4b20e4524d0b")
+        elif self.options.with_onetbb:
+            self.requires("onetbb/2021.10.0#159e2dde755615b9f4d43b6868cdd1d2")
 
     def config_options(self):
         if self.settings.os == "Windows":

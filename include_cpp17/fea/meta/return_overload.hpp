@@ -57,26 +57,25 @@ namespace detail {
 template <class T>
 using has_const_paren = decltype(std::declval<const T&>()());
 
-template <class, bool IsConst>
+template <class T, bool IsConst,
+		class OverloadT = decltype(std::declval<T>()())>
 struct ro_expose_const;
 
-template <class T>
-struct ro_expose_const<T, true> : T {
-	using overload_t = decltype(std::declval<T>()());
+template <class T, class OT>
+struct ro_expose_const<T, true, OT> : T {
+	using overload_t = OT;
 
 	// Fix VS2017?
-	operator decltype(std::declval<T>()())() const
-			noexcept(noexcept(std::declval<T>()())) {
+	operator OT() const noexcept(noexcept(std::declval<T>()())) {
 		return T::operator()();
 	}
 };
 
-template <class T>
-struct ro_expose_const<T, false> : T {
-	using overload_t = decltype(std::declval<T>()());
+template <class T, class OT>
+struct ro_expose_const<T, false, OT> : T {
+	using overload_t = OT;
 
-	operator decltype(std::declval<T>()())() noexcept(
-			noexcept(std::declval<T>()())) {
+	operator OT() noexcept(noexcept(std::declval<T>()())) {
 		return T::operator()();
 	}
 };
