@@ -2,6 +2,8 @@
 #include <fea/numerics/literals.hpp>
 #include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
+#include <string>
+#include <string_view>
 
 using namespace fea::literals;
 
@@ -58,6 +60,58 @@ TEST(return_overload, basics) {
 	EXPECT_EQ(ui, 5_u32);
 	EXPECT_EQ(f, 6.f);
 	EXPECT_EQ(str, "string");
+}
+
+auto example_func(int mi) {
+	return fea::return_overload{
+		[mi]() -> signed char { return 0 + (signed char)(mi); },
+		[mi]() -> unsigned char { return 1 + (unsigned char)(mi); },
+		[mi]() -> short { return 2 + short(mi); },
+		[mi]() -> unsigned short { return 3 + (unsigned short)(mi); },
+		[mi]() -> int { return 4 + mi; },
+		[mi]() -> unsigned int { return 5 + (unsigned char)(mi); },
+		[mi]() -> float { return 6.f + float(mi); },
+		[mi]() -> std::string { return "string" + std::to_string(mi); },
+	};
+}
+
+TEST(return_overload, args) {
+	signed char c = example_func(42);
+	unsigned char uc = example_func(42);
+	short s = example_func(42);
+	unsigned short us = example_func(42);
+	int i = example_func(42);
+	unsigned int ui = example_func(42);
+	float f = example_func(42);
+	std::string str = example_func(42);
+
+	EXPECT_EQ(c, 42_i8);
+	EXPECT_EQ(uc, 43_u8);
+	EXPECT_EQ(s, 44_i16);
+	EXPECT_EQ(us, 45_u16);
+	EXPECT_EQ(i, 46_i32);
+	EXPECT_EQ(ui, 47_u32);
+	EXPECT_EQ(f, 48.f);
+	EXPECT_EQ(str, "string42");
+
+	// operator=
+	c = example_func(42);
+	uc = example_func(42);
+	s = example_func(42);
+	us = example_func(42);
+	i = example_func(42);
+	ui = example_func(42);
+	f = example_func(42);
+	str = example_func(42);
+
+	EXPECT_EQ(c, 42_i8);
+	EXPECT_EQ(uc, 43_u8);
+	EXPECT_EQ(s, 44_i16);
+	EXPECT_EQ(us, 45_u16);
+	EXPECT_EQ(i, 46_i32);
+	EXPECT_EQ(ui, 47_u32);
+	EXPECT_EQ(f, 48.f);
+	EXPECT_EQ(str, "string42");
 }
 
 struct obj {
@@ -291,7 +345,6 @@ TEST(return_overload, const_overload) {
 	}
 
 	{
-
 		signed char& c = o.const_overload_func();
 		unsigned char& uc = o.const_overload_func();
 		short& s = o.const_overload_func();
@@ -319,5 +372,18 @@ TEST(return_overload, const_overload) {
 		EXPECT_EQ(o.f, 16.f);
 		EXPECT_EQ(o.str, "string string");
 	}
+}
+
+TEST(return_overload, string_stringview) {
+	auto r = fea::return_overload{
+		[]() -> std::string_view { return "sv"; },
+		[]() -> std::string { return "string"; },
+	};
+
+	std::string_view sv = r;
+	std::string str = r;
+
+	EXPECT_EQ(sv, "sv");
+	EXPECT_EQ(str, "string");
 }
 } // namespace

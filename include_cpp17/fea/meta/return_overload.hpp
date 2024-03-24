@@ -58,7 +58,8 @@ template <class T>
 struct ro_expose_const<T, true> : T {
 	using overload_t = decltype(std::declval<T>().operator()());
 
-	operator overload_t() const {
+	operator overload_t() const
+			noexcept(noexcept(std::declval<T>().operator()())) {
 		return T::operator()();
 	}
 };
@@ -67,7 +68,7 @@ template <class T>
 struct ro_expose_const<T, false> : T {
 	using overload_t = decltype(std::declval<T>().operator()());
 
-	operator overload_t() noexcept(noexcept(T::operator()())) {
+	operator overload_t() noexcept(noexcept(std::declval<T>().operator()())) {
 		return T::operator()();
 	}
 };
