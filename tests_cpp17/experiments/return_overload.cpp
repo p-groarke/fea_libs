@@ -189,7 +189,7 @@ struct obj {
 		};
 	}
 
-	auto const_overload_func() {
+	auto const_overload_func() const {
 		return fea::return_overload{
 			[this]() -> const signed char& { return c; },
 			[this]() -> const unsigned char& { return uc; },
@@ -199,35 +199,51 @@ struct obj {
 			[this]() -> const unsigned int& { return ui; },
 			[this]() -> const float& { return f; },
 			[this]() -> const std::string& { return str; },
-			[this]() -> signed char& {
+		};
+	}
+
+	auto const_overload_func() {
+		// This simply tests const overloading.
+		// However, in this situation, the mutable version will always be
+		// picked on the return type.
+		return fea::return_overload{
+			[this]() -> const signed char& { return c; },
+			[this]() -> const unsigned char& { return uc; },
+			[this]() -> const short& { return s; },
+			[this]() -> const unsigned short& { return us; },
+			[this]() -> const int& { return i; },
+			[this]() -> const unsigned int& { return ui; },
+			[this]() -> const float& { return f; },
+			[this]() -> const std::string& { return str; },
+			[this]() mutable -> signed char& {
 				c += 10_i8;
 				return c;
 			},
-			[this]() -> unsigned char& {
+			[this]() mutable -> unsigned char& {
 				uc += 10_u8;
 				return uc;
 			},
-			[this]() -> short& {
+			[this]() mutable -> short& {
 				s += 10_i16;
 				return s;
 			},
-			[this]() -> unsigned short& {
+			[this]() mutable -> unsigned short& {
 				us += 10_u16;
 				return us;
 			},
-			[this]() -> int& {
+			[this]() mutable -> int& {
 				i += 10_i32;
 				return i;
 			},
-			[this]() -> unsigned int& {
+			[this]() mutable -> unsigned int& {
 				ui += 10_u32;
 				return ui;
 			},
-			[this]() -> float& {
+			[this]() mutable -> float& {
 				f += 10.f;
 				return f;
 			},
-			[this]() -> std::string& {
+			[this]() mutable -> std::string& {
 				str += " string";
 				return str;
 			},
@@ -360,14 +376,15 @@ TEST(return_overload, const_overload) {
 	obj o;
 
 	{
-		const signed char& c = o.const_overload_func();
-		const unsigned char& uc = o.const_overload_func();
-		const short& s = o.const_overload_func();
-		const unsigned short& us = o.const_overload_func();
-		const int& i = o.const_overload_func();
-		const unsigned int& ui = o.const_overload_func();
-		const float& f = o.const_overload_func();
-		const std::string& str = o.const_overload_func();
+		const obj& co = o;
+		const signed char& c = co.const_overload_func();
+		const unsigned char& uc = co.const_overload_func();
+		const short& s = co.const_overload_func();
+		const unsigned short& us = co.const_overload_func();
+		const int& i = co.const_overload_func();
+		const unsigned int& ui = co.const_overload_func();
+		const float& f = co.const_overload_func();
+		const std::string& str = co.const_overload_func();
 
 		EXPECT_EQ(c, 0_i8);
 		EXPECT_EQ(uc, 1_u8);
