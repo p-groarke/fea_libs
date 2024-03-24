@@ -31,8 +31,9 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
-#include "fea/meta/traits.hpp"
 #include "fea/utils/platform.hpp"
+#if FEA_GCC_VER == 0 || FEA_GCC_VER >= 13
+#include "fea/meta/traits.hpp"
 
 #include <type_traits>
 
@@ -67,7 +68,7 @@ template <class T, class OT>
 struct ro_expose_const<T, true, OT> : T {
 	using overload_t = OT;
 
-	operator OT() const noexcept(noexcept(std::declval<T>()())) {
+	inline operator OT() const noexcept(noexcept(std::declval<T>()())) {
 		return T::operator()();
 	}
 };
@@ -76,7 +77,7 @@ template <class T, class OT>
 struct ro_expose_const<T, false, OT> : T {
 	using overload_t = OT;
 
-	operator OT() noexcept(noexcept(std::declval<T>()())) {
+	inline operator OT() noexcept(noexcept(std::declval<T>()())) {
 		return T::operator()();
 	}
 };
@@ -110,4 +111,5 @@ return_overload(Ts...) -> return_overload<Ts...>;
 
 #if FEA_MACOS
 #pragma clang diagnostic pop
+#endif
 #endif

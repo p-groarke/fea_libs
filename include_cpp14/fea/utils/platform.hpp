@@ -325,59 +325,7 @@ FEA_INLINE_VAR constexpr platform_group_t platform_group
 		= platform_group_t::count;
 #endif
 
-
-// Nicer VS versions.
-#if FEA_WINDOWS
-#undef FEA_VS2022
-#undef FEA_VS2019
-#undef FEA_VS2017
-#undef FEA_VS2015
-#define FEA_VS2022 0
-#define FEA_VS2019 0
-#define FEA_VS2017 0
-#define FEA_VS2015 0
-
-// The VS year of release (..., 2022, 2019, 2017, 2015).
-#if FEA_WINDOWS
-#undef FEA_VSYEAR
-#define FEA_VSYEAR 0
-#endif
-
-#if _MSC_VER >= 1930 && _MSC_VER < 1940
-#undef FEA_VS2022
-#define FEA_VS2022 1
-
-#undef FEA_VSYEAR
-#define FEA_VSYEAR 2022
-#endif
-
-#if _MSC_VER >= 1920 && _MSC_VER < 1930
-#undef FEA_VS2019
-#define FEA_VS2019 1
-
-#undef FEA_VSYEAR
-#define FEA_VSYEAR 2019
-#endif
-
-#if _MSC_VER >= 1910 && _MSC_VER < 1920
-#undef FEA_VS2017
-#define FEA_VS2017 1
-
-#undef FEA_VSYEAR
-#define FEA_VSYEAR 2017
-#endif
-
-#if _MSC_VER >= 1900 && _MSC_VER < 1910
-#undef FEA_VS2015
-#define FEA_VS2015 1
-
-#undef FEA_VSYEAR
-#define FEA_VSYEAR 2015
-#endif
-#endif
-
-
-// x86 vs. arm architecture.
+// Architecture.
 #undef FEA_ARM
 #undef FEA_X86
 #define FEA_ARM 0
@@ -392,6 +340,38 @@ FEA_INLINE_VAR constexpr platform_group_t platform_group
 #define FEA_X86 1
 #endif
 
+// VS versions.
+#undef FEA_VS_YEAR
+#define FEA_VS_YEAR 0
+#if defined(_MSC_VER)
+#if _MSC_VER >= 1930 && _MSC_VER < 1940
+#undef FEA_VS_YEAR
+#define FEA_VS_YEAR 2022
+#endif
+
+#if _MSC_VER >= 1920 && _MSC_VER < 1930
+#undef FEA_VS_YEAR
+#define FEA_VS_YEAR 2019
+#endif
+
+#if _MSC_VER >= 1910 && _MSC_VER < 1920
+#undef FEA_VS_YEAR
+#define FEA_VS_YEAR 2017
+#endif
+
+#if _MSC_VER >= 1900 && _MSC_VER < 1910
+#undef FEA_VS_YEAR
+#define FEA_VS_YEAR 2015
+#endif
+#endif
+
+// GCC versions.
+#undef FEA_GCC_VER
+#define FEA_GCC_VER 0
+#if defined(__GNUC__)
+#undef FEA_GCC_VER
+#define FEA_GCC_VER __GNUC__
+#endif
 
 //// Cross-platform compiler warning.
 //// Note MSVC isn't a true warning, just a message.

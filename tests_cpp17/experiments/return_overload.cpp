@@ -1,4 +1,5 @@
 #include <fea/meta/return_overload.hpp>
+#if FEA_GCC_VER == 0 || FEA_GCC_VER >= 13
 #include <fea/numerics/literals.hpp>
 #include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
@@ -15,18 +16,12 @@ using namespace fea::literals;
 #endif
 
 namespace {
-#if !FEA_MACOS
-#define DISABLE_MAC(...) __VA_ARGS__
-#else
-#define DISABLE_MAC(...)
-#endif
-
 auto example_func() {
+	// When overloading with both char and std::string,
+	// use signed char to disambiguate std::string operator=.
+	// On apple-clang, this doesn't work, which means
+	// you cannot mix std::string and chars in that situation.
 	return fea::return_overload{
-		// When overloading with both char and std::string,
-		// use signed char to disambiguate std::string operator=.
-		// On apple-clang, this doesn't work, which means
-		// you cannot mix std::string and chars in that situation.
 		[]() -> signed char { return 0; },
 		[]() -> unsigned char { return 1; },
 		[]() -> short { return 2; },
@@ -440,4 +435,5 @@ TEST(return_overload, string_stringview) {
 
 #if FEA_MACOS
 #pragma clang diagnostic pop
+#endif
 #endif

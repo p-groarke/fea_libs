@@ -31,11 +31,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
+#include "fea/utils/platform.hpp"
+#if FEA_GCC_VER == 0 || FEA_GCC_VER >= 13
 #include "fea/enum/enum_array.hpp"
 #include "fea/macros/literals.hpp"
 #include "fea/macros/macros.hpp"
 #include "fea/meta/return_overload.hpp"
-#include "fea/utils/platform.hpp"
 
 #include <string>
 #include <string_view>
@@ -192,3 +193,5 @@ See unit tests for examples.
 		}; \
 		return lookup.at(s__); \
 	}
+
+#endif
