@@ -1,5 +1,6 @@
 ﻿#include <fea/enum/enum_to_strings.hpp>
-#if FEA_GCC_VER == 0 || FEA_GCC_VER >= 13
+
+#if FEA_GCC_GE(13)
 #include <gtest/gtest.h>
 
 namespace {

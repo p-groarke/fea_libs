@@ -3,7 +3,7 @@
 #include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 
-#if FEA_VS_YEAR == 0 || FEA_VS_YEAR > 2017
+#if FEA_VS_GT(2017)
 
 namespace {
 #define ERROR_MSG "versioned_data.cpp : Unit test failed."

@@ -32,7 +32,8 @@
  **/
 #pragma once
 #include "fea/utils/platform.hpp"
-#if FEA_GCC_VER == 0 || FEA_GCC_VER >= 13
+
+#if FEA_GCC_GE(13)
 #include "fea/meta/traits.hpp"
 
 #include <type_traits>
@@ -90,11 +91,6 @@ struct return_overload
 	using overload_t = typename base_t::overload_t;
 	using base_t::operator typename base_t::overload_t;
 };
-
-// Fix gcc?
-template <class T>
-using moverloaded_t = typename detail::return_overload<T>::overload_t;
-
 } // namespace detail
 
 template <class... Ts>

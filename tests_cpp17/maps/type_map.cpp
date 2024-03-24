@@ -335,7 +335,7 @@ TEST(type_map, runtime_get) {
 	//		},
 	//		int(tm_e::two), m);
 
-#if FEA_VS_YEAR == 0 || FEA_VS_YEAR >= 2022
+#if FEA_VS_GE(2022)
 	fea::runtime_get(
 			[](const auto& val) {
 				using T = std::decay_t<decltype(val)>;
