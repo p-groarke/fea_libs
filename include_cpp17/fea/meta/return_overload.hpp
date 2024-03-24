@@ -58,46 +58,45 @@ See unit tests for examples.
 namespace fea {
 namespace detail {
 template <class T>
-using has_const_paren = decltype(std::declval<const T&>()());
+using has_const_operator = decltype(std::declval<const T&>()());
 
 // Use OverloadT defaulted template param to fix VS2017 bug.
 template <class T, bool IsConst,
 		class OverloadT = decltype(std::declval<T>()())>
-struct ro_expose_const;
+struct ro_make_operator;
 
 template <class T, class OT>
-struct ro_expose_const<T, true, OT> : T {
+struct ro_make_operator<T, true, OT> : T {
 	using overload_t = OT;
-
 	inline operator OT() const noexcept(noexcept(std::declval<T>()())) {
 		return T::operator()();
 	}
 };
 
 template <class T, class OT>
-struct ro_expose_const<T, false, OT> : T {
+struct ro_make_operator<T, false, OT> : T {
 	using overload_t = OT;
-
 	inline operator OT() noexcept(noexcept(std::declval<T>()())) {
 		return T::operator()();
 	}
 };
 
 template <class T>
-struct return_overload
-		: ro_expose_const<T, fea::is_detected_v<has_const_paren, T>> {
+struct ro_base
+		: ro_make_operator<T, fea::is_detected_v<has_const_operator, T>> {
 
-	using base_t = ro_expose_const<T, fea::is_detected_v<has_const_paren, T>>;
+	using base_t
+			= ro_make_operator<T, fea::is_detected_v<has_const_operator, T>>;
 	using overload_t = typename base_t::overload_t;
 	using base_t::operator typename base_t::overload_t;
 };
 } // namespace detail
 
 template <class... Ts>
-struct return_overload : detail::return_overload<Ts>... {
+struct return_overload : detail::ro_base<Ts>... {
 	// Inherit the overload operators.
-	using detail::return_overload<
-			Ts>::operator typename detail::return_overload<Ts>::overload_t...;
+	using detail::ro_base<Ts>::operator typename detail::ro_base<
+			Ts>::overload_t...;
 };
 
 // Not necessary in c++20.

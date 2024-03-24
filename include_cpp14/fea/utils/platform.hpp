@@ -340,8 +340,8 @@ FEA_INLINE_VAR constexpr platform_group_t platform_group
 #define FEA_X86 1
 #endif
 
-// VS versions.
-// Returns true on other platforms.
+// VS versions (years).
+// Returns true on other compilers.
 #undef FEA_VS_GT
 #undef FEA_VS_GE
 #undef FEA_VS_EQ
@@ -386,43 +386,18 @@ FEA_INLINE_VAR constexpr platform_group_t platform_group
 #define FEA_VS_LT(year) FEA_DETAIL_VS_YEAR < year
 #endif
 
-
-// #undef FEA_VS_YEAR
-// #define FEA_VS_YEAR 0
-// #if defined(_MSC_VER)
-// #if _MSC_VER >= 1930 && _MSC_VER < 1940
-// #undef FEA_VS_YEAR
-// #define FEA_VS_YEAR 2022
-// #endif
-//
-// #if _MSC_VER >= 1920 && _MSC_VER < 1930
-// #undef FEA_VS_YEAR
-// #define FEA_VS_YEAR 2019
-// #endif
-//
-// #if _MSC_VER >= 1910 && _MSC_VER < 1920
-// #undef FEA_VS_YEAR
-// #define FEA_VS_YEAR 2017
-// #endif
-//
-// #if _MSC_VER >= 1900 && _MSC_VER < 1910
-// #undef FEA_VS_YEAR
-// #define FEA_VS_YEAR 2015
-// #endif
-// #endif
-
 // GCC versions.
-// Returns true on other platforms.
+// Returns true on other compilers.
 #undef FEA_GCC_GT
 #undef FEA_GCC_GE
 #undef FEA_GCC_EQ
 #undef FEA_GCC_LE
 #undef FEA_GCC_LT
-#define FEA_GCC_GT(ver) 1
-#define FEA_GCC_GE(ver) 1
-#define FEA_GCC_EQ(ver) 1
-#define FEA_GCC_LE(ver) 1
-#define FEA_GCC_LT(ver) 1
+#define FEA_GCC_GT(major_ver) 1
+#define FEA_GCC_GE(major_ver) 1
+#define FEA_GCC_EQ(major_ver) 1
+#define FEA_GCC_LE(major_ver) 1
+#define FEA_GCC_LT(major_ver) 1
 
 #if defined(__GNUC__)
 #undef FEA_GCC_GT
@@ -430,11 +405,11 @@ FEA_INLINE_VAR constexpr platform_group_t platform_group
 #undef FEA_GCC_EQ
 #undef FEA_GCC_LE
 #undef FEA_GCC_LT
-#define FEA_GCC_GT(ver) ver > __GNUC__
-#define FEA_GCC_GE(ver) ver >= __GNUC__
-#define FEA_GCC_EQ(ver) ver == __GNUC__
-#define FEA_GCC_LE(ver) ver <= __GNUC__
-#define FEA_GCC_LT(ver) ver < __GNUC__
+#define FEA_GCC_GT(major_ver) __GNUC__ > major_ver
+#define FEA_GCC_GE(major_ver) __GNUC__ >= major_ver
+#define FEA_GCC_EQ(major_ver) __GNUC__ == major_ver
+#define FEA_GCC_LE(major_ver) __GNUC__ <= major_ver
+#define FEA_GCC_LT(major_ver) __GNUC__ < major_ver
 #endif
 
 //// Cross-platform compiler warning.

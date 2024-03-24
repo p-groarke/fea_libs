@@ -69,7 +69,6 @@ See unit tests for examples.
 #if FEA_MACOS
 // Clang complains about braces around lambdas / initializers, whether they are
 // present or not.
-
 #define FEA_DETAIL_CLANG_BUG_BEGIN \
 	_Pragma("clang diagnostic push"); \
 	_Pragma("clang diagnostic ignored \"-Wmissing-braces\"")
@@ -125,14 +124,14 @@ See unit tests for examples.
 			FEA_FOR_EACH(FEA_U32STRINGIFY_COMMA, __VA_ARGS__) \
 		}; \
 		return fea::return_overload{ \
-			[=]() -> std::string_view { return sv_arr[e__]; }, \
-			[=]() -> std::wstring_view { return wsv_arr[e__]; }, \
-			[=]() -> std::u16string_view { return u16sv_arr[e__]; }, \
-			[=]() -> std::u32string_view { return u32sv_arr[e__]; }, \
-			[=]() -> const std::string& { return str_arr[e__]; }, \
-			[=]() -> const std::wstring& { return wstr_arr[e__]; }, \
-			[=]() -> const std::u16string& { return u16str_arr[e__]; }, \
-			[=]() -> const std::u32string& { return u32str_arr[e__]; }, \
+			[e__]() -> std::string_view { return sv_arr[e__]; }, \
+			[e__]() -> std::wstring_view { return wsv_arr[e__]; }, \
+			[e__]() -> std::u16string_view { return u16sv_arr[e__]; }, \
+			[e__]() -> std::u32string_view { return u32sv_arr[e__]; }, \
+			[e__]() -> const std::string& { return str_arr[e__]; }, \
+			[e__]() -> const std::wstring& { return wstr_arr[e__]; }, \
+			[e__]() -> const std::u16string& { return u16str_arr[e__]; }, \
+			[e__]() -> const std::u32string& { return u32str_arr[e__]; }, \
 		}; \
 	} \
 	/* Silence bugged clang warnings. */ \
