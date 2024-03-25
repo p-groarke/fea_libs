@@ -232,34 +232,27 @@ namespace fea {
 #if defined(_AIX)
 #undef FEA_AIX
 #define FEA_AIX 1
-
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::aix;
 
-#elif defined(__unix__)
+#elif defined(__unix__) && !defined(__linux__)
 } // namespace fea
 #include <sys/param.h>
 namespace fea {
+
 #if defined(BSD)
 #undef FEA_BSD
 #define FEA_BSD 1
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::bsd;
-
-#elif defined(__linux__)
-#undef FEA_LINUX
-#define FEA_LINUX 1
-FEA_INLINE_VAR constexpr platform_t platform = platform_t::linuxx;
 #endif
 
 #elif defined(__hpux)
 #undef FEA_HPUX
 #define FEA_HPUX 1
-
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::hpux;
 
 #elif defined(__linux__)
 #undef FEA_LINUX
 #define FEA_LINUX 1
-
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::linuxx;
 
 #elif defined(__APPLE__) && defined(__MACH__)
@@ -270,26 +263,22 @@ namespace fea {
 #if TARGET_OS_IPHONE == 1
 #undef FEA_IOS
 #define FEA_IOS 1
-
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::ios;
 
 #elif TARGET_OS_MAC == 1
 #undef FEA_MACOS
 #define FEA_MACOS 1
-
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::macos;
 #endif
 
 #elif defined(__sun) && defined(__SVR4)
 #undef FEA_SOLARIS
 #define FEA_SOLARIS 1
-
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::solaris;
 
 #elif defined(_WIN32)
 #undef FEA_WINDOWS
 #define FEA_WINDOWS 1
-
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::windows;
 #else
 // We are on an unknown platform :scream:
@@ -311,14 +300,12 @@ namespace fea {
 #define FEA_POSIX 1
 #undef FEA_UNIX
 #define FEA_UNIX 1
-
 FEA_INLINE_VAR constexpr platform_group_t platform_group
 		= platform_group_t::posix | platform_group_t::unixx;
 
 #else
 #undef FEA_UNIX
 #define FEA_UNIX 1
-
 FEA_INLINE_VAR constexpr platform_group_t platform_group
 		= platform_group_t::unixx;
 #endif
