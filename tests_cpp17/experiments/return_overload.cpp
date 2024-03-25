@@ -14,7 +14,9 @@ using namespace fea::literals;
 // fixed in recent versions).
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-braces"
-#elif FEA_LINUX
+#endif
+
+#if FEA_LINUX
 // GCC incorrectly flags returned references as dangling.
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdangling-reference"
@@ -477,7 +479,7 @@ TEST(return_overload, subtleties) {
 
 #if FEA_MACOS
 #pragma clang diagnostic pop
-#elif FEA_GCC
+#elif FEA_LINUX
 #pragma GCC diagnostic pop
 #endif
 #endif
