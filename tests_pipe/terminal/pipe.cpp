@@ -11,7 +11,7 @@ const std::string expected = "l1 🙂\nl2\n<>\né\n";
 const std::wstring wexpected = L"l1 🙂\nl2\n<>\né\n";
 
 TEST(pipe, basics) {
-	// Are we too quick?
+	// Give some time to CI machines.
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
 	switch (test_num) {

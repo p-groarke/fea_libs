@@ -1,11 +1,12 @@
-﻿#include <fea/macros/enum_to_strings.hpp>
+﻿#include <fea/enum/enum_to_strings_legacy.hpp>
 #include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
 
 namespace {
 namespace espace_all {
 
-FEA_ALLSTRINGS_ENUM(e, unsigned, zero, one, two, three, four, five, count)
+FEA_ALLSTRINGS_ENUM_LEGACY(
+		e, unsigned, zero, one, two, three, four, five, count)
 
 TEST(enum_macros, basics) {
 
@@ -129,7 +130,8 @@ TEST(enum_macros, basics) {
 } // namespace espace_all
 
 namespace espace2 {
-FEA_ALLSTRINGS_ENUM_WITH_COUNT(e, unsigned, zero, one, two, three, four, five)
+FEA_ALLSTRINGS_ENUM_LEGACY_WITH_COUNT(
+		e, unsigned, zero, one, two, three, four, five)
 TEST(enum_macros, basics) {
 	EXPECT_EQ(size_t(e::zero), 0u);
 	EXPECT_EQ(size_t(e::one), 1u);

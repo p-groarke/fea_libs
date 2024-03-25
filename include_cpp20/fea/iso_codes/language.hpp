@@ -35,6 +35,7 @@
 #include "fea/iso_codes/details/language_database.hpp"
 
 #include <array>
+#include <cassert>
 #include <limits>
 #include <string>
 #include <string_view>

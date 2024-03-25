@@ -320,12 +320,10 @@ TEST(type_map, runtime_get) {
 		}
 	});
 
-#if FEA_WINDOWS && (FEA_32BIT || !FEA_VS2019)
-	// Fix VS v141, 32 bits. For some reason it deduces int
+	// In VS v141, 32 bits, for some reason it deduces int
 	// instead of tm_e in fea::pack_nt.
 	// In v142, it complains about ambiguity between int and enum class...
 	// Just disable it.
-
 	// fea::runtime_get(
 	//		[](const auto& val) {
 	//			using T = std::decay_t<decltype(val)>;
@@ -336,7 +334,8 @@ TEST(type_map, runtime_get) {
 	//			}
 	//		},
 	//		int(tm_e::two), m);
-#else
+
+#if FEA_VS_GE(2022)
 	fea::runtime_get(
 			[](const auto& val) {
 				using T = std::decay_t<decltype(val)>;

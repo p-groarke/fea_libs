@@ -32,6 +32,7 @@
  **/
 #pragma once
 #include "fea/utils/platform.hpp"
+#if !FEA_ARM
 
 #if FEA_POSIX
 #include <cpuid.h>
@@ -1559,3 +1560,4 @@ extern const cpu_info_t cpu_info;
 #endif
 
 } // namespace fea
+#endif

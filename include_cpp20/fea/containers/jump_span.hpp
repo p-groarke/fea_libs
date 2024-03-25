@@ -33,6 +33,7 @@
 #pragma once
 #include "fea/meta/traits.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <initializer_list>
@@ -197,14 +198,13 @@ struct jump_span_iterator {
 	}
 
 	template <class U, class W>
-	[[nodiscard]] friend constexpr bool are_contiguous(
-			const jump_span_iterator<U, W>& lhs,
+	friend constexpr bool are_contiguous(const jump_span_iterator<U, W>& lhs,
 			const jump_span_iterator<U, W>& rhs) noexcept;
 
 
 	template <class U, class W>
-	[[nodiscard]] friend constexpr typename std::span<U>::iterator
-	make_contiguous(const jump_span_iterator<U, W>& it) noexcept;
+	friend constexpr typename std::span<U>::iterator make_contiguous(
+			const jump_span_iterator<U, W>& it) noexcept;
 
 private:
 	const jump_span<T, Alloc>* _back_ptr = nullptr;
@@ -213,13 +213,14 @@ private:
 };
 
 template <class T, class Alloc>
-constexpr bool are_contiguous(const jump_span_iterator<T, Alloc>& lhs,
+[[nodiscard]] constexpr bool are_contiguous(
+		const jump_span_iterator<T, Alloc>& lhs,
 		const jump_span_iterator<T, Alloc>& rhs) noexcept {
 	return lhs._span_idx == rhs._span_idx;
 }
 
 template <class It>
-constexpr bool are_contiguous(It, It) noexcept {
+[[nodiscard]] constexpr bool are_contiguous(It, It) noexcept {
 	// wtf msvc
 	// return std::is_same_v<typename
 	// std::iterator_traits<It>::iterator_concept,
@@ -231,7 +232,7 @@ constexpr bool are_contiguous(It, It) noexcept {
 // By calling this, you promise that you've checked whether the iterators are
 // truly contiguous.
 template <class T, class Alloc>
-constexpr typename std::span<T>::iterator make_contiguous(
+[[nodiscard]] constexpr typename std::span<T>::iterator make_contiguous(
 		const jump_span_iterator<T, Alloc>& it) noexcept {
 	const std::span<T>& s = it._back_ptr->data()[it._span_idx];
 	return s.begin() + it._lcl_idx;
