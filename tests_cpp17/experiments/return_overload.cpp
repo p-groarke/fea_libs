@@ -17,7 +17,7 @@ using namespace fea::literals;
 #elif FEA_LINUX
 // GCC incorrectly flags returned references as dangling.
 #pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Werror=dangling-reference"
+#pragma GCC diagnostic ignored "-Wdangling-reference"
 #endif
 
 namespace {
@@ -461,13 +461,13 @@ TEST(return_overload, subtleties) {
 			return 42;
 		},
 	};
-	using ret_t = std::decay_t<decltype(r)>;
 
 	static_assert(noexcept(r.operator char()), ERROR_MSG);
 	static_assert(noexcept(r.operator short()), ERROR_MSG);
 	static_assert(!noexcept(r.operator int()), ERROR_MSG);
 	static_assert(!noexcept(r.operator float()), ERROR_MSG);
 
+	using ret_t = std::decay_t<decltype(r)>;
 	static_assert(fea::is_detected_v<is_char_const, ret_t>, ERROR_MSG);
 	static_assert(!fea::is_detected_v<is_short_const, ret_t>, ERROR_MSG);
 	static_assert(fea::is_detected_v<is_int_const, ret_t>, ERROR_MSG);
