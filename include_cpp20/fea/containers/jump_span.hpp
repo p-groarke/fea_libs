@@ -213,14 +213,14 @@ private:
 };
 
 template <class T, class Alloc>
-[[no_discard]] constexpr bool are_contiguous(
+[[nodiscard]] constexpr bool are_contiguous(
 		const jump_span_iterator<T, Alloc>& lhs,
 		const jump_span_iterator<T, Alloc>& rhs) noexcept {
 	return lhs._span_idx == rhs._span_idx;
 }
 
 template <class It>
-[[no_discard]] constexpr bool are_contiguous(It, It) noexcept {
+[[nodiscard]] constexpr bool are_contiguous(It, It) noexcept {
 	// wtf msvc
 	// return std::is_same_v<typename
 	// std::iterator_traits<It>::iterator_concept,
@@ -232,7 +232,7 @@ template <class It>
 // By calling this, you promise that you've checked whether the iterators are
 // truly contiguous.
 template <class T, class Alloc>
-[[no_discard]] constexpr typename std::span<T>::iterator make_contiguous(
+[[nodiscard]] constexpr typename std::span<T>::iterator make_contiguous(
 		const jump_span_iterator<T, Alloc>& it) noexcept {
 	const std::span<T>& s = it._back_ptr->data()[it._span_idx];
 	return s.begin() + it._lcl_idx;
