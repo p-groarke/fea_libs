@@ -20,7 +20,6 @@ using namespace fea::literals;
 static_assert(false, "blaaa");
 // GCC incorrectly flags returned references as dangling.
 #pragma GCC diagnostic push
-#pragma GCC diagnostic warning "-Wdangling-reference"
 #pragma GCC diagnostic ignored "-Wdangling-reference"
 #endif
 

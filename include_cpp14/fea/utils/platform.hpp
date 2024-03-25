@@ -239,12 +239,15 @@ FEA_INLINE_VAR constexpr platform_t platform = platform_t::aix;
 } // namespace fea
 #include <sys/param.h>
 namespace fea {
-
 #if defined(BSD)
 #undef FEA_BSD
 #define FEA_BSD 1
-
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::bsd;
+
+#elif defined(__linux__)
+#undef FEA_LINUX
+#define FEA_LINUX 1
+FEA_INLINE_VAR constexpr platform_t platform = platform_t::linuxx;
 #endif
 
 #elif defined(__hpux)
