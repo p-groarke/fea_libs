@@ -38,7 +38,8 @@ else()
 endif()
 
 if (FEA_SANITIZE AND NOT CMAKE_CXX_STANDARD EQUAL 20)
-	message(FATAL_ERROR "'FEA_SANITIZE' is only compatible with C++20")
+	message(WARNING "'FEA_SANITIZE' is only compatible with C++20, disabling option.")
+	set(FEA_SANITIZE Off)
 endif()
 
 # Pull fea_cmake helper library.

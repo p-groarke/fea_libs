@@ -1054,9 +1054,12 @@ struct lazy_graph {
 			}
 
 			fea::span<const Id> children = n.children();
+
+			// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=106199
+			auto fix_gcc_graph_end = graph.end();
 			auto fix_gcc_beg = children.begin();
 			auto fix_gcc_end = children.end();
-			graph.insert(graph.end(), fix_gcc_beg, fix_gcc_end);
+			graph.insert(fix_gcc_graph_end, fix_gcc_beg, fix_gcc_end);
 		}
 
 		return false;
