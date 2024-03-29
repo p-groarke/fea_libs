@@ -558,10 +558,10 @@ struct return_overload {
 	[[nodiscard]] operator signed char() const&& {
 		return (signed char)(doit<intmax_t>());
 	}
-#endif
 	[[nodiscard]] operator unsigned char() const&& {
 		return (unsigned char)(doit<intmax_t>());
 	}
+#endif
 
 	[[nodiscard]] operator short() const&& {
 		return short(doit<intmax_t>());
