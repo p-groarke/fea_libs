@@ -356,7 +356,11 @@ TEST(return_overload, struct_basics) {
 		EXPECT_EQ(i, 24_i32);
 		EXPECT_EQ(ui, 25_u32);
 		EXPECT_EQ(f, 26.f);
+#if FEA_WINDOWS
 		EXPECT_EQ(str, "string string string");
+#else
+		EXPECT_EQ(str, "string string string string");
+#endif
 
 		EXPECT_EQ(o.c, 20_i8);
 		EXPECT_EQ(o.uc, 21_u8);
@@ -365,7 +369,11 @@ TEST(return_overload, struct_basics) {
 		EXPECT_EQ(o.i, 24_i32);
 		EXPECT_EQ(o.ui, 25_u32);
 		EXPECT_EQ(o.f, 26.f);
+#if FEA_WINDOWS
 		EXPECT_EQ(o.str, "string string string");
+#else
+		EXPECT_EQ(o.str, "string string string string");
+#endif
 	}
 }
 
