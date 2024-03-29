@@ -122,8 +122,19 @@ TEST(ini, basics) {
 		floatval = test["fla"]["flee"] | -42.f;
 		EXPECT_EQ(floatval, -42.f);
 
+#if FEA_WINDOWS
+		stringval = test["fla"]["flou"] | "a default";
+		EXPECT_EQ(stringval, "a default");
+#else
 		stringval = static_cast<std::string>(test["fla"]["flou"] | "a default");
 		EXPECT_EQ(stringval, "a default");
+
+		stringval = std::string(test["fla"]["flou"] | "a default");
+		EXPECT_EQ(stringval, "a default");
+
+		stringval = std::string{ test["fla"]["flou"] | "a default" };
+		EXPECT_EQ(stringval, "a default");
+#endif
 	}
 
 	// Test expected.

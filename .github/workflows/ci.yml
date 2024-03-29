@@ -59,7 +59,7 @@ jobs:
         cd ${{ github.workspace }}
         mkdir build
         cd build
-        cmake .. -T ${{ matrix.config.toolset_ver }} -A ${{ matrix.build_arch }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.config.fea_ver }}
+        cmake .. -T ${{ matrix.config.toolset_ver }} -A ${{ matrix.build_arch }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.config.fea_ver }} -DFEA_SANITIZE=On
 
     - name: Build
       run: |
@@ -130,7 +130,7 @@ jobs:
         cd ${{ github.workspace }}
         mkdir build
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.config.fea_ver }}  ${{ matrix.config.fea_tbb }}
+        cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.config.fea_ver }} -DFEA_SANITIZE=On  ${{ matrix.config.fea_tbb }}
 
     - name: Build
       run: |
@@ -209,7 +209,7 @@ jobs:
         cd ${{ github.workspace }}
         mkdir build
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.config.fea_ver }} ${{ matrix.config.fea_tbb }}
+        cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.config.fea_ver }} -DFEA_SANITIZE=On ${{ matrix.config.fea_tbb }}
 
     - name: Build
       run: |
