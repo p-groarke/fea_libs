@@ -53,22 +53,21 @@ template <class T>
 using has_const_operator = decltype(std::declval<const T&>()());
 
 // Use OverloadT defaulted template param to fix VS2017 bug.
-template <class T, bool IsConst,
-		class OverloadT = decltype(std::declval<T>()())>
+template <class T, bool IsConst>
 struct ro_make_operator;
 
-template <class T, class OT>
-struct ro_make_operator<T, true, OT> : T {
-	using overload_t = OT;
-	inline operator OT() const noexcept(noexcept(std::declval<T>()())) {
+template <class T>
+struct ro_make_operator<T, true> : T {
+	using overload_t = decltype(std::declval<T>()());
+	inline operator overload_t() const noexcept(noexcept(std::declval<T>()())) {
 		return T::operator()();
 	}
 };
 
-template <class T, class OT>
-struct ro_make_operator<T, false, OT> : T {
-	using overload_t = OT;
-	inline operator OT() noexcept(noexcept(std::declval<T>()())) {
+template <class T>
+struct ro_make_operator<T, false> : T {
+	using overload_t = decltype(std::declval<T>()());
+	inline operator overload_t() noexcept(noexcept(std::declval<T>()())) {
 		return T::operator()();
 	}
 };

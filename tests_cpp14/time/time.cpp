@@ -154,7 +154,7 @@ TEST(time, basics) {
 		EXPECT_EQ(diff_d.count(), 1.f);
 	}
 
-#if FEA_CPP17 && FEA_GCC_GE(13)
+#if FEA_CPP20
 	{
 		date::sys_days d{};
 		std::string_view s = fea::suffixed_day(d);

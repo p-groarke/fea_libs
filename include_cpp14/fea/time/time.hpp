@@ -43,10 +43,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string>
 
 #if FEA_CPP17
-#include "fea/macros/literals.hpp"
-#include "fea/meta/return_overload.hpp"
 #include <filesystem>
 #include <string_view>
+#endif
+
+#if FEA_CPP20
+#include "fea/macros/literals.hpp"
+#include "fea/meta/return_overload.hpp"
 #endif
 
 namespace fea {
@@ -454,7 +457,7 @@ inline std::string to_string(std::tm tm_) {
 	return oss.str();
 }
 
-#if FEA_CPP17 && FEA_GCC_GE(13)
+#if FEA_CPP20
 namespace detail {
 template <class SV>
 constexpr std::array<SV, 32> make_suffix_array() {
