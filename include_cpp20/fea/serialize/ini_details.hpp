@@ -543,6 +543,11 @@ struct return_overload {
 		_entry->value = make_variant<T>(std::forward<T>(t));
 		return *this;
 	}
+	return_overload& operator=(const char* t) {
+		assert(_entry != nullptr);
+		_entry->value = make_variant<std::string_view>(std::string_view{ t });
+		return *this;
+	}
 
 	return_overload& operator,(std::string_view comment) {
 		assert(_entry != nullptr);
