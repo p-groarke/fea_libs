@@ -232,10 +232,9 @@ namespace fea {
 #if defined(_AIX)
 #undef FEA_AIX
 #define FEA_AIX 1
-
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::aix;
 
-#elif defined(__unix__)
+#elif defined(__unix__) && !defined(__linux__)
 } // namespace fea
 #include <sys/param.h>
 namespace fea {
@@ -243,20 +242,17 @@ namespace fea {
 #if defined(BSD)
 #undef FEA_BSD
 #define FEA_BSD 1
-
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::bsd;
 #endif
 
 #elif defined(__hpux)
 #undef FEA_HPUX
 #define FEA_HPUX 1
-
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::hpux;
 
 #elif defined(__linux__)
 #undef FEA_LINUX
 #define FEA_LINUX 1
-
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::linuxx;
 
 #elif defined(__APPLE__) && defined(__MACH__)
@@ -267,80 +263,30 @@ namespace fea {
 #if TARGET_OS_IPHONE == 1
 #undef FEA_IOS
 #define FEA_IOS 1
-
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::ios;
 
 #elif TARGET_OS_MAC == 1
 #undef FEA_MACOS
 #define FEA_MACOS 1
-
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::macos;
 #endif
 
 #elif defined(__sun) && defined(__SVR4)
 #undef FEA_SOLARIS
 #define FEA_SOLARIS 1
-
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::solaris;
 
 #elif defined(_WIN32)
 #undef FEA_WINDOWS
 #define FEA_WINDOWS 1
-
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::windows;
-
-// Nicer VS versions.
-#undef FEA_VS2022
-#undef FEA_VS2019
-#undef FEA_VS2017
-#undef FEA_VS2015
-#define FEA_VS2022 0
-#define FEA_VS2019 0
-#define FEA_VS2017 0
-#define FEA_VS2015 0
-
-// The VS year of release (..., 2022, 2019, 2017, 2015).
-#if FEA_WINDOWS
-#undef FEA_VSYEAR
-#define FEA_VSYEAR 0
-#endif
-
-#if _MSC_VER >= 1930 && _MSC_VER < 1940
-#undef FEA_VS2022
-#define FEA_VS2022 1
-
-#undef FEA_VSYEAR
-#define FEA_VSYEAR 2022
-#endif
-
-#if _MSC_VER >= 1920 && _MSC_VER < 1930
-#undef FEA_VS2019
-#define FEA_VS2019 1
-
-#undef FEA_VSYEAR
-#define FEA_VSYEAR 2019
-#endif
-
-#if _MSC_VER >= 1910 && _MSC_VER < 1920
-#undef FEA_VS2017
-#define FEA_VS2017 1
-
-#undef FEA_VSYEAR
-#define FEA_VSYEAR 2017
-#endif
-
-#if _MSC_VER >= 1900 && _MSC_VER < 1910
-#undef FEA_VS2015
-#define FEA_VS2015 1
-
-#undef FEA_VSYEAR
-#define FEA_VSYEAR 2015
-#endif
-
 #else
+// We are on an unknown platform :scream:
 FEA_INLINE_VAR constexpr platform_t platform = platform_t::count;
 #endif
 
+
+// Check for posix.
 #if !defined(_WIN32) \
 		&& (defined(__unix__) || defined(__unix) \
 				|| (defined(__APPLE__) && defined(__MACH__)) \
@@ -354,14 +300,12 @@ namespace fea {
 #define FEA_POSIX 1
 #undef FEA_UNIX
 #define FEA_UNIX 1
-
 FEA_INLINE_VAR constexpr platform_group_t platform_group
 		= platform_group_t::posix | platform_group_t::unixx;
 
 #else
 #undef FEA_UNIX
 #define FEA_UNIX 1
-
 FEA_INLINE_VAR constexpr platform_group_t platform_group
 		= platform_group_t::unixx;
 #endif
@@ -371,6 +315,106 @@ FEA_INLINE_VAR constexpr platform_group_t platform_group
 		= platform_group_t::count;
 #endif
 
+// Architecture.
+#undef FEA_ARM
+#undef FEA_X86
+#define FEA_ARM 0
+#define FEA_X86 0
+#if defined(__arm__) || defined(__arm) || defined(__arm64__) \
+		|| defined(__arm64) \
+		|| (defined(TARGET_CPU_ARM64) && TARGET_CPU_ARM64 == 1)
+#undef FEA_ARM
+#define FEA_ARM 1
+#else
+#undef FEA_X86
+#define FEA_X86 1
+#endif
+
+// Compiler identification.
+#undef FEA_MSVC
+#undef FEA_CLANG
+#undef FEA_GCC
+#define FEA_MSVC 0
+#define FEA_CLANG 0
+#define FEA_GCC 0
+
+#if defined(_MSC_VER)
+#undef FEA_MSVC
+#define FEA_MSVC 1
+#elif defined(__clang__) || defined(__llvm__)
+// Call before gnuc check.
+#undef FEA_CLANG
+#define FEA_CLANG 1
+#elif defined(__GNUC__)
+#undef FEA_GCC
+#define FEA_GCC 1
+#endif
+
+// VS versions (years).
+// Returns true on other compilers.
+#undef FEA_VS_GT
+#undef FEA_VS_GE
+#undef FEA_VS_EQ
+#undef FEA_VS_LE
+#undef FEA_VS_LT
+#define FEA_VS_GT(year) 1
+#define FEA_VS_GE(year) 1
+#define FEA_VS_EQ(year) 1
+#define FEA_VS_LE(year) 1
+#define FEA_VS_LT(year) 1
+
+#if FEA_MSVC
+#if _MSC_VER >= 1930 && _MSC_VER < 1940
+#undef FEA_DETAIL_VS_YEAR
+#define FEA_DETAIL_VS_YEAR 2022
+#elif _MSC_VER >= 1920 && _MSC_VER < 1930
+#undef FEA_DETAIL_VS_YEAR
+#define FEA_DETAIL_VS_YEAR 2019
+#elif _MSC_VER >= 1910 && _MSC_VER < 1920
+#undef FEA_DETAIL_VS_YEAR
+#define FEA_DETAIL_VS_YEAR 2017
+#elif _MSC_VER >= 1900 && _MSC_VER < 1910
+#undef FEA_DETAIL_VS_YEAR
+#define FEA_DETAIL_VS_YEAR 2015
+#endif
+
+#undef FEA_VS_GT
+#undef FEA_VS_GE
+#undef FEA_VS_EQ
+#undef FEA_VS_LE
+#undef FEA_VS_LT
+#define FEA_VS_GT(year) FEA_DETAIL_VS_YEAR > year
+#define FEA_VS_GE(year) FEA_DETAIL_VS_YEAR >= year
+#define FEA_VS_EQ(year) FEA_DETAIL_VS_YEAR == year
+#define FEA_VS_LE(year) FEA_DETAIL_VS_YEAR <= year
+#define FEA_VS_LT(year) FEA_DETAIL_VS_YEAR < year
+#endif
+
+// GCC versions.
+// Returns true on other compilers.
+#undef FEA_GCC_GT
+#undef FEA_GCC_GE
+#undef FEA_GCC_EQ
+#undef FEA_GCC_LE
+#undef FEA_GCC_LT
+#define FEA_GCC_GT(major_ver) 1
+#define FEA_GCC_GE(major_ver) 1
+#define FEA_GCC_EQ(major_ver) 1
+#define FEA_GCC_LE(major_ver) 1
+#define FEA_GCC_LT(major_ver) 1
+
+#if FEA_GCC
+#undef FEA_GCC_GT
+#undef FEA_GCC_GE
+#undef FEA_GCC_EQ
+#undef FEA_GCC_LE
+#undef FEA_GCC_LT
+#define FEA_GCC_GT(major_ver) __GNUC__ > major_ver
+#define FEA_GCC_GE(major_ver) __GNUC__ >= major_ver
+#define FEA_GCC_EQ(major_ver) __GNUC__ == major_ver
+#define FEA_GCC_LE(major_ver) __GNUC__ <= major_ver
+#define FEA_GCC_LT(major_ver) __GNUC__ < major_ver
+#endif
 
 //// Cross-platform compiler warning.
 //// Note MSVC isn't a true warning, just a message.

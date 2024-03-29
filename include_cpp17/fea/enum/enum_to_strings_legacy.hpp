@@ -43,19 +43,20 @@
 #include "fea/utils/platform.hpp"
 
 #include <array>
+#include <cstdint>
 #include <string>
 #include <string_view>
 #include <tuple>
 
 /*
-FEA_STRING_ENUM creates an enum class with accompanying fea::enum_arrays of
-literals and string_views, plus useful accessors.
+FEA_STRING_ENUM_LEGACY creates an enum class with accompanying fea::enum_arrays
+of literals and string_views, plus useful accessors.
 
 Call the macro using (enum_name, enum_underlying_type, your, enum, values, ...)
 You must always provide an underlying_type.
 
 Example :
-FEA_STRING_ENUM(my_enum, unsigned, potato, tomato)
+FEA_STRING_ENUM_LEGACY(my_enum, unsigned, potato, tomato)
 
 Generates :
 enum class my_enum : unsigned { potato, tomato };
@@ -153,7 +154,7 @@ etc...
 
 
 // Generates both an enum and accompanying arrays of enum strings and functions.
-#define FEA_STRING_ENUM(ename, utype, ...) \
+#define FEA_STRING_ENUM_LEGACY(ename, utype, ...) \
 	/* Declares your enum. */ \
 	enum class ename : utype { __VA_ARGS__ }; \
 	/* char and std::string */ \
@@ -161,7 +162,7 @@ etc...
 	FEA_DETAIL_SE_FUNCS(char, , ename)
 
 // Generates both an enum and accompanying arrays of enum strings and functions.
-#define FEA_WSTRING_ENUM(ename, utype, ...) \
+#define FEA_WSTRING_ENUM_LEGACY(ename, utype, ...) \
 	/* Declares your enum. */ \
 	enum class ename : utype { __VA_ARGS__ }; \
 	/* wchar_t and std::wstring */ \
@@ -170,7 +171,7 @@ etc...
 	FEA_DETAIL_SE_FUNCS(wchar_t, w, ename)
 
 // Generates both an enum and accompanying arrays of enum strings and functions.
-#define FEA_U16STRING_ENUM(ename, utype, ...) \
+#define FEA_U16STRING_ENUM_LEGACY(ename, utype, ...) \
 	/* Declares your enum. */ \
 	enum class ename : utype { __VA_ARGS__ }; \
 	/* char16_t and std::u16string */ \
@@ -179,7 +180,7 @@ etc...
 	FEA_DETAIL_SE_FUNCS(char16_t, u16, ename)
 
 // Generates both an enum and accompanying arrays of enum strings and functions.
-#define FEA_U32STRING_ENUM(ename, utype, ...) \
+#define FEA_U32STRING_ENUM_LEGACY(ename, utype, ...) \
 	/* Declares your enum. */ \
 	enum class ename : utype { __VA_ARGS__ }; \
 	/* char32_t and std::u32string */ \
@@ -188,7 +189,7 @@ etc...
 	FEA_DETAIL_SE_FUNCS(char32_t, u32, ename)
 
 // Generates both an enum and accompanying arrays of enum strings and functions.
-#define FEA_ALLSTRINGS_ENUM(ename, utype, ...) \
+#define FEA_ALLSTRINGS_ENUM_LEGACY(ename, utype, ...) \
 	/* Declares your enum. */ \
 	enum class ename : utype { __VA_ARGS__ }; \
 	/* char and std::string */ \
@@ -209,7 +210,7 @@ etc...
 
 // Generates the enum and accompanying helpers, plus,
 // calls your provided macro with ename, __VA_ARGS__
-#define FEA_STRING_ENUM_CUSTOM(user_macro, ename, utype, ...) \
+#define FEA_STRING_ENUM_LEGACY_CUSTOM(user_macro, ename, utype, ...) \
 	/* Declares your enum. */ \
 	enum class ename : utype { __VA_ARGS__ }; \
 	/* char and std::string */ \
@@ -221,7 +222,7 @@ etc...
 
 // Generates the enum and accompanying helpers, plus,
 // calls your provided macro with ename, __VA_ARGS__
-#define FEA_WSTRING_ENUM_CUSTOM(user_macro, ename, utype, ...) \
+#define FEA_WSTRING_ENUM_LEGACY_CUSTOM(user_macro, ename, utype, ...) \
 	/* Declares your enum. */ \
 	enum class ename : utype { __VA_ARGS__ }; \
 	/* wchar_t and std::wstring */ \
@@ -234,7 +235,7 @@ etc...
 
 // Generates the enum and accompanying helpers, plus,
 // calls your provided macro with ename, __VA_ARGS__
-#define FEA_U16STRING_ENUM_CUSTOM(user_macro, ename, utype, ...) \
+#define FEA_U16STRING_ENUM_LEGACY_CUSTOM(user_macro, ename, utype, ...) \
 	/* Declares your enum. */ \
 	enum class ename : utype { __VA_ARGS__ }; \
 	/* char16_t and std::u16string */ \
@@ -247,7 +248,7 @@ etc...
 
 // Generates the enum and accompanying helpers, plus,
 // calls your provided macro with ename, __VA_ARGS__
-#define FEA_U32STRING_ENUM_CUSTOM(user_macro, ename, utype, ...) \
+#define FEA_U32STRING_ENUM_LEGACY_CUSTOM(user_macro, ename, utype, ...) \
 	/* Declares your enum. */ \
 	enum class ename : utype { __VA_ARGS__ }; \
 	/* char32_t and std::u32string */ \
@@ -261,7 +262,7 @@ etc...
 
 // Generates the enum and accompanying helpers, plus,
 // calls your provided macro with ename, __VA_ARGS__
-#define FEA_ALLSTRINGS_ENUM_CUSTOM(user_macro, ename, utype, ...) \
+#define FEA_ALLSTRINGS_ENUM_LEGACY_CUSTOM(user_macro, ename, utype, ...) \
 	/* Declares your enum. */ \
 	enum class ename : utype { __VA_ARGS__ }; \
 	/* char and std::string */ \
@@ -287,7 +288,7 @@ etc...
 // Generates both an enum and accompanying arrays of enum strings and functions.
 // This version generates a 'count' enum value for you, and places it at the end
 // of the enum. No strings are generated for 'count', and array sizes == count.
-#define FEA_STRING_ENUM_WITH_COUNT(ename, utype, ...) \
+#define FEA_STRING_ENUM_LEGACY_WITH_COUNT(ename, utype, ...) \
 	/* Declares your enum. Adds 'count' at the end. */ \
 	enum class ename : utype { __VA_ARGS__, count }; \
 	/* char and std::string */ \
@@ -297,7 +298,7 @@ etc...
 // Generates both an enum and accompanying arrays of enum strings and functions.
 // This version generates a 'count' enum value for you, and places it at the end
 // of the enum. No strings are generated for 'count', and array sizes == count.
-#define FEA_WSTRING_ENUM_WITH_COUNT(ename, utype, ...) \
+#define FEA_WSTRING_ENUM_LEGACY_WITH_COUNT(ename, utype, ...) \
 	/* Declares your enum. Adds 'count' at the end. */ \
 	enum class ename : utype { __VA_ARGS__, count }; \
 	/* wchar_t and std::wstring */ \
@@ -308,7 +309,7 @@ etc...
 // Generates both an enum and accompanying arrays of enum strings and functions.
 // This version generates a 'count' enum value for you, and places it at the end
 // of the enum. No strings are generated for 'count', and array sizes == count.
-#define FEA_U16STRING_ENUM_WITH_COUNT(ename, utype, ...) \
+#define FEA_U16STRING_ENUM_LEGACY_WITH_COUNT(ename, utype, ...) \
 	/* Declares your enum. Adds 'count' at the end. */ \
 	enum class ename : utype { __VA_ARGS__, count }; \
 	/* char16_t and std::u16string */ \
@@ -319,7 +320,7 @@ etc...
 // Generates both an enum and accompanying arrays of enum strings and functions.
 // This version generates a 'count' enum value for you, and places it at the end
 // of the enum. No strings are generated for 'count', and array sizes == count.
-#define FEA_U32STRING_ENUM_WITH_COUNT(ename, utype, ...) \
+#define FEA_U32STRING_ENUM_LEGACY_WITH_COUNT(ename, utype, ...) \
 	/* Declares your enum. Adds 'count' at the end. */ \
 	enum class ename : utype { __VA_ARGS__, count }; \
 	/* char32_t and std::u32string */ \
@@ -330,7 +331,7 @@ etc...
 // Generates both an enum and accompanying arrays of enum strings and functions.
 // This version generates a 'count' enum value for you, and places it at the end
 // of the enum. No strings are generated for 'count', and array sizes == count.
-#define FEA_ALLSTRINGS_ENUM_WITH_COUNT(ename, utype, ...) \
+#define FEA_ALLSTRINGS_ENUM_LEGACY_WITH_COUNT(ename, utype, ...) \
 	/* Declares your enum. Adds 'count' at the end. */ \
 	enum class ename : utype { __VA_ARGS__, count }; \
 	/* char and std::string */ \
@@ -356,7 +357,8 @@ etc...
 //
 // In addition, this call will call your 'user_macro' once it is done.
 // Your macro must accept : (enum_name, ...)
-#define FEA_STRING_ENUM_WITH_COUNT_CUSTOM(user_macro, ename, utype, ...) \
+#define FEA_STRING_ENUM_LEGACY_WITH_COUNT_CUSTOM( \
+		user_macro, ename, utype, ...) \
 	/* Declares your enum. Adds 'count' at the end. */ \
 	enum class ename : utype { __VA_ARGS__, count }; \
 	/* char and std::string */ \
@@ -372,7 +374,8 @@ etc...
 //
 // In addition, this call will call your 'user_macro' once it is done.
 // Your macro must accept : (enum_name, ...)
-#define FEA_WSTRING_ENUM_WITH_COUNT_CUSTOM(user_macro, ename, utype, ...) \
+#define FEA_WSTRING_ENUM_LEGACY_WITH_COUNT_CUSTOM( \
+		user_macro, ename, utype, ...) \
 	/* Declares your enum. Adds 'count' at the end. */ \
 	enum class ename : utype { __VA_ARGS__, count }; \
 	/* wchar_t and std::wstring */ \
@@ -389,7 +392,8 @@ etc...
 //
 // In addition, this call will call your 'user_macro' once it is done.
 // Your macro must accept : (enum_name, ...)
-#define FEA_U16STRING_ENUM_WITH_COUNT_CUSTOM(user_macro, ename, utype, ...) \
+#define FEA_U16STRING_ENUM_LEGACY_WITH_COUNT_CUSTOM( \
+		user_macro, ename, utype, ...) \
 	/* Declares your enum. Adds 'count' at the end. */ \
 	enum class ename : utype { __VA_ARGS__, count }; \
 	/* char16_t and std::u16string */ \
@@ -406,7 +410,8 @@ etc...
 //
 // In addition, this call will call your 'user_macro' once it is done.
 // Your macro must accept : (enum_name, ...)
-#define FEA_U32STRING_ENUM_WITH_COUNT_CUSTOM(user_macro, ename, utype, ...) \
+#define FEA_U32STRING_ENUM_LEGACY_WITH_COUNT_CUSTOM( \
+		user_macro, ename, utype, ...) \
 	/* Declares your enum. Adds 'count' at the end. */ \
 	enum class ename : utype { __VA_ARGS__, count }; \
 	/* char32_t and std::u32string */ \
@@ -423,7 +428,8 @@ etc...
 //
 // In addition, this call will call your 'user_macro' once it is done.
 // Your macro must accept : (enum_name, ...)
-#define FEA_ALLSTRINGS_ENUM_WITH_COUNT_CUSTOM(user_macro, ename, utype, ...) \
+#define FEA_ALLSTRINGS_ENUM_LEGACY_WITH_COUNT_CUSTOM( \
+		user_macro, ename, utype, ...) \
 	/* Declares your enum. Adds 'count' at the end. */ \
 	enum class ename : utype { __VA_ARGS__, count }; \
 	/* char and std::string */ \

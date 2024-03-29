@@ -32,8 +32,6 @@
  **/
 
 #pragma once
-#include "fea/macros/enum_to_strings.hpp"
-
 #include <cstdint>
 #include <limits>
 #include <string_view>

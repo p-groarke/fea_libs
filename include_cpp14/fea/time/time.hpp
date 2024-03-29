@@ -32,11 +32,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 #include "fea/utils/platform.hpp"
 
-#if FEA_CPP17
-#include "fea/macros/literals.hpp"
-#include "fea/string/string.hpp"
-#endif
-
 #include <array>
 #include <chrono>
 #include <cmath>
@@ -49,6 +44,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #if FEA_CPP17
 #include <filesystem>
+#include <string_view>
+#endif
+
+#if FEA_CPP20
+#include "fea/macros/literals.hpp"
+#include "fea/meta/return_overload.hpp"
 #endif
 
 namespace fea {
@@ -456,25 +457,20 @@ inline std::string to_string(std::tm tm_) {
 	return oss.str();
 }
 
-#if FEA_CPP17
+#if FEA_CPP20
 namespace detail {
-template <class String>
-void suffixed_day(date::sys_days tp, const String*& ret) {
-	using CharT = typename String::value_type;
-	static const std::array<String, 32> lookup{ FEA_LIT("0th"), FEA_LIT("1st"),
-		FEA_LIT("2nd"), FEA_LIT("3rd"), FEA_LIT("4th"), FEA_LIT("5th"),
-		FEA_LIT("6th"), FEA_LIT("7th"), FEA_LIT("8th"), FEA_LIT("9th"),
-		FEA_LIT("10th"), FEA_LIT("11th"), FEA_LIT("12th"), FEA_LIT("13th"),
-		FEA_LIT("14th"), FEA_LIT("15th"), FEA_LIT("16th"), FEA_LIT("17th"),
-		FEA_LIT("18th"), FEA_LIT("19th"), FEA_LIT("20th"), FEA_LIT("21st"),
-		FEA_LIT("22nd"), FEA_LIT("23rd"), FEA_LIT("24th"), FEA_LIT("25th"),
-		FEA_LIT("26th"), FEA_LIT("27th"), FEA_LIT("28th"), FEA_LIT("29th"),
-		FEA_LIT("30th"), FEA_LIT("31st") };
-
-	date::year_month_day ymd{ tp };
-	unsigned d = unsigned(ymd.day());
-	assert(d < 32u);
-	ret = &lookup[d];
+template <class SV>
+constexpr std::array<SV, 32> make_suffix_array() {
+	using CharT = typename SV::value_type;
+	return std::array<SV, 32>{ FEA_LIT("0th"), FEA_LIT("1st"), FEA_LIT("2nd"),
+		FEA_LIT("3rd"), FEA_LIT("4th"), FEA_LIT("5th"), FEA_LIT("6th"),
+		FEA_LIT("7th"), FEA_LIT("8th"), FEA_LIT("9th"), FEA_LIT("10th"),
+		FEA_LIT("11th"), FEA_LIT("12th"), FEA_LIT("13th"), FEA_LIT("14th"),
+		FEA_LIT("15th"), FEA_LIT("16th"), FEA_LIT("17th"), FEA_LIT("18th"),
+		FEA_LIT("19th"), FEA_LIT("20th"), FEA_LIT("21st"), FEA_LIT("22nd"),
+		FEA_LIT("23rd"), FEA_LIT("24th"), FEA_LIT("25th"), FEA_LIT("26th"),
+		FEA_LIT("27th"), FEA_LIT("28th"), FEA_LIT("29th"), FEA_LIT("30th"),
+		FEA_LIT("31st") };
 }
 } // namespace detail
 
@@ -482,9 +478,25 @@ void suffixed_day(date::sys_days tp, const String*& ret) {
 // Ex, 1st, 2nd, 3rd, etc.
 // Return type overload magic. Supports all std strings (other than u8string).
 inline auto suffixed_day(date::sys_days tp) {
-	return fea::str_cr_return_overload{ [tp](const auto*& ret) {
-		detail::suffixed_day(tp, ret);
-	} };
+	static constexpr auto str_arr
+			= detail::make_suffix_array<std::string_view>();
+	static constexpr auto wstr_arr
+			= detail::make_suffix_array<std::wstring_view>();
+	static constexpr auto u16str_arr
+			= detail::make_suffix_array<std::u16string_view>();
+	static constexpr auto u32str_arr
+			= detail::make_suffix_array<std::u32string_view>();
+
+	date::year_month_day ymd{ tp };
+	unsigned d = unsigned(ymd.day());
+	assert(d < 32u);
+
+	return fea::return_overload{
+		[d]() -> std::string_view { return str_arr[d]; },
+		[d]() -> std::wstring_view { return wstr_arr[d]; },
+		[d]() -> std::u16string_view { return u16str_arr[d]; },
+		[d]() -> std::u32string_view { return u32str_arr[d]; },
+	};
 }
 #endif
 } // namespace fea

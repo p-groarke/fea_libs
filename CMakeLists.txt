@@ -14,9 +14,16 @@ option(FEA_CPP14 "Use C++14 (default is C++20)." Off)
 option(FEA_PULL_CONAN "Executes conan install from cmake." On)
 option(FEA_CONAN2 "If pulling conan dependencies, are we running conan 2?" Off)
 option(FEA_CMAKE_LOCAL "Use local fea_cmake repo. Searches for '../fea_cmake'" Off)
+# option(FEA_SANITIZE "Enables -fsanitize on debug builds." Off)
 
 # Options that affect which modules and functionality are available.
-option(FEA_WITH_TBB "Pull oneTBB and use it." On)
+option(FEA_WITH_TBB "Pull TBB (2020.3) and use it." On)
+option(FEA_WITH_ONETBB "Pull oneTBB (2020.10.0) and use it." Off)
+
+if (FEA_WITH_ONETBB)
+	# We prioritize onetbb throughout, but use the same defines in codebase.
+	set(FEA_WITH_TBB On)
+endif()
 
 # C++ version.
 if ("cxx_std_20" IN_LIST CMAKE_CXX_COMPILE_FEATURES AND NOT FEA_CPP17 AND NOT FEA_CPP14)
@@ -30,13 +37,23 @@ else()
 	message("\nEnabling C++14 libraries.\n")
 endif()
 
+# wip
+set(FEA_SANITIZE Off)
+if (FEA_SANITIZE AND NOT CMAKE_CXX_STANDARD EQUAL 20)
+	message(WARNING "'FEA_SANITIZE' is only compatible with C++20, disabling option.")
+	set(FEA_SANITIZE Off)
+elseif (FEA_SANITIZE AND NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
+	message(WARNING "'FEA_SANITIZE' doesn't work on clang or gcc at the moment, disabling option.")
+	set(FEA_SANITIZE Off)
+endif()
+
 # Pull fea_cmake helper library.
 if (${FEA_CMAKE_LOCAL})
 	set(FETCHCONTENT_SOURCE_DIR_FEA_CMAKE ${CMAKE_CURRENT_SOURCE_DIR}/../fea_cmake CACHE INTERNAL "")
 endif()
 FetchContent_Declare(fea_cmake
 	GIT_REPOSITORY https://github.com/p-groarke/fea_cmake.git
-	GIT_TAG 3af8de8dee6b1e7b9a782076f90216ea4cbd10f3
+	GIT_TAG 0bcad438e84b8b8124901990e42f998d095c3a8c
 )
 FetchContent_MakeAvailable(fea_cmake)
 
@@ -56,24 +73,54 @@ fea_import_gitignore()
 fea_set_output_dir(${CMAKE_BINARY_DIR}/bin)
 
 # External dependencies.
-if (${FEA_PULL_CONAN})
-	fea_bool_to_pybool(FEA_WITH_TBB _FEA_WITH_TBB_PYBOOL)
 
-	if (NOT ${FEA_CONAN2})
+if (FEA_PULL_CONAN)
+	fea_bool_to_pybool(FEA_WITH_TBB _FEA_WITH_TBB_PYBOOL)
+	fea_bool_to_pybool(FEA_WITH_ONETBB _FEA_WITH_ONETBB_PYBOOL)
+
+	# Install our conan config, which contains settings, profiles, hooks, etc.
+	fea_execute_process(COMMAND conan config install --type dir "${fea_cmake_SOURCE_DIR}/.conan"
+		COMMAND_ECHO STDOUT
+		ERROR_MSG "Couldn't install fea_cmake conan config."
+	)
+
+	# Enables fsanitize=address on debug builds.
+	set(FEA_CONAN_PROFILE_ASAN "")
+	if (FEA_SANITIZE)
+		# Use the sanitize profiles.
+		if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+			set(FEA_CONAN_PROFILE_ASAN "--profile fea_sanitize_win_profile")
+		# Disable on unixes, gcc dies.
+		# else()
+		# 	set(FEA_CONAN_PROFILE_ASAN "--profile fea_sanitize_unix_profile")
+		endif()
+	endif()
+
+	if (NOT FEA_CONAN2)
 		# Enable conan revisions (RREV).
 		fea_execute_process(COMMAND conan config set general.revisions_enabled=True
 			COMMAND_ECHO STDOUT
 			ERROR_MSG "Failed to set conan 1 revisions_enabled."
 		)
-		fea_pull_conan(CONAN_MSVC_TOOLSET "${CMAKE_VS_PLATFORM_TOOLSET}" CONAN_ARGS "-o fea_libs:with_tbb=${_FEA_WITH_TBB_PYBOOL}")
-	else()
-		fea_pull_conan2(CONAN_MSVC_TOOLSET "${CMAKE_VS_PLATFORM_TOOLSET}" CONAN_ARGS "-o fea_libs:with_tbb=${_FEA_WITH_TBB_PYBOOL}")
-	endif()
 
+		fea_pull_conan_debug(CONAN_MSVC_TOOLSET "${CMAKE_VS_PLATFORM_TOOLSET}"
+			CONAN_ARGS "--profile default ${FEA_CONAN_PROFILE_ASAN} -o fea_libs:with_tbb=${_FEA_WITH_TBB_PYBOOL} -o fea_libs:with_onetbb=${_FEA_WITH_ONETBB_PYBOOL} --build missing"
+		)
+		# No sanitize in release.
+		fea_pull_conan_release(CONAN_MSVC_TOOLSET "${CMAKE_VS_PLATFORM_TOOLSET}"
+			CONAN_ARGS "--profile default -o fea_libs:with_tbb=${_FEA_WITH_TBB_PYBOOL} -o fea_libs:with_onetbb=${_FEA_WITH_ONETBB_PYBOOL} --build missing"
+		)
+	else()
+		fea_pull_conan2_debug(CONAN_MSVC_TOOLSET "${CMAKE_VS_PLATFORM_TOOLSET}"
+			CONAN_ARGS "--profile default ${FEA_CONAN_PROFILE_ASAN} -o fea_libs:with_tbb=${_FEA_WITH_TBB_PYBOOL} -o fea_libs:with_onetbb=${_FEA_WITH_ONETBB_PYBOOL} --build missing"
+		)
+		fea_pull_conan2_release(CONAN_MSVC_TOOLSET "${CMAKE_VS_PLATFORM_TOOLSET}"
+			CONAN_ARGS "--profile default -o fea_libs:with_tbb=${_FEA_WITH_TBB_PYBOOL} -o fea_libs:with_onetbb=${_FEA_WITH_ONETBB_PYBOOL} --build missing"
+		)
+	endif()
 endif()
 
 find_package(date CONFIG REQUIRED QUIET)
-
 
 # Main Project
 set(INCLUDE_NAME fea)
@@ -83,6 +130,11 @@ file(GLOB_RECURSE HEADER_FILES_CPP20 "include_cpp20/${INCLUDE_NAME}/*.hpp")
 add_library(${PROJECT_NAME} INTERFACE)
 fea_set_compile_options(${PROJECT_NAME} INTERFACE)
 target_link_libraries(${PROJECT_NAME} INTERFACE date::date)
+
+if (FEA_SANITIZE)
+	fea_sanitize_address(${PROJECT_NAME} INTERFACE Debug)
+	fea_sanitize_address(date::date INTERFACE Debug)
+endif()
 
 if (FEA_WITH_TBB)
 	find_package(TBB CONFIG REQUIRED QUIET)

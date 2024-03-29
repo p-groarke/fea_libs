@@ -246,15 +246,15 @@ See : https://codecraft.co/2014/11/25/variadic-macros-tricks/
  *
  * Example usage1:
  *     #define FWD_DECLARE_CLASS(cls) class cls;
- *     CALL_MACRO_X_FOR_EACH(FWD_DECLARE_CLASS, Foo, Bar)
+ *     FEA_FOR_EACH(FWD_DECLARE_CLASS, Foo, Bar)
  *
  * Example usage 2:
  *     #define START_NS(ns) namespace ns {
  *     #define END_NS(ns) }
  *     #define MY_NAMESPACES System, Net, Http
- *     CALL_MACRO_X_FOR_EACH(START_NS, MY_NAMESPACES)
+ *     FEA_FOR_EACH(START_NS, MY_NAMESPACES)
  *     typedef foo int;
- *     CALL_MACRO_X_FOR_EACH(END_NS, MY_NAMESPACES)
+ *     FEA_FOR_EACH(END_NS, MY_NAMESPACES)
  */
 #define FEA_FOR_EACH(macro, ...) \
 	FEA_DETAIL_EXPAND(FEA_GET_NTH_ARG(__VA_ARGS__, FEA_DETAIL_FECALL_99, \

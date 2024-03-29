@@ -153,17 +153,17 @@ struct section {
 	std::string section_name;
 
 	// Optional comment.
-	std::string comment;
+	std::string comment{};
 
 	// Used when generating entry ids.
 	entry_id_t next_entry_id = entry_id_t(0);
 
 	// Our entries.
-	fea::flat_unsigned_map<entry_id_t, entry> entry_map;
+	fea::flat_unsigned_map<entry_id_t, entry> entry_map{};
 
 	// Section id to section lookup of entry name to entry id.
 	std::unordered_map<std::string, entry_id_t, string_hash, std::equal_to<>>
-			entry_name_to_id;
+			entry_name_to_id{};
 
 	// Used to store invalid variant.
 	static constexpr variant_t invalid_variant = std::nullptr_t{};
@@ -272,7 +272,6 @@ inline std::string to_string(const variant_t& v) {
 }
 
 inline std::string to_string(const entry& e, bool var_help) {
-	constexpr std::string_view endline = "\n";
 	static constexpr std::string_view comment_fmt = "  ; {}\n";
 	constexpr std::string_view val_fmt = "{} = {}\n";
 
@@ -296,7 +295,6 @@ inline std::string to_string(const entry& e, bool var_help) {
 }
 
 inline std::string to_string(const section& s, bool var_help) {
-	constexpr std::string_view endline = "\n";
 	static constexpr std::string_view comment_fmt = "\n; {}";
 	constexpr std::string_view s_fmt = "\n[{}]\n";
 
@@ -485,7 +483,6 @@ struct return_overload {
 
 	template <class T>
 	[[nodiscard]] static variant_t make_variant(T&& t) {
-		using m_t = std::decay_t<T>;
 		using inner_t = decltype(to_variant_type<T>());
 		return variant_t{ inner_t(std::forward<T>(t)) };
 	}
@@ -557,9 +554,11 @@ struct return_overload {
 		return doit<bool>();
 	}
 
+#if FEA_WINDOWS
 	[[nodiscard]] operator signed char() const&& {
 		return (signed char)(doit<intmax_t>());
 	}
+#endif
 	[[nodiscard]] operator unsigned char() const&& {
 		return (unsigned char)(doit<intmax_t>());
 	}
@@ -593,6 +592,12 @@ struct return_overload {
 
 	[[nodiscard]] operator double() const&& {
 		return doit<float_t>();
+	}
+#endif
+
+#if !FEA_WINDOWS
+	[[nodiscard]] operator size_t() const&& {
+		return size_t(doit<intmax_t>());
 	}
 #endif
 

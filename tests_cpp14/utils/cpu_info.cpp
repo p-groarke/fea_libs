@@ -1,4 +1,5 @@
 ﻿#include <fea/utils/cpu_info.hpp>
+#if !FEA_ARM
 #include <gtest/gtest.h>
 #include <unordered_map>
 
@@ -315,3 +316,4 @@ TEST(cpu_info, basics) {
 	// fea::cpu_info.print_all();
 }
 } // namespace
+#endif
