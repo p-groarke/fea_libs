@@ -1055,11 +1055,14 @@ struct lazy_graph {
 
 			fea::span<const Id> children = n.children();
 
+#if FEA_LINUX
 			// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=106199
-			auto fix_gcc_graph_end = graph.end();
-			auto fix_gcc_beg = children.begin();
-			auto fix_gcc_end = children.end();
-			graph.insert(fix_gcc_graph_end, fix_gcc_beg, fix_gcc_end);
+			for (const Id& mid : children) {
+				graph.push_back(mid);
+			}
+#else
+			graph.insert(graph.end(), children.begin(), children.end());
+#endif
 		}
 
 		return false;
