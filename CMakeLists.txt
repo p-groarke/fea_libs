@@ -85,8 +85,9 @@ if (FEA_PULL_CONAN)
 		# Use the sanitize profiles.
 		if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 			set(FEA_CONAN_PROFILE_ASAN "--profile fea_sanitize_win_profile")
-		else()
-			set(FEA_CONAN_PROFILE_ASAN "--profile fea_sanitize_unix_profile")
+		# Disable on unixes, gcc dies.
+		# else()
+		# 	set(FEA_CONAN_PROFILE_ASAN "--profile fea_sanitize_unix_profile")
 		endif()
 	endif()
 
@@ -216,12 +217,6 @@ if (FEA_TESTS)
 	fea_set_compile_options(${TEST_NAME} PRIVATE)
 	fea_set_compile_options(${TEST_NAME_NOTHROW} PRIVATE)
 	fea_set_compile_options(${TEST_NAME_PIPE} PRIVATE)
-
-	if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-		target_link_options(${TEST_NAME} PRIVATE -Wl,-z,stack-size=4194304)
-		target_link_options(${TEST_NAME_NOTHROW} PRIVATE -Wl,-z,stack-size=4194304)
-		target_link_options(${TEST_NAME_PIPE} PRIVATE -Wl,-z,stack-size=4194304)
-	endif()
 
 	set_target_properties(${TEST_NAME} PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "--gtest_catch_exceptions=0 --gtest_filter=*")
 	set_target_properties(${TEST_NAME_NOTHROW} PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "--gtest_catch_exceptions=0 --gtest_filter=*")

@@ -330,6 +330,26 @@ FEA_INLINE_VAR constexpr platform_group_t platform_group
 #define FEA_X86 1
 #endif
 
+// Compiler identification.
+#undef FEA_MSVC
+#undef FEA_CLANG
+#undef FEA_GCC
+#define FEA_MSVC 0
+#define FEA_CLANG 0
+#define FEA_GCC 0
+
+#if defined(_MSC_VER)
+#undef FEA_MSVC
+#define FEA_MSVC 1
+#elif defined(__clang__) || defined(__llvm__)
+// Call before gnuc check.
+#undef FEA_CLANG
+#define FEA_CLANG 1
+#elif defined(__GNUC__)
+#undef FEA_GCC
+#define FEA_GCC 1
+#endif
+
 // VS versions (years).
 // Returns true on other compilers.
 #undef FEA_VS_GT
@@ -343,7 +363,7 @@ FEA_INLINE_VAR constexpr platform_group_t platform_group
 #define FEA_VS_LE(year) 1
 #define FEA_VS_LT(year) 1
 
-#if defined(_MSC_VER)
+#if FEA_MSVC
 #if _MSC_VER >= 1930 && _MSC_VER < 1940
 #undef FEA_DETAIL_VS_YEAR
 #define FEA_DETAIL_VS_YEAR 2022
@@ -383,7 +403,7 @@ FEA_INLINE_VAR constexpr platform_group_t platform_group
 #define FEA_GCC_LE(major_ver) 1
 #define FEA_GCC_LT(major_ver) 1
 
-#if defined(__GNUC__)
+#if FEA_GCC
 #undef FEA_GCC_GT
 #undef FEA_GCC_GE
 #undef FEA_GCC_EQ
