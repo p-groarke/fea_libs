@@ -7,13 +7,6 @@
 
 using namespace fea::literals;
 
-#if FEA_MACOS
-// Clang complains about braces around lambdas, which is a bug (potentially
-// fixed in recent versions).
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-braces"
-#endif
-
 #if FEA_LINUX
 // GCC incorrectly flags returned references as dangling.
 #pragma GCC diagnostic push
@@ -475,8 +468,6 @@ TEST(return_overload, subtleties) {
 }
 } // namespace
 
-#if FEA_MACOS
-#pragma clang diagnostic pop
-#elif FEA_LINUX
+#if FEA_LINUX
 #pragma GCC diagnostic pop
 #endif
