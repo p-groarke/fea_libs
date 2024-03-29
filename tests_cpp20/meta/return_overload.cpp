@@ -17,8 +17,9 @@ namespace {
 auto example_func() {
 	// When overloading with both char and std::string,
 	// use signed char to disambiguate std::string operator=.
-	// On apple-clang, this doesn't work, which means
-	// you cannot mix std::string and chars in that situation.
+	// On non-msvc, this doesn't work, which means
+	// you need to make the assignement explicit.
+	// See unit test for an example.
 	return fea::return_overload{
 		[]() -> signed char { return 0; },
 		[]() -> unsigned char { return 1; },

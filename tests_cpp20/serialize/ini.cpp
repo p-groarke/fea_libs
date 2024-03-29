@@ -126,6 +126,9 @@ TEST(ini, basics) {
 		stringval = test["fla"]["flou"] | "a default";
 		EXPECT_EQ(stringval, "a default");
 #else
+		// clang and gcc do not differntiate signed char.
+		// Since std::string::operator=(char) isn't marked explicit (which it
+		// should be in the standard), you need explicit conversion.
 		stringval = static_cast<std::string>(test["fla"]["flou"] | "a default");
 		EXPECT_EQ(stringval, "a default");
 

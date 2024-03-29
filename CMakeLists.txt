@@ -48,7 +48,7 @@ if (${FEA_CMAKE_LOCAL})
 endif()
 FetchContent_Declare(fea_cmake
 	GIT_REPOSITORY https://github.com/p-groarke/fea_cmake.git
-	GIT_TAG 1d2c8f0c7d5980b7758f7f8b807d062877a44e08
+	GIT_TAG 8632366adc2bd3b65ae7560f9f9390beb9db2848
 )
 FetchContent_MakeAvailable(fea_cmake)
 
@@ -127,6 +127,7 @@ target_link_libraries(${PROJECT_NAME} INTERFACE date::date)
 
 if (FEA_SANITIZE)
 	fea_sanitize_address(${PROJECT_NAME} INTERFACE Debug)
+	fea_sanitize_address(date::date INTERFACE Debug)
 endif()
 
 if (FEA_WITH_TBB)
