@@ -35,6 +35,7 @@
 #include "fea/utils/platform.hpp"
 
 #include <type_traits>
+#include <utility>
 
 /*
 fea::return_overload is a simple return type which allows you to customize
@@ -50,14 +51,16 @@ See unit tests for examples.
 namespace fea {
 namespace detail {
 template <class T>
-using has_const_operator = decltype(std::declval<const T&>()());
+concept has_const_paren
+		= requires(std::decay_t<T> t) { std::as_const(t).operator()(); };
 
 // Use OverloadT defaulted template param to fix VS2017 bug.
-template <class T, bool IsConst>
+template <class T>
 struct ro_make_operator;
 
 template <class T>
-struct ro_make_operator<T, true> : T {
+	requires(has_const_paren<T>)
+struct ro_make_operator<T> : T {
 	using overload_t = decltype(std::declval<T>()());
 	inline operator overload_t() const noexcept(noexcept(std::declval<T>()())) {
 		return T::operator()();
@@ -65,7 +68,8 @@ struct ro_make_operator<T, true> : T {
 };
 
 template <class T>
-struct ro_make_operator<T, false> : T {
+	requires(!has_const_paren<T>)
+struct ro_make_operator<T> : T {
 	using overload_t = decltype(std::declval<T>()());
 	inline operator overload_t() noexcept(noexcept(std::declval<T>()())) {
 		return T::operator()();
@@ -73,10 +77,8 @@ struct ro_make_operator<T, false> : T {
 };
 
 template <class T>
-struct ro_base
-		: ro_make_operator<T, fea::is_detected_v<has_const_operator, T>> {
-	using base_t
-			= ro_make_operator<T, fea::is_detected_v<has_const_operator, T>>;
+struct ro_base : ro_make_operator<T> {
+	using base_t = ro_make_operator<T>;
 	using overload_t = typename base_t::overload_t;
 	using base_t::operator typename base_t::overload_t;
 };

@@ -31,13 +31,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
-#include "fea/utils/platform.hpp"
-
-#if FEA_GCC_GE(13)
 #include "fea/enum/enum_array.hpp"
 #include "fea/macros/literals.hpp"
 #include "fea/macros/macros.hpp"
 #include "fea/meta/return_overload.hpp"
+#include "fea/utils/platform.hpp"
 
 #include <string>
 #include <string_view>
@@ -66,19 +64,6 @@ inline my_enum from_string(...);
 See unit tests for examples.
 */
 
-#if FEA_MACOS
-// Clang complains about braces around lambdas / initializers, whether they are
-// present or not.
-#define FEA_DETAIL_CLANG_BUG_BEGIN \
-	_Pragma("clang diagnostic push"); \
-	_Pragma("clang diagnostic ignored \"-Wmissing-braces\"")
-
-#define FEA_DETAIL_CLANG_BUG_END _Pragma("clang diagnostic pop")
-#else
-#define FEA_DETAIL_CLANG_BUG_BEGIN
-#define FEA_DETAIL_CLANG_BUG_END
-#endif
-
 // Used internally.
 // Creates pairs of { "name", enum_type::name } for unordered_map.
 #define FEA_DETAIL_LOOKUP_PAIR(name) { FEA_STRINGIFY(name), enum_type::name },
@@ -95,8 +80,6 @@ See unit tests for examples.
 #define FEA_STRING_ENUM(enum_t, underlying_t, ...) \
 	/* Declare your enum. */ \
 	enum class enum_t : underlying_t { __VA_ARGS__ }; \
-	/* Silence bugged clang warnings. */ \
-	FEA_DETAIL_CLANG_BUG_BEGIN \
 	/* Implement to_string for all supported string types. */ \
 	inline auto to_string(enum_t e__) { \
 		static constexpr size_t N = FEA_SIZEOF_VAARGS(__VA_ARGS__); \
@@ -134,8 +117,6 @@ See unit tests for examples.
 			[e__]() -> const std::u32string& { return u32str_arr[e__]; }, \
 		}; \
 	} \
-	/* Silence bugged clang warnings. */ \
-	FEA_DETAIL_CLANG_BUG_END \
 	/* Implement from_string for all supported string types. */ \
 	inline enum_t from_string(std::string_view s__) { \
 		using enum_type = enum_t; \
@@ -193,5 +174,3 @@ See unit tests for examples.
 		}; \
 		return lookup.at(s__); \
 	}
-
-#endif

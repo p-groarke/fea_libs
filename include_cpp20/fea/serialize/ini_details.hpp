@@ -153,17 +153,17 @@ struct section {
 	std::string section_name;
 
 	// Optional comment.
-	std::string comment;
+	std::string comment{};
 
 	// Used when generating entry ids.
 	entry_id_t next_entry_id = entry_id_t(0);
 
 	// Our entries.
-	fea::flat_unsigned_map<entry_id_t, entry> entry_map;
+	fea::flat_unsigned_map<entry_id_t, entry> entry_map{};
 
 	// Section id to section lookup of entry name to entry id.
 	std::unordered_map<std::string, entry_id_t, string_hash, std::equal_to<>>
-			entry_name_to_id;
+			entry_name_to_id{};
 
 	// Used to store invalid variant.
 	static constexpr variant_t invalid_variant = std::nullptr_t{};
@@ -483,7 +483,6 @@ struct return_overload {
 
 	template <class T>
 	[[nodiscard]] static variant_t make_variant(T&& t) {
-		using m_t = std::decay_t<T>;
 		using inner_t = decltype(to_variant_type<T>());
 		return variant_t{ inner_t(std::forward<T>(t)) };
 	}
