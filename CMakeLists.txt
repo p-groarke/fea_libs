@@ -14,7 +14,7 @@ option(FEA_CPP14 "Use C++14 (default is C++20)." Off)
 option(FEA_PULL_CONAN "Executes conan install from cmake." On)
 option(FEA_CONAN2 "If pulling conan dependencies, are we running conan 2?" Off)
 option(FEA_CMAKE_LOCAL "Use local fea_cmake repo. Searches for '../fea_cmake'" Off)
-option(FEA_SANITIZE "Enables -fsanitize on debug builds." Off)
+# option(FEA_SANITIZE "Enables -fsanitize on debug builds." Off)
 
 # Options that affect which modules and functionality are available.
 option(FEA_WITH_TBB "Pull TBB (2020.3) and use it." On)
@@ -37,6 +37,8 @@ else()
 	message("\nEnabling C++14 libraries.\n")
 endif()
 
+# wip
+set(FEA_SANITIZE Off)
 if (FEA_SANITIZE AND NOT CMAKE_CXX_STANDARD EQUAL 20)
 	message(WARNING "'FEA_SANITIZE' is only compatible with C++20, disabling option.")
 	set(FEA_SANITIZE Off)
