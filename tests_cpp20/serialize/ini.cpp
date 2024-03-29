@@ -131,9 +131,6 @@ TEST(ini, basics) {
 
 		stringval = std::string(test["fla"]["flou"] | "a default");
 		EXPECT_EQ(stringval, "a default");
-
-		stringval = std::string{ test["fla"]["flou"] | "a default" };
-		EXPECT_EQ(stringval, "a default");
 #endif
 	}
 

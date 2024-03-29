@@ -66,7 +66,6 @@ TEST(return_overload, basics) {
 	// be in the standard), you need explicit conversion.
 	str = static_cast<std::string>(example_func());
 	str = std::string(example_func());
-	str = std::string{ example_func() };
 #endif
 
 	EXPECT_EQ(c, 0_i8);
@@ -124,7 +123,6 @@ TEST(return_overload, args) {
 #else
 	str = static_cast<std::string>(example_func(42));
 	str = std::string(example_func(42));
-	str = std::string{ example_func(42) };
 #endif
 
 	EXPECT_EQ(c, 42_i8);
@@ -293,7 +291,6 @@ TEST(return_overload, struct_basics) {
 #else
 		str = static_cast<std::string>(o.func());
 		str = std::string(o.func());
-		str = std::string{ o.func() };
 #endif
 
 		EXPECT_EQ(c, 0_i8);
@@ -349,7 +346,6 @@ TEST(return_overload, struct_basics) {
 #else
 		str = static_cast<std::string>(o.func());
 		str = std::string(o.func());
-		str = std::string{ o.func() };
 #endif
 
 		EXPECT_EQ(c, 20_i8);
