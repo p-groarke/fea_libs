@@ -1,6 +1,4 @@
 #include <fea/meta/return_overload.hpp>
-
-#if FEA_GCC_GE(13)
 #include <fea/numerics/literals.hpp>
 #include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
@@ -481,5 +479,4 @@ TEST(return_overload, subtleties) {
 #pragma clang diagnostic pop
 #elif FEA_LINUX
 #pragma GCC diagnostic pop
-#endif
 #endif

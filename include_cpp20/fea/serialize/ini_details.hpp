@@ -272,7 +272,6 @@ inline std::string to_string(const variant_t& v) {
 }
 
 inline std::string to_string(const entry& e, bool var_help) {
-	constexpr std::string_view endline = "\n";
 	static constexpr std::string_view comment_fmt = "  ; {}\n";
 	constexpr std::string_view val_fmt = "{} = {}\n";
 
@@ -296,7 +295,6 @@ inline std::string to_string(const entry& e, bool var_help) {
 }
 
 inline std::string to_string(const section& s, bool var_help) {
-	constexpr std::string_view endline = "\n";
 	static constexpr std::string_view comment_fmt = "\n; {}";
 	constexpr std::string_view s_fmt = "\n[{}]\n";
 

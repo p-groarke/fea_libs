@@ -31,10 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
-#include "fea/utils/platform.hpp"
-
-#if FEA_GCC_GE(13)
 #include "fea/meta/traits.hpp"
+#include "fea/utils/platform.hpp"
 
 #include <type_traits>
 
@@ -48,12 +46,6 @@ https://en.cppreference.com/w/cpp/utility/variant/visit
 With return_overload, you can overload by return type.
 See unit tests for examples.
 */
-
-#if FEA_MACOS
-// Clang complains about braces around lambdas, which is silly.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-braces"
-#endif
 
 namespace fea {
 namespace detail {
@@ -102,8 +94,3 @@ struct return_overload : detail::ro_base<Ts>... {
 template <class... Ts>
 return_overload(Ts...) -> return_overload<Ts...>;
 } // namespace fea
-
-#if FEA_MACOS
-#pragma clang diagnostic pop
-#endif
-#endif
