@@ -543,11 +543,6 @@ struct return_overload {
 		_entry->value = make_variant<T>(std::forward<T>(t));
 		return *this;
 	}
-	return_overload& operator=(const char* t) {
-		assert(_entry != nullptr);
-		_entry->value = make_variant<std::string_view>(std::string_view{ t });
-		return *this;
-	}
 
 	return_overload& operator,(std::string_view comment) {
 		assert(_entry != nullptr);
@@ -563,10 +558,10 @@ struct return_overload {
 	[[nodiscard]] operator signed char() const&& {
 		return (signed char)(doit<intmax_t>());
 	}
+#endif
 	[[nodiscard]] operator unsigned char() const&& {
 		return (unsigned char)(doit<intmax_t>());
 	}
-#endif
 
 	[[nodiscard]] operator short() const&& {
 		return short(doit<intmax_t>());
@@ -602,7 +597,7 @@ struct return_overload {
 
 #if !FEA_WINDOWS
 	[[nodiscard]] operator size_t() const&& {
-		return (size_t)(doit<intmax_t>());
+		return size_t(doit<intmax_t>());
 	}
 #endif
 
