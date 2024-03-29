@@ -217,6 +217,12 @@ if (FEA_TESTS)
 	fea_set_compile_options(${TEST_NAME_NOTHROW} PRIVATE)
 	fea_set_compile_options(${TEST_NAME_PIPE} PRIVATE)
 
+	if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+		target_link_options(${TEST_NAME} PRIVATE -Wl,-z,stack-size=4194304)
+		target_link_options(${TEST_NAME_NOTHROW} PRIVATE -Wl,-z,stack-size=4194304)
+		target_link_options(${TEST_NAME_PIPE} PRIVATE -Wl,-z,stack-size=4194304)
+	endif()
+
 	set_target_properties(${TEST_NAME} PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "--gtest_catch_exceptions=0 --gtest_filter=*")
 	set_target_properties(${TEST_NAME_NOTHROW} PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "--gtest_catch_exceptions=0 --gtest_filter=*")
 	file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/bin/tests_data/pipe.txt" PIPE_FILEPATH)
