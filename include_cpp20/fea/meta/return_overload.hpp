@@ -51,8 +51,7 @@ See unit tests for examples.
 namespace fea {
 namespace detail {
 template <class T>
-concept has_const_paren
-		= requires(std::decay_t<T> t) { std::as_const(t).operator()(); };
+concept has_const_paren = requires(const std::decay_t<T> t) { t.operator()(); };
 
 // Use OverloadT defaulted template param to fix VS2017 bug.
 template <class T>

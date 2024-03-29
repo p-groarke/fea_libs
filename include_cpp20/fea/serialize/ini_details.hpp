@@ -554,9 +554,11 @@ struct return_overload {
 		return doit<bool>();
 	}
 
+#if FEA_WINDOWS
 	[[nodiscard]] operator signed char() const&& {
 		return (signed char)(doit<intmax_t>());
 	}
+#endif
 	[[nodiscard]] operator unsigned char() const&& {
 		return (unsigned char)(doit<intmax_t>());
 	}
@@ -590,6 +592,12 @@ struct return_overload {
 
 	[[nodiscard]] operator double() const&& {
 		return doit<float_t>();
+	}
+#endif
+
+#if !FEA_WINDOWS
+	[[nodiscard]] operator size_t() const&& {
+		return (size_t)(doit<intmax_t>());
 	}
 #endif
 
