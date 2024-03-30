@@ -55,22 +55,46 @@ TEST(enum_to_strings, to_string) {
 TEST(enum_to_strings, from_string) {
 	using namespace std::literals::string_view_literals;
 
-	EXPECT_EQ(from_string("potato"sv), my_enum::potato);
-	EXPECT_EQ(from_string("tomato"sv), my_enum::tomato);
-	EXPECT_EQ(from_string(L"potato"sv), my_enum::potato);
-	EXPECT_EQ(from_string(L"tomato"sv), my_enum::tomato);
-	EXPECT_EQ(from_string(u"potato"sv), my_enum::potato);
-	EXPECT_EQ(from_string(u"tomato"sv), my_enum::tomato);
-	EXPECT_EQ(from_string(U"potato"sv), my_enum::potato);
-	EXPECT_EQ(from_string(U"tomato"sv), my_enum::tomato);
+	my_enum e;
+	EXPECT_TRUE(from_string("potato"sv, e));
+	EXPECT_EQ(e, my_enum::potato);
+	EXPECT_TRUE(from_string("tomato"sv, e));
+	EXPECT_EQ(e, my_enum::tomato);
+	EXPECT_TRUE(from_string(L"potato"sv, e));
+	EXPECT_EQ(e, my_enum::potato);
+	EXPECT_TRUE(from_string(L"tomato"sv, e));
+	EXPECT_EQ(e, my_enum::tomato);
+	EXPECT_TRUE(from_string(u"potato"sv, e));
+	EXPECT_EQ(e, my_enum::potato);
+	EXPECT_TRUE(from_string(u"tomato"sv, e));
+	EXPECT_EQ(e, my_enum::tomato);
+	EXPECT_TRUE(from_string(U"potato"sv, e));
+	EXPECT_EQ(e, my_enum::potato);
+	EXPECT_TRUE(from_string(U"tomato"sv, e));
+	EXPECT_EQ(e, my_enum::tomato);
 
-	EXPECT_EQ(from_string(std::string{ "potato" }), my_enum::potato);
-	EXPECT_EQ(from_string(std::string{ "tomato" }), my_enum::tomato);
-	EXPECT_EQ(from_string(std::wstring{ L"potato" }), my_enum::potato);
-	EXPECT_EQ(from_string(std::wstring{ L"tomato" }), my_enum::tomato);
-	EXPECT_EQ(from_string(std::u16string{ u"potato" }), my_enum::potato);
-	EXPECT_EQ(from_string(std::u16string{ u"tomato" }), my_enum::tomato);
-	EXPECT_EQ(from_string(std::u32string{ U"potato" }), my_enum::potato);
-	EXPECT_EQ(from_string(std::u32string{ U"tomato" }), my_enum::tomato);
+	EXPECT_TRUE(from_string(std::string{ "potato" }, e));
+	EXPECT_EQ(e, my_enum::potato);
+	EXPECT_TRUE(from_string(std::string{ "tomato" }, e));
+	EXPECT_EQ(e, my_enum::tomato);
+	EXPECT_TRUE(from_string(std::wstring{ L"potato" }, e));
+	EXPECT_EQ(e, my_enum::potato);
+	EXPECT_TRUE(from_string(std::wstring{ L"tomato" }, e));
+	EXPECT_EQ(e, my_enum::tomato);
+	EXPECT_TRUE(from_string(std::u16string{ u"potato" }, e));
+	EXPECT_EQ(e, my_enum::potato);
+	EXPECT_TRUE(from_string(std::u16string{ u"tomato" }, e));
+	EXPECT_EQ(e, my_enum::tomato);
+	EXPECT_TRUE(from_string(std::u32string{ U"potato" }, e));
+	EXPECT_EQ(e, my_enum::potato);
+	EXPECT_TRUE(from_string(std::u32string{ U"tomato" }, e));
+	EXPECT_EQ(e, my_enum::tomato);
+
+
+	EXPECT_FALSE(from_string("test"sv, e));
+	EXPECT_FALSE(from_string("invalid"sv, e));
+	EXPECT_FALSE(from_string("count"sv, e));
+	EXPECT_FALSE(from_string("Potato"sv, e));
+	EXPECT_FALSE(from_string("Totato"sv, e));
 }
 } // namespace
