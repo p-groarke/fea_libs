@@ -127,7 +127,7 @@ TEST(flat_bf_graph, builder_basics) {
 			}
 		}
 
-		// Modifiers
+		// Clear
 		{
 			auto builder2 = builder;
 			EXPECT_FALSE(builder2.empty());
@@ -146,6 +146,9 @@ TEST(flat_bf_graph, builder_basics) {
 			EXPECT_EQ(builder2.capacity(), 0u);
 		}
 	}
+
+	// Stress builder conversion.
+	{}
 
 	// Now create a flat constant graph using builder.
 	// After this point, you may not retopologize the graph,

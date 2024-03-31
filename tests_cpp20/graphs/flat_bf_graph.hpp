@@ -78,9 +78,9 @@ struct flat_bf_graph_builder_node {
 	using const_key_iterator =
 			typename std::vector<key_type, key_allocator_type>::const_iterator;
 
-	using underlying_key_t = detail::id_getter_t<key_type>;
+	using underlying_key_type = detail::id_getter_t<key_type>;
 	static constexpr key_type invalid_sentinel
-			= key_type((std::numeric_limits<underlying_key_t>::max)());
+			= key_type((std::numeric_limits<underlying_key_type>::max)());
 
 	/**
 	 * Ctors
@@ -138,6 +138,14 @@ struct flat_bf_graph_builder_node {
 		return _children_keys.cend();
 	}
 
+	/**
+	 * Capacity
+	 */
+	[[nodiscard]] size_t children_size() const noexcept {
+		return _children_keys.size();
+	}
+
+
 private:
 	friend fea::flat_bf_graph_builder<Key, Value, Alloc>;
 
@@ -186,6 +194,7 @@ struct flat_bf_graph_builder {
 			= detail::flat_bf_graph_builder_node<key_type, value_type, Alloc>;
 	using size_type = std::size_t;
 	using difference_type = std::ptrdiff_t;
+	using underlying_key_type = typename node_type::underlying_key_type;
 
 	using allocator_type = Alloc;
 	using key_allocator_type = typename std::allocator_traits<
@@ -397,6 +406,7 @@ private:
 	// Id generator.
 	key_type _next_key = key_type(1u);
 
+	// Top-level root keys.
 	std::vector<key_type, key_allocator_type> _root_keys{};
 
 	// All our nodes.
@@ -405,25 +415,6 @@ private:
 
 
 namespace detail {
-
-template <class Key, class Value, class Alloc, class Func>
-void recurse_breadths(flat_bf_graph_builder<Key, Value, Alloc>& builder,
-		std::span<const Key> nodes, const Func& func) {
-	func(nodes);
-
-	// ret.insert(nodes.begin(), nodes.end(), pos);
-	// pos += nodes.size();
-	// assert(std::all_of(nodes.begin(), nodes.end(),
-	//		[&](const Key& k) { return ret.contains(k); }));
-
-	for (const Key& k : nodes) {
-		std::span<const Key> children = builder.children(k);
-		if (children.empty()) {
-			continue;
-		}
-		recurse_breadths(builder, children, func);
-	}
-}
 
 // template <class Key, class Value, class Alloc,
 //		class KeyAlloc
@@ -456,75 +447,167 @@ void recurse_breadths(flat_bf_graph_builder<Key, Value, Alloc>& builder,
 //	return ret;
 // }
 
+template <class SpanAlloc, class Value, class VAlloc, class UKeyT,
+		class PairAlloc>
+std::vector<std::span<const Value>, SpanAlloc> convert_children_breadths(
+		const std::vector<Value, VAlloc>& values,
+		const std::vector<std::pair<UKeyT, UKeyT>, PairAlloc>& breadths) {
+	std::vector<std::span<const Value>, SpanAlloc> ret{};
+	ret.reserve(breadths.size());
+	for (const std::pair<UKeyT, UKeyT>& c_range : breadths) {
+		ret.push_back(std::span<const Value>{ values.begin() + c_range.first,
+				values.begin() + c_range.second });
+	}
+	return ret;
+}
+
 template <class Key, class Value, class VAlloc, class KeyAlloc, class SpanAlloc>
 struct flat_bf_graph_data {
+	// template <class UKeyT, class PairAlloc>
+	flat_bf_graph_data(fea::detail::unsigned_lookup<Key, KeyAlloc>&& mlookup,
+			std::vector<Key, KeyAlloc>&& mkeys,
+			std::vector<Value, VAlloc>&& mvalues,
+			std::vector<Key, KeyAlloc>&& mparents,
+			std::vector<std::span<const Value>, SpanAlloc>&& mchildren_breadths)
+			// std::vector<std::pair<UKeyT, UKeyT>, PairAlloc>&&
+			//		mchildren_breadths)
+			: lookup(std::move(mlookup))
+			, keys(std::move(mkeys))
+			, values(std::move(mvalues))
+			, parents(std::move(mparents))
+			, children_breadths(std::move(mchildren_breadths)) {
+		//, children_breadths(convert_children_breadths<SpanAlloc>(
+		//		  values, mchildren_breadths)) {
+		assert(lookup.size() >= keys.size());
+		assert(keys.size() == values.size());
+		assert(values.size() == parents.size());
+		assert(parents.size() == children_breadths.size());
+
+		// Make sure the value vector was moved all the way.
+		// The first item will be a root, its span points to its first child.
+		assert(children_breadths.front().data() == values.data() + 1);
+	}
+
+	~flat_bf_graph_data() = default;
+	flat_bf_graph_data(const flat_bf_graph_data&) = default;
+	flat_bf_graph_data(flat_bf_graph_data&&) = default;
+	flat_bf_graph_data& operator=(const flat_bf_graph_data&) = delete;
+	flat_bf_graph_data& operator=(flat_bf_graph_data&&) = delete;
+
+
+	// Key -> vector index.
 	const fea::detail::unsigned_lookup<Key, KeyAlloc> lookup{};
+
+	// Our keys, ordered vertically.
 	const std::vector<Key, KeyAlloc> keys{};
+
+	// Our values, ordered vertically.
 	std::vector<Value, VAlloc> values{};
+
+	// Our parents, ordered vertically.
 	const std::vector<Key, KeyAlloc> parents{};
-	// const std::vector<std::span<const Value>, SpanAlloc> children_breadths{};
+
+	// Our children (without sub-children), ordered vertically.
+	const std::vector<std::span<const Value>, SpanAlloc> children_breadths{};
+
 	// const std::vector<std::span<const Value>, SpanAlloc>
 	// children_subgraphs{};
 };
 
+template <class Key, class Value, class Alloc, class Func>
+void recurse_breadths(flat_bf_graph_builder<Key, Value, Alloc>& builder,
+		std::span<const Key> nodes, const Func& func) {
+	func(nodes);
+
+	// ret.insert(nodes.begin(), nodes.end(), pos);
+	// pos += nodes.size();
+	// assert(std::all_of(nodes.begin(), nodes.end(),
+	//		[&](const Key& k) { return ret.contains(k); }));
+
+	for (const Key& k : nodes) {
+		std::span<const Key> children = builder.children(k);
+		if (children.empty()) {
+			continue;
+		}
+		recurse_breadths(builder, children, func);
+	}
+}
+
 template <class KeyAlloc, class SpanAlloc, class Key, class Value, class VAlloc>
 flat_bf_graph_data<Key, Value, VAlloc, KeyAlloc, SpanAlloc> make_graph_data(
 		fea::flat_bf_graph_builder<Key, Value, VAlloc>&& builder) {
-	using node_t =
-			typename fea::flat_bf_graph_builder<Key, Value, VAlloc>::node_type;
+	using builder_t = fea::flat_bf_graph_builder<Key, Value, VAlloc>;
+	using node_t = typename builder_t::node_type;
+	using u_key_t = typename builder_t::underlying_key_type;
 	using pair_alloc_t = typename std::allocator_traits<
-			VAlloc>::template rebind_alloc<std::pair<size_t, size_t>>;
+			VAlloc>::template rebind_alloc<std::pair<u_key_t, u_key_t>>;
 
 	fea::detail::unsigned_lookup<Key, KeyAlloc> mlookup{};
 	std::vector<Key, KeyAlloc> mkeys{};
 	std::vector<Value, VAlloc> mvalues{};
 	std::vector<Key, KeyAlloc> mparents{};
+	// TODO : Since the value vector is moved into data, should be able to
+	// create spans directly.
+	// std::vector<std::pair<u_key_t, u_key_t>, pair_alloc_t>
+	// mchildren_breadths{};
+	std::vector<std::span<const Value>, SpanAlloc> mchildren_breadths{};
 	// std::vector<std::pair<size_t, size_t>, pair_alloc_t>
-	// mchildren_breadths{}; std::vector<std::pair<size_t, size_t>,
-	// pair_alloc_t> mchildren_subgraphs{};
+	// mchildren_subgraphs{};
 
 	mlookup.reserve(builder.key_capacity());
 	mvalues.reserve(builder.size());
 	mparents.reserve(builder.size());
-	// mchildren_breadths.reserve(builder.size());
+	mchildren_breadths.reserve(builder.size());
 	// mchildren_subgraphs.reserve(builder.size());
 
 	size_t pos = 0;
 	auto recurse = [&](std::span<const Key> nodes) {
+		assert(std::all_of(nodes.begin(), nodes.end(), [&](const Key& k) {
+			const Key& first_parent_key
+					= builder.node_at(nodes.front()).parent_key();
+			return builder.node_at(k).parent_key() == first_parent_key;
+		}));
+
 		assert(mkeys.size() == pos);
 		assert(mvalues.size() == pos);
 		assert(mparents.size() == pos);
-		// assert(children_breadths.size() == pos);
-		// assert(children_subgraphs.size() == pos);
+		assert(mchildren_breadths.size() == pos);
+		//  assert(children_subgraphs.size() == pos);
 
 		mlookup.insert(nodes.begin(), nodes.end(), pos);
 		assert(std::all_of(nodes.begin(), nodes.end(),
 				[&](const Key& k) { return mlookup.contains(k); }));
 
-		pos += nodes.size();
-
+		size_t children_start = pos + nodes.size();
 		for (const Key& k : nodes) {
 			node_t& n = builder.node_at(k);
+			// TODO : move keys?
 			mkeys.push_back(k);
 			mvalues.push_back(std::move(n.value()));
 			mparents.push_back(n.parent_key());
+			// mchildren_breadths.push_back({ u_key_t(children_start),
+			//		u_key_t(children_start + n.children_size()) });
+
+			size_t children_size = n.children_size();
+			mchildren_breadths.push_back({ mvalues.data() + children_start,
+					mvalues.data() + children_start + children_size });
+			children_start += children_size;
+			// mchildren_breadths.push_back({ pos, n.children_size() });
 		}
 
+		pos += nodes.size();
 		assert(mkeys.size() == pos);
 		assert(mvalues.size() == pos);
 		assert(mparents.size() == pos);
-		// assert(children_breadths.size() == pos);
-		// assert(children_subgraphs.size() == pos);
+		assert(mchildren_breadths.size() == pos);
+		//   assert(children_subgraphs.size() == pos);
 	};
 
 	recurse_breadths(builder, builder.root_keys(), recurse);
 
 	return flat_bf_graph_data<Key, Value, VAlloc, KeyAlloc, SpanAlloc>{
-		.lookup = std::move(mlookup),
-		.keys = std::move(mkeys),
-		.values = std::move(mvalues),
-		.parents = std::move(mparents),
-		//.children_breadths = std::move(mchildren_breadths),
+		std::move(mlookup), std::move(mkeys), std::move(mvalues),
+		std::move(mparents), std::move(mchildren_breadths),
 		//.children_subgraphs = std::move(mchildren_subgraphs),
 	};
 }
