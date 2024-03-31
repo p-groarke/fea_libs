@@ -204,6 +204,12 @@ struct flat_unsigned_map {
 
 	// returns the number of elements that can be held in currently allocated
 	// storage
+	size_type key_capacity() const noexcept {
+		return _lookup.capacity();
+	}
+
+	// returns the number of elements that can be held in currently allocated
+	// storage
 	size_type capacity() const noexcept {
 		return _values.capacity();
 	}
