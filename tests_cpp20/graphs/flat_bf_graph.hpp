@@ -487,7 +487,6 @@ struct flat_bf_graph_data {
 		// The first item will be a root, its span points to its first child.
 		assert(children_breadths.front().data() == values.data() + 1);
 	}
-
 	~flat_bf_graph_data() = default;
 	flat_bf_graph_data(const flat_bf_graph_data&) = default;
 	flat_bf_graph_data(flat_bf_graph_data&&) = default;
@@ -614,7 +613,7 @@ flat_bf_graph_data<Key, Value, VAlloc, KeyAlloc, SpanAlloc> make_graph_data(
 } // namespace detail
 
 // The constant graph.
-template <class Key, class Value, class Alloc = std::allocator<Value>>
+template <class Key, class Value, class VAlloc = std::allocator<Value>>
 struct flat_bf_graph {
 	using key_type = Key;
 	using const_key_type = const key_type;
@@ -624,7 +623,7 @@ struct flat_bf_graph {
 	using size_type = std::size_t;
 	using difference_type = std::ptrdiff_t;
 
-	using allocator_type = Alloc;
+	using allocator_type = VAlloc;
 	using key_allocator_type = typename std::allocator_traits<
 			allocator_type>::template rebind_alloc<key_type>;
 	using span_allocator_type = typename std::allocator_traits<
@@ -652,7 +651,7 @@ struct flat_bf_graph {
 	//		: _lookup(detail::make_lookup(builder))
 	//		, _values(detail::make_value_vec(std::move(builder), _lookup)) {
 	//}
-	flat_bf_graph(flat_bf_graph_builder<Key, Value, Alloc>&& builder)
+	flat_bf_graph(flat_bf_graph_builder<Key, Value, VAlloc>&& builder)
 			: _data(detail::make_graph_data<key_allocator_type,
 					span_allocator_type>(std::move(builder))) {
 	}
