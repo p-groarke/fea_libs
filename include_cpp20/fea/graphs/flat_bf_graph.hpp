@@ -158,6 +158,17 @@ private:
 		assert(_key != invalid_sentinel);
 	}
 
+	template <class T>
+		requires(std::is_same_v<std::decay_t<T>, Value>)
+	flat_bf_graph_builder_node(const key_type& parent_key, const key_type& key,
+			T&& value, const std::span<const key_type>& children)
+			: _parent_key(parent_key)
+			, _key(key)
+			, _value(std::forward<T>(value))
+			, _children_keys(children.begin(), children.end()) {
+		assert(_key != invalid_sentinel);
+	}
+
 	/**
 	 * Modifiers
 	 */
@@ -354,13 +365,18 @@ struct flat_bf_graph_builder {
 	void reserve(size_type new_cap) {
 		_nodes.reserve(new_cap);
 	}
-	void reserve(size_type key_new_cap, size_type value_new_cap) {
-		_nodes.reserve(key_new_cap, value_new_cap);
+	void reserve(size_type lookup_new_cap, size_type value_new_cap) {
+		_nodes.reserve(lookup_new_cap, value_new_cap);
+	}
+
+	// Reserve storage for a node's children vector.
+	void reserve_children(const key_type& k, size_type children_new_cap) {
+		_nodes.at(k)._children_keys.reserve(children_new_cap);
 	}
 
 	// Returns the key storge capacity.
-	[[nodiscard]] size_type key_capacity() const noexcept {
-		return _nodes.key_capacity();
+	[[nodiscard]] size_type lookup_capacity() const noexcept {
+		return _nodes.lookup_capacity();
 	}
 
 	// Returns the number of elements that can be held in currently allocated
@@ -394,23 +410,60 @@ struct flat_bf_graph_builder {
 		node_type n{ invalid_sentinel, key, std::forward<T>(v) };
 		_nodes.insert(std::move(key), std::move(n));
 		assert(!_nodes.contains(invalid_sentinel));
+		assert(_nodes.contains(key));
 	}
 
-	// Create a child and add to parent.
+	// Create a node and add to parent.
 	template <class T>
 		requires(std::is_same_v<std::decay_t<T>, Value>)
-	void push_back(
-			const key_type& parent_key, const key_type& child_key, T&& v) {
-		assert(parent_key != root_key());
-		assert(_nodes.contains(parent_key));
-		assert(!_nodes.contains(child_key));
+	void push_back(const key_type& parent_key, const key_type& key, T&& v) {
+		assert(!_nodes.contains(key));
+		if (parent_key != root_key()) {
+			assert(_nodes.contains(parent_key));
+			node_type& parent_n = _nodes.at(parent_key);
+			parent_n.push_back(key);
+		} else {
+			assert(!_nodes.contains(parent_key));
+			assert(std::find(_root_keys.begin(), _root_keys.end(), key)
+					== _root_keys.end());
+			_root_keys.push_back(key);
+		}
 
-		node_type& parent_n = _nodes.at(parent_key);
-		parent_n.push_back(child_key);
-
-		node_type n{ parent_key, child_key, std::forward<T>(v) };
-		_nodes.insert(std::move(child_key), std::move(n));
+		node_type n{ parent_key, key, std::forward<T>(v) };
+		_nodes.insert(std::move(key), std::move(n));
 		assert(!_nodes.contains(invalid_sentinel));
+		assert(_nodes.contains(key));
+	}
+
+	// Create a node and add to parent.
+	// At the same time, add node children.
+	//
+	// WARNING : When adding nodes with predefined children, do not use
+	// overloads that set children in parents. Your key already exists in your
+	// parent's children.
+	template <class T>
+		requires(std::is_same_v<std::decay_t<T>, Value>)
+	void push_back(const key_type& parent_key, const key_type& key, T&& v,
+			const std::span<const key_type>& children) {
+		assert(!_nodes.contains(key));
+		if (parent_key != root_key()) {
+			assert(_nodes.contains(parent_key));
+
+			// We should be stored in our parent already.
+			assert(std::find(_nodes.at(parent_key)._children_keys.begin(),
+						   _nodes.at(parent_key)._children_keys.end(), key)
+					!= _nodes.at(parent_key)._children_keys.end());
+		} else {
+			assert(!_nodes.contains(parent_key));
+			assert(std::find(_root_keys.begin(), _root_keys.end(), key)
+					== _root_keys.end());
+			_root_keys.push_back(key);
+		}
+
+		node_type n{ parent_key, key, std::forward<T>(v), children };
+		_nodes.insert(std::move(key), std::move(n));
+		assert(!_nodes.contains(invalid_sentinel));
+		assert(_nodes.contains(key));
 	}
 
 	// Used internally.
@@ -530,12 +583,6 @@ flat_bf_graph_data<Key, Value, VAlloc, KeyAlloc, SpanAlloc> make_graph_data(
 	size_t pos = 0;
 	auto recurse = [&](std::span<const Key> nodes) {
 		assert(!nodes.empty());
-		// assert(std::all_of(nodes.begin(), nodes.end(), [&](const Key& k) {
-		//	const Key& first_parent_key
-		//			= builder.node_at(nodes.front()).parent_key();
-		//	return builder.node_at(k).parent_key() == first_parent_key;
-		// }));
-
 		assert(mkeys.size() == pos);
 		assert(mvalues.size() == pos);
 		assert(mparents.size() == pos);
@@ -630,6 +677,10 @@ struct flat_bf_graph {
 
 	static constexpr key_type invalid_sentinel = builder_t::invalid_sentinel;
 
+	/**
+	 * Ctors
+	 */
+	flat_bf_graph() = default;
 	flat_bf_graph(builder_t&& builder)
 			: _data(detail::make_graph_data<key_allocator_type,
 					span_allocator_type>(std::move(builder))) {
@@ -639,6 +690,31 @@ struct flat_bf_graph {
 	flat_bf_graph(flat_bf_graph&&) = default;
 	flat_bf_graph& operator=(const flat_bf_graph&) = delete;
 	flat_bf_graph& operator=(flat_bf_graph&&) = delete;
+
+	// Create and fill a builder from this pre-existing graph.
+	// Use this as a starting point if you need to retopologize the graph.
+	[[nodiscard]] builder_t make_builder() const {
+		flat_bf_graph_builder<Key, Value, VAlloc> ret{};
+		ret.reserve(lookup_capacity(), capacity());
+
+		std::span<const key_type> mkeys = keys();
+		std::span<const value_type> mvalues = data();
+		std::span<const key_type> mparents = parents();
+		std::span<const std::span<const key_type>> mchildren = children();
+		std::span<const std::span<const key_type>> mbreadths = breadths();
+
+		size_t abs_i = 0;
+		for (size_t i = 0; i < breadth_size(); ++i) {
+			std::span<const key_type> b = breadth(i);
+			for (size_t j = 0; j < b.size(); ++j) {
+				ret.push_back(mparents[abs_i], mkeys[abs_i], mvalues[abs_i],
+						mchildren[abs_i]);
+				++abs_i;
+			}
+		}
+
+		return ret;
+	}
 
 	/**
 	 * Element access
@@ -864,7 +940,7 @@ struct flat_bf_graph {
 	}
 
 	// Returns the key storge capacity.
-	[[nodiscard]] size_type key_capacity() const noexcept {
+	[[nodiscard]] size_type lookup_capacity() const noexcept {
 		assert(_data.lookup.capacity() >= _data.keys.capacity());
 		assert(_data.keys.capacity() == _data.values.capacity());
 		assert(_data.values.capacity() == _data.parents.capacity());

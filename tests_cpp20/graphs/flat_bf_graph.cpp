@@ -1,16 +1,8 @@
-#include "flat_bf_graph.hpp"
-
-#include <algorithm>
-#include <compare>
-#include <fea/numerics/random.hpp>
-#include <fea/utils/platform.hpp>
+#include <fea/graphs/flat_bf_graph.hpp>
 #include <gtest/gtest.h>
-#include <numeric>
-#include <ranges>
-#include <vector>
 
 namespace {
-TEST(flat_bf_graph, builder_basics) {
+TEST(flat_bf_graph, basics) {
 	using id_t = uint32_t;
 	static constexpr id_t sentinel = (std::numeric_limits<id_t>::max)();
 	id_t next_id = 0u;
@@ -18,6 +10,7 @@ TEST(flat_bf_graph, builder_basics) {
 		id_t id = sentinel;
 	};
 
+	// First, we use a graph_builder to create the graph topology.
 	fea::flat_bf_graph_builder<id_t, node> builder;
 	using builder_node_t =
 			typename fea::flat_bf_graph_builder<id_t, node>::node_type;
@@ -198,7 +191,7 @@ TEST(flat_bf_graph, builder_basics) {
 	EXPECT_FALSE(graph.empty());
 	EXPECT_EQ(graph.size(), builder_size);
 	EXPECT_EQ(graph.breadth_size(), 5u);
-	EXPECT_GE(graph.key_capacity(), graph.capacity());
+	EXPECT_GE(graph.lookup_capacity(), graph.capacity());
 
 	// Check topology and expected values.
 	{
@@ -262,6 +255,12 @@ TEST(flat_bf_graph, builder_basics) {
 			EXPECT_EQ(*it, keys[midx]);
 			++midx;
 		}
+	}
+
+	// Create a builder clone of current graph.
+	fea::flat_bf_graph_builder<id_t, node> builder2 = graph.make_builder();
+	{
+		assert(false); // todo tests
 	}
 }
 
