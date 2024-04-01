@@ -55,8 +55,6 @@ there are memory jumps every breadth.
 
 Keys should be an unsigned number from 0 to N. Do NOT use this with key pointers
 or large hashes, lookup grows as big as N.
-
-TODO : Make graph builder to batch topo operations?
 */
 
 namespace fea {
@@ -70,6 +68,7 @@ template <class Key, class Value, class Alloc = std::allocator<Value>>
 struct flat_bf_graph_builder_node {
 	using key_type = Key;
 	using value_type = Value;
+	using underlying_key_type = detail::id_getter_t<key_type>;
 
 	using allocator_type = Alloc;
 	using key_allocator_type = typename std::allocator_traits<
@@ -78,7 +77,6 @@ struct flat_bf_graph_builder_node {
 	using const_key_iterator =
 			typename std::vector<key_type, key_allocator_type>::const_iterator;
 
-	using underlying_key_type = detail::id_getter_t<key_type>;
 	static constexpr key_type invalid_sentinel
 			= key_type((std::numeric_limits<underlying_key_type>::max)());
 
@@ -153,10 +151,11 @@ private:
 		requires(std::is_same_v<std::decay_t<T>, Value>)
 	flat_bf_graph_builder_node(
 			const key_type& parent_key, const key_type& key, T&& value)
-			: _key(key)
+			: _parent_key(parent_key)
+			, _key(key)
 			, _value(std::forward<T>(value))
-			, _parent_key(parent_key)
 			, _children_keys({}) {
+		assert(_key != invalid_sentinel);
 	}
 
 	/**
@@ -168,14 +167,14 @@ private:
 		_children_keys.push_back(k);
 	}
 
+	// My parent. Invalid == no parent (is a root node).
+	key_type _parent_key = invalid_sentinel;
+
 	// My key.
 	key_type _key = invalid_sentinel;
 
 	// My value.
 	value_type _value;
-
-	// My parent.
-	key_type _parent_key = invalid_sentinel;
 
 	// Ordered in child order.
 	std::vector<key_type, key_allocator_type> _children_keys{};
@@ -214,8 +213,8 @@ struct flat_bf_graph_builder {
 	using const_iterator = typename fea::flat_unsigned_map<key_type, node_type,
 			node_allocator_type>::const_iterator;
 
-	// Root sentinel.
-	static constexpr key_type root_parent_sentinel = key_type(0u);
+	// Invalid sentinel. Set as parent for roots.
+	static constexpr key_type invalid_sentinel = node_type::invalid_sentinel;
 
 	/**
 	 * Ctors
@@ -231,10 +230,13 @@ struct flat_bf_graph_builder {
 	/**
 	 * Element access
 	 */
-	[[nodiscard]] static constexpr key_type root_key() noexcept {
-		return root_parent_sentinel;
+
+	// Get the parent key used to identify root nodes.
+	[[nodiscard]] static constexpr const key_type& root_key() noexcept {
+		return invalid_sentinel;
 	}
 
+	// Is this node a root?
 	[[nodiscard]] bool is_root(const key_type& k) const {
 		return _nodes.at(k)._parent_key == root_key();
 	}
@@ -246,6 +248,11 @@ struct flat_bf_graph_builder {
 	// Get a value at key k.
 	[[nodiscard]] reference at(const key_type& k) {
 		return const_cast<reference&>(std::as_const(*this).at(k));
+	}
+
+	// Does the graph contain this key?
+	[[nodiscard]] bool contains(const key_type& k) const noexcept {
+		return _nodes.contains(k);
 	}
 
 	// Get the internal node of key k.
@@ -326,6 +333,7 @@ struct flat_bf_graph_builder {
 	/**
 	 * Capacity
 	 */
+
 	// Is graph empty?
 	[[nodiscard]] bool empty() const noexcept {
 		return _nodes.empty();
@@ -337,7 +345,7 @@ struct flat_bf_graph_builder {
 	}
 
 	// Returns the maximum possible number of elements graph can hold.
-	[[nodiscard]] size_type max_size() const noexcept {
+	[[nodiscard]] constexpr size_type max_size() const noexcept {
 		// One reserved for root_sentinel.
 		return _nodes.max_size() - size_type(1);
 	}
@@ -374,38 +382,43 @@ struct flat_bf_graph_builder {
 		_nodes.clear();
 	}
 
-	// Add a root node.
+	// Create a root node.
 	template <class T>
 		requires(std::is_same_v<std::decay_t<T>, Value>)
-	key_type push_back(T&& v) {
-		key_type parent_key = root_parent_sentinel;
-		key_type nkey = _next_key++;
-		_root_keys.push_back(nkey);
+	void push_back(const key_type& key, T&& v) {
+		assert(!_nodes.contains(key));
+		assert(std::find(_root_keys.begin(), _root_keys.end(), key)
+				== _root_keys.end());
+		_root_keys.push_back(key);
 
-		node_type n{ parent_key, nkey, std::forward<T>(v) };
-		_nodes.insert(std::move(nkey), std::move(n));
-		return nkey;
+		node_type n{ invalid_sentinel, key, std::forward<T>(v) };
+		_nodes.insert(std::move(key), std::move(n));
+		assert(!_nodes.contains(invalid_sentinel));
 	}
 
-	// Add a child to parent.
+	// Create a child and add to parent.
 	template <class T>
 		requires(std::is_same_v<std::decay_t<T>, Value>)
-	key_type push_back(const key_type& parent_key, T&& v) {
+	void push_back(
+			const key_type& parent_key, const key_type& child_key, T&& v) {
 		assert(parent_key != root_key());
-		key_type nkey = _next_key++;
-		node_type& parent_n = _nodes.at(parent_key);
-		parent_n.push_back(nkey);
+		assert(_nodes.contains(parent_key));
+		assert(!_nodes.contains(child_key));
 
-		node_type n{ parent_key, nkey, std::forward<T>(v) };
-		_nodes.insert(std::move(nkey), std::move(n));
-		return nkey;
+		node_type& parent_n = _nodes.at(parent_key);
+		parent_n.push_back(child_key);
+
+		node_type n{ parent_key, child_key, std::forward<T>(v) };
+		_nodes.insert(std::move(child_key), std::move(n));
+		assert(!_nodes.contains(invalid_sentinel));
 	}
 
+	// Used internally.
+	[[nodiscard]] size_type lookup_size() const noexcept {
+		return _nodes.lookup_size();
+	}
 
 private:
-	// Id generator.
-	key_type _next_key = key_type(1u);
-
 	// Top-level root keys.
 	std::vector<key_type, key_allocator_type> _root_keys{};
 
@@ -415,52 +428,6 @@ private:
 
 
 namespace detail {
-
-// template <class Key, class Value, class Alloc,
-//		class KeyAlloc
-//		= typename std::allocator_traits<Alloc>::template rebind_alloc<Key>>
-// fea::detail::unsigned_lookup<Key, KeyAlloc> make_lookup(
-//		const flat_bf_graph_builder<Key, Value, Alloc>& builder) {
-//	fea::detail::unsigned_lookup<Key, KeyAlloc> ret{};
-//	ret.reserve(builder.key_capacity());
-//
-//	// Recurse in graph and store our keys at expected indexes.
-//	size_t pos = 0;
-//	recurse_breadths(builder, builder.root_keys(), pos, ret);
-//	return ret;
-// }
-//
-// template <class Key, class Value, class Alloc, class KeyAlloc>
-// std::vector<Value, Alloc> make_value_vec(
-//		flat_bf_graph_builder<Key, Value, Alloc>&& builder,
-//		const fea::detail::unsigned_lookup<Key, KeyAlloc>& lookup) {
-//	std::vector<Value, Alloc> ret{};
-//	ret.resize(builder.size());
-//
-//	using node_t = typename flat_bf_graph_builder<Key, Value, Alloc>::node_type;
-//
-//	for (node_t& n : builder) {
-//		size_t idx = lookup.at(n.key());
-//		ret[idx] = std::move(n.value());
-//	}
-//
-//	return ret;
-// }
-
-template <class SpanAlloc, class Value, class VAlloc, class UKeyT,
-		class PairAlloc>
-std::vector<std::span<const Value>, SpanAlloc> convert_children_breadths(
-		const std::vector<Value, VAlloc>& values,
-		const std::vector<std::pair<UKeyT, UKeyT>, PairAlloc>& breadths) {
-	std::vector<std::span<const Value>, SpanAlloc> ret{};
-	ret.reserve(breadths.size());
-	for (const std::pair<UKeyT, UKeyT>& c_range : breadths) {
-		ret.push_back(std::span<const Value>{ values.begin() + c_range.first,
-				values.begin() + c_range.second });
-	}
-	return ret;
-}
-
 template <class Key, class Value, class VAlloc, class KeyAlloc, class SpanAlloc>
 struct flat_bf_graph_data {
 	// template <class UKeyT, class PairAlloc>
@@ -468,24 +435,29 @@ struct flat_bf_graph_data {
 			std::vector<Key, KeyAlloc>&& mkeys,
 			std::vector<Value, VAlloc>&& mvalues,
 			std::vector<Key, KeyAlloc>&& mparents,
-			std::vector<std::span<const Value>, SpanAlloc>&& mchildren_breadths)
-			// std::vector<std::pair<UKeyT, UKeyT>, PairAlloc>&&
-			//		mchildren_breadths)
+			std::vector<std::span<const Key>, SpanAlloc>&& mchildren_keys,
+			std::vector<std::span<const Key>, SpanAlloc>&& mbreadths)
 			: lookup(std::move(mlookup))
 			, keys(std::move(mkeys))
 			, values(std::move(mvalues))
 			, parents(std::move(mparents))
-			, children_breadths(std::move(mchildren_breadths)) {
-		//, children_breadths(convert_children_breadths<SpanAlloc>(
-		//		  values, mchildren_breadths)) {
+			, children_keys(std::move(mchildren_keys))
+			, breadths(std::move(mbreadths)) {
 		assert(lookup.size() >= keys.size());
 		assert(keys.size() == values.size());
 		assert(values.size() == parents.size());
-		assert(parents.size() == children_breadths.size());
+		assert(parents.size() == children_keys.size());
+		assert(breadths.size() <= children_keys.size());
 
 		// Make sure the value vector was moved all the way.
-		// The first item will be a root, its span points to its first child.
-		assert(children_breadths.front().data() == values.data() + 1);
+		// We should hit our first child pointer quickly.
+		assert(children_keys.front().data() - keys.data()
+				< ptrdiff_t(keys.size()));
+
+		// Breadths should start at first key, end at last.
+		assert(breadths.front().data() == keys.data());
+		assert(breadths.back().data() + breadths.back().size()
+				== keys.data() + keys.size());
 	}
 	~flat_bf_graph_data() = default;
 	flat_bf_graph_data(const flat_bf_graph_data&) = default;
@@ -506,30 +478,32 @@ struct flat_bf_graph_data {
 	// Our parents, ordered vertically.
 	const std::vector<Key, KeyAlloc> parents{};
 
-	// Our children (without sub-children), ordered vertically.
-	const std::vector<std::span<const Value>, SpanAlloc> children_breadths{};
+	// Our children (without sub-children).
+	const std::vector<std::span<const Key>, SpanAlloc> children_keys{};
 
-	// const std::vector<std::span<const Value>, SpanAlloc>
-	// children_subgraphs{};
+	// The graph breadths, ordered from first to last.
+	const std::vector<std::span<const Key>, SpanAlloc> breadths{};
 };
 
 template <class Key, class Value, class Alloc, class Func>
 void recurse_breadths(flat_bf_graph_builder<Key, Value, Alloc>& builder,
-		std::span<const Key> nodes, const Func& func) {
-	func(nodes);
+		std::vector<Key>& nodes, std::vector<Key>& scratch, const Func& func) {
+	func(std::span<const Key>{ nodes });
 
-	// ret.insert(nodes.begin(), nodes.end(), pos);
-	// pos += nodes.size();
-	// assert(std::all_of(nodes.begin(), nodes.end(),
-	//		[&](const Key& k) { return ret.contains(k); }));
-
+	scratch.clear();
 	for (const Key& k : nodes) {
 		std::span<const Key> children = builder.children(k);
 		if (children.empty()) {
 			continue;
 		}
-		recurse_breadths(builder, children, func);
+		scratch.insert(scratch.end(), children.begin(), children.end());
 	}
+
+	if (scratch.empty()) {
+		return;
+	}
+	nodes.assign(scratch.begin(), scratch.end());
+	recurse_breadths(builder, nodes, scratch, func);
 }
 
 template <class KeyAlloc, class SpanAlloc, class Key, class Value, class VAlloc>
@@ -538,40 +512,34 @@ flat_bf_graph_data<Key, Value, VAlloc, KeyAlloc, SpanAlloc> make_graph_data(
 	using builder_t = fea::flat_bf_graph_builder<Key, Value, VAlloc>;
 	using node_t = typename builder_t::node_type;
 	using u_key_t = typename builder_t::underlying_key_type;
-	using pair_alloc_t = typename std::allocator_traits<
-			VAlloc>::template rebind_alloc<std::pair<u_key_t, u_key_t>>;
 
 	fea::detail::unsigned_lookup<Key, KeyAlloc> mlookup{};
 	std::vector<Key, KeyAlloc> mkeys{};
 	std::vector<Value, VAlloc> mvalues{};
 	std::vector<Key, KeyAlloc> mparents{};
-	// TODO : Since the value vector is moved into data, should be able to
-	// create spans directly.
-	// std::vector<std::pair<u_key_t, u_key_t>, pair_alloc_t>
-	// mchildren_breadths{};
-	std::vector<std::span<const Value>, SpanAlloc> mchildren_breadths{};
-	// std::vector<std::pair<size_t, size_t>, pair_alloc_t>
-	// mchildren_subgraphs{};
+	std::vector<std::span<const Key>, SpanAlloc> mchildren_keys{};
+	std::vector<std::span<const Key>, SpanAlloc> mbreadths{};
 
-	mlookup.reserve(builder.key_capacity());
+	mlookup.reserve(builder.lookup_size());
+	mkeys.reserve(builder.size());
 	mvalues.reserve(builder.size());
 	mparents.reserve(builder.size());
-	mchildren_breadths.reserve(builder.size());
-	// mchildren_subgraphs.reserve(builder.size());
+	mchildren_keys.reserve(builder.size());
+	mbreadths.reserve(10u); // Arbitrary amount to kick it off.
 
 	size_t pos = 0;
 	auto recurse = [&](std::span<const Key> nodes) {
-		assert(std::all_of(nodes.begin(), nodes.end(), [&](const Key& k) {
-			const Key& first_parent_key
-					= builder.node_at(nodes.front()).parent_key();
-			return builder.node_at(k).parent_key() == first_parent_key;
-		}));
+		assert(!nodes.empty());
+		// assert(std::all_of(nodes.begin(), nodes.end(), [&](const Key& k) {
+		//	const Key& first_parent_key
+		//			= builder.node_at(nodes.front()).parent_key();
+		//	return builder.node_at(k).parent_key() == first_parent_key;
+		// }));
 
 		assert(mkeys.size() == pos);
 		assert(mvalues.size() == pos);
 		assert(mparents.size() == pos);
-		assert(mchildren_breadths.size() == pos);
-		//  assert(children_subgraphs.size() == pos);
+		assert(mchildren_keys.size() == pos);
 
 		mlookup.insert(nodes.begin(), nodes.end(), pos);
 		assert(std::all_of(nodes.begin(), nodes.end(),
@@ -584,30 +552,42 @@ flat_bf_graph_data<Key, Value, VAlloc, KeyAlloc, SpanAlloc> make_graph_data(
 			mkeys.push_back(k);
 			mvalues.push_back(std::move(n.value()));
 			mparents.push_back(n.parent_key());
-			// mchildren_breadths.push_back({ u_key_t(children_start),
-			//		u_key_t(children_start + n.children_size()) });
 
 			size_t children_size = n.children_size();
-			mchildren_breadths.push_back({ mvalues.data() + children_start,
-					mvalues.data() + children_start + children_size });
+			mchildren_keys.push_back({ mkeys.data() + children_start,
+					mkeys.data() + children_start + children_size });
 			children_start += children_size;
-			// mchildren_breadths.push_back({ pos, n.children_size() });
 		}
+
+		// Point the breadths to keys.
+		mbreadths.push_back(std::span<const Key>{
+				mkeys.begin() + pos, mkeys.begin() + pos + nodes.size() });
 
 		pos += nodes.size();
 		assert(mkeys.size() == pos);
 		assert(mvalues.size() == pos);
 		assert(mparents.size() == pos);
-		assert(mchildren_breadths.size() == pos);
-		//   assert(children_subgraphs.size() == pos);
+		assert(mchildren_keys.size() == pos);
+		assert(mbreadths.back().size() == nodes.size());
 	};
 
-	recurse_breadths(builder, builder.root_keys(), recurse);
+	// We need 2 vectors, one used for forwarding nodes with stable memory,
+	// one to hold breadths.
+	std::span<const Key> root_keys = builder.root_keys();
+	std::vector<Key> nodes(root_keys.begin(), root_keys.end());
+	std::vector<Key> scratch;
+	recurse_breadths(builder, nodes, scratch, recurse);
+
+	// Everything is perfectly sized.
+	mbreadths.shrink_to_fit();
 
 	return flat_bf_graph_data<Key, Value, VAlloc, KeyAlloc, SpanAlloc>{
-		std::move(mlookup), std::move(mkeys), std::move(mvalues),
-		std::move(mparents), std::move(mchildren_breadths),
-		//.children_subgraphs = std::move(mchildren_subgraphs),
+		std::move(mlookup),
+		std::move(mkeys),
+		std::move(mvalues),
+		std::move(mparents),
+		std::move(mchildren_keys),
+		std::move(mbreadths),
 	};
 }
 } // namespace detail
@@ -627,7 +607,7 @@ struct flat_bf_graph {
 	using key_allocator_type = typename std::allocator_traits<
 			allocator_type>::template rebind_alloc<key_type>;
 	using span_allocator_type = typename std::allocator_traits<
-			allocator_type>::template rebind_alloc<std::span<const value_type>>;
+			allocator_type>::template rebind_alloc<std::span<const key_type>>;
 
 	using reference = value_type&;
 	using const_reference = const value_type&;
@@ -641,17 +621,16 @@ struct flat_bf_graph {
 	using local_iterator = iterator;
 	using const_local_iterator = const_iterator;
 
-	using key_iterator =
-			typename std::vector<key_type, key_allocator_type>::iterator;
 	using const_key_iterator =
 			typename std::vector<key_type, key_allocator_type>::const_iterator;
 
-	// Construct the flat graph using builder.
-	// flat_bf_graph(flat_bf_graph_builder<Key, Value, Alloc>&& builder)
-	//		: _lookup(detail::make_lookup(builder))
-	//		, _values(detail::make_value_vec(std::move(builder), _lookup)) {
-	//}
-	flat_bf_graph(flat_bf_graph_builder<Key, Value, VAlloc>&& builder)
+	using builder_t = flat_bf_graph_builder<Key, Value, VAlloc>;
+	using data_t = detail::flat_bf_graph_data<key_type, value_type,
+			allocator_type, key_allocator_type, span_allocator_type>;
+
+	static constexpr key_type invalid_sentinel = builder_t::invalid_sentinel;
+
+	flat_bf_graph(builder_t&& builder)
 			: _data(detail::make_graph_data<key_allocator_type,
 					span_allocator_type>(std::move(builder))) {
 	}
@@ -661,11 +640,229 @@ struct flat_bf_graph {
 	flat_bf_graph& operator=(const flat_bf_graph&) = delete;
 	flat_bf_graph& operator=(flat_bf_graph&&) = delete;
 
+	/**
+	 * Element access
+	 */
+
+	// Get the parent key used to identify root nodes.
+	[[nodiscard]] static constexpr const key_type& root_key() noexcept {
+		return invalid_sentinel;
+	}
+
+	// Is this node a root?
+	[[nodiscard]] bool is_root(const key_type& k) const {
+		size_type idx = _data.lookup.at(k);
+		return _data.parents[idx] == root_key();
+	}
+
+	// Does the graph contain this key?
+	[[nodiscard]] bool contains(const key_type& k) const noexcept {
+		return _data.lookup.contains(k);
+	}
+
+	// Get a value at key k.
+	[[nodiscard]] const_reference at(const key_type& k) const {
+		size_type idx = _data.lookup.at(k);
+		return _data.values[idx];
+	}
+	// Get a value at key k.
+	[[nodiscard]] reference at(const key_type& k) {
+		return const_cast<reference&>(std::as_const(*this).at(k));
+	}
+
+	// Get a value at key k.
+	[[nodiscard]] const_reference at_unchecked(
+			const key_type& k) const noexcept {
+		size_type idx = _data.lookup.at_unchecked(k);
+		return _data.values[idx];
+	}
+	// Get a value at key k.
+	[[nodiscard]] reference at_unchecked(const key_type& k) {
+		return const_cast<reference&>(std::as_const(*this).at_unchecked(k));
+	}
+
+	// Get a value at index idx.
+	[[nodiscard]] const_reference operator[](size_type idx) const noexcept {
+		return _data.values[idx];
+	}
+	// Get a value at index idx.
+	[[nodiscard]] reference operator[](size_type idx) noexcept {
+		return const_cast<reference>(std::as_const(*this).operator[](idx));
+	}
+
+	// Get the child's parent key.
+	[[nodiscard]] const key_type& parent(const key_type& child_key) {
+		size_type idx = _data.lookup.at(child_key);
+		return _data.parents[idx];
+	}
+
+	// Get a node's children. Read-only.
+	[[nodiscard]] const std::span<const key_type>& children(
+			const key_type& parent_key) const {
+		size_type idx = _data.lookup.at(parent_key);
+		return _data.children_keys[idx];
+	}
+
+	// Get a span of the breadth at idx.
+	// Use breadth_size() to loop on breadths.
+	[[nodiscard]] std::span<const key_type> breadth_keys(
+			size_type breadth_idx) const noexcept {
+		return _data.breadths[breadth_idx];
+	}
+
+	// Get all the keys, ordered breadth-first.
+	[[nodiscard]] std::span<const key_type> keys() const noexcept {
+		return { _data.keys };
+	}
+
+	// Get all the values, ordered breadth-first.
+	[[nodiscard]] std::span<const value_type> data() const noexcept {
+		return { _data.values };
+	}
+	// Get all the values, ordered breadth-first.
+	[[nodiscard]] std::span<const value_type> values() const noexcept {
+		return data();
+	}
+
+	// Get all the values, ordered breadth-first.
+	// WARNING : You can modify the values but NOT reorder them.
+	[[nodiscard]] std::span<value_type> data() noexcept {
+		return { _data.values };
+	}
+	// Get all the values, ordered breadth-first.
+	// WARNING : You can modify the values but NOT reorder them.
+	[[nodiscard]] std::span<value_type> values() noexcept {
+		return data();
+	}
+
+	// Get all the parent keys, ordered breadth-first.
+	[[nodiscard]] std::span<const key_type> parents() const noexcept {
+		return { _data.parents };
+	}
+
+	// Get all the children spans, ordered breadth-first.
+	[[nodiscard]] std::span<const std::span<const key_type>>
+	children() const noexcept {
+		return { _data.children_keys };
+	}
+
+	/**
+	 * Iterators
+	 */
+	// Full graph key iterators.
+	[[nodiscard]] const_key_iterator key_begin() const noexcept {
+		return _data.keys.begin();
+	}
+	[[nodiscard]] const_key_iterator key_cbegin() const noexcept {
+		return key_begin();
+	}
+	[[nodiscard]] const_key_iterator key_end() const noexcept {
+		return _data.keys.end();
+	}
+	[[nodiscard]] const_key_iterator key_cend() const noexcept {
+		return key_end();
+	}
+
+	//// Children (breadth) key iterators.
+	//[[nodiscard]] const_key_iterator key_begin(
+	//		const key_type& parent_key) const {
+	//	return _nodes.at(parent_key).children_begin();
+	//}
+	//[[nodiscard]] const_key_iterator key_cbegin(
+	//		const key_type& parent_key) const {
+	//	return key_begin(parent_key);
+	//}
+	//[[nodiscard]] const_key_iterator key_end(const key_type& parent_key) const
+	//{ 	return _nodes.at(parent_key).children_end();
+	//}
+	//[[nodiscard]] const_key_iterator key_cend(
+	//		const key_type& parent_key) const {
+	//	return key_end(parent_key);
+	//}
+
+	//// Full graph node iterators.
+	//// Access your values with node.value().
+	//[[nodiscard]] iterator begin() noexcept {
+	//	return _nodes.begin();
+	//}
+	//[[nodiscard]] const_iterator begin() const noexcept {
+	//	return _nodes.begin();
+	//}
+	//[[nodiscard]] const_iterator cbegin() const noexcept {
+	//	return cbegin();
+	//}
+	//[[nodiscard]] iterator end() noexcept {
+	//	return _nodes.end();
+	//}
+	//[[nodiscard]] const_iterator end() const noexcept {
+	//	return _nodes.end();
+	//}
+	//[[nodiscard]] const_iterator cend() const noexcept {
+	//	return end();
+	//}
+
+	/**
+	 * Capacity
+	 */
+
+	// Is graph empty?
+	[[nodiscard]] bool empty() const noexcept {
+		assert(_data.lookup.size() >= _data.keys.size());
+		assert(_data.keys.size() == _data.values.size());
+		assert(_data.values.size() == _data.parents.size());
+		assert(_data.parents.size() == _data.children_keys.size());
+		return _data.keys.empty();
+	}
+
+	// Node count.
+	[[nodiscard]] size_type size() const noexcept {
+		assert(_data.lookup.size() >= _data.keys.size());
+		assert(_data.keys.size() == _data.values.size());
+		assert(_data.values.size() == _data.parents.size());
+		assert(_data.parents.size() == _data.children_keys.size());
+		return _data.keys.size();
+	}
+
+	// Breadth count.
+	[[nodiscard]] size_type breadth_size() const noexcept {
+		assert(_data.lookup.size() >= _data.keys.size());
+		assert(_data.keys.size() == _data.values.size());
+		assert(_data.values.size() == _data.parents.size());
+		assert(_data.parents.size() == _data.children_keys.size());
+		return _data.breadths.size();
+	}
+
+	// Returns the maximum possible number of elements graph can hold.
+	[[nodiscard]] constexpr size_type max_size() const noexcept {
+		// One reserved for root_sentinel.
+		return _data.lookup.max_size() - size_type(1);
+	}
+
+	// Returns the key storge capacity.
+	[[nodiscard]] size_type key_capacity() const noexcept {
+		assert(_data.lookup.capacity() >= _data.keys.capacity());
+		assert(_data.keys.capacity() == _data.values.capacity());
+		assert(_data.values.capacity() == _data.parents.capacity());
+		assert(_data.parents.capacity() == _data.children_keys.capacity());
+		return _data.lookup.capacity();
+	}
+
+	// Returns the number of elements that can be held in currently allocated
+	// storage.
+	[[nodiscard]] size_type capacity() const noexcept {
+		assert(_data.lookup.capacity() >= _data.keys.capacity());
+		assert(_data.keys.capacity() == _data.values.capacity());
+		assert(_data.values.capacity() == _data.parents.capacity());
+		assert(_data.parents.capacity() == _data.children_keys.capacity());
+		return _data.keys.capacity();
+	}
+
 private:
-	detail::flat_bf_graph_data<key_type, value_type, allocator_type,
-			key_allocator_type, span_allocator_type>
-			_data{};
+	// Our internal lookup and vectors.
+	// All data is const except values, which can be modified but not reordered.
+	data_t _data{};
 };
+
 
 // template <class Key, class Value, class Alloc = std::allocator<Value>>
 // struct flat_bf_graph {

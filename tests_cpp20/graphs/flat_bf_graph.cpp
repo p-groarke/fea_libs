@@ -13,6 +13,7 @@ namespace {
 TEST(flat_bf_graph, builder_basics) {
 	using id_t = uint32_t;
 	static constexpr id_t sentinel = (std::numeric_limits<id_t>::max)();
+	id_t next_id = 0u;
 	struct node {
 		id_t id = sentinel;
 	};
@@ -31,8 +32,8 @@ TEST(flat_bf_graph, builder_basics) {
 
 	{
 		// Add root node.
-		id_t root_id = builder.push_back(node{});
-		EXPECT_EQ(root_id, 1u);
+		id_t root_id = ++next_id;
+		builder.push_back(root_id, node{});
 		EXPECT_TRUE(builder.is_root(root_id));
 
 		EXPECT_FALSE(builder.empty());
@@ -54,7 +55,8 @@ TEST(flat_bf_graph, builder_basics) {
 		}
 
 		// Add child to root.
-		id_t child_id = builder.push_back(root_id, node{});
+		id_t child_id = ++next_id;
+		builder.push_back(root_id, child_id, node{});
 		EXPECT_EQ(child_id, 2u);
 		EXPECT_FALSE(builder.is_root(child_id));
 		{
@@ -68,16 +70,13 @@ TEST(flat_bf_graph, builder_basics) {
 
 
 		// Add new child.
-		child_id = builder.push_back(root_id, node{});
+		child_id = ++next_id;
+		builder.push_back(root_id, child_id, node{ child_id });
 		EXPECT_EQ(child_id, 3u);
 		EXPECT_FALSE(builder.is_root(child_id));
 		{
 			node& child_n = builder.at(child_id);
-			EXPECT_EQ(child_n.id, sentinel);
-			child_n.id = child_id;
-
-			const node& child_n2 = builder.at(child_id);
-			EXPECT_EQ(child_n2.id, child_id);
+			EXPECT_EQ(child_n.id, child_id);
 		}
 
 		// Iterators.
@@ -147,13 +146,99 @@ TEST(flat_bf_graph, builder_basics) {
 		}
 	}
 
-	// Stress builder conversion.
-	{}
+	// Stress builder conversion by adding unordered nodes.
+	{
+		constexpr unsigned count = 5;
+		// Add roots.
+		for (unsigned i = 0; i < count; ++i) {
+			++next_id;
+			builder.push_back(next_id, node{ next_id });
+		}
+
+		// Add children.
+		for (unsigned i = 0; i < count; ++i) {
+			++next_id;
+			builder.push_back(next_id - count, next_id, node{ next_id });
+		}
+		for (unsigned i = 0; i < count; ++i) {
+			++next_id;
+			builder.push_back(next_id - count, next_id, node{ next_id });
+		}
+		for (unsigned i = 0; i < count; ++i) {
+			++next_id;
+			builder.push_back(next_id - count, next_id, node{ next_id });
+		}
+		for (unsigned i = 0; i < count; ++i) {
+			++next_id;
+			builder.push_back(next_id - count, next_id, node{ next_id });
+		}
+		for (unsigned i = 0; i < count; ++i) {
+			++next_id;
+			builder.push_back(next_id - count * 3u, next_id, node{ next_id });
+		}
+		for (unsigned i = 0; i < count; ++i) {
+			++next_id;
+			builder.push_back(next_id - count * 4u, next_id, node{ next_id });
+		}
+		for (unsigned i = 0; i < count; ++i) {
+			++next_id;
+			builder.push_back(next_id - count * 2u, next_id, node{ next_id });
+		}
+		for (unsigned i = 0; i < count; ++i) {
+			++next_id;
+			builder.push_back(next_id, node{ next_id });
+		}
+	}
 
 	// Now create a flat constant graph using builder.
 	// After this point, you may not retopologize the graph,
 	// unless you recreate it with a new builder.
+	size_t builder_size = builder.size();
 	fea::flat_bf_graph graph{ std::move(builder) };
+	EXPECT_FALSE(graph.empty());
+	EXPECT_EQ(graph.size(), builder_size);
+	EXPECT_EQ(graph.breadth_size(), 5u);
+	EXPECT_GE(graph.key_capacity(), graph.capacity());
+
+	// Check topology and expected values.
+	{
+		std::span<const id_t> keys = graph.keys();
+		size_t midx = 0;
+		for (id_t k : keys) {
+			// Check basics.
+			EXPECT_TRUE(graph.contains(k));
+			EXPECT_EQ(graph.at(k).id, k);
+			EXPECT_EQ(graph.at(k).id, graph.at_unchecked(k).id);
+			EXPECT_EQ(graph[midx].id, graph.at(k).id);
+			++midx;
+
+			id_t parent = graph.parent(k);
+			if (parent == graph.root_key()) {
+				continue;
+			}
+
+			// Check children spans are well formed.
+			std::span<const id_t> parent_children = graph.children(parent);
+			EXPECT_NE(std::find(parent_children.begin(), parent_children.end(),
+							  k),
+					parent_children.end());
+		}
+
+		for (size_t i = 0; i < graph.breadth_size(); ++i) {
+			std::span<const id_t> breadth = graph.breadth_keys(i);
+			for (id_t k : breadth) {
+				EXPECT_TRUE(graph.contains(k));
+
+				if (i == 0) {
+					EXPECT_EQ(graph.parent(k), graph.root_key());
+					EXPECT_TRUE(graph.is_root(k));
+				} else {
+					EXPECT_NE(graph.parent(k), graph.root_key());
+					EXPECT_FALSE(graph.is_root(k));
+				}
+			}
+		}
+	}
 }
 
 } // namespace
