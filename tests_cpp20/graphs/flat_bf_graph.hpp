@@ -655,6 +655,12 @@ struct flat_bf_graph {
 		return _data.parents[idx] == root_key();
 	}
 
+	// Is this node a root? Doesn't throw on invalid key.
+	[[nodiscard]] bool is_root_unchecked(const key_type& k) const noexcept {
+		size_type idx = _data.lookup.at_unchecked(k);
+		return _data.parents[idx] == root_key();
+	}
+
 	// Does the graph contain this key?
 	[[nodiscard]] bool contains(const key_type& k) const noexcept {
 		return _data.lookup.contains(k);
@@ -666,19 +672,28 @@ struct flat_bf_graph {
 		return _data.values[idx];
 	}
 	// Get a value at key k.
-	[[nodiscard]] reference at(const key_type& k) {
-		return const_cast<reference&>(std::as_const(*this).at(k));
-	}
-
-	// Get a value at key k.
 	[[nodiscard]] const_reference at_unchecked(
 			const key_type& k) const noexcept {
 		size_type idx = _data.lookup.at_unchecked(k);
 		return _data.values[idx];
 	}
+
+	// Get a value at key k.
+	[[nodiscard]] reference at(const key_type& k) {
+		return const_cast<reference&>(std::as_const(*this).at(k));
+	}
 	// Get a value at key k.
 	[[nodiscard]] reference at_unchecked(const key_type& k) {
 		return const_cast<reference&>(std::as_const(*this).at_unchecked(k));
+	}
+
+	// Get the data index of a key.
+	[[nodiscard]] size_type index(const key_type& k) const {
+		return _data.lookup.at(k);
+	}
+	// Get the data index of a key.
+	[[nodiscard]] size_type index_unchecked(const key_type& k) const noexcept {
+		return _data.lookup.at_unchecked(k);
 	}
 
 	// Get a value at index idx.
@@ -691,21 +706,41 @@ struct flat_bf_graph {
 	}
 
 	// Get the child's parent key.
-	[[nodiscard]] const key_type& parent(const key_type& child_key) {
+	[[nodiscard]] const key_type& parent(const key_type& child_key) const {
 		size_type idx = _data.lookup.at(child_key);
 		return _data.parents[idx];
 	}
+	// Get the child's parent key. Doesn't throw on invalid child_key.
+	[[nodiscard]] const key_type& parent_unchecked(
+			const key_type& child_key) const noexcept {
+		size_type idx = _data.lookup.at_unchecked(child_key);
+		return _data.parents[idx];
+	}
 
-	// Get a node's children. Read-only.
+	// Get a node's children.
 	[[nodiscard]] const std::span<const key_type>& children(
 			const key_type& parent_key) const {
 		size_type idx = _data.lookup.at(parent_key);
 		return _data.children_keys[idx];
 	}
+	// Get a node's children. Doesn't throw on invalid parent key.
+	[[nodiscard]] const std::span<const key_type>& children_unchecked(
+			const key_type& parent_key) const noexcept {
+		size_type idx = _data.lookup.at_unchecked(parent_key);
+		return _data.children_keys[idx];
+	}
 
 	// Get a span of the breadth at idx.
 	// Use breadth_size() to loop on breadths.
-	[[nodiscard]] std::span<const key_type> breadth_keys(
+	[[nodiscard]] const std::span<const key_type>& breadth(
+			size_type breadth_idx) const {
+		return _data.breadths.at(breadth_idx);
+	}
+
+	// Get a span of the breadth at idx.
+	// Use breadth_size() to loop on breadths.
+	// Doesn't throw on out-of-range index.
+	[[nodiscard]] const std::span<const key_type>& breadth_unchecked(
 			size_type breadth_idx) const noexcept {
 		return _data.breadths[breadth_idx];
 	}
@@ -746,10 +781,17 @@ struct flat_bf_graph {
 		return { _data.children_keys };
 	}
 
+	// Get all the breadth spans, ordered root to leaf.
+	[[nodiscard]] std::span<const std::span<const key_type>>
+	breadths() const noexcept {
+		return { _data.breadths };
+	}
+
 	/**
 	 * Iterators
 	 */
-	// Full graph key iterators.
+
+	// Key iterators.
 	[[nodiscard]] const_key_iterator key_begin() const noexcept {
 		return _data.keys.begin();
 	}
@@ -763,43 +805,26 @@ struct flat_bf_graph {
 		return key_end();
 	}
 
-	//// Children (breadth) key iterators.
-	//[[nodiscard]] const_key_iterator key_begin(
-	//		const key_type& parent_key) const {
-	//	return _nodes.at(parent_key).children_begin();
-	//}
-	//[[nodiscard]] const_key_iterator key_cbegin(
-	//		const key_type& parent_key) const {
-	//	return key_begin(parent_key);
-	//}
-	//[[nodiscard]] const_key_iterator key_end(const key_type& parent_key) const
-	//{ 	return _nodes.at(parent_key).children_end();
-	//}
-	//[[nodiscard]] const_key_iterator key_cend(
-	//		const key_type& parent_key) const {
-	//	return key_end(parent_key);
-	//}
-
-	//// Full graph node iterators.
-	//// Access your values with node.value().
-	//[[nodiscard]] iterator begin() noexcept {
-	//	return _nodes.begin();
-	//}
-	//[[nodiscard]] const_iterator begin() const noexcept {
-	//	return _nodes.begin();
-	//}
-	//[[nodiscard]] const_iterator cbegin() const noexcept {
-	//	return cbegin();
-	//}
-	//[[nodiscard]] iterator end() noexcept {
-	//	return _nodes.end();
-	//}
-	//[[nodiscard]] const_iterator end() const noexcept {
-	//	return _nodes.end();
-	//}
-	//[[nodiscard]] const_iterator cend() const noexcept {
-	//	return end();
-	//}
+	// Value iterators.
+	// WARNING : You may modify values, but NOT reorder them.
+	[[nodiscard]] iterator begin() noexcept {
+		return _data.values.begin();
+	}
+	[[nodiscard]] const_iterator begin() const noexcept {
+		return _data.values.begin();
+	}
+	[[nodiscard]] const_iterator cbegin() const noexcept {
+		return cbegin();
+	}
+	[[nodiscard]] iterator end() noexcept {
+		return _data.values.end();
+	}
+	[[nodiscard]] const_iterator end() const noexcept {
+		return _data.values.end();
+	}
+	[[nodiscard]] const_iterator cend() const noexcept {
+		return end();
+	}
 
 	/**
 	 * Capacity
@@ -859,6 +884,7 @@ struct flat_bf_graph {
 
 private:
 	// Our internal lookup and vectors.
+	// All vectors are vertically aligned in soa fashion.
 	// All data is const except values, which can be modified but not reordered.
 	data_t _data{};
 };

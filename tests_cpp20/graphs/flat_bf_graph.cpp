@@ -202,6 +202,7 @@ TEST(flat_bf_graph, builder_basics) {
 
 	// Check topology and expected values.
 	{
+		std::span<const std::span<const id_t>> children = graph.children();
 		std::span<const id_t> keys = graph.keys();
 		size_t midx = 0;
 		for (id_t k : keys) {
@@ -217,15 +218,23 @@ TEST(flat_bf_graph, builder_basics) {
 				continue;
 			}
 
+			size_t parent_idx = graph.index(parent);
+
 			// Check children spans are well formed.
 			std::span<const id_t> parent_children = graph.children(parent);
 			EXPECT_NE(std::find(parent_children.begin(), parent_children.end(),
 							  k),
 					parent_children.end());
+
+			EXPECT_EQ(parent_children.data(), children[parent_idx].data());
 		}
 
+		// Breadths
+		std::span<const std::span<const id_t>> breadths = graph.breadths();
 		for (size_t i = 0; i < graph.breadth_size(); ++i) {
-			std::span<const id_t> breadth = graph.breadth_keys(i);
+			std::span<const id_t> breadth = graph.breadth(i);
+			EXPECT_EQ(breadth.data(), breadths[i].data());
+
 			for (id_t k : breadth) {
 				EXPECT_TRUE(graph.contains(k));
 
@@ -237,6 +246,21 @@ TEST(flat_bf_graph, builder_basics) {
 					EXPECT_FALSE(graph.is_root(k));
 				}
 			}
+		}
+
+		// Iterators.
+		std::span<const node> values = graph.values();
+		midx = 0;
+		for (const node& n : graph) {
+			EXPECT_EQ(n.id, values[midx].id);
+			++midx;
+		}
+
+		keys = graph.keys();
+		midx = 0;
+		for (auto it = graph.key_begin(); it != graph.key_end(); ++it) {
+			EXPECT_EQ(*it, keys[midx]);
+			++midx;
 		}
 	}
 }
