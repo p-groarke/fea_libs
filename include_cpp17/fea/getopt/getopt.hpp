@@ -839,15 +839,20 @@ void get_opt<CharT, PrintfT>::on_parse_shortopt(fsm_t& m) {
 	_parser_args.pop_front();
 
 	size_t new_beg = arg.find_first_not_of(FEA_LIT("-"));
-	arg = arg.substr(new_beg);
+	if (new_beg == arg.npos) {
+		print(FEA_LIT("Could not parse '") + arg
+				+ FEA_LIT("'.\nInvalid option.\n"));
+		return m.template trigger<transition::error>(this);
+	}
 
+	arg = arg.substr(new_beg);
 	assert(arg.size() == 1);
 
 	CharT short_opt = arg[0];
 
 	if (_short_opt_to_long_opt.count(short_opt) == 0) {
-		print(FEA_LIT("Could not parse : '") + arg + FEA_LIT("'\n"));
-		print(FEA_LIT("Option not recognized.\n"));
+		print(FEA_LIT("Could not parse '") + arg
+				+ FEA_LIT("'.\nOption not recognized.\n"));
 		return m.template trigger<transition::error>(this);
 	}
 
@@ -862,14 +867,19 @@ void get_opt<CharT, PrintfT>::on_parse_concat(fsm_t& m) {
 	_parser_args.pop_front();
 
 	size_t new_beg = arg.find_first_not_of(FEA_LIT("-"));
+	if (new_beg == arg.npos) {
+		print(FEA_LIT("Could not parse '") + arg
+				+ FEA_LIT("'.\nInvalid option.\n"));
+		return m.template trigger<transition::error>(this);
+	}
+
 	arg = arg.substr(new_beg);
 
 	std::vector<string> long_args;
 	for (CharT short_opt : arg) {
 		if (_short_opt_to_long_opt.count(short_opt) == 0) {
-			print(FEA_LIT("Could not parse : '") + string{ short_opt }
-					+ FEA_LIT("'\n"));
-			print(FEA_LIT("Option not recognized.\n"));
+			print(FEA_LIT("Could not parse '") + string{ short_opt }
+					+ FEA_LIT("'.\nOption not recognized.\n"));
 			return m.template trigger<transition::error>(this);
 		}
 
