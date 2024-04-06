@@ -190,6 +190,9 @@ struct get_opt {
 	// If no user argument is provided, your callback is called with your
 	// default argument.
 	// ex : '--has_default arg' or '--has_default'
+	//
+	// If always_execute is true, your callback is called with the default
+	// argument even if the user didn't use the option.
 	void add_default_arg_option(string&& long_name,
 			std::function<bool(string&&)>&& func, string&& help,
 			string&& default_value, CharT short_name = null_char,
