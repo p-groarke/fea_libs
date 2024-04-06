@@ -196,10 +196,16 @@ struct flat_unsigned_map {
 		_reverse_lookup.reserve(new_cap);
 		_values.reserve(new_cap);
 	}
-	void reserve(size_type key_new_cap, size_type value_new_cap) {
-		_lookup.reserve(key_new_cap);
+	void reserve(size_type lookup_new_cap, size_type value_new_cap) {
+		_lookup.reserve(lookup_new_cap);
 		_reverse_lookup.reserve(value_new_cap);
 		_values.reserve(value_new_cap);
+	}
+
+	// returns the number of elements that can be held in currently allocated
+	// storage
+	size_type lookup_capacity() const noexcept {
+		return _lookup.capacity();
 	}
 
 	// returns the number of elements that can be held in currently allocated

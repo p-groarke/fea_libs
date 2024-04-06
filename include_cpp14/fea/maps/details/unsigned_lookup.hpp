@@ -66,6 +66,9 @@ struct unsigned_lookup {
 	using iterator =
 			typename std::vector<pos_type, pos_allocator_type>::iterator;
 
+	/**
+	 * Ctors
+	 */
 	constexpr unsigned_lookup() = default;
 	~unsigned_lookup() = default;
 	constexpr unsigned_lookup(const unsigned_lookup&) = default;
@@ -73,101 +76,9 @@ struct unsigned_lookup {
 	constexpr unsigned_lookup& operator=(const unsigned_lookup&) = default;
 	constexpr unsigned_lookup& operator=(unsigned_lookup&&) = default;
 
-
-	// Iterators
-	constexpr iterator begin() noexcept {
-		return _indexes.begin();
-	}
-	constexpr const_iterator begin() const noexcept {
-		return _indexes.begin();
-	}
-	constexpr const_iterator cbegin() const noexcept {
-		return _indexes.cbegin();
-	}
-
-	constexpr iterator end() noexcept {
-		return _indexes.end();
-	}
-	constexpr const_iterator end() const noexcept {
-		return _indexes.end();
-	}
-	constexpr const_iterator cend() const noexcept {
-		return _indexes.cend();
-	}
-
-
-	// Capacity
-	FEA_NODISCARD constexpr size_type max_size() const noexcept {
-		// Reserve 1 slot for sentinel.
-		return size_type(sentinel()) - size_type(1);
-	}
-	constexpr void reserve(size_type new_cap) {
-		_indexes.reserve(new_cap);
-	}
-	constexpr void shrink_to_fit() {
-		_indexes.shrink_to_fit();
-	}
-
-
-	// Modifiers
-	constexpr void clear() noexcept {
-		_indexes.clear();
-	}
-
-	constexpr void insert_prehashed(underlying_key_type uk, size_type new_idx) {
-		assert(!contains_prehashed(uk));
-		maybe_resize(uk);
-		_indexes[uk] = pos_type(new_idx);
-	}
-	constexpr void insert(const Key& k, size_type new_idx) {
-		underlying_key_type uk = hash(k);
-		insert_prehashed(uk, new_idx);
-	}
-
-	// Insert multiple new keys of contiguous positions.
-	// First key is at first_new_idx position.
-	template <class FwdIt>
-	constexpr void insert(
-			FwdIt&& k_begin, FwdIt&& k_end, size_type first_new_idx) {
-		auto max_it = std::max_element(
-				k_begin, k_end, [](const Key& lhs, const Key& rhs) {
-					return hash(lhs) < hash(rhs);
-				});
-		maybe_resize(*max_it);
-
-		for (auto it = k_begin; it != k_end; ++it) {
-			underlying_key_type uk = hash(*it);
-			assert(!contains_prehashed(uk));
-			_indexes[uk] = pos_type(first_new_idx++);
-		}
-	}
-
-	constexpr void swap(unsigned_lookup& other) noexcept {
-		_indexes.swap(other._indexes);
-	}
-
-	// Sets a pre-existing to sentinel.
-	constexpr void invalidate_prehashed(underlying_key_type uk) noexcept {
-		assert(contains_prehashed(uk));
-		_indexes[uk] = sentinel();
-	}
-	constexpr void invalidate(const Key& k) noexcept {
-		underlying_key_type uk = hash(k);
-		invalidate_prehashed(uk);
-	}
-
-	// Updates the position of a pre-existing key.
-	constexpr void update_prehashed(
-			underlying_key_type uk, size_type new_idx) noexcept {
-		assert(contains_prehashed(uk));
-		_indexes[uk] = pos_type(new_idx);
-	}
-	constexpr void update(const Key& k, size_type new_idx) noexcept {
-		underlying_key_type uk = hash(k);
-		update_prehashed(uk, new_idx);
-	}
-
-
+	/**
+	 * Element access
+	 */
 	// Lookups, return the index of the item.
 	FEA_NODISCARD constexpr size_type at_prehashed(
 			underlying_key_type uk) const {
@@ -234,6 +145,109 @@ struct unsigned_lookup {
 
 	FEA_NODISCARD constexpr size_type size() const noexcept {
 		return _indexes.size();
+	}
+
+
+	/**
+	 * Iterators
+	 */
+	constexpr iterator begin() noexcept {
+		return _indexes.begin();
+	}
+	constexpr const_iterator begin() const noexcept {
+		return _indexes.begin();
+	}
+	constexpr const_iterator cbegin() const noexcept {
+		return _indexes.cbegin();
+	}
+
+	constexpr iterator end() noexcept {
+		return _indexes.end();
+	}
+	constexpr const_iterator end() const noexcept {
+		return _indexes.end();
+	}
+	constexpr const_iterator cend() const noexcept {
+		return _indexes.cend();
+	}
+
+
+	/**
+	 * Capacity
+	 */
+	FEA_NODISCARD constexpr size_type max_size() const noexcept {
+		// Reserve 1 slot for sentinel.
+		return size_type(sentinel()) - size_type(1);
+	}
+	constexpr void reserve(size_type new_cap) {
+		_indexes.reserve(new_cap);
+	}
+	FEA_NODISCARD constexpr size_type capacity() const noexcept {
+		return _indexes.capacity();
+	}
+	constexpr void shrink_to_fit() {
+		_indexes.shrink_to_fit();
+	}
+
+
+	/**
+	 * Modifiers
+	 */
+	constexpr void clear() noexcept {
+		_indexes.clear();
+	}
+
+	constexpr void insert_prehashed(underlying_key_type uk, size_type new_idx) {
+		assert(!contains_prehashed(uk));
+		maybe_resize(uk);
+		_indexes[uk] = pos_type(new_idx);
+	}
+	constexpr void insert(const Key& k, size_type new_idx) {
+		underlying_key_type uk = hash(k);
+		insert_prehashed(uk, new_idx);
+	}
+
+	// Insert multiple new keys of contiguous positions.
+	// First key is at first_new_idx position.
+	template <class FwdIt>
+	constexpr void insert(
+			FwdIt&& k_begin, FwdIt&& k_end, size_type first_new_idx) {
+		auto max_it = std::max_element(
+				k_begin, k_end, [](const Key& lhs, const Key& rhs) {
+					return hash(lhs) < hash(rhs);
+				});
+		maybe_resize(*max_it);
+
+		for (auto it = k_begin; it != k_end; ++it) {
+			underlying_key_type uk = hash(*it);
+			assert(!contains_prehashed(uk));
+			_indexes[uk] = pos_type(first_new_idx++);
+		}
+	}
+
+	constexpr void swap(unsigned_lookup& other) noexcept {
+		_indexes.swap(other._indexes);
+	}
+
+	// Sets a pre-existing to sentinel.
+	constexpr void invalidate_prehashed(underlying_key_type uk) noexcept {
+		assert(contains_prehashed(uk));
+		_indexes[uk] = sentinel();
+	}
+	constexpr void invalidate(const Key& k) noexcept {
+		underlying_key_type uk = hash(k);
+		invalidate_prehashed(uk);
+	}
+
+	// Updates the position of a pre-existing key.
+	constexpr void update_prehashed(
+			underlying_key_type uk, size_type new_idx) noexcept {
+		assert(contains_prehashed(uk));
+		_indexes[uk] = pos_type(new_idx);
+	}
+	constexpr void update(const Key& k, size_type new_idx) noexcept {
+		underlying_key_type uk = hash(k);
+		update_prehashed(uk, new_idx);
 	}
 
 	FEA_NODISCARD static constexpr pos_type sentinel() noexcept {

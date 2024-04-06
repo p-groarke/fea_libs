@@ -190,6 +190,9 @@ struct get_opt {
 	// If no user argument is provided, your callback is called with your
 	// default argument.
 	// ex : '--has_default arg' or '--has_default'
+	//
+	// If always_execute is true, your callback is called with the default
+	// argument even if the user didn't use the option.
 	void add_default_arg_option(string&& long_name,
 			std::function<bool(string&&)>&& func, string&& help,
 			string&& default_value, CharT short_name = null_char,
@@ -233,6 +236,16 @@ struct get_opt {
 	// By default, if a user provides no options, help will be printed and
 	// success will be false. Use this to allow success on no arguments passed.
 	void no_options_is_ok();
+
+	// By default, help is printed if an error is encountered.
+	// Disable this behavior and print a short message (suggesting --help).
+	void print_full_help_on_error(bool enable);
+
+	// By default, help is printed as one option block and mixes short options
+	// and long-only options. By enabling this setting, the long-only options
+	// are considered "Extra Options" and printed after the options with both
+	// short and long args.
+	void longoptions_are_extra_options(bool enable);
 
 	// By default, the text wrapping will use 120 characters width.
 	// Use this to change the width of the console window.
@@ -312,6 +325,8 @@ private:
 
 	size_t _output_width = 120;
 	bool _no_arg_is_help = true;
+	bool _print_full_help_on_error = true;
+	bool _longoptions_are_extra_options = false;
 
 	// State machine eval things :
 	std::deque<string> _parser_args;
@@ -496,6 +511,16 @@ void get_opt<CharT, PrintfT>::add_help_outro(const string& message) {
 template <class CharT, class PrintfT>
 void fea::get_opt<CharT, PrintfT>::no_options_is_ok() {
 	_no_arg_is_help = false;
+}
+
+template <class CharT, class PrintfT>
+void fea::get_opt<CharT, PrintfT>::print_full_help_on_error(bool enable) {
+	_print_full_help_on_error = enable;
+}
+
+template <class CharT, class PrintfT>
+void fea::get_opt<CharT, PrintfT>::longoptions_are_extra_options(bool enable) {
+	_longoptions_are_extra_options = enable;
 }
 
 template <class CharT, class PrintfT>
@@ -806,10 +831,11 @@ void get_opt<CharT, PrintfT>::on_parse_longopt(fsm_t& m) {
 
 	if (!success) {
 		if (!_parser_args.empty()) {
-			print(FEA_LIT("'") + _parser_args.front()
-					+ FEA_LIT("' problem parsing argument.\n"));
+			print(FEA_LIT("Problem parsing argument '") + _parser_args.front()
+					+ FEA_LIT("'.\n"));
 		} else {
-			print(FEA_LIT("Problem parsing arguments.\n"));
+			print(FEA_LIT("Problem parsing argument '--") + user_opt.long_name
+					+ FEA_LIT("'.\n"));
 		}
 		return m.template trigger<transition::error>(this);
 	}
@@ -825,15 +851,20 @@ void get_opt<CharT, PrintfT>::on_parse_shortopt(fsm_t& m) {
 	_parser_args.pop_front();
 
 	size_t new_beg = arg.find_first_not_of(FEA_LIT("-"));
-	arg = arg.substr(new_beg);
+	if (new_beg == arg.npos) {
+		print(FEA_LIT("Could not parse '") + arg
+				+ FEA_LIT("'.\nInvalid option.\n"));
+		return m.template trigger<transition::error>(this);
+	}
 
+	arg = arg.substr(new_beg);
 	assert(arg.size() == 1);
 
 	CharT short_opt = arg[0];
 
 	if (_short_opt_to_long_opt.count(short_opt) == 0) {
-		print(FEA_LIT("Could not parse : '") + arg + FEA_LIT("'\n"));
-		print(FEA_LIT("Option not recognized.\n"));
+		print(FEA_LIT("Could not parse '") + arg
+				+ FEA_LIT("'.\nOption not recognized.\n"));
 		return m.template trigger<transition::error>(this);
 	}
 
@@ -848,14 +879,19 @@ void get_opt<CharT, PrintfT>::on_parse_concat(fsm_t& m) {
 	_parser_args.pop_front();
 
 	size_t new_beg = arg.find_first_not_of(FEA_LIT("-"));
+	if (new_beg == arg.npos) {
+		print(FEA_LIT("Could not parse '") + arg
+				+ FEA_LIT("'.\nInvalid option.\n"));
+		return m.template trigger<transition::error>(this);
+	}
+
 	arg = arg.substr(new_beg);
 
 	std::vector<string> long_args;
 	for (CharT short_opt : arg) {
 		if (_short_opt_to_long_opt.count(short_opt) == 0) {
-			print(FEA_LIT("Could not parse : '") + string{ short_opt }
-					+ FEA_LIT("'\n"));
-			print(FEA_LIT("Option not recognized.\n"));
+			print(FEA_LIT("Could not parse '") + string{ short_opt }
+					+ FEA_LIT("'.\nOption not recognized.\n"));
 			return m.template trigger<transition::error>(this);
 		}
 
@@ -926,10 +962,12 @@ void get_opt<CharT, PrintfT>::on_end(fsm_t& m) {
 
 template <class CharT, class PrintfT>
 void get_opt<CharT, PrintfT>::on_print_error(fsm_t& m) {
-	// print(FEA_ML("problem parsing provided options :\n"));
-	// print(_error_message);
-	print(FEA_LIT("\n"));
-	m.template trigger<transition::help>(this);
+	if (_print_full_help_on_error) {
+		print(FEA_LIT("\n"));
+		return m.template trigger<transition::help>(this);
+	}
+	_success = false;
+	print(FEA_LIT("Use --help for extra help.\n"));
 }
 
 template <class CharT, class PrintfT>
@@ -1077,8 +1115,6 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 
 	// All Other Options
 	{
-		print(FEA_LIT("Options:\n"));
-
 		// First, compute the maximum width of long options.
 		size_t longopt_width = 0;
 		for (const std::pair<const string, user_option<CharT>>& opt_p :
@@ -1107,67 +1143,83 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 			longopt_width = longopt_width_max;
 		}
 
-		// Print the options.
+		// Option printer.
+		// We may loop twice. Once for options with short flags, considered
+		// your "main options". A second time for options without short opts,
+		// considered "extra options".
+		auto option_help_printer
+				= [&, this](const std::pair<const string, user_option<CharT>>&
+								  opt_p) {
+					  const string& long_opt_str = opt_p.first;
+					  const user_option<CharT>& opt = opt_p.second;
+
+					  // Print indentation.
+					  print(string(indent, FEA_CH(' ')));
+
+					  // If the option has a shortarg, print that.
+					  if (opt.short_name != FEA_CH('\0')) {
+						  string shortopt_str;
+						  shortopt_str += FEA_LIT("-");
+						  shortopt_str += opt.short_name;
+						  shortopt_str += FEA_LIT(",");
+						  string out = shortopt_str;
+						  out.resize(shortopt_width, FEA_CH(' '));
+						  print(out);
+					  } else {
+						  print(string(shortopt_width, FEA_CH(' ')));
+					  }
+
+					  // Build the longopt string.
+					  string longopt_str;
+					  longopt_str += FEA_LIT("--");
+					  longopt_str += long_opt_str;
+
+					  // Add the specific "instructions" for each type of arg.
+					  if (opt.opt_type == user_option_e::optional_arg) {
+						  longopt_str += opt_str;
+					  } else if (opt.opt_type == user_option_e::required_arg) {
+						  longopt_str += req_str;
+					  } else if (opt.opt_type == user_option_e::default_arg) {
+						  longopt_str += default_beg;
+						  longopt_str += opt.default_val;
+						  longopt_str += default_end;
+					  } else if (opt.opt_type == user_option_e::multi_arg) {
+						  longopt_str += multi_str;
+					  }
+
+					  // Print the longopt string.
+					  string out = longopt_str;
+					  out.resize(longopt_width, FEA_CH(' '));
+					  print(out);
+
+					  // If it was bigger than the max width, the description
+					  // will be printed on the next line, indented up to the
+					  // right position.
+					  if (longopt_str.size() >= longopt_width) {
+						  print(FEA_LIT("\n"));
+						  print(string(longopt_width + shortopt_total_width,
+								  FEA_CH(' ')));
+					  }
+
+					  // Print the help message, indents appropriately and
+					  // splits into multiple strings if the message is too
+					  // wide.
+					  print_description(opt.description,
+							  longopt_width + shortopt_total_width);
+				  };
+
+		// Print the main options (those that have short opt).
+		print(FEA_LIT("Options:\n"));
 		for (const std::pair<const string, user_option<CharT>>& opt_p :
 				_long_opt_to_user_opt) {
-			const string& long_opt_str = opt_p.first;
 			const user_option<CharT>& opt = opt_p.second;
-
-			// Print indentation.
-			print(string(indent, FEA_CH(' ')));
-
-			// If the option has a shortarg, print that.
-			if (opt.short_name != FEA_CH('\0')) {
-				string shortopt_str;
-				shortopt_str += FEA_LIT("-");
-				shortopt_str += opt.short_name;
-				shortopt_str += FEA_LIT(",");
-				string out = shortopt_str;
-				out.resize(shortopt_width, FEA_CH(' '));
-				print(out);
-			} else {
-				print(string(shortopt_width, FEA_CH(' ')));
+			if (_longoptions_are_extra_options
+					&& opt.short_name == FEA_CH('\0')) {
+				// skip, print later.
+				continue;
 			}
-
-			// Build the longopt string.
-			string longopt_str;
-			longopt_str += FEA_LIT("--");
-			longopt_str += long_opt_str;
-
-			// Add the specific "instructions" for each type of arg.
-			if (opt.opt_type == user_option_e::optional_arg) {
-				longopt_str += opt_str;
-			} else if (opt.opt_type == user_option_e::required_arg) {
-				longopt_str += req_str;
-			} else if (opt.opt_type == user_option_e::default_arg) {
-				longopt_str += default_beg;
-				longopt_str += opt.default_val;
-				longopt_str += default_end;
-			} else if (opt.opt_type == user_option_e::multi_arg) {
-				longopt_str += multi_str;
-			}
-
-			// Print the longopt string.
-			string out = longopt_str;
-			out.resize(longopt_width, FEA_CH(' '));
-			print(out);
-
-			// If it was bigger than the max width, the description will be
-			// printed on the next line, indented up to the right position.
-			if (longopt_str.size() >= longopt_width) {
-				print(FEA_LIT("\n"));
-				print(string(
-						longopt_width + shortopt_total_width, FEA_CH(' ')));
-			}
-
-			// Print the help message, indents appropriately and splits into
-			// multiple strings if the message is too wide.
-			print_description(
-					opt.description, longopt_width + shortopt_total_width);
+			option_help_printer(opt_p);
 		}
-
-		if (longopt_width == 0) // No options, width is --help only.
-			longopt_width = 2 + 4 + longopt_space;
 
 		// Print the help command help.
 		string short_help = FEA_LIT("-h,");
@@ -1178,6 +1230,23 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 
 		print(string(indent, FEA_CH(' ')) + short_help + long_help
 				+ FEA_LIT("Print this help\n"));
+
+		if (_longoptions_are_extra_options) {
+			// Print options that don't have short opt.
+			print(FEA_LIT("\nExtra Options:\n"));
+			for (const std::pair<const string, user_option<CharT>>& opt_p :
+					_long_opt_to_user_opt) {
+				const user_option<CharT>& opt = opt_p.second;
+				if (opt.short_name != FEA_CH('\0')) {
+					// skip, already printed.
+					continue;
+				}
+				option_help_printer(opt_p);
+			}
+		}
+
+		if (longopt_width == 0) // No options, width is --help only.
+			longopt_width = 2 + 4 + longopt_space;
 
 		// Print user outro.
 		if (!_help_outro.empty()) {

@@ -1196,6 +1196,51 @@ TEST(fea_getopt, basics) {
 			}
 		}
 	}
+
+	// No full help.
+	{
+		using mchar_t = char;
+		fea::get_opt<mchar_t> opt{ print_to_string };
+		opt.print_full_help_on_error(false);
+		// fea::get_opt<char> opt{};
+		add_options(opt);
+
+		{
+			test_scenario<mchar_t> scenario = test_all_help<mchar_t>();
+			scenario.fuzzit(opt);
+		}
+		{
+			test_scenario<mchar_t> scenario = test_raw<mchar_t>();
+			scenario.fuzzit(opt);
+		}
+		{
+			test_scenario<mchar_t> scenario = test_flags_and_concat<mchar_t>();
+			scenario.fuzzit(opt);
+		}
+		{
+			test_scenario<mchar_t> scenario = test_default_arg<mchar_t>();
+			scenario.fuzzit(opt);
+		}
+		{
+			test_scenario<mchar_t> scenario = test_optional_arg<mchar_t>();
+			scenario.fuzzit(opt);
+		}
+		{
+			test_scenario<mchar_t> scenario = test_required_arg<mchar_t>();
+			scenario.fuzzit(opt);
+		}
+		{
+			test_scenario<mchar_t> scenario = test_multi_arg<mchar_t>();
+			scenario.fuzzit(opt);
+		}
+		{
+			std::vector<test_scenario<mchar_t>> scenarios
+					= one_test_to_rule_them_all<mchar_t>();
+			for (test_scenario<mchar_t>& s : scenarios) {
+				s.fuzzit(opt);
+			}
+		}
+	}
 }
 
 TEST(fea_getopt, always_execute) {
