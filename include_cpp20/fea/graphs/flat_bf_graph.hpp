@@ -568,7 +568,7 @@ flat_bf_graph_data<Key, Value, VAlloc, KeyAlloc, SpanAlloc> make_graph_data(
 	using builder_t
 			= fea::experimental::flat_bf_graph_builder<Key, Value, VAlloc>;
 	using node_t = typename builder_t::node_type;
-	using u_key_t = typename builder_t::underlying_key_type;
+	// using u_key_t = typename builder_t::underlying_key_type;
 
 	fea::detail::unsigned_lookup<Key, KeyAlloc> mlookup{};
 	std::vector<Key, KeyAlloc> mkeys{};

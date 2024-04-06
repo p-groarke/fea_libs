@@ -234,6 +234,10 @@ struct get_opt {
 	// success will be false. Use this to allow success on no arguments passed.
 	void no_options_is_ok();
 
+	// By default, help is printed if an error is encountered.
+	// Disable this behavior and print a short message (suggesting --help).
+	void print_full_help_on_error(bool enable);
+
 	// By default, the text wrapping will use 120 characters width.
 	// Use this to change the width of the console window.
 	void console_width(size_t character_width);
@@ -312,6 +316,7 @@ private:
 
 	size_t _output_width = 120;
 	bool _no_arg_is_help = true;
+	bool _print_full_help_on_error = true;
 
 	// State machine eval things :
 	std::deque<string> _parser_args;
@@ -496,6 +501,11 @@ void get_opt<CharT, PrintfT>::add_help_outro(const string& message) {
 template <class CharT, class PrintfT>
 void fea::get_opt<CharT, PrintfT>::no_options_is_ok() {
 	_no_arg_is_help = false;
+}
+
+template <class CharT, class PrintfT>
+void fea::get_opt<CharT, PrintfT>::print_full_help_on_error(bool enable) {
+	_print_full_help_on_error = enable;
 }
 
 template <class CharT, class PrintfT>
@@ -806,10 +816,11 @@ void get_opt<CharT, PrintfT>::on_parse_longopt(fsm_t& m) {
 
 	if (!success) {
 		if (!_parser_args.empty()) {
-			print(FEA_LIT("'") + _parser_args.front()
-					+ FEA_LIT("' problem parsing argument.\n"));
+			print(FEA_LIT("Problem parsing argument '") + _parser_args.front()
+					+ FEA_LIT("'.\n"));
 		} else {
-			print(FEA_LIT("Problem parsing arguments.\n"));
+			print(FEA_LIT("Problem parsing argument '--") + user_opt.long_name
+					+ FEA_LIT("'.\n"));
 		}
 		return m.template trigger<transition::error>(this);
 	}
@@ -926,10 +937,12 @@ void get_opt<CharT, PrintfT>::on_end(fsm_t& m) {
 
 template <class CharT, class PrintfT>
 void get_opt<CharT, PrintfT>::on_print_error(fsm_t& m) {
-	// print(FEA_ML("problem parsing provided options :\n"));
-	// print(_error_message);
-	print(FEA_LIT("\n"));
-	m.template trigger<transition::help>(this);
+	if (_print_full_help_on_error) {
+		print(FEA_LIT("\n"));
+		return m.template trigger<transition::help>(this);
+	}
+	_success = false;
+	print(FEA_LIT("Use --help for extra help.\n"));
 }
 
 template <class CharT, class PrintfT>
