@@ -243,7 +243,8 @@ struct get_opt {
 
 	// By default, help is printed as one option block and mixes short options
 	// and long-only options. By enabling this setting, the long-only options
-	// are considered "Extra Options" and printed after.
+	// are considered "Extra Options" and printed after the options with both
+	// short and long args.
 	void longoptions_are_extra_options(bool enable);
 
 	// By default, the text wrapping will use 120 characters width.
