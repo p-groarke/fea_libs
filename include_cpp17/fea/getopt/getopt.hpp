@@ -241,6 +241,11 @@ struct get_opt {
 	// Disable this behavior and print a short message (suggesting --help).
 	void print_full_help_on_error(bool enable);
 
+	// By default, help is printed as one option block and mixes short options
+	// and long-only options. By enabling this setting, the long-only options
+	// are considered "Extra Options" and printed after.
+	void longoptions_are_extra_options(bool enable);
+
 	// By default, the text wrapping will use 120 characters width.
 	// Use this to change the width of the console window.
 	void console_width(size_t character_width);
@@ -320,6 +325,7 @@ private:
 	size_t _output_width = 120;
 	bool _no_arg_is_help = true;
 	bool _print_full_help_on_error = true;
+	bool _longoptions_are_extra_options = false;
 
 	// State machine eval things :
 	std::deque<string> _parser_args;
@@ -509,6 +515,11 @@ void fea::get_opt<CharT, PrintfT>::no_options_is_ok() {
 template <class CharT, class PrintfT>
 void fea::get_opt<CharT, PrintfT>::print_full_help_on_error(bool enable) {
 	_print_full_help_on_error = enable;
+}
+
+template <class CharT, class PrintfT>
+void fea::get_opt<CharT, PrintfT>::longoptions_are_extra_options(bool enable) {
+	_longoptions_are_extra_options = enable;
 }
 
 template <class CharT, class PrintfT>
@@ -1132,7 +1143,7 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 		}
 
 		// Option printer.
-		// We will loop twice. Once for options with short flags, considered
+		// We may loop twice. Once for options with short flags, considered
 		// your "main options". A second time for options without short opts,
 		// considered "extra options".
 		auto option_help_printer
@@ -1201,7 +1212,8 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 		for (const std::pair<const string, user_option<CharT>>& opt_p :
 				_long_opt_to_user_opt) {
 			const user_option<CharT>& opt = opt_p.second;
-			if (opt.short_name == FEA_CH('\0')) {
+			if (_longoptions_are_extra_options
+					&& opt.short_name == FEA_CH('\0')) {
 				// skip, print later.
 				continue;
 			}
@@ -1218,16 +1230,18 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 		print(string(indent, FEA_CH(' ')) + short_help + long_help
 				+ FEA_LIT("Print this help\n"));
 
-		// Print options that don't have short opt.
-		print(FEA_LIT("\nExtra Options:\n"));
-		for (const std::pair<const string, user_option<CharT>>& opt_p :
-				_long_opt_to_user_opt) {
-			const user_option<CharT>& opt = opt_p.second;
-			if (opt.short_name != FEA_CH('\0')) {
-				// skip, already printed.
-				continue;
+		if (_longoptions_are_extra_options) {
+			// Print options that don't have short opt.
+			print(FEA_LIT("\nExtra Options:\n"));
+			for (const std::pair<const string, user_option<CharT>>& opt_p :
+					_long_opt_to_user_opt) {
+				const user_option<CharT>& opt = opt_p.second;
+				if (opt.short_name != FEA_CH('\0')) {
+					// skip, already printed.
+					continue;
+				}
+				option_help_printer(opt_p);
 			}
-			option_help_printer(opt_p);
 		}
 
 		if (longopt_width == 0) // No options, width is --help only.
