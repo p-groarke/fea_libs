@@ -44,7 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <utility>
 #include <vector>
 
-// WIP //
+// WIP! EVERYTHING SUBJECT TO CHANGE //
 
 /*
 flat_bf_graph is a flat breadth-first constant graph. It is slow to construct
@@ -58,6 +58,8 @@ or large hashes, lookup grows as big as N.
 */
 
 namespace fea {
+namespace experimental {
+
 template <class, class, class>
 struct flat_bf_graph_builder;
 template <class, class, class>
@@ -68,7 +70,7 @@ template <class Key, class Value, class Alloc = std::allocator<Value>>
 struct flat_bf_graph_builder_node {
 	using key_type = Key;
 	using value_type = Value;
-	using underlying_key_type = detail::id_getter_t<key_type>;
+	using underlying_key_type = fea::detail::id_getter_t<key_type>;
 
 	using allocator_type = Alloc;
 	using key_allocator_type = typename std::allocator_traits<
@@ -145,7 +147,7 @@ struct flat_bf_graph_builder_node {
 
 
 private:
-	friend fea::flat_bf_graph_builder<Key, Value, Alloc>;
+	friend fea::experimental::flat_bf_graph_builder<Key, Value, Alloc>;
 
 	template <class T>
 		requires(std::is_same_v<std::decay_t<T>, Value>)
@@ -561,8 +563,10 @@ void recurse_breadths(flat_bf_graph_builder<Key, Value, Alloc>& builder,
 
 template <class KeyAlloc, class SpanAlloc, class Key, class Value, class VAlloc>
 flat_bf_graph_data<Key, Value, VAlloc, KeyAlloc, SpanAlloc> make_graph_data(
-		fea::flat_bf_graph_builder<Key, Value, VAlloc>&& builder) {
-	using builder_t = fea::flat_bf_graph_builder<Key, Value, VAlloc>;
+		fea::experimental::flat_bf_graph_builder<Key, Value, VAlloc>&&
+				builder) {
+	using builder_t
+			= fea::experimental::flat_bf_graph_builder<Key, Value, VAlloc>;
 	using node_t = typename builder_t::node_type;
 	using u_key_t = typename builder_t::underlying_key_type;
 
@@ -965,4 +969,5 @@ private:
 	data_t _data{};
 };
 
+} // namespace experimental
 } // namespace fea

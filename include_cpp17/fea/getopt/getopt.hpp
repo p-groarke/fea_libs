@@ -1077,8 +1077,6 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 
 	// All Other Options
 	{
-		print(FEA_LIT("Options:\n"));
-
 		// First, compute the maximum width of long options.
 		size_t longopt_width = 0;
 		for (const std::pair<const string, user_option<CharT>>& opt_p :
@@ -1107,67 +1105,82 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 			longopt_width = longopt_width_max;
 		}
 
-		// Print the options.
+		// Option printer.
+		// We will loop twice. Once for options with short flags, considered
+		// your "main options". A second time for options without short opts,
+		// considered "extra options".
+		auto option_help_printer
+				= [&, this](const std::pair<const string, user_option<CharT>>&
+								  opt_p) {
+					  const string& long_opt_str = opt_p.first;
+					  const user_option<CharT>& opt = opt_p.second;
+
+					  // Print indentation.
+					  print(string(indent, FEA_CH(' ')));
+
+					  // If the option has a shortarg, print that.
+					  if (opt.short_name != FEA_CH('\0')) {
+						  string shortopt_str;
+						  shortopt_str += FEA_LIT("-");
+						  shortopt_str += opt.short_name;
+						  shortopt_str += FEA_LIT(",");
+						  string out = shortopt_str;
+						  out.resize(shortopt_width, FEA_CH(' '));
+						  print(out);
+					  } else {
+						  print(string(shortopt_width, FEA_CH(' ')));
+					  }
+
+					  // Build the longopt string.
+					  string longopt_str;
+					  longopt_str += FEA_LIT("--");
+					  longopt_str += long_opt_str;
+
+					  // Add the specific "instructions" for each type of arg.
+					  if (opt.opt_type == user_option_e::optional_arg) {
+						  longopt_str += opt_str;
+					  } else if (opt.opt_type == user_option_e::required_arg) {
+						  longopt_str += req_str;
+					  } else if (opt.opt_type == user_option_e::default_arg) {
+						  longopt_str += default_beg;
+						  longopt_str += opt.default_val;
+						  longopt_str += default_end;
+					  } else if (opt.opt_type == user_option_e::multi_arg) {
+						  longopt_str += multi_str;
+					  }
+
+					  // Print the longopt string.
+					  string out = longopt_str;
+					  out.resize(longopt_width, FEA_CH(' '));
+					  print(out);
+
+					  // If it was bigger than the max width, the description
+					  // will be printed on the next line, indented up to the
+					  // right position.
+					  if (longopt_str.size() >= longopt_width) {
+						  print(FEA_LIT("\n"));
+						  print(string(longopt_width + shortopt_total_width,
+								  FEA_CH(' ')));
+					  }
+
+					  // Print the help message, indents appropriately and
+					  // splits into multiple strings if the message is too
+					  // wide.
+					  print_description(opt.description,
+							  longopt_width + shortopt_total_width);
+				  };
+
+		// Print the main options (those that have short opt).
+		print(FEA_LIT("Options:\n"));
 		for (const std::pair<const string, user_option<CharT>>& opt_p :
 				_long_opt_to_user_opt) {
-			const string& long_opt_str = opt_p.first;
 			const user_option<CharT>& opt = opt_p.second;
-
-			// Print indentation.
-			print(string(indent, FEA_CH(' ')));
-
-			// If the option has a shortarg, print that.
-			if (opt.short_name != FEA_CH('\0')) {
-				string shortopt_str;
-				shortopt_str += FEA_LIT("-");
-				shortopt_str += opt.short_name;
-				shortopt_str += FEA_LIT(",");
-				string out = shortopt_str;
-				out.resize(shortopt_width, FEA_CH(' '));
-				print(out);
-			} else {
-				print(string(shortopt_width, FEA_CH(' ')));
+			if (opt.short_name == FEA_CH('\0')) {
+				// skip, print later.
+				continue;
 			}
-
-			// Build the longopt string.
-			string longopt_str;
-			longopt_str += FEA_LIT("--");
-			longopt_str += long_opt_str;
-
-			// Add the specific "instructions" for each type of arg.
-			if (opt.opt_type == user_option_e::optional_arg) {
-				longopt_str += opt_str;
-			} else if (opt.opt_type == user_option_e::required_arg) {
-				longopt_str += req_str;
-			} else if (opt.opt_type == user_option_e::default_arg) {
-				longopt_str += default_beg;
-				longopt_str += opt.default_val;
-				longopt_str += default_end;
-			} else if (opt.opt_type == user_option_e::multi_arg) {
-				longopt_str += multi_str;
-			}
-
-			// Print the longopt string.
-			string out = longopt_str;
-			out.resize(longopt_width, FEA_CH(' '));
-			print(out);
-
-			// If it was bigger than the max width, the description will be
-			// printed on the next line, indented up to the right position.
-			if (longopt_str.size() >= longopt_width) {
-				print(FEA_LIT("\n"));
-				print(string(
-						longopt_width + shortopt_total_width, FEA_CH(' ')));
-			}
-
-			// Print the help message, indents appropriately and splits into
-			// multiple strings if the message is too wide.
-			print_description(
-					opt.description, longopt_width + shortopt_total_width);
+			option_help_printer(opt_p);
 		}
-
-		if (longopt_width == 0) // No options, width is --help only.
-			longopt_width = 2 + 4 + longopt_space;
 
 		// Print the help command help.
 		string short_help = FEA_LIT("-h,");
@@ -1178,6 +1191,21 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 
 		print(string(indent, FEA_CH(' ')) + short_help + long_help
 				+ FEA_LIT("Print this help\n"));
+
+		// Print options that don't have short opt.
+		print(FEA_LIT("\nExtra Options:\n"));
+		for (const std::pair<const string, user_option<CharT>>& opt_p :
+				_long_opt_to_user_opt) {
+			const user_option<CharT>& opt = opt_p.second;
+			if (opt.short_name != FEA_CH('\0')) {
+				// skip, already printed.
+				continue;
+			}
+			option_help_printer(opt_p);
+		}
+
+		if (longopt_width == 0) // No options, width is --help only.
+			longopt_width = 2 + 4 + longopt_space;
 
 		// Print user outro.
 		if (!_help_outro.empty()) {
