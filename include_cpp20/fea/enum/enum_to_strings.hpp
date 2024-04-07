@@ -39,6 +39,7 @@
 
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <unordered_map>
 
 /*
@@ -72,6 +73,8 @@ See unit tests for examples.
 	{ FEA_U16STRINGIFY(name), enum_type::name },
 #define FEA_DETAIL_U32LOOKUP_PAIR(name) \
 	{ FEA_U32STRINGIFY(name), enum_type::name },
+#define FEA_DETAIL_U8LOOKUP_PAIR(name) \
+	{ FEA_U8STRINGIFY(name), enum_type::name },
 
 
 // Declare an enum of type enum_t, with underlying type underlying_t.
@@ -94,6 +97,8 @@ See unit tests for examples.
 		static constexpr fea::enum_array<std::u32string_view, enum_t, N> \
 				u32sv_arr{ FEA_FOR_EACH( \
 						FEA_U32STRINGIFY_COMMA, __VA_ARGS__) }; \
+		static constexpr fea::enum_array<std::u8string_view, enum_t, N> \
+				u8sv_arr{ FEA_FOR_EACH(FEA_U8STRINGIFY_COMMA, __VA_ARGS__) }; \
 		static const fea::enum_array<std::string, enum_t, N> str_arr{ \
 			FEA_FOR_EACH(FEA_STRINGIFY_COMMA, __VA_ARGS__) \
 		}; \
@@ -106,111 +111,101 @@ See unit tests for examples.
 		static const fea::enum_array<std::u32string, enum_t, N> u32str_arr{ \
 			FEA_FOR_EACH(FEA_U32STRINGIFY_COMMA, __VA_ARGS__) \
 		}; \
+		static const fea::enum_array<std::u8string, enum_t, N> u8str_arr{ \
+			FEA_FOR_EACH(FEA_U8STRINGIFY_COMMA, __VA_ARGS__) \
+		}; \
 		return fea::return_overload{ \
 			[e__]() -> std::string_view { return sv_arr[e__]; }, \
 			[e__]() -> std::wstring_view { return wsv_arr[e__]; }, \
 			[e__]() -> std::u16string_view { return u16sv_arr[e__]; }, \
 			[e__]() -> std::u32string_view { return u32sv_arr[e__]; }, \
+			[e__]() -> std::u8string_view { return u8sv_arr[e__]; }, \
 			[e__]() -> const std::string& { return str_arr[e__]; }, \
 			[e__]() -> const std::wstring& { return wstr_arr[e__]; }, \
 			[e__]() -> const std::u16string& { return u16str_arr[e__]; }, \
 			[e__]() -> const std::u32string& { return u32str_arr[e__]; }, \
+			[e__]() -> const std::u8string& { return u8str_arr[e__]; }, \
 		}; \
 	} \
 	/* Implement from_string for all supported string types. */ \
+	namespace detail { \
+	template <class StrT, class UMapT> \
+	bool from_string(const UMapT& umap__, const StrT& s__, enum_t& out__) { \
+		auto it = umap__.find(s__); \
+		if (it == umap__.end()) { \
+			return false; \
+		} \
+		out__ = it->second; \
+		return true; \
+	} \
+	} \
 	inline bool from_string(std::string_view s__, enum_t& out__) { \
 		using enum_type = enum_t; \
 		static const std::unordered_map<std::string_view, enum_t> lookup{ \
 			FEA_FOR_EACH(FEA_DETAIL_LOOKUP_PAIR, __VA_ARGS__) \
 		}; \
-		auto it = lookup.find(s__); \
-		if (it == lookup.end()) { \
-			return false; \
-		} \
-		out__ = it->second; \
-		return true; \
+		return detail::from_string(lookup, s__, out__); \
 	} \
 	inline bool from_string(std::wstring_view s__, enum_t& out__) { \
 		using enum_type = enum_t; \
 		static const std::unordered_map<std::wstring_view, enum_t> lookup{ \
 			FEA_FOR_EACH(FEA_DETAIL_WLOOKUP_PAIR, __VA_ARGS__) \
 		}; \
-		auto it = lookup.find(s__); \
-		if (it == lookup.end()) { \
-			return false; \
-		} \
-		out__ = it->second; \
-		return true; \
+		return detail::from_string(lookup, s__, out__); \
 	} \
 	inline bool from_string(std::u16string_view s__, enum_t& out__) { \
 		using enum_type = enum_t; \
 		static const std::unordered_map<std::u16string_view, enum_t> lookup{ \
 			FEA_FOR_EACH(FEA_DETAIL_U16LOOKUP_PAIR, __VA_ARGS__) \
 		}; \
-		auto it = lookup.find(s__); \
-		if (it == lookup.end()) { \
-			return false; \
-		} \
-		out__ = it->second; \
-		return true; \
+		return detail::from_string(lookup, s__, out__); \
 	} \
 	inline bool from_string(std::u32string_view s__, enum_t& out__) { \
 		using enum_type = enum_t; \
 		static const std::unordered_map<std::u32string_view, enum_t> lookup{ \
 			FEA_FOR_EACH(FEA_DETAIL_U32LOOKUP_PAIR, __VA_ARGS__) \
 		}; \
-		auto it = lookup.find(s__); \
-		if (it == lookup.end()) { \
-			return false; \
-		} \
-		out__ = it->second; \
-		return true; \
+		return detail::from_string(lookup, s__, out__); \
+	} \
+	inline bool from_string(std::u8string_view s__, enum_t& out__) { \
+		using enum_type = enum_t; \
+		static const std::unordered_map<std::u8string_view, enum_t> lookup{ \
+			FEA_FOR_EACH(FEA_DETAIL_U8LOOKUP_PAIR, __VA_ARGS__) \
+		}; \
+		return detail::from_string(lookup, s__, out__); \
 	} \
 	inline bool from_string(const std::string& s__, enum_t& out__) { \
 		using enum_type = enum_t; \
 		static const std::unordered_map<std::string, enum_t> lookup{ \
 			FEA_FOR_EACH(FEA_DETAIL_LOOKUP_PAIR, __VA_ARGS__) \
 		}; \
-		auto it = lookup.find(s__); \
-		if (it == lookup.end()) { \
-			return false; \
-		} \
-		out__ = it->second; \
-		return true; \
+		return detail::from_string(lookup, s__, out__); \
 	} \
 	inline bool from_string(const std::wstring& s__, enum_t& out__) { \
 		using enum_type = enum_t; \
 		static const std::unordered_map<std::wstring, enum_t> lookup{ \
 			FEA_FOR_EACH(FEA_DETAIL_WLOOKUP_PAIR, __VA_ARGS__) \
 		}; \
-		auto it = lookup.find(s__); \
-		if (it == lookup.end()) { \
-			return false; \
-		} \
-		out__ = it->second; \
-		return true; \
+		return detail::from_string(lookup, s__, out__); \
 	} \
 	inline bool from_string(const std::u16string& s__, enum_t& out__) { \
 		using enum_type = enum_t; \
 		static const std::unordered_map<std::u16string, enum_t> lookup{ \
 			FEA_FOR_EACH(FEA_DETAIL_U16LOOKUP_PAIR, __VA_ARGS__) \
 		}; \
-		auto it = lookup.find(s__); \
-		if (it == lookup.end()) { \
-			return false; \
-		} \
-		out__ = it->second; \
-		return true; \
+		return detail::from_string(lookup, s__, out__); \
 	} \
 	inline bool from_string(const std::u32string& s__, enum_t& out__) { \
 		using enum_type = enum_t; \
 		static const std::unordered_map<std::u32string, enum_t> lookup{ \
 			FEA_FOR_EACH(FEA_DETAIL_U32LOOKUP_PAIR, __VA_ARGS__) \
 		}; \
-		auto it = lookup.find(s__); \
-		if (it == lookup.end()) { \
-			return false; \
-		} \
-		out__ = it->second; \
-		return true; \
+		return detail::from_string(lookup, s__, out__); \
+	} \
+	inline bool from_string(const std::u8string& s__, enum_t& out__) { \
+		using enum_type = enum_t; \
+		static const std::unordered_map<std::u8string, enum_t> lookup{ \
+			FEA_FOR_EACH(FEA_DETAIL_U8LOOKUP_PAIR, __VA_ARGS__) \
+		}; \
+		return detail::from_string(lookup, s__, out__); \
 	}
