@@ -1,4 +1,5 @@
 ﻿#include <fea/string/string_literal.hpp>
+#include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 
 namespace {
@@ -57,9 +58,11 @@ TEST(string_literal, basics) {
 		static_assert(t.lit.sv() == t2, ERROR_MSG);
 		static_assert(t.lit.hash() == answers[sizeof(char)], ERROR_MSG);
 
-		// Q : If windows?
+#if FEA_WINDOWS
+		// Windows uses fnv1a.
 		size_t std_hash = std::hash<std::string_view>{}(t2);
 		EXPECT_EQ(t.hash, std_hash);
+#endif
 	}
 
 	{
@@ -69,8 +72,10 @@ TEST(string_literal, basics) {
 		static_assert(t.lit.sv() == t2, ERROR_MSG);
 		static_assert(t.lit.hash() == answers[sizeof(wchar_t)], ERROR_MSG);
 
+#if FEA_WINDOWS
 		size_t std_hash = std::hash<std::wstring_view>{}(t2);
 		EXPECT_EQ(t.hash, std_hash);
+#endif
 	}
 
 	{
@@ -80,8 +85,10 @@ TEST(string_literal, basics) {
 		static_assert(t.lit.sv() == t2, ERROR_MSG);
 		static_assert(t.lit.hash() == answers[sizeof(char8_t)], ERROR_MSG);
 
+#if FEA_WINDOWS
 		size_t std_hash = std::hash<std::u8string_view>{}(t2);
 		EXPECT_EQ(t.hash, std_hash);
+#endif
 	}
 
 	{
@@ -91,8 +98,10 @@ TEST(string_literal, basics) {
 		static_assert(t.lit.sv() == t2, ERROR_MSG);
 		static_assert(t.lit.hash() == answers[sizeof(char16_t)], ERROR_MSG);
 
+#if FEA_WINDOWS
 		size_t std_hash = std::hash<std::u16string_view>{}(t2);
 		EXPECT_EQ(t.hash, std_hash);
+#endif
 	}
 
 	{
@@ -102,8 +111,10 @@ TEST(string_literal, basics) {
 		static_assert(t.lit.sv() == t2, ERROR_MSG);
 		static_assert(t.lit.hash() == answers[sizeof(char32_t)], ERROR_MSG);
 
+#if FEA_WINDOWS
 		size_t std_hash = std::hash<std::u32string_view>{}(t2);
 		EXPECT_EQ(t.hash, std_hash);
+#endif
 	}
 }
 
@@ -131,40 +142,50 @@ TEST(string_literal, cexpr_hash) {
 		constexpr size_t hash = fea::make_cexpr_hash(sv);
 		static_assert(hash == answers[sizeof(char)], ERROR_MSG);
 
+#if FEA_WINDOWS
 		size_t std_hash = std::hash<std::string_view>{}(sv);
 		EXPECT_EQ(hash, std_hash);
+#endif
 	}
 	{
 		constexpr std::wstring_view sv = L"a test";
 		constexpr size_t hash = fea::make_cexpr_hash(sv);
 		static_assert(hash == answers[sizeof(wchar_t)], ERROR_MSG);
 
+#if FEA_WINDOWS
 		size_t std_hash = std::hash<std::wstring_view>{}(sv);
 		EXPECT_EQ(hash, std_hash);
+#endif
 	}
 	{
 		constexpr std::u16string_view sv = u"a test";
 		constexpr size_t hash = fea::make_cexpr_hash(sv);
 		static_assert(hash == answers[sizeof(char16_t)], ERROR_MSG);
 
+#if FEA_WINDOWS
 		size_t std_hash = std::hash<std::u16string_view>{}(sv);
 		EXPECT_EQ(hash, std_hash);
+#endif
 	}
 	{
 		constexpr std::u32string_view sv = U"a test";
 		constexpr size_t hash = fea::make_cexpr_hash(sv);
 		static_assert(hash == answers[sizeof(char32_t)], ERROR_MSG);
 
+#if FEA_WINDOWS
 		size_t std_hash = std::hash<std::u32string_view>{}(sv);
 		EXPECT_EQ(hash, std_hash);
+#endif
 	}
 	{
 		constexpr std::u8string_view sv = u8"a test";
 		constexpr size_t hash = fea::make_cexpr_hash(sv);
 		static_assert(hash == answers[sizeof(char8_t)], ERROR_MSG);
 
+#if FEA_WINDOWS
 		size_t std_hash = std::hash<std::u8string_view>{}(sv);
 		EXPECT_EQ(hash, std_hash);
+#endif
 	}
 
 	// Null terminated vs. not.
@@ -194,6 +215,7 @@ TEST(string_literal, cexpr_hash) {
 		static_assert(hash == hash5_miss, ERROR_MSG);
 		static_assert(hash == hash6_miss, ERROR_MSG);
 
+#if FEA_WINDOWS
 		size_t std_hash1
 				= std::hash<std::string_view>{}(std::string_view{ c, 5 });
 		EXPECT_EQ(hash, std_hash1);
@@ -219,6 +241,7 @@ TEST(string_literal, cexpr_hash) {
 		size_t std_hash6_miss = std::hash<std::string_view>{}(
 				std::string_view{ arr2.data(), arr2.size() });
 		EXPECT_NE(hash, std_hash6_miss);
+#endif
 	}
 }
 } // namespace

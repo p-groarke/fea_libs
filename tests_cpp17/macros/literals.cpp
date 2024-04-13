@@ -73,7 +73,6 @@ TEST(macros_literals, prefix) {
 		EXPECT_EQ(std::to_wstring(i), arr2[i]);
 		EXPECT_EQ(fea::utf8_to_any<char16_t>(std::to_string(i)), arr3[i]);
 		EXPECT_EQ(fea::any_to_utf32(std::to_string(i)), arr4[i]);
-
 #if FEA_CPP20
 		EXPECT_EQ(fea::utf8_to_any<char8_t>(std::to_string(i)), arr5[i]);
 #endif
