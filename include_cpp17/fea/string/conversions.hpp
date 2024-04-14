@@ -40,6 +40,17 @@
 #include <locale>
 #include <string>
 
+/*
+TODO : Rewrite everything based on std::c8rtomb, std::mbrtoc8,std::c16rtomb,
+std::mbrtoc16, etc
+
+Use return type overloading.
+
+wstring -> reinterpret_cast as char16_t on windows, reinterpret_cast as char32_t
+on linux.
+
+*/
+
 // Define FEA_CODEPAGE_CONVERSIONS to get windows (only) codepage conversions.
 // Those are, helper functions for your current codepage to std::wstring.
 #if FEA_WINDOWS && defined(FEA_CODEPAGE_CONVERSIONS_DEF)
@@ -140,6 +151,22 @@ inline std::u32string utf8_to_utf32(const std::string& s) {
 	return conv.from_bytes(s);
 #endif
 }
+
+#if FEA_CPP20
+// UTF-8 to UTF-32
+inline std::u32string utf8_to_utf32(const std::u8string& s) {
+#if FEA_MSVC_CODECVT_BUG
+	std::wstring_convert<std::codecvt_utf8<std::uint_least32_t>,
+			std::uint_least32_t>
+			conv;
+	u32string_hack str = conv.from_bytes(s);
+	return { reinterpret_cast<const char32_t*>(str.c_str()) };
+#else
+	std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+	return conv.from_bytes(reinterpret_cast<const char*>(s.c_str()));
+#endif
+}
+#endif
 
 
 // From UTF-16
@@ -345,6 +372,10 @@ std::basic_string<CharT> utf8_to_any(const std::string& str) {
 		return utf8_to_utf16(str);
 	} else if constexpr (std::is_same_v<CharT, char32_t>) {
 		return utf8_to_utf32(str);
+#if FEA_CPP20
+	} else if constexpr (std::is_same_v<CharT, char8_t>) {
+		return std::u8string{ reinterpret_cast<const char8_t*>(str.c_str()) };
+#endif
 	} else {
 		fea::maybe_throw(__FUNCTION__, __LINE__, "unsupported string type");
 	}
@@ -360,6 +391,10 @@ std::u32string any_to_utf32(const std::basic_string<CharT>& str) {
 		return utf16_to_utf32(str);
 	} else if constexpr (std::is_same_v<CharT, char32_t>) {
 		return str;
+#if FEA_CPP20
+	} else if constexpr (std::is_same_v<CharT, char8_t>) {
+		return utf8_to_utf32(str);
+#endif
 	} else {
 		fea::maybe_throw(__FUNCTION__, __LINE__, "unsupported string type");
 	}
