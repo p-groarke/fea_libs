@@ -130,10 +130,10 @@ TEST(string_literal, cexpr_hash) {
 #else
 	constexpr std::array<size_t, 5> answers{
 		0u, // sizeof(T) == 0 invalid
+		2786919424u,
+		123405690u,
 		0u,
-		0u,
-		0u,
-		0u,
+		310081570u,
 	};
 #endif
 
