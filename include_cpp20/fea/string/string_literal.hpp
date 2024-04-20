@@ -134,15 +134,13 @@ cexpr_concat() noexcept {
 
 	CharT arr[N]{};
 	size_t out_idx = 0;
-	auto add = [&](auto sl) {
+	auto add = [&](auto sl) noexcept {
 		for (size_t i = 0; i < sl.size(); ++i) {
 			arr[out_idx++] = sl.data[i];
 		}
 	};
 	(add(Literals), ...);
-
-	FEA_CONSTEXPR_ASSERT(arr[out_idx] == CharT(0));
-	// ret[out_idx++] = CharT(0);
+	ret[out_idx++] = CharT(0);
 	return fea::basic_string_literal<CharT, N>{ arr };
 }
 
