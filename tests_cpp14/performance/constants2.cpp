@@ -27,22 +27,26 @@ struct default_partitioner<true> {
 } // namespace fea
 
 namespace {
-#define ERROR_MSG "constants2.cpp : Unit test failed."
+#define TEST_FAIL_MSG "constants2.cpp : Unit test failed."
 
 TEST(constants, basics) {
-	static_assert(fea::default_grainsize_small<true>::value == 2u, ERROR_MSG);
-	static_assert(fea::default_grainsize_small_v<true> == 2u, ERROR_MSG);
+	static_assert(
+			fea::default_grainsize_small<true>::value == 2u, TEST_FAIL_MSG);
+	static_assert(fea::default_grainsize_small_v<true> == 2u, TEST_FAIL_MSG);
 
-	static_assert(fea::default_grainsize_medium<true>::value == 42u, ERROR_MSG);
-	static_assert(fea::default_grainsize_medium_v<true> == 42u, ERROR_MSG);
+	static_assert(
+			fea::default_grainsize_medium<true>::value == 42u, TEST_FAIL_MSG);
+	static_assert(fea::default_grainsize_medium_v<true> == 42u, TEST_FAIL_MSG);
 
-	static_assert(fea::default_grainsize_large<true>::value == 420u, ERROR_MSG);
-	static_assert(fea::default_grainsize_large_v<true> == 420u, ERROR_MSG);
+	static_assert(
+			fea::default_grainsize_large<true>::value == 420u, TEST_FAIL_MSG);
+	static_assert(fea::default_grainsize_large_v<true> == 420u, TEST_FAIL_MSG);
 
 	using default_partitioner_t = typename fea::default_partitioner<true>::type;
-	static_assert(std::is_same<default_partitioner_t, int>::value, ERROR_MSG);
+	static_assert(
+			std::is_same<default_partitioner_t, int>::value, TEST_FAIL_MSG);
 	static_assert(std::is_same<fea::default_partitioner_t<true>, int>::value,
-			ERROR_MSG);
+			TEST_FAIL_MSG);
 }
 } // namespace
 #endif

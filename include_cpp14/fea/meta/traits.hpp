@@ -245,10 +245,11 @@ struct is_pair<std::pair<U1, U2>> : std::true_type {};
 template <class T>
 FEA_INLINE_VAR constexpr bool is_pair_v = is_pair<T>::value;
 
-
+// Iterator helper.
 template <class T>
 using iterator_category_t = typename std::iterator_traits<T>::iterator_category;
 
+// Checks if a type is an iterator.
 template <class T, class = void>
 struct is_iterator {
 	static constexpr bool value = false;

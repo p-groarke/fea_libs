@@ -434,4 +434,22 @@ FEA_INLINE_VAR constexpr platform_group_t platform_group
 #undef FEA_PACKED
 #define FEA_PACKED(...) __VA_ARGS__ __attribute__((__packed__))
 #endif
+
 } // namespace fea
+
+// Fail in consteval context, assert at runtime.
+#if FEA_CPP20
+#include <cassert>
+#include <type_traits>
+namespace fea {
+#define FEA_CONSTEXPR_ASSERT(expression) \
+	do { \
+		if (std::is_constant_evaluated()) { \
+			if (!(expression)) \
+				throw 1; \
+		} else { \
+			assert(!!(expression)); \
+		} \
+	} while (0)
+} // namespace fea
+#endif

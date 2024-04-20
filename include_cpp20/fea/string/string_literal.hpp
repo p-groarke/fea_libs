@@ -32,18 +32,36 @@
  **/
 
 #pragma once
+#include "fea/meta/traits.hpp"
 #include "fea/utils/platform.hpp"
 
 #include <algorithm>
 #include <array>
 #include <bitset>
 #include <string_view>
+#include <type_traits>
 
 namespace fea {
+template <class CharT, size_t N>
+struct basic_string_literal;
+
+// Pass in string_view.size(), string_view must point to string literal (end
+// with null char).
+template <size_t N, class CharT>
+[[nodiscard]] consteval fea::basic_string_literal<CharT, N + 1>
+make_string_literal(std::basic_string_view<CharT> sv) {
+	FEA_CONSTEXPR_ASSERT(*(sv.data() + N) == CharT(0));
+	CharT arr[N + 1]{};
+	std::copy_n(sv.data(), N + 1, std::begin(arr));
+	return fea::basic_string_literal<CharT, N + 1>{ arr };
+}
+
+// Makes a fnv1a hash at compile time.
+// A null-terminated vs. non-null-terminated string return the same hash.
 // fnv1a
 // https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
 template <class CharT>
-[[nodiscard]] consteval size_t make_cexpr_hash(
+[[nodiscard]] consteval size_t cexpr_make_hash(
 		std::basic_string_view<CharT> str) noexcept {
 #if FEA_32BIT
 	constexpr size_t fnv_offset_basis = 2166136261u;
@@ -73,38 +91,71 @@ template <class CharT>
 	}
 	return ret;
 }
+
+// Makes a fnv1a hash at compile time.
+// A null-terminated vs. non-null-terminated string return the same hash.
 template <class CharT, size_t N>
-[[nodiscard]] consteval size_t make_cexpr_hash(const CharT (&str)[N]) noexcept {
+[[nodiscard]] consteval size_t cexpr_make_hash(const CharT (&str)[N]) noexcept {
 	if (str[N - 1] == CharT(0)) {
-		return make_cexpr_hash(std::basic_string_view<CharT>{ str, N - 1 });
+		return cexpr_make_hash(std::basic_string_view<CharT>{ str, N - 1 });
 	} else {
-		return make_cexpr_hash(std::basic_string_view<CharT>{ str, N });
+		return cexpr_make_hash(std::basic_string_view<CharT>{ str, N });
 	}
 }
+
+// Makes a fnv1a hash at compile time.
+// A null-terminated vs. non-null-terminated string return the same hash.
 template <class CharT, size_t N>
-[[nodiscard]] consteval size_t make_cexpr_hash(
+[[nodiscard]] consteval size_t cexpr_make_hash(
 		const std::array<CharT, N>& str) noexcept {
 	if (str[N - 1] == CharT(0)) {
-		return make_cexpr_hash(
+		return cexpr_make_hash(
 				std::basic_string_view<CharT>{ str.data(), N - 1 });
 	} else {
-		return make_cexpr_hash(std::basic_string_view<CharT>{ str.data(), N });
+		return cexpr_make_hash(std::basic_string_view<CharT>{ str.data(), N });
 	}
 }
 
+// The total size of concatenation + 1 null char.
+template <fea::basic_string_literal... Literals>
+[[nodiscard]] consteval auto cexpr_concat_size() noexcept {
+	return (Literals.size() + ...) + 1;
+}
 
+// Concatenate multiple string literals.
+template <fea::basic_string_literal... Literals>
+[[nodiscard]] consteval fea::basic_string_literal<
+		typename fea::front_t<std::decay_t<decltype(Literals)>...>::value_type,
+		fea::cexpr_concat_size<Literals...>()>
+cexpr_concat() noexcept {
+	constexpr size_t N = fea::cexpr_concat_size<Literals...>();
+	using lit_t = fea::front_t<std::decay_t<decltype(Literals)>...>;
+	using CharT = typename lit_t::value_type;
+
+	CharT arr[N]{};
+	size_t out_idx = 0;
+	auto add = [&](auto sl) {
+		for (size_t i = 0; i < sl.size(); ++i) {
+			arr[out_idx++] = sl.data[i];
+		}
+	};
+	(add(Literals), ...);
+
+	FEA_CONSTEXPR_ASSERT(arr[out_idx] == CharT(0));
+	// ret[out_idx++] = CharT(0);
+	return fea::basic_string_literal<CharT, N>{ arr };
+}
+
+
+// A compile time string literal container, permitting typical string operations
+// on it.
 template <class CharT, size_t N>
 struct basic_string_literal {
 	using value_type = CharT;
 
 	consteval basic_string_literal(const CharT (&str)[N]) {
-		std::copy_n(str, N, _data);
-		_hash = fea::make_cexpr_hash(_data);
-	}
-
-	// Underlying char array, null terminated.
-	[[nodiscard]] consteval const CharT* data() const noexcept {
-		return _data;
+		FEA_CONSTEXPR_ASSERT(str[N - 1] == CharT(0));
+		std::copy_n(str, N, data);
 	}
 
 	// Number of chars without null char.
@@ -112,50 +163,78 @@ struct basic_string_literal {
 		return N - 1;
 	}
 
-	// The pre-computed hash.
+	// Returns the full size, including null char.
+	[[nodiscard]] consteval size_t capacity() const noexcept {
+		return N;
+	}
+
+	// Return a compile-time computed fnv1a hash.
 	[[nodiscard]] consteval size_t hash() const noexcept {
-		return _hash;
+		return fea::cexpr_make_hash(data);
 	}
 
 	// Converts to string_view for all the niceties.
 	[[nodiscard]] consteval std::basic_string_view<CharT> sv() const noexcept {
-		return std::basic_string_view<CharT>(_data, size());
+		return std::basic_string_view<CharT>(data, size());
 	}
 
-	CharT _data[N]{};
-	size_t _hash{};
+	// Syntactically compare string literals.
+	template <size_t N2>
+	[[nodiscard]] consteval bool operator==(
+			basic_string_literal<CharT, N2> rhs) const noexcept {
+		if constexpr (N == N2) {
+			for (size_t i = 0; i < N; ++i) {
+				if (data[i] != rhs.data[i]) {
+					return false;
+				}
+			}
+			return true;
+		} else {
+			// Allow different sizes if trailing chars are null.
+			size_t min = N < N2 ? N : N2;
+			for (size_t i = 0; i < min; ++i) {
+				if (data[i] != rhs.data[i]) {
+					return false;
+				}
+			}
+
+			if constexpr (N > N2) {
+				for (size_t i = min; i < N; ++i) {
+					if (data[i] != CharT(0)) {
+						return false;
+					}
+				}
+			} else {
+				for (size_t i = min; i < N2; ++i) {
+					if (rhs.data[i] != CharT(0)) {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+	}
+
+	// Syntactically compare string literals.
+	template <size_t N2>
+	[[nodiscard]] consteval bool operator!=(
+			basic_string_literal<CharT, N2> rhs) const noexcept {
+		return !(*this == rhs);
+	}
+
+	CharT data[N]{};
 };
 
-
+// Don't use inheritance to allow deduction.
 template <size_t N>
-struct string_literal : basic_string_literal<char, N> {
-	consteval string_literal(const char (&str)[N])
-			: basic_string_literal<char, N>(str) {
-	}
-};
+using string_literal = basic_string_literal<char, N>;
 template <size_t N>
-struct wstring_literal : basic_string_literal<wchar_t, N> {
-	consteval wstring_literal(const wchar_t (&str)[N])
-			: basic_string_literal<wchar_t, N>(str) {
-	}
-};
+using u8string_literal = basic_string_literal<char8_t, N>;
 template <size_t N>
-struct u8string_literal : basic_string_literal<char8_t, N> {
-	consteval u8string_literal(const char8_t (&str)[N])
-			: basic_string_literal<char8_t, N>(str) {
-	}
-};
+using wstring_literal = basic_string_literal<wchar_t, N>;
 template <size_t N>
-struct u16string_literal : basic_string_literal<char16_t, N> {
-	consteval u16string_literal(const char16_t (&str)[N])
-			: basic_string_literal<char16_t, N>(str) {
-	}
-};
+using u16string_literal = basic_string_literal<char16_t, N>;
 template <size_t N>
-struct u32string_literal : basic_string_literal<char32_t, N> {
-	consteval u32string_literal(const char32_t (&str)[N])
-			: basic_string_literal<char32_t, N>(str) {
-	}
-};
+using u32string_literal = basic_string_literal<char32_t, N>;
 
 } // namespace fea
