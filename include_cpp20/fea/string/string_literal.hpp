@@ -140,7 +140,7 @@ cexpr_concat() noexcept {
 		}
 	};
 	(add(Literals), ...);
-	ret[out_idx++] = CharT(0);
+	arr[out_idx++] = CharT(0);
 	return fea::basic_string_literal<CharT, N>{ arr };
 }
 
