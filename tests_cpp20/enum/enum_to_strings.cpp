@@ -2,6 +2,8 @@
 #include <gtest/gtest.h>
 
 namespace {
+#define FAILMSG "enum_to_strings.cpp : Unit test failed."
+
 FEA_STRING_ENUM(my_enum, unsigned, potato, tomato)
 
 TEST(enum_to_strings, to_string) {
@@ -60,6 +62,53 @@ TEST(enum_to_strings, to_string) {
 	EXPECT_EQ(u32strt, U"tomato");
 	EXPECT_EQ(u8strp, u8"potato");
 	EXPECT_EQ(u8strt, u8"tomato");
+}
+
+TEST(enum_to_strings, to_string_view) {
+	using namespace std::literals::string_view_literals;
+
+	EXPECT_EQ(to_string_view(my_enum::potato), "potato"sv);
+	EXPECT_EQ(to_string_view(my_enum::tomato), "tomato"sv);
+	EXPECT_EQ(to_string_view(my_enum::potato), L"potato"sv);
+	EXPECT_EQ(to_string_view(my_enum::tomato), L"tomato"sv);
+	EXPECT_EQ(to_string_view(my_enum::potato), u"potato"sv);
+	EXPECT_EQ(to_string_view(my_enum::tomato), u"tomato"sv);
+	EXPECT_EQ(to_string_view(my_enum::potato), U"potato"sv);
+	EXPECT_EQ(to_string_view(my_enum::tomato), U"tomato"sv);
+	EXPECT_EQ(to_string_view(my_enum::potato), u8"potato"sv);
+	EXPECT_EQ(to_string_view(my_enum::tomato), u8"tomato"sv);
+
+	std::string_view svp = to_string_view(my_enum::potato);
+	std::string_view svt = to_string_view(my_enum::tomato);
+	std::wstring_view wsvp = to_string_view(my_enum::potato);
+	std::wstring_view wsvt = to_string_view(my_enum::tomato);
+	std::u16string_view u16svp = to_string_view(my_enum::potato);
+	std::u16string_view u16svt = to_string_view(my_enum::tomato);
+	std::u32string_view u32svp = to_string_view(my_enum::potato);
+	std::u32string_view u32svt = to_string_view(my_enum::tomato);
+	std::u8string_view u8svp = to_string_view(my_enum::potato);
+	std::u8string_view u8svt = to_string_view(my_enum::tomato);
+	EXPECT_EQ(svp, "potato"sv);
+	EXPECT_EQ(svt, "tomato"sv);
+	EXPECT_EQ(wsvp, L"potato"sv);
+	EXPECT_EQ(wsvt, L"tomato"sv);
+	EXPECT_EQ(u16svp, u"potato"sv);
+	EXPECT_EQ(u16svt, u"tomato"sv);
+	EXPECT_EQ(u32svp, U"potato"sv);
+	EXPECT_EQ(u32svt, U"tomato"sv);
+	EXPECT_EQ(u8svp, u8"potato"sv);
+	EXPECT_EQ(u8svt, u8"tomato"sv);
+
+	static_assert(to_string_view(my_enum::potato) == "potato"sv, FAILMSG);
+	static_assert(to_string_view(my_enum::tomato) == "tomato"sv, FAILMSG);
+	static_assert(to_string_view(my_enum::potato) == L"potato"sv, FAILMSG);
+	static_assert(to_string_view(my_enum::tomato) == L"tomato"sv, FAILMSG);
+	static_assert(to_string_view(my_enum::potato) == u"potato"sv, FAILMSG);
+	static_assert(to_string_view(my_enum::tomato) == u"tomato"sv, FAILMSG);
+	static_assert(to_string_view(my_enum::potato) == U"potato"sv, FAILMSG);
+	static_assert(to_string_view(my_enum::tomato) == U"tomato"sv, FAILMSG);
+	static_assert(to_string_view(my_enum::potato) == u8"potato"sv, FAILMSG);
+	static_assert(to_string_view(my_enum::tomato) == u8"tomato"sv, FAILMSG);
 }
 
 TEST(enum_to_strings, from_string) {

@@ -83,22 +83,37 @@ See unit tests for examples.
 #define FEA_STRING_ENUM(enum_t, underlying_t, ...) \
 	/* Declare your enum. */ \
 	enum class enum_t : underlying_t { __VA_ARGS__ }; \
-	/* Implement to_string for all supported string types. */ \
-	inline auto to_string(enum_t e__) { \
-		static constexpr size_t N = FEA_SIZEOF_VAARGS(__VA_ARGS__); \
-		static constexpr fea::enum_array<std::string_view, enum_t, N> sv_arr{ \
+	/* Unfortunately declare inline, cannot use static constexpr in func. */ \
+	namespace fea_string_detail##enum_t { \
+		inline constexpr size_t N = FEA_SIZEOF_VAARGS(__VA_ARGS__); \
+		inline constexpr fea::enum_array<std::string_view, enum_t, N> sv_arr{ \
 			FEA_FOR_EACH(FEA_STRINGIFY_COMMA, __VA_ARGS__) \
 		}; \
-		static constexpr fea::enum_array<std::wstring_view, enum_t, N> \
+		inline constexpr fea::enum_array<std::wstring_view, enum_t, N> \
 				wsv_arr{ FEA_FOR_EACH(FEA_WSTRINGIFY_COMMA, __VA_ARGS__) }; \
-		static constexpr fea::enum_array<std::u16string_view, enum_t, N> \
+		inline constexpr fea::enum_array<std::u16string_view, enum_t, N> \
 				u16sv_arr{ FEA_FOR_EACH( \
 						FEA_U16STRINGIFY_COMMA, __VA_ARGS__) }; \
-		static constexpr fea::enum_array<std::u32string_view, enum_t, N> \
+		inline constexpr fea::enum_array<std::u32string_view, enum_t, N> \
 				u32sv_arr{ FEA_FOR_EACH( \
 						FEA_U32STRINGIFY_COMMA, __VA_ARGS__) }; \
-		static constexpr fea::enum_array<std::u8string_view, enum_t, N> \
+		inline constexpr fea::enum_array<std::u8string_view, enum_t, N> \
 				u8sv_arr{ FEA_FOR_EACH(FEA_U8STRINGIFY_COMMA, __VA_ARGS__) }; \
+	} \
+	/* Implement a seperate to_string_view in case you want consteval. */ \
+	inline constexpr auto to_string_view(enum_t e__) noexcept { \
+		using namespace fea_string_detail##enum_t; \
+		return fea::return_overload{ \
+			[e__]() -> std::string_view { return sv_arr[e__]; }, \
+			[e__]() -> std::wstring_view { return wsv_arr[e__]; }, \
+			[e__]() -> std::u16string_view { return u16sv_arr[e__]; }, \
+			[e__]() -> std::u32string_view { return u32sv_arr[e__]; }, \
+			[e__]() -> std::u8string_view { return u8sv_arr[e__]; }, \
+		}; \
+	} \
+	/* Implement to_string for all supported string types. */ \
+	inline auto to_string(enum_t e__) noexcept { \
+		static constexpr size_t N = FEA_SIZEOF_VAARGS(__VA_ARGS__); \
 		static const fea::enum_array<std::string, enum_t, N> str_arr{ \
 			FEA_FOR_EACH(FEA_STRINGIFY_COMMA, __VA_ARGS__) \
 		}; \
@@ -115,11 +130,11 @@ See unit tests for examples.
 			FEA_FOR_EACH(FEA_U8STRINGIFY_COMMA, __VA_ARGS__) \
 		}; \
 		return fea::return_overload{ \
-			[e__]() -> std::string_view { return sv_arr[e__]; }, \
-			[e__]() -> std::wstring_view { return wsv_arr[e__]; }, \
-			[e__]() -> std::u16string_view { return u16sv_arr[e__]; }, \
-			[e__]() -> std::u32string_view { return u32sv_arr[e__]; }, \
-			[e__]() -> std::u8string_view { return u8sv_arr[e__]; }, \
+			[e__]() -> std::string_view { return to_string_view(e__); }, \
+			[e__]() -> std::wstring_view { return to_string_view(e__); }, \
+			[e__]() -> std::u16string_view { return to_string_view(e__); }, \
+			[e__]() -> std::u32string_view { return to_string_view(e__); }, \
+			[e__]() -> std::u8string_view { return to_string_view(e__); }, \
 			[e__]() -> const std::string& { return str_arr[e__]; }, \
 			[e__]() -> const std::wstring& { return wstr_arr[e__]; }, \
 			[e__]() -> const std::u16string& { return u16str_arr[e__]; }, \

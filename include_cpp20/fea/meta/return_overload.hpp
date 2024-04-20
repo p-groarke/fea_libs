@@ -61,7 +61,8 @@ template <class T>
 	requires(has_const_paren<T>)
 struct ro_make_operator<T> : T {
 	using overload_t = decltype(std::declval<T>()());
-	inline operator overload_t() const noexcept(noexcept(std::declval<T>()())) {
+	inline constexpr operator overload_t() const
+			noexcept(noexcept(std::declval<T>()())) {
 		return T::operator()();
 	}
 };
@@ -70,7 +71,8 @@ template <class T>
 	requires(!has_const_paren<T>)
 struct ro_make_operator<T> : T {
 	using overload_t = decltype(std::declval<T>()());
-	inline operator overload_t() noexcept(noexcept(std::declval<T>()())) {
+	inline constexpr operator overload_t() noexcept(
+			noexcept(std::declval<T>()())) {
 		return T::operator()();
 	}
 };

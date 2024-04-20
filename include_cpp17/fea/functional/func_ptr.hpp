@@ -110,6 +110,9 @@ struct func_ptr<Ret(FrontT, Args...)> {
 		return std::invoke(_mem_ptr, std::forward<FrontT>(arg1),
 				std::forward<Args>(args)...);
 	}
+	constexpr Ret operator()(FrontT arg1, Args... args) const {
+		return invoke(std::forward<FrontT>(arg1), std::forward<Args>(args)...);
+	}
 
 	// Converts to a callable std::function.
 	std::function<Ret(FrontT, Args...)> to_function() const {

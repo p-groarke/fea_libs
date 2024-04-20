@@ -445,7 +445,7 @@ TEST(return_overload, string_stringview) {
 }
 
 // Test the inner-workings.
-#define ERROR_MSG "return_overload.cpp : Unit test failed."
+#define FAILMSG "return_overload.cpp : Unit test failed."
 template <class T>
 using is_char_const = decltype(std::declval<const T&>().operator char());
 template <class T>
@@ -469,16 +469,16 @@ TEST(return_overload, subtleties) {
 		},
 	};
 
-	static_assert(noexcept(r.operator char()), ERROR_MSG);
-	static_assert(noexcept(r.operator short()), ERROR_MSG);
-	static_assert(!noexcept(r.operator int()), ERROR_MSG);
-	static_assert(!noexcept(r.operator float()), ERROR_MSG);
+	static_assert(noexcept(r.operator char()), FAILMSG);
+	static_assert(noexcept(r.operator short()), FAILMSG);
+	static_assert(!noexcept(r.operator int()), FAILMSG);
+	static_assert(!noexcept(r.operator float()), FAILMSG);
 
 	using ret_t = std::decay_t<decltype(r)>;
-	static_assert(fea::is_detected_v<is_char_const, ret_t>, ERROR_MSG);
-	static_assert(!fea::is_detected_v<is_short_const, ret_t>, ERROR_MSG);
-	static_assert(fea::is_detected_v<is_int_const, ret_t>, ERROR_MSG);
-	static_assert(!fea::is_detected_v<is_float_const, ret_t>, ERROR_MSG);
+	static_assert(fea::is_detected_v<is_char_const, ret_t>, FAILMSG);
+	static_assert(!fea::is_detected_v<is_short_const, ret_t>, FAILMSG);
+	static_assert(fea::is_detected_v<is_int_const, ret_t>, FAILMSG);
+	static_assert(!fea::is_detected_v<is_float_const, ret_t>, FAILMSG);
 }
 } // namespace
 
