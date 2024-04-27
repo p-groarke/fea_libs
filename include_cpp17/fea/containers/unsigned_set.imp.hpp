@@ -1,5 +1,7 @@
 #pragma once
 namespace fea {
+namespace experimental {
+
 template <class MySet>
 constexpr unsigned_set_const_iterator<MySet>::unsigned_set_const_iterator(
 		bool_pointer first, bool_pointer last, bool_pointer ptr) noexcept
@@ -236,8 +238,7 @@ auto unsigned_set<Key, Alloc>::erase(const key_type& key) -> size_type {
 }
 
 template <class Key, class Alloc>
-void unsigned_set<Key, Alloc>::swap(unsigned_set& other) noexcept(
-		noexcept(_map.swap(other._map))) {
+void unsigned_set<Key, Alloc>::swap(unsigned_set& other) noexcept {
 	_map.swap(other._map);
 }
 
@@ -301,4 +302,5 @@ auto unsigned_set<Key, Alloc>::find(const key_type& key) noexcept(
 		_map.data() + idx };
 }
 
+} // namespace experimental
 } // namespace fea

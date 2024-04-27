@@ -44,7 +44,6 @@ fea::unsigned_set is an unordered_set interface for unsigned keys which grow in
 a controlled linear fashion (ids). The memory backing grows as large as biggest
 key!
 
-TODO : Specialize for pure unsigned. Specialize for ordered/unordered.
 */
 
 /*
@@ -56,6 +55,9 @@ modulo = index start -> std::find -> index start + collisions
 */
 
 namespace fea {
+namespace experimental {
+// TODO : Specialize for pure unsigned. Specialize for ordered/unordered.
+
 template <class MySet>
 struct unsigned_set_const_iterator {
 	using difference_type = typename MySet::difference_type;
@@ -217,7 +219,7 @@ struct unsigned_set {
 	iterator erase(const_iterator);
 
 	// Swap with another unsigned_set.
-	void swap(unsigned_set& other) noexcept(noexcept(_map.swap(other._map)));
+	void swap(unsigned_set& other) noexcept;
 
 	// Merge with source.
 	// Items are "stolen" from source, only if they don't exist in destination.
@@ -242,6 +244,7 @@ struct unsigned_set {
 private:
 	std::vector<bool_type, bool_allocator_type> _map;
 };
+} // namespace experimental
 } // namespace fea
 
 #include "unsigned_set.imp.hpp"

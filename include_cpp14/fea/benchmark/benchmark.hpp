@@ -30,6 +30,7 @@
  */
 #pragma once
 #include "fea/time/time.hpp"
+#include "fea/utils/platform.hpp"
 #include "fea/utils/unused.hpp"
 
 #include <algorithm>
@@ -40,44 +41,24 @@
 #include <thread>
 #include <vector>
 
-#ifdef _MSC_VER
+#if FEA_WINDOWS
 #include <intrin.h>
 #endif
 
 namespace fea {
 namespace bench {
-static std::chrono::time_point<std::chrono::steady_clock> start_time, end_time;
+using time_point_t = std::chrono::time_point<std::chrono::steady_clock>;
 
-static inline void title(const std::string& message, FILE* stream = stdout) {
-	fea::unused(message);
-	fprintf(stream, "%.*s\n", int(message.size()),
-			"############################################################");
-	fprintf(stream, "%s\n", message.c_str());
-	fprintf(stream, "%.*s\n", int(message.size()),
-			"############################################################");
-}
+// Outputs a fancy formatted title for benchmark.
+inline void title(const std::string& message, FILE* stream = stdout);
 
-static inline void start(
-		const std::string& message = {}, FILE* stream = stdout) {
-	if (!message.empty()) {
-		fprintf(stream, "\n%s\n", message.c_str());
-		fprintf(stream, "%.*s\n", int(message.size()),
-				"--------------------------------------------------------");
-	}
+// Start the benchmark.
+inline time_point_t start(
+		const std::string& message = {}, FILE* stream = stdout);
 
-	start_time = std::chrono::steady_clock::now();
-}
-
-static inline double stop(
-		const std::string& message = {}, FILE* stream = stdout) {
-	fea::unused(message);
-	end_time = std::chrono::steady_clock::now();
-	const std::chrono::duration<double> elapsed_time = end_time - start_time;
-
-	fprintf(stream, "%s%*fs\n", message.c_str(), 70 - int(message.size()),
-			elapsed_time.count());
-	return elapsed_time.count();
-}
+// Stop the benchmark. Returns time in seconds.
+inline double stop(time_point_t start_time, const std::string& message = {},
+		FILE* stream = stdout);
 
 /**
  * This deactivates compiler optimizations for the passed pointer.
@@ -86,14 +67,7 @@ static inline double stop(
  * Usage: Pass the pointer to an allocated object you want to benchmark.
  * https://www.youtube.com/watch?v=nXaxk27zwlk
  */
-static inline void escape(void* p) {
-#ifdef _MSC_VER
-	fea::unused(p);
-	_WriteBarrier();
-#else
-	asm volatile("" : : "g"(p) : "memory");
-#endif
-}
+inline void escape(void* p);
 
 /**
  * This method deactivates compiler optimizations by indicating all memory
@@ -102,35 +76,18 @@ static inline void escape(void* p) {
  * Usage: Use after a call, to make sure the compiler doesn't remove the call.
  * https://www.youtube.com/watch?v=nXaxk27zwlk
  */
-static inline void clobber() {
-#ifdef _MSC_VER
-	_ReadBarrier();
-#else
-	asm volatile("" : : : "memory");
-#endif
-}
+inline void clobber();
 
 struct suite {
 	// Set the title for the benchmark run. Optional.
-	void title(const std::string& message) {
-		_title = message;
-	}
+	inline void title(const std::string& message);
 
 	// Run each benchmark num_runs times and average results.
-	void average(size_t num_runs) {
-		if (num_runs == 0) {
-			return;
-		}
-		_num_average = num_runs;
-	}
+	inline void average(size_t num_runs);
 
 	// Useful when profiling. Sleeps in between runs of the benchmarks.
-	void sleep_between(std::chrono::seconds seconds) {
-		_sleep_between = std::chrono::milliseconds(seconds);
-	}
-	void sleep_between(std::chrono::milliseconds milli_seconds) {
-		_sleep_between = milli_seconds;
-	}
+	inline void sleep_between(std::chrono::seconds seconds);
+	inline void sleep_between(std::chrono::milliseconds milli_seconds);
 
 	// Run a benchmark on func.
 	// If averaging was set, will average the times.
@@ -141,81 +98,24 @@ struct suite {
 	// It is executed after each call to func.
 	template <class Func, class InBetweenFunc>
 	void benchmark(const std::string& message, Func&& func,
-			InBetweenFunc&& inbetween_func) {
-
-		clock_duration_t elapsed_time = clock_duration_t(0);
-		std::this_thread::sleep_for(_sleep_between);
-
-		for (size_t i = 0; i < _num_average; ++i) {
-			std::chrono::time_point<std::chrono::steady_clock> _start_time,
-					_end_time;
-
-			_start_time = std::chrono::steady_clock::now();
-			func();
-			_end_time = std::chrono::steady_clock::now();
-
-			elapsed_time += _end_time - _start_time;
-
-			inbetween_func();
-		}
-
-		fea::dseconds elapsed_d(elapsed_time);
-		_results.push_back(
-				pair{ message, elapsed_d.count() / double(_num_average) });
-	}
+			InBetweenFunc&& inbetween_func);
 
 	// Run a benchmark on func.
 	// If averaging was set, will average the times.
 	// Pass in message (name of the benchmark).
 	template <class Func>
-	void benchmark(const std::string& message, Func&& func) {
-		benchmark(message, std::forward<Func>(func), []() {});
-	}
+	void benchmark(const std::string& message, Func&& func);
 
 	// Print the results of the benchmark run to selected stream output
 	// (defaults to stdout).
 	// Resets the suite to accept new benchmarks.
-	void print(FILE* stream = stdout) {
-		std::this_thread::sleep_for(_sleep_between);
-
-		if (!_title.empty()) {
-			fprintf(stream, "%.*s\n", int(_title.size()),
-					"##########################################################"
-					"##");
-			fprintf(stream, "%s\n", _title.c_str());
-			fprintf(stream, "%.*s\n", int(_title.size()),
-					"##########################################################"
-					"##");
-		}
-
-		if (_results.empty())
-			return;
-
-		if (_results.size() > 1) {
-			std::sort(_results.begin(), _results.end(),
-					[](const pair& lhs, const pair& rhs) {
-						return lhs.time < rhs.time;
-					});
-		}
-
-		for (const pair& p : _results) {
-			double ratio = _results.back().time / p.time;
-			fprintf(stream, "%s%*fs        %fx\n", p.message.c_str(),
-					70 - int(p.message.size()), p.time, ratio);
-		}
-		fprintf(stream, "%s", "\n");
-
-		_results.clear();
-	}
+	inline void print(FILE* stream = stdout);
 
 private:
 	using clock_duration_t = std::chrono::steady_clock::duration;
 
 	struct pair {
-		pair(const std::string& msg, double t)
-				: message(msg)
-				, time(t) {
-		}
+		inline pair(const std::string& msg, double t);
 		pair() = default;
 
 		std::string message;
@@ -229,3 +129,5 @@ private:
 };
 } // namespace bench
 } // namespace fea
+
+#include "benchmark.imp.hpp"
