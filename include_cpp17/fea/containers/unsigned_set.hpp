@@ -43,6 +43,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 fea::unsigned_set is an unordered_set interface for unsigned keys which grow in
 a controlled linear fashion (ids). The memory backing grows as large as biggest
 key!
+
+TODO : Specialize for pure unsigned. Specialize for ordered/unordered.
 */
 
 /*
