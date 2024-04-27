@@ -35,7 +35,7 @@
 #include "fea/utils/platform.hpp"
 
 #if !FEA_MACOS // Missing std::from_chars float.
-#include "fea/maps/flat_unsigned_hashmap.hpp"
+#include "fea/containers/flat_unsigned_hashmap.hpp"
 #include "fea/string/string.hpp"
 #include "fea/string/string_literal.hpp"
 #include "fea/utils/file.hpp"

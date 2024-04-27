@@ -30,8 +30,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
-#include "fea/maps/details/unsigned_lookup.hpp"
-#include "fea/maps/flat_unsigned_map.hpp"
+#include "fea/containers/detail.unsigned_lookup.hpp"
+#include "fea/containers/flat_unsigned_map.hpp"
 
 #include <algorithm>
 #include <cassert>

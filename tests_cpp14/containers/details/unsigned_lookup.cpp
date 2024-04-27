@@ -1,4 +1,4 @@
-#include <fea/maps/details/unsigned_lookup.hpp>
+#include <fea/containers/detail.unsigned_lookup.hpp>
 #include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
 #include <unordered_map>
@@ -21,18 +21,15 @@ struct my_id {
 };
 } // namespace
 
-namespace fea {
 template <>
-struct id_hash<my_id> {
+struct fea::id_hash<my_id> {
 	inline constexpr uint8_t operator()(const my_id& k) const noexcept {
 		return k.id;
 	}
 };
-} // namespace fea
 
-namespace std {
 template <>
-struct hash<my_id> {
+struct std::hash<my_id> {
 	inline constexpr uint8_t operator()(const my_id& k) const noexcept {
 		return k.id;
 	}
@@ -41,8 +38,6 @@ struct hash<my_id> {
 // Will this happily convert return value to size_t?
 // std::unordered_map<my_id, int> testme;
 // testme.insert({ my_id{}, 0 });
-
-} // namespace std
 
 namespace {
 TEST(unsigned_lookup, basics) {

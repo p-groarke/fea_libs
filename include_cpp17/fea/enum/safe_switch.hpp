@@ -32,7 +32,7 @@
  **/
 
 #pragma once
-#include "fea/maps/type_map.hpp"
+#include "fea/containers/type_map.hpp"
 #include "fea/meta/traits.hpp"
 
 #include <algorithm>

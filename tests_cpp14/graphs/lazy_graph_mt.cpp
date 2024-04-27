@@ -1,7 +1,7 @@
 ﻿#include <algorithm>
 #include <cstdint>
 #include <fea/graphs/lazy_graph.hpp>
-#include <fea/maps/unsigned_map.hpp>
+#include <fea/containers/unsigned_map.hpp>
 #include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 #include <mutex>

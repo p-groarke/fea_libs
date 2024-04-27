@@ -1,12 +1,11 @@
 ﻿#include <fea/utils/platform.hpp>
 
 #if FEA_RELEASE && defined(FEA_BENCHMARKS_DEF)
-
 #include <algorithm>
 #include <array>
 #include <cstdio>
 #include <fea/benchmark/benchmark.hpp>
-#include <fea/maps/unsigned_map.hpp>
+#include <fea/containers/flat_unsigned_hashmap.hpp>
 #include <gtest/gtest.h>
 #include <map>
 #include <random>
@@ -42,26 +41,29 @@ struct big_obj {
 		data = other.data;
 		return *this;
 	}
-	big_obj(big_obj&&) = delete;
-	big_obj& operator=(big_obj&&) = delete;
+	// big_obj(big_obj&&) = delete;
+	// big_obj& operator=(big_obj&&) = delete;
 
 	std::array<uint8_t, 1024> data{};
 };
 
 void benchmarks(const std::vector<size_t>& keys) {
+	using namespace std::chrono_literals;
+
 	std::array<char, 128> title;
 	title.fill('\0');
 
 	fea::bench::suite suite;
+	// suite.sleep_between(1s);
 
 	// Containers
 	std::map<size_t, small_obj> map_small;
 	std::unordered_map<size_t, small_obj> unordered_map_small;
-	fea::unsigned_map<size_t, small_obj> unsigned_map_small;
+	fea::flat_unsigned_hashmap<size_t, small_obj> unsigned_map_small;
 
 	std::map<size_t, big_obj> map_big;
 	std::unordered_map<size_t, big_obj> unordered_map_big;
-	fea::unsigned_map<size_t, big_obj> unsigned_map_big;
+	fea::flat_unsigned_hashmap<size_t, big_obj> unsigned_map_big;
 
 
 	// Preheat
@@ -73,8 +75,7 @@ void benchmarks(const std::vector<size_t>& keys) {
 				{ keys[i], { float(i), float(i), float(i) } });
 	}
 	for (size_t i = 0; i < keys.size(); ++i) {
-		unsigned_map_small.insert(
-				{ keys[i], { float(i), float(i), float(i) } });
+		unsigned_map_small.insert(keys[i], { float(i), float(i), float(i) });
 	}
 	for (size_t i = 0; i < keys.size(); ++i) {
 		map_big.insert({ keys[i], {} });
@@ -83,7 +84,7 @@ void benchmarks(const std::vector<size_t>& keys) {
 		unordered_map_big.insert({ keys[i], {} });
 	}
 	for (size_t i = 0; i < keys.size(); ++i) {
-		unsigned_map_big.insert({ keys[i], {} });
+		unsigned_map_big.insert(keys[i], {});
 	}
 	printf("Num unique keys : %zu\n\n", map_small.size());
 	// printf("%zu\n", unordered_map_small.size());
@@ -108,8 +109,8 @@ void benchmarks(const std::vector<size_t>& keys) {
 	suite.benchmark("std::unordered_map copy ctor", [&]() {
 		std::unordered_map<size_t, small_obj> cpy(unordered_map_small);
 	});
-	suite.benchmark("fea::unsigned_map copy ctor", [&]() {
-		fea::unsigned_map<size_t, small_obj> cpy(unsigned_map_small);
+	suite.benchmark("fea::flat_unsigned_hashmap copy ctor", [&]() {
+		fea::flat_unsigned_hashmap<size_t, small_obj> cpy(unsigned_map_small);
 	});
 	suite.print();
 
@@ -125,8 +126,8 @@ void benchmarks(const std::vector<size_t>& keys) {
 	suite.benchmark("std::unordered_map copy ctor", [&]() {
 		std::unordered_map<size_t, big_obj> cpy(unordered_map_big);
 	});
-	suite.benchmark("fea::unsigned_map copy ctor", [&]() {
-		fea::unsigned_map<size_t, big_obj> cpy(unsigned_map_big);
+	suite.benchmark("fea::flat_unsigned_hashmap copy ctor", [&]() {
+		fea::flat_unsigned_hashmap<size_t, big_obj> cpy(unsigned_map_big);
 	});
 	suite.print();
 
@@ -140,8 +141,8 @@ void benchmarks(const std::vector<size_t>& keys) {
 	suite.benchmark("std::map clear", [&]() { map_small.clear(); });
 	suite.benchmark(
 			"std::unordered_map clear", [&]() { unordered_map_small.clear(); });
-	suite.benchmark(
-			"fea::unsigned_map clear", [&]() { unsigned_map_small.clear(); });
+	suite.benchmark("fea::flat_unsigned_hashmap clear",
+			[&]() { unsigned_map_small.clear(); });
 	suite.print();
 
 	// Bench : clear big
@@ -153,8 +154,8 @@ void benchmarks(const std::vector<size_t>& keys) {
 	suite.benchmark("std::map clear", [&]() { map_big.clear(); });
 	suite.benchmark(
 			"std::unordered_map clear", [&]() { unordered_map_big.clear(); });
-	suite.benchmark(
-			"fea::unsigned_map clear", [&]() { unsigned_map_big.clear(); });
+	suite.benchmark("fea::flat_unsigned_hashmap clear",
+			[&]() { unsigned_map_big.clear(); });
 	suite.print();
 
 
@@ -175,10 +176,10 @@ void benchmarks(const std::vector<size_t>& keys) {
 					{ keys[i], { float(i), float(i), float(i) } });
 		}
 	});
-	suite.benchmark("fea::unsigned_map insert", [&]() {
+	suite.benchmark("fea::flat_unsigned_hashmap insert", [&]() {
 		for (size_t i = 0; i < keys.size(); ++i) {
 			unsigned_map_small.insert(
-					{ keys[i], { float(i), float(i), float(i) } });
+					keys[i], { float(i), float(i), float(i) });
 		}
 	});
 	suite.print();
@@ -203,9 +204,9 @@ void benchmarks(const std::vector<size_t>& keys) {
 			unordered_map_big.insert({ keys[i], {} });
 		}
 	});
-	suite.benchmark("fea::unsigned_map insert", [&]() {
+	suite.benchmark("fea::flat_unsigned_hashmap insert", [&]() {
 		for (size_t i = 0; i < keys.size(); ++i) {
-			unsigned_map_big.insert({ keys[i], {} });
+			unsigned_map_big.insert(keys[i], {});
 		}
 	});
 	suite.print();
@@ -223,8 +224,7 @@ void benchmarks(const std::vector<size_t>& keys) {
 				{ keys[i], { float(i), float(i), float(i) } });
 	}
 	for (size_t i = 0; i < keys.size(); ++i) {
-		unsigned_map_small.insert(
-				{ keys[i], { float(i), float(i), float(i) } });
+		unsigned_map_small.insert(keys[i], { float(i), float(i), float(i) });
 	}
 
 	title.fill('\0');
@@ -249,7 +249,7 @@ void benchmarks(const std::vector<size_t>& keys) {
 			unordered_map_small.erase(random_keys[i]);
 		}
 	});
-	suite.benchmark("fea::unsigned_map erase", [&]() {
+	suite.benchmark("fea::flat_unsigned_hashmap erase", [&]() {
 		for (size_t i = 0; i < random_keys.size(); ++i) {
 			unsigned_map_small.erase(random_keys[i]);
 		}
@@ -268,7 +268,7 @@ void benchmarks(const std::vector<size_t>& keys) {
 		unordered_map_big.insert({ keys[i], {} });
 	}
 	for (size_t i = 0; i < keys.size(); ++i) {
-		unsigned_map_big.insert({ keys[i], {} });
+		unsigned_map_big.insert(keys[i], {});
 	}
 
 	title.fill('\0');
@@ -286,7 +286,7 @@ void benchmarks(const std::vector<size_t>& keys) {
 			unordered_map_big.erase(random_keys[i]);
 		}
 	});
-	suite.benchmark("fea::unsigned_map erase", [&]() {
+	suite.benchmark("fea::flat_unsigned_hashmap erase", [&]() {
 		for (size_t i = 0; i < random_keys.size(); ++i) {
 			unsigned_map_big.erase(random_keys[i]);
 		}
@@ -316,9 +316,9 @@ void benchmarks(const std::vector<size_t>& keys) {
 			unordered_map_small.insert({ keys[i], {} });
 		}
 	});
-	suite.benchmark("fea::unsigned_map insert", [&]() {
+	suite.benchmark("fea::flat_unsigned_hashmap insert", [&]() {
 		for (size_t i = 0; i < keys.size(); ++i) {
-			unsigned_map_small.insert({ keys[i], {} });
+			unsigned_map_small.insert(keys[i], {});
 		}
 	});
 	suite.print();
@@ -346,9 +346,9 @@ void benchmarks(const std::vector<size_t>& keys) {
 			unordered_map_big.insert({ keys[i], {} });
 		}
 	});
-	suite.benchmark("fea::unsigned_map insert", [&]() {
+	suite.benchmark("fea::flat_unsigned_hashmap insert", [&]() {
 		for (size_t i = 0; i < keys.size(); ++i) {
-			unsigned_map_big.insert({ keys[i], {} });
+			unsigned_map_big.insert(keys[i], {});
 		}
 	});
 	suite.print();
@@ -366,8 +366,7 @@ void benchmarks(const std::vector<size_t>& keys) {
 				{ keys[i], { float(i), float(i), float(i) } });
 	}
 	for (size_t i = 0; i < keys.size(); ++i) {
-		unsigned_map_small.insert(
-				{ keys[i], { float(i), float(i), float(i) } });
+		unsigned_map_small.insert(keys[i], { float(i), float(i), float(i) });
 	}
 
 	title.fill('\0');
@@ -386,9 +385,9 @@ void benchmarks(const std::vector<size_t>& keys) {
 			p.second.y = float(rand() % 100);
 		}
 	});
-	suite.benchmark("fea::unsigned_map iterate & assign", [&]() {
+	suite.benchmark("fea::flat_unsigned_hashmap iterate & assign", [&]() {
 		for (auto& p : unsigned_map_small) {
-			p.second.y = float(rand() % 100);
+			p.y = float(rand() % 100);
 		}
 	});
 	suite.print();
@@ -406,7 +405,7 @@ void benchmarks(const std::vector<size_t>& keys) {
 		unordered_map_big.insert({ keys[i], {} });
 	}
 	for (size_t i = 0; i < keys.size(); ++i) {
-		unsigned_map_big.insert({ keys[i], {} });
+		unsigned_map_big.insert(keys[i], {});
 	}
 
 	title.fill('\0');
@@ -425,9 +424,9 @@ void benchmarks(const std::vector<size_t>& keys) {
 			p.second.data.fill(rand() % 100);
 		}
 	});
-	suite.benchmark("fea::unsigned_map iterate & assign", [&]() {
+	suite.benchmark("fea::flat_unsigned_hashmap iterate & assign", [&]() {
 		for (auto& p : unsigned_map_big) {
-			p.second.data.fill(rand() % 100);
+			p.data.fill(rand() % 100);
 		}
 	});
 	suite.print();
@@ -438,7 +437,7 @@ void benchmarks(const std::vector<size_t>& keys) {
 }
 
 
-TEST(unsigned_map, benchmarks) {
+TEST(flat_unsigned_hashmap, benchmarks) {
 	srand(static_cast<unsigned int>(
 			std::chrono::system_clock::now().time_since_epoch().count()));
 	std::vector<size_t> keys;
@@ -508,7 +507,7 @@ TEST(unsigned_map, benchmarks) {
 	// Random keys.
 	{
 		keys.clear();
-		for (size_t i = 0; i < num_keys; ++i) {
+		for (size_t i = 0; i < num_keys * 4; ++i) {
 			keys.push_back(rand() % num_keys);
 		}
 
@@ -522,4 +521,5 @@ TEST(unsigned_map, benchmarks) {
 	}
 }
 } // namespace
+
 #endif // NDEBUG

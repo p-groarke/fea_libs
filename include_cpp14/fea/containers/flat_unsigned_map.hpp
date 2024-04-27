@@ -30,10 +30,10 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
-#include "fea/maps/details/unsigned_lookup.hpp"
+#include "fea/containers/detail.unsigned_lookup.hpp"
+#include "fea/containers/id_hash.hpp"
 #include "fea/memory/memory.hpp"
 #include "fea/utils/throw.hpp"
-#include "id_hash.hpp"
 
 #include <cassert>
 #include <functional>
@@ -84,6 +84,7 @@ struct flat_unsigned_map {
 	// Constructors, destructors and assignement
 
 	flat_unsigned_map() = default;
+	~flat_unsigned_map() = default;
 	flat_unsigned_map(const flat_unsigned_map&) = default;
 	flat_unsigned_map(flat_unsigned_map&&) noexcept = default;
 	flat_unsigned_map& operator=(const flat_unsigned_map&) = default;

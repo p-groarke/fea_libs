@@ -1,5 +1,5 @@
 ﻿#include <array>
-#include <fea/maps/type_map.hpp>
+#include <fea/containers/type_map.hpp>
 #include <fea/utils/platform.hpp>
 #include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
