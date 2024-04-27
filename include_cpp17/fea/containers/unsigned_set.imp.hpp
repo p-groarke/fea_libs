@@ -1,5 +1,4 @@
 #pragma once
-
 namespace fea {
 template <class MySet>
 constexpr unsigned_set_const_iterator<MySet>::unsigned_set_const_iterator(

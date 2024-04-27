@@ -117,59 +117,40 @@ template <class FunctionEnum, class PredicateEnum, class... PredArgs,
 struct utility_ai_function<FunctionEnum, PredicateEnum, float(PredArgs...),
 		ActionReturn(ActionArgs...)> {
 
+	// typedefs
 	using action_t = std::function<ActionReturn(ActionArgs...)>;
 
+	// ctors
 	utility_ai_function() = default;
+	~utility_ai_function() = default;
+	utility_ai_function(const utility_ai_function&) = default;
+	utility_ai_function(utility_ai_function&&) = default;
+	utility_ai_function& operator=(const utility_ai_function&) = default;
+	utility_ai_function& operator=(utility_ai_function&&) = default;
 
 	// Enables the provided predicates on this utility function.
-	void add_predicates(fea::span<const PredicateEnum> preds) {
-		if (preds.size() + _predicates.size() > _max_predicates) {
-			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
-					"Too many predicates provided, do you have duplicates?");
-		}
-		_predicates.insert(_predicates.end(), preds.begin(), preds.end());
-	}
+	void add_predicates(fea::span<const PredicateEnum> preds);
 
 	// Enables the provided predicates on this utility function.
-	void add_predicates(std::initializer_list<PredicateEnum>&& preds) {
-		add_predicates({ preds.begin(), preds.end() });
-	}
+	void add_predicates(std::initializer_list<PredicateEnum>&& preds);
 
 	// Enables the provided predicate on this utility function.
-	void add_predicate(PredicateEnum pred) {
-		if (_predicates.size() + 1 > _max_predicates) {
-			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
-					"Too many predicates provided, do you have duplicates?");
-		}
-		_predicates.push_back(pred);
-	}
+	void add_predicate(PredicateEnum pred);
 
 	// Adds an action to execute.
 	template <class ActionFunc>
-	void add_action(ActionFunc&& func) {
-		_action = std::forward<ActionFunc>(func);
-		assert(has_action());
-	}
+	void add_action(ActionFunc&& func);
 
 	// The predicates to use.
-	fea::span<const PredicateEnum> predicates() const {
-		return { _predicates.begin(), _predicates.end() };
-	}
+	fea::span<const PredicateEnum> predicates() const;
 
 	// Has an action.
-	bool has_action() const {
-		return bool(_action);
-	}
+	bool has_action() const;
 
 	// Number of predicates.
-	size_t size() const {
-		return _predicates.size();
-	}
+	size_t size() const;
 
-	ActionReturn execute(ActionArgs... args) const {
-		assert(has_action());
-		return _action(std::forward<ActionArgs>(args)...);
-	}
+	ActionReturn execute(ActionArgs... args) const;
 
 private:
 	static constexpr size_t _max_predicates = size_t(PredicateEnum::count);
@@ -184,114 +165,44 @@ template <class FunctionEnum, class PredicateEnum, class... PredArgs,
 struct utility_ai<FunctionEnum, PredicateEnum, float(PredArgs...),
 		ActionReturn(ActionArgs...)> {
 
+	// typedefs
 	using utility_func_t = utility_ai_function<FunctionEnum, PredicateEnum,
 			float(PredArgs...), ActionReturn(ActionArgs...)>;
 	using action_t = typename utility_func_t::action_t;
 	using predicate_func_t = std::function<float(PredArgs...)>;
 
+	// ctors
 	utility_ai() = default;
+	~utility_ai() = default;
 	utility_ai(const utility_ai&) = default;
 	utility_ai(utility_ai&&) = default;
 	utility_ai& operator=(const utility_ai&) = default;
 	utility_ai& operator=(utility_ai&&) = default;
 
-
 	// Helper so you don't have to type all the template parameters.
 	// Returns a new state to be filled in and later re-added through add_state.
-	static constexpr auto make_function() {
-		return utility_func_t{};
-	}
+	static constexpr auto make_function();
 
 	// Adds the utility function F.
 	// Must be configured appropriately, with at minimum 1 predicate and an
 	// action.
 	template <FunctionEnum F>
-	void add_function(utility_func_t&& utility_function) {
-		if (utility_function.size() == 0 || !utility_function.has_action()) {
-			fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
-					"Misconfigured utility function provided.");
-		}
-
-		assert(!utility_function.predicates().empty());
-		std::get<size_t(F)>(_utility_functions) = std::move(utility_function);
-	}
+	void add_function(utility_func_t&& utility_function);
 
 	// Adds the given predicate and assigns it to provided enum value.
 	template <PredicateEnum P, class PredFunc>
-	void add_predicate(PredFunc&& pred) {
-		std::get<size_t(P)>(_predicates) = std::forward<PredFunc>(pred);
-	}
+	void add_predicate(PredFunc&& pred);
 
 	// Evaluates all utility functions, picks the function with the
 	// highest predicate score and executes it.
-	ActionReturn trigger(
-			ActionArgs... action_args, PredArgs... predicate_args) {
-
-		// Don't use std::max_element, it would compute score twice for each
-		// utility func.
-
-		size_t winner_idx = (std::numeric_limits<size_t>::max)();
-		float max_score = (std::numeric_limits<float>::lowest)();
-
-		for (size_t i = 0; i < size_t(FunctionEnum::count); ++i) {
-			// predicate_args are not forwarded, as they are used for multiple
-			// predicates.
-			fea::span<const PredicateEnum> preds
-					= _utility_functions[i].predicates();
-			float score = evaluate_score(preds, predicate_args...);
-
-			// TODO : What happens when predicates return negative, should
-			// guarantee skip?
-			if (score > max_score) {
-				winner_idx = i;
-				max_score = score;
-			}
-		}
-
-		// Something went horribly wrong.
-		assert(winner_idx != (std::numeric_limits<size_t>::max)());
-		return _utility_functions[winner_idx].execute(
-				std::forward<ActionArgs>(action_args)...);
-	}
+	ActionReturn trigger(ActionArgs... action_args, PredArgs... predicate_args);
 
 	// Same as trigger, but evaluates scores in multiple threads.
 	// Your predicates must be thread safe.
 	// The action is executed on the caller thread.
 #if FEA_WITH_TBB
 	ActionReturn trigger_mt(
-			ActionArgs... action_args, PredArgs... predicate_args) {
-		std::array<float, size_t(FunctionEnum::count)> scores;
-		auto eval = [&, this](const tbb::blocked_range<size_t>& range) {
-			for (size_t i = range.begin(); i < range.end(); ++i) {
-				fea::span<const PredicateEnum> preds
-						= _utility_functions[i].predicates();
-				scores[i] = evaluate_score(preds, predicate_args...);
-			}
-		};
-		tbb::blocked_range<size_t> range{
-			0,
-			size_t(FunctionEnum::count),
-			fea::default_grainsize_small_v<true>,
-		};
-		tbb::parallel_for(range, eval, fea::default_partitioner_t<true>{});
-
-		size_t winner_idx = (std::numeric_limits<size_t>::max)();
-		float max_score = (std::numeric_limits<float>::lowest)();
-
-		// TODO : What happens when predicates return negative,
-		// should guarantee skip?
-		for (size_t i = 0; i < size_t(FunctionEnum::count); ++i) {
-			if (scores[i] > max_score) {
-				winner_idx = i;
-				max_score = scores[i];
-			}
-		}
-
-		// Something went horribly wrong.
-		assert(winner_idx != (std::numeric_limits<size_t>::max)());
-		return _utility_functions[winner_idx].execute(
-				std::forward<ActionArgs>(action_args)...);
-	}
+			ActionArgs... action_args, PredArgs... predicate_args);
 #endif
 
 private:
@@ -303,17 +214,7 @@ private:
 			"function enum, and it must not be equal to 0.");
 
 	float evaluate_score(
-			fea::span<const PredicateEnum> preds, PredArgs... pred_args) const {
-
-		assert(!preds.empty());
-
-		// Compute the functions score and average it.
-		float ret = 0.f;
-		for (PredicateEnum pred : preds) {
-			ret += _predicates[size_t(pred)](pred_args...);
-		}
-		return ret / float(preds.size());
-	}
+			fea::span<const PredicateEnum> preds, PredArgs... pred_args) const;
 
 	// The utility functions.
 	std::array<utility_func_t, size_t(FunctionEnum::count)>
@@ -322,6 +223,6 @@ private:
 	// The predicates.
 	std::array<predicate_func_t, size_t(PredicateEnum::count)> _predicates{};
 };
-
-
 } // namespace fea
+
+#include "utility_ai.imp.hpp"
