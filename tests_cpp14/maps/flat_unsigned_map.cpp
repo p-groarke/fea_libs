@@ -394,7 +394,7 @@ struct my_id {
 
 namespace fea {
 template <>
-struct id_getter<my_id> {
+struct id_hash<my_id> {
 	inline constexpr uint16_t operator()(const my_id& k) const noexcept {
 		return k.id;
 	}

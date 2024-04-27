@@ -31,9 +31,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 #include "fea/maps/details/unsigned_lookup.hpp"
-#include "fea/maps/id_getter.hpp"
 #include "fea/memory/memory.hpp"
 #include "fea/utils/throw.hpp"
+#include "id_hash.hpp"
 
 #include <cassert>
 #include <initializer_list>
@@ -43,7 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <utility>
 #include <vector>
 // To add custom id classes, in the fea namespace, define a struct
-// specialization to `id_getter` which returns your id type through operator().
+// specialization to `id_hash` which returns your id type through operator().
 // Important : The return type must be an unsigned, but unlike std::hash,
 // shouldn't necessarily be of size_t.
 

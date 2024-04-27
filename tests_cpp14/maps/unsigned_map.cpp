@@ -393,7 +393,7 @@ bool operator==(const my_id& lhs, const my_id& rhs) {
 
 namespace fea {
 template <>
-struct id_getter<my_id> {
+struct id_hash<my_id> {
 	inline constexpr uint8_t operator()(const my_id& k) const noexcept {
 		return k.id;
 	}

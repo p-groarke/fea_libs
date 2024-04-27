@@ -30,7 +30,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
-#include "fea/maps/id_getter.hpp"
+#include "../id_hash.hpp"
 #include "fea/utils/platform.hpp"
 #include "fea/utils/throw.hpp"
 
@@ -49,22 +49,22 @@ namespace detail {
 
 template <class Key, class TAlloc = std::allocator<Key>>
 struct unsigned_lookup {
-	static_assert(std::is_unsigned<fea::detail::id_getter_t<Key>>::value,
-			"unsigned_map : key or id_getter return type must be unsigned "
+	static_assert(std::is_unsigned<fea::detail::id_hash_t<Key>>::value,
+			"unsigned_map : key or id_hash return type must be unsigned "
 			"integer");
 
-	using hasher_type = fea::id_getter<Key>;
-	using underlying_key_type = fea::detail::id_getter_t<Key>;
+	using hasher = fea::id_hash<Key>;
+	using underlying_key_type = fea::detail::id_hash_t<Key>;
 	using pos_type = underlying_key_type;
 	using pos_allocator_type = typename std::allocator_traits<
 			TAlloc>::template rebind_alloc<pos_type>;
 	using size_type = std::size_t;
 	using ssize_type = std::make_signed_t<size_type>;
 
-	using const_iterator =
-			typename std::vector<pos_type, pos_allocator_type>::const_iterator;
 	using iterator =
 			typename std::vector<pos_type, pos_allocator_type>::iterator;
+	using const_iterator =
+			typename std::vector<pos_type, pos_allocator_type>::const_iterator;
 
 	/**
 	 * Ctors
@@ -256,7 +256,7 @@ struct unsigned_lookup {
 
 	FEA_NODISCARD static constexpr underlying_key_type hash(
 			const Key& k) noexcept {
-		return hasher_type{}(k);
+		return hasher{}(k);
 	}
 
 private:

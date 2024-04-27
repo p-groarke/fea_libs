@@ -70,7 +70,7 @@ template <class Key, class Value, class Alloc = std::allocator<Value>>
 struct flat_bf_graph_builder_node {
 	using key_type = Key;
 	using value_type = Value;
-	using underlying_key_type = fea::detail::id_getter_t<key_type>;
+	using underlying_key_type = fea::detail::id_hash_t<key_type>;
 
 	using allocator_type = Alloc;
 	using key_allocator_type = typename std::allocator_traits<

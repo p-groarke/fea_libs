@@ -33,11 +33,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <type_traits>
 
 namespace fea {
-// Default id getter.
+// Default id hasher.
 // Specialize this struct for your own id classes.
 // Return an unsigned type.
 template <class Key>
-struct id_getter {
+struct id_hash {
 	inline constexpr Key operator()(const Key& k) const noexcept {
 		return k;
 	}
@@ -45,12 +45,13 @@ struct id_getter {
 
 namespace detail {
 template <class T>
-struct id_getter_traits {
-	using type = std::decay_t<
-			decltype(std::declval<fea::id_getter<T>>().operator()(T{}))>;
+struct id_hash_traits {
+	using type
+			= std::decay_t<decltype(std::declval<fea::id_hash<T>>().operator()(
+					std::declval<T>()))>;
 };
 
 template <class T>
-using id_getter_t = typename id_getter_traits<T>::type;
+using id_hash_t = typename id_hash_traits<T>::type;
 } // namespace detail
 } // namespace fea

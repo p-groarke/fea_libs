@@ -42,6 +42,7 @@
 #include <vector>
 
 namespace fea {
+namespace experimental {
 template <class T, size_t N>
 struct circle_array {
 	circle_array() noexcept = default;
@@ -134,4 +135,5 @@ private:
 
 	std::array<T, N> _arr{};
 };
+} // namespace experimental
 } // namespace fea
