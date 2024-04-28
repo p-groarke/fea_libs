@@ -50,6 +50,7 @@ constexpr span<T, Extent>& span<T, Extent>::operator=(
 	}
 	_data = other.data();
 	_size = other.size();
+	return *this;
 }
 
 template <class T, size_t Extent>
