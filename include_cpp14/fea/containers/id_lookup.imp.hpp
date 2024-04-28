@@ -21,7 +21,7 @@ template <class Key, class TAlloc>
 constexpr auto id_lookup<Key, TAlloc>::at_unchecked_prehashed(
 		underlying_key_type uk) const noexcept -> size_type {
 	assert(contains_prehashed(uk));
-	return static_cast<size_type>(_indexes[uk]);
+	return size_type(_indexes[uk]);
 }
 
 template <class Key, class TAlloc>
@@ -42,7 +42,7 @@ constexpr auto id_lookup<Key, TAlloc>::find_prehashed(underlying_key_type uk,
 		return end_size;
 	}
 	assert(pos < end_size);
-	return static_cast<size_type>(pos);
+	return size_type(pos);
 }
 
 template <class Key, class TAlloc>
@@ -114,7 +114,7 @@ constexpr auto id_lookup<Key, TAlloc>::cend() const noexcept -> const_iterator {
 template <class Key, class TAlloc>
 constexpr auto id_lookup<Key, TAlloc>::max_size() const noexcept -> size_type {
 	// Reserve 1 slot for sentinel.
-	return static_cast<size_type>(sentinel()) - static_cast<size_type>(1);
+	return size_type(sentinel()) - size_type(1);
 }
 
 template <class Key, class TAlloc>
@@ -224,7 +224,7 @@ auto id_lookup<Key, TAlloc>::maybe_resize(underlying_key_type uk) -> void {
 				__FUNCTION__, __LINE__, "maximum size reached");
 	}
 
-	_indexes.resize(static_cast<size_t>(uk) + 1u, sentinel());
+	_indexes.resize(size_t(uk) + 1u, sentinel());
 	assert(uk < _indexes.size());
 }
 } // namespace fea

@@ -17,7 +17,7 @@ constexpr span<T, Extent>::span(It first, size_t count)
 template <class T, size_t Extent>
 template <class It>
 constexpr span<T, Extent>::span(It first, It last)
-		: _size(static_cast<size_t>(last - first)) {
+		: _size(size_t(last - first)) {
 	using cat_t = typename std::iterator_traits<It>::iterator_category;
 	static_assert(std::is_same_v<cat_t, std::random_access_iterator_tag>,
 			"fea::span : iterators must be random access");
@@ -142,7 +142,9 @@ constexpr auto span<T, Extent>::empty() const noexcept -> bool {
 #if FEA_CPP20
 namespace std {
 template <class U>
-[[nodiscard]] constexpr auto operator==(span<U> lhs, span<U> rhs) -> bool {
+[[nodiscard]]
+constexpr auto
+operator==(span<U> lhs, span<U> rhs) -> bool {
 	if (lhs.size() != rhs.size()) {
 		return false;
 	}
@@ -155,7 +157,9 @@ template <class U>
 }
 
 template <class U>
-[[nodiscard]] constexpr auto operator!=(span<U> lhs, span<U> rhs) -> bool {
+[[nodiscard]]
+constexpr auto
+operator!=(span<U> lhs, span<U> rhs) -> bool {
 	return !(lhs == rhs);
 }
 } // namespace std

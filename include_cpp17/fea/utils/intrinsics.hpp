@@ -112,12 +112,12 @@ constexpr auto to_unsigned(T t) noexcept {
 	static_assert(std::is_integral_v<T>, "to_ulong : expects integral types");
 
 	if constexpr (sizeof(T) <= 4) {
-		return static_cast<uint32_t>(t);
+		return uint32_t(t);
 	} else if constexpr (sizeof(T) <= 8) {
-		return static_cast<uint64_t>(t);
+		return uint64_t(t);
 	} else {
 		// someday...
-		return static_cast<uint64_t>(t);
+		return uint64_t(t);
 	}
 }
 

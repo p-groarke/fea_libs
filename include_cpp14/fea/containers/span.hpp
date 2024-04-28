@@ -48,7 +48,7 @@ Aliases std::span in c++ >= 20.
 
 namespace fea {
 namespace imp {
-template <class T, size_t = static_cast<size_t>(-1)>
+template <class T, size_t = size_t(-1)>
 struct span;
 }
 
@@ -56,7 +56,7 @@ struct span;
 template <class T, size_t Extent = std::dynamic_extent>
 using span = std::span<T, Extent>;
 #else
-template <class T, size_t Extent = static_cast<size_t>(-1)>
+template <class T, size_t Extent = size_t(-1)>
 using span = imp::span<T, Extent>;
 #endif
 
@@ -64,7 +64,7 @@ namespace imp {
 template <class T, size_t Extent>
 struct span {
 	// Sanity checks.
-	static_assert(Extent == static_cast<size_t>(-1),
+	static_assert(Extent == size_t(-1),
 			"fea::span : Doesn't support non dynamic extent.");
 
 	// Typedefs
