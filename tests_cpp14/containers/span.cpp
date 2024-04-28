@@ -1,4 +1,6 @@
-﻿#include <fea/containers/span.hpp>
+﻿#include "fea/utils/unused.hpp"
+
+#include <fea/containers/span.hpp>
 #include <gtest/gtest.h>
 
 namespace {
@@ -74,5 +76,11 @@ TEST(span, empty) {
 TEST(span, to_const) {
 	fea::span<int> s;
 	fea::span<const int> consts = s;
+	fea::span<const int> consts2 = fea::span<int>{};
+	fea::span<const int> consts3{ fea::span<int>{} };
+	fea::unused(s);
+	fea::unused(consts);
+	fea::unused(consts2);
+	fea::unused(consts3);
 }
 } // namespace

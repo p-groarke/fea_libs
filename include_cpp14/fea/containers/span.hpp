@@ -78,6 +78,9 @@ struct span {
 	using reverse_iterator = std::reverse_iterator<iterator>;
 
 	constexpr span() = default;
+	constexpr ~span() = default;
+	// constexpr span(span<T, Extent>&&) = default;
+	// constexpr span& operator=(span<T, Extent>&&) = default;
 
 	template <class It>
 	constexpr span(It first, size_t count);
@@ -89,6 +92,7 @@ struct span {
 	// Enable construction of const from non-const.
 	constexpr span(const span<std::remove_const_t<T>, Extent>&);
 	constexpr span& operator=(const span<std::remove_const_t<T>, Extent>&);
+
 
 	/**
 	 * Iterators

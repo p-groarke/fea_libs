@@ -38,8 +38,7 @@ constexpr span<T, Extent>::span(
 template <class T, size_t Extent>
 constexpr span<T, Extent>::span(
 		const span<std::remove_const_t<T>, Extent>& other)
-		: _data(other._data)
-		, _size(other._size) {
+		: span(other.data(), other.size()) {
 }
 
 template <class T, size_t Extent>
@@ -48,8 +47,8 @@ constexpr span<T, Extent>& span<T, Extent>::operator=(
 	if (this == &other) {
 		return *this;
 	}
-	_data = other._data;
-	_size = other._size;
+	_data = other.data();
+	_size = other.size();
 }
 
 template <class T, size_t Extent>
