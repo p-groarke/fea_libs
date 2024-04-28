@@ -1,10 +1,6 @@
 #include <fea/containers/unsigned_set.hpp>
 #include <gtest/gtest.h>
 
-namespace fea {
-using namespace experimental;
-}
-
 namespace {
 TEST(unsigned_set, basics) {
 	// Empty test

@@ -56,7 +56,6 @@ modulo = index start -> std::find -> index start + collisions
 */
 
 namespace fea {
-namespace experimental {
 template <class Key, class Alloc = std::allocator<Key>>
 struct unsigned_set {
 	// Sanity checks.
@@ -211,7 +210,6 @@ private:
 	// Stores true at [key] if the key is contained.
 	std::vector<bool_type, bool_allocator_type> _map;
 };
-} // namespace experimental
 } // namespace fea
 
 #include "unsigned_set.imp.hpp"
