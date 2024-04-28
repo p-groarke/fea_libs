@@ -70,4 +70,9 @@ TEST(span, empty) {
 		EXPECT_EQ(s.data(), nullptr);
 	}
 }
+
+TEST(span, to_const) {
+	fea::span<int> s;
+	fea::span<const int> consts = s;
+}
 } // namespace

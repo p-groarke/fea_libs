@@ -35,6 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <algorithm>
 #include <cassert>
 #include <iterator>
+#include <type_traits>
 
 #if FEA_CPP20
 #include <span>
@@ -84,6 +85,10 @@ struct span {
 	constexpr span(It first, It last);
 	template <template <class, class...> class Container, class... Args>
 	constexpr span(const Container<std::decay_t<T>, Args...>& container);
+
+	// Enable construction of const from non-const.
+	constexpr span(const span<std::remove_const_t<T>, Extent>&);
+	constexpr span& operator=(const span<std::remove_const_t<T>, Extent>&);
 
 	/**
 	 * Iterators
@@ -147,6 +152,7 @@ private:
 	pointer _data = nullptr;
 	size_type _size = 0;
 };
+
 } // namespace imp
 } // namespace fea
 

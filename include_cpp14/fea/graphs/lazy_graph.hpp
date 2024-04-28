@@ -585,7 +585,7 @@ struct lazy_graph {
 		}
 
 		DirtyVersion parent_ver = n.version();
-		fea::span<DirtyVersion> children_versions = n.children_versions();
+		fea::span<const DirtyVersion> children_versions = n.children_versions();
 
 		for (DirtyVersion child_ver : children_versions) {
 			if (child_ver == parent_ver) {

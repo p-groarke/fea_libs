@@ -36,6 +36,23 @@ constexpr span<T, Extent>::span(
 }
 
 template <class T, size_t Extent>
+constexpr span<T, Extent>::span(
+		const span<std::remove_const_t<T>, Extent>& other)
+		: _data(other._data)
+		, _size(other._size) {
+}
+
+template <class T, size_t Extent>
+constexpr span<T, Extent>& span<T, Extent>::operator=(
+		const span<std::remove_const_t<T>, Extent>& other) {
+	if (this == &other) {
+		return *this;
+	}
+	_data = other._data;
+	_size = other._size;
+}
+
+template <class T, size_t Extent>
 constexpr typename span<T, Extent>::iterator
 span<T, Extent>::begin() const noexcept {
 	return _data;
