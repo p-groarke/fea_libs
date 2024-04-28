@@ -1,10 +1,10 @@
-#include <fea/containers/unsigned_lookup.hpp>
+#include <fea/containers/id_lookup.hpp>
 #include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
 #include <unordered_map>
 
 namespace {
-#define test_failed_msg "unsigned_lookup.cpp : Unit test failed."
+#define test_failed_msg "id_lookup.cpp : Unit test failed."
 
 struct my_id {
 	my_id() = default;
@@ -40,7 +40,7 @@ struct std::hash<my_id> {
 // testme.insert({ my_id{}, 0 });
 
 namespace {
-TEST(unsigned_lookup, basics) {
+TEST(id_lookup, basics) {
 	{
 		my_id id1(0u);
 		my_id id2(0u);
@@ -48,7 +48,7 @@ TEST(unsigned_lookup, basics) {
 	}
 
 	{
-		fea::unsigned_lookup<size_t> ul;
+		fea::id_lookup<size_t> ul;
 
 		using ul_t = std::decay_t<decltype(ul)>;
 		static_assert(std::is_same<typename ul_t::hasher,
@@ -60,7 +60,7 @@ TEST(unsigned_lookup, basics) {
 		static_assert(std::is_same<typename ul_t::pos_type, size_t>::value,
 				test_failed_msg);
 
-		fea::unsigned_lookup<size_t> ul2;
+		fea::id_lookup<size_t> ul2;
 		ul.swap(ul2);
 
 		size_t k = 0u;
@@ -119,7 +119,7 @@ TEST(unsigned_lookup, basics) {
 	}
 
 	{
-		fea::unsigned_lookup<my_id> ul;
+		fea::id_lookup<my_id> ul;
 
 		using ul_t = std::decay_t<decltype(ul)>;
 		static_assert(

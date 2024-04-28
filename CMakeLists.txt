@@ -17,7 +17,7 @@ option(FEA_CMAKE_LOCAL "Use local fea_cmake repo. Searches for '../fea_cmake'" O
 # option(FEA_SANITIZE "Enables -fsanitize on debug builds." Off)
 
 # Options that affect which modules and functionality are available.
-option(FEA_WITH_TBB "Pull TBB (2020.3) and use it." On)
+option(FEA_WITH_TBB "Pull TBB (2020.3) and use it." Off)
 option(FEA_WITH_ONETBB "Pull oneTBB (2020.10.0) and use it." Off)
 
 if (FEA_WITH_ONETBB)

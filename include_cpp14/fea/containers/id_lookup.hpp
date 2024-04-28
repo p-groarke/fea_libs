@@ -47,7 +47,7 @@ namespace fea {
 // user data. You must synchronize the items according to this lookup yourself.
 
 template <class Key, class TAlloc = std::allocator<Key>>
-struct unsigned_lookup {
+struct id_lookup {
 	// Sanity checks.
 	static_assert(std::is_unsigned<fea::detail::id_hash_return_t<Key>>::value,
 			"unsigned_map : key or id_hash return type must be unsigned "
@@ -70,12 +70,12 @@ struct unsigned_lookup {
 	/**
 	 * Ctors
 	 */
-	constexpr unsigned_lookup() = default;
-	~unsigned_lookup() = default;
-	constexpr unsigned_lookup(const unsigned_lookup&) = default;
-	constexpr unsigned_lookup(unsigned_lookup&&) = default;
-	constexpr unsigned_lookup& operator=(const unsigned_lookup&) = default;
-	constexpr unsigned_lookup& operator=(unsigned_lookup&&) = default;
+	constexpr id_lookup() = default;
+	~id_lookup() = default;
+	constexpr id_lookup(const id_lookup&) = default;
+	constexpr id_lookup(id_lookup&&) = default;
+	constexpr id_lookup& operator=(const id_lookup&) = default;
+	constexpr id_lookup& operator=(id_lookup&&) = default;
 
 	/**
 	 * Element access
@@ -146,7 +146,7 @@ struct unsigned_lookup {
 	constexpr void insert(
 			FwdIt&& k_begin, FwdIt&& k_end, size_type first_new_idx);
 
-	constexpr void swap(unsigned_lookup& other) noexcept;
+	constexpr void swap(id_lookup& other) noexcept;
 
 	// Sets a pre-existing to sentinel.
 	constexpr void invalidate_prehashed(underlying_key_type uk) noexcept;
@@ -171,4 +171,4 @@ private:
 };
 } // namespace fea
 
-#include "unsigned_lookup.imp.hpp"
+#include "id_lookup.imp.hpp"

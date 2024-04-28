@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 #include "fea/containers/flat_unsigned_map.hpp"
-#include "fea/containers/unsigned_lookup.hpp"
+#include "fea/containers/id_lookup.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -486,7 +486,7 @@ namespace detail {
 template <class Key, class Value, class VAlloc, class KeyAlloc, class SpanAlloc>
 struct flat_bf_graph_data {
 	// template <class UKeyT, class PairAlloc>
-	flat_bf_graph_data(fea::unsigned_lookup<Key, KeyAlloc>&& mlookup,
+	flat_bf_graph_data(fea::id_lookup<Key, KeyAlloc>&& mlookup,
 			std::vector<Key, KeyAlloc>&& mkeys,
 			std::vector<Value, VAlloc>&& mvalues,
 			std::vector<Key, KeyAlloc>&& mparents,
@@ -522,7 +522,7 @@ struct flat_bf_graph_data {
 
 
 	// Key -> vector index.
-	const fea::unsigned_lookup<Key, KeyAlloc> lookup{};
+	const fea::id_lookup<Key, KeyAlloc> lookup{};
 
 	// Our keys, ordered vertically.
 	const std::vector<Key, KeyAlloc> keys{};
@@ -570,7 +570,7 @@ flat_bf_graph_data<Key, Value, VAlloc, KeyAlloc, SpanAlloc> make_graph_data(
 	using node_t = typename builder_t::node_type;
 	// using u_key_t = typename builder_t::underlying_key_type;
 
-	fea::unsigned_lookup<Key, KeyAlloc> mlookup{};
+	fea::id_lookup<Key, KeyAlloc> mlookup{};
 	std::vector<Key, KeyAlloc> mkeys{};
 	std::vector<Value, VAlloc> mvalues{};
 	std::vector<Key, KeyAlloc> mparents{};

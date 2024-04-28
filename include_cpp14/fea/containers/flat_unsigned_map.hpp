@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 #include "fea/containers/id_hash.hpp"
-#include "fea/containers/unsigned_lookup.hpp"
+#include "fea/containers/id_lookup.hpp"
 #include "fea/memory/memory.hpp"
 #include "fea/utils/throw.hpp"
 
@@ -246,7 +246,7 @@ private:
 			const key_type& k, M&& obj, bool assign_found = false);
 
 
-	fea::unsigned_lookup<Key, allocator_type> _lookup; // key -> position
+	fea::id_lookup<Key, allocator_type> _lookup; // key -> position
 	std::vector<key_type, key_allocator_type> _reverse_lookup; // used in erase
 	std::vector<value_type, allocator_type> _values; // packed values
 };
