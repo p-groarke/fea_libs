@@ -32,12 +32,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 #include "fea/utils/platform.hpp"
 
-#if FEA_CPP20
-#include <span>
-#else
 #include <algorithm>
 #include <cassert>
 #include <iterator>
+
+#if FEA_CPP20
+#include <span>
 #endif
 
 
@@ -80,10 +80,8 @@ struct span {
 
 	template <class It>
 	constexpr span(It first, size_t count);
-
 	template <class It>
 	constexpr span(It first, It last);
-
 	template <template <class, class...> class Container, class... Args>
 	constexpr span(const Container<std::decay_t<T>, Args...>& container);
 
