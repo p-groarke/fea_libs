@@ -6,7 +6,7 @@ template <class It>
 constexpr span<T, Extent>::span(It first, size_t count)
 		: _size(count) {
 	using cat_t = typename std::iterator_traits<It>::iterator_category;
-	static_assert(std::is_same_v<cat_t, std::random_access_iterator_tag>,
+	static_assert(std::is_same<cat_t, std::random_access_iterator_tag>::value,
 			"fea::span : iterators must be random access");
 
 	if (_size != 0) {
@@ -19,7 +19,7 @@ template <class It>
 constexpr span<T, Extent>::span(It first, It last)
 		: _size(size_t(last - first)) {
 	using cat_t = typename std::iterator_traits<It>::iterator_category;
-	static_assert(std::is_same_v<cat_t, std::random_access_iterator_tag>,
+	static_assert(std::is_same<cat_t, std::random_access_iterator_tag>::value,
 			"fea::span : iterators must be random access");
 
 	if (_size != 0) {

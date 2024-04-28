@@ -77,9 +77,8 @@ struct id_lookup {
 	constexpr id_lookup& operator=(const id_lookup&) = default;
 	constexpr id_lookup& operator=(id_lookup&&) = default;
 
-	/**
-	 * Element access
-	 */
+	// Element access
+
 	// Lookups, return the index of the item.
 	FEA_NODISCARD constexpr size_type at_prehashed(
 			underlying_key_type uk) const;
@@ -107,37 +106,51 @@ struct id_lookup {
 	FEA_NODISCARD constexpr size_type size() const noexcept;
 
 
-	/**
-	 * Iterators
-	 */
+	// Iterators
+
+	// Returns an iterator to the positions, NOT the ids.
 	constexpr iterator begin() noexcept;
+
+	// Returns an iterator to the positions, NOT the ids.
 	constexpr const_iterator begin() const noexcept;
+
+	// Returns an iterator to the positions, NOT the ids.
 	constexpr const_iterator cbegin() const noexcept;
 
+	// Returns an iterator to the positions, NOT the ids.
 	constexpr iterator end() noexcept;
+
+	// Returns an iterator to the positions, NOT the ids.
 	constexpr const_iterator end() const noexcept;
+
+	// Returns an iterator to the positions, NOT the ids.
 	constexpr const_iterator cend() const noexcept;
 
 
-	/**
-	 * Capacity
-	 */
+	// Capacity
+
+	// Maximum storable size (std::vector::max_size - 1).
 	FEA_NODISCARD constexpr size_type max_size() const noexcept;
 
+	// Reserve memory, recommended maxid + 1.
 	constexpr void reserve(size_type new_cap);
 
+	// Current capacity.
 	FEA_NODISCARD constexpr size_type capacity() const noexcept;
 
+	// Shrink memory to fit number of positions.
 	constexpr void shrink_to_fit();
 
 
-	/**
-	 * Modifiers
-	 */
+	// Modifiers
+
+	// Clear container.
 	constexpr void clear() noexcept;
 
+	// Insert a new key that will be stored at new_idx.
 	constexpr void insert_prehashed(underlying_key_type uk, size_type new_idx);
 
+	// Insert a new key that will be stored at new_idx.
 	constexpr void insert(const Key& k, size_type new_idx);
 
 	// Insert multiple new keys of contiguous positions.
@@ -146,25 +159,31 @@ struct id_lookup {
 	constexpr void insert(
 			FwdIt&& k_begin, FwdIt&& k_end, size_type first_new_idx);
 
+	// Swap with other id_lookup.
 	constexpr void swap(id_lookup& other) noexcept;
 
-	// Sets a pre-existing to sentinel.
+	// Invalidates a pre-existing id. Sets its position to our sentinel.
 	constexpr void invalidate_prehashed(underlying_key_type uk) noexcept;
 
+	// Invalidates a pre-existing id. Sets its position to our sentinel.
 	constexpr void invalidate(const Key& k) noexcept;
 
 	// Updates the position of a pre-existing key.
 	constexpr void update_prehashed(
 			underlying_key_type uk, size_type new_idx) noexcept;
 
+	// Updates the position of a pre-existing key.
 	constexpr void update(const Key& k, size_type new_idx) noexcept;
 
+	// Sentinel used to mark ids invalid.
 	FEA_NODISCARD static constexpr pos_type sentinel() noexcept;
 
+	// Hash a key using fea::id_hash.
 	FEA_NODISCARD static constexpr underlying_key_type hash(
 			const Key& k) noexcept;
 
 private:
+	// Might resize our storage to fit the key.
 	void maybe_resize(underlying_key_type uk);
 
 	std::vector<pos_type, pos_allocator_type> _indexes;
