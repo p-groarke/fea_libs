@@ -78,7 +78,7 @@ struct span {
 	using reverse_iterator = std::reverse_iterator<iterator>;
 
 	constexpr span() = default;
-	constexpr ~span() = default;
+	~span() = default;
 	// constexpr span(span<T, Extent>&&) = default;
 	// constexpr span& operator=(span<T, Extent>&&) = default;
 
