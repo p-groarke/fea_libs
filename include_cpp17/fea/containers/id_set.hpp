@@ -60,7 +60,7 @@ namespace experimental {
 // Currently unsafe as it drops potential id extra data.
 
 template <class MySet>
-struct unsigned_set_const_iterator {
+struct id_set_const_iterator {
 	using difference_type = typename MySet::difference_type;
 	using key_type = typename MySet::key_type;
 	using value_type = key_type;
@@ -74,31 +74,31 @@ struct unsigned_set_const_iterator {
 			typename std::allocator_traits<bool_allocator_type>::const_pointer;
 	using underlying_key_type = typename MySet::underlying_key_type;
 
-	constexpr unsigned_set_const_iterator() noexcept = default;
-	constexpr unsigned_set_const_iterator(
+	constexpr id_set_const_iterator() noexcept = default;
+	constexpr id_set_const_iterator(
 			bool_pointer first, bool_pointer last, bool_pointer ptr) noexcept;
 
 	[[nodiscard]] constexpr key_type operator*() const noexcept;
 	[[nodiscard]] constexpr key_type operator->() const noexcept = delete;
 
-	constexpr unsigned_set_const_iterator& operator++() noexcept;
-	constexpr unsigned_set_const_iterator& operator++(int) noexcept;
+	constexpr id_set_const_iterator& operator++() noexcept;
+	constexpr id_set_const_iterator& operator++(int) noexcept;
 
-	constexpr unsigned_set_const_iterator& operator--() noexcept;
-	constexpr unsigned_set_const_iterator& operator--(int) noexcept;
+	constexpr id_set_const_iterator& operator--() noexcept;
+	constexpr id_set_const_iterator& operator--(int) noexcept;
 
 	[[nodiscard]] bool operator==(
-			const unsigned_set_const_iterator& rhs) const noexcept;
+			const id_set_const_iterator& rhs) const noexcept;
 	[[nodiscard]] bool operator!=(
-			const unsigned_set_const_iterator& rhs) const noexcept;
+			const id_set_const_iterator& rhs) const noexcept;
 	[[nodiscard]] bool operator<(
-			const unsigned_set_const_iterator& rhs) const noexcept;
+			const id_set_const_iterator& rhs) const noexcept;
 	[[nodiscard]] bool operator>(
-			const unsigned_set_const_iterator& rhs) const noexcept;
+			const id_set_const_iterator& rhs) const noexcept;
 	[[nodiscard]] bool operator<=(
-			const unsigned_set_const_iterator& rhs) const noexcept;
+			const id_set_const_iterator& rhs) const noexcept;
 	[[nodiscard]] bool operator>=(
-			const unsigned_set_const_iterator& rhs) const noexcept;
+			const id_set_const_iterator& rhs) const noexcept;
 
 private:
 	bool_pointer _first = nullptr;
@@ -107,8 +107,9 @@ private:
 };
 
 template <class MySet>
-struct unsigned_set_iterator : public unsigned_set_const_iterator<MySet> {
-	using base_t = unsigned_set_const_iterator<MySet>;
+struct id_set_iterator : public id_set_const_iterator<MySet> {
+	using base_t = id_set_const_iterator<MySet>;
+	using base_t::base_t;
 
 	using difference_type = typename base_t::difference_type;
 	using key_type = typename base_t::key_type;
@@ -116,17 +117,17 @@ struct unsigned_set_iterator : public unsigned_set_const_iterator<MySet> {
 	using pointer = key_type;
 	using reference = key_type;
 	using iterator_category = std::bidirectional_iterator_tag;
-
-	using base_t::base_t;
 };
 
 
 template <class Key, class Alloc = std::allocator<Key>>
-struct unsigned_set {
+struct id_set {
+	// Sanity checks.
 	static_assert(std::is_unsigned_v<fea::detail::id_hash_return_t<Key>>,
 			"unsigned_set : key or id_hash return type must be unsigned "
 			"integer");
 
+	// Typedefs
 	using key_type = Key;
 	using value_type = key_type;
 	using size_type = std::size_t;
@@ -139,9 +140,8 @@ struct unsigned_set {
 	using const_reference = const value_type&;
 	using pointer = typename std::allocator_traits<Alloc>::pointer;
 	using const_pointer = typename std::allocator_traits<Alloc>::const_pointer;
-	using const_iterator
-			= unsigned_set_const_iterator<unsigned_set<Key, Alloc>>;
-	using iterator = unsigned_set_iterator<unsigned_set<Key, Alloc>>;
+	using const_iterator = id_set_const_iterator<id_set<Key, Alloc>>;
+	using iterator = id_set_iterator<id_set<Key, Alloc>>;
 
 	// Internals
 	using underlying_key_type = fea::detail::id_hash_return_t<Key>;
@@ -149,36 +149,43 @@ struct unsigned_set {
 	using bool_allocator_type = typename std::allocator_traits<
 			Alloc>::template rebind_alloc<bool_type>;
 
-
-	// ctors
-	unsigned_set() = default;
-	~unsigned_set() = default;
-	unsigned_set(const unsigned_set&) = default;
-	unsigned_set(unsigned_set&&) = default;
-	unsigned_set& operator=(const unsigned_set&) = default;
-	unsigned_set& operator=(unsigned_set&&) = default;
+	// Ctors
+	id_set() = default;
+	~id_set() = default;
+	id_set(const id_set&) = default;
+	id_set(id_set&&) = default;
+	id_set& operator=(const id_set&) = default;
+	id_set& operator=(id_set&&) = default;
 
 	// Initializes with provided keys.
 	template <class FwdIt>
-	unsigned_set(FwdIt first, FwdIt last);
+	id_set(FwdIt first, FwdIt last);
 
 	// Initializes with provided keys.
-	unsigned_set(std::initializer_list<key_type>&& ilist);
+	id_set(std::initializer_list<key_type>&& ilist);
 
-	/**
-	 * Iterators
-	 */
+	// Iterators
+
+	// Begin iterator, bidirectional.
 	[[nodiscard]] const_iterator begin() const noexcept;
+
+	// Begin iterator, bidirectional.
 	[[nodiscard]] const_iterator cbegin() const noexcept;
+
+	// Begin iterator, bidirectional.
 	[[nodiscard]] iterator begin() noexcept;
 
+	// End iterator, bidirectional.
 	[[nodiscard]] const_iterator end() const noexcept;
+
+	// End iterator, bidirectional.
 	[[nodiscard]] const_iterator cend() const noexcept;
+
+	// End iterator, bidirectional.
 	[[nodiscard]] iterator end() noexcept;
 
-	/**
-	 * Capacity
-	 */
+	// Capacity
+
 	// Is set empty? O(n)
 	[[nodiscard]] bool empty() const noexcept(
 			noexcept(std::find(const_iterator{}, const_iterator{}, uint8_t{})));
@@ -198,9 +205,8 @@ struct unsigned_set {
 	// Shrink unused memory.
 	void shrink_to_fit();
 
-	/**
-	 * Modifiers
-	 */
+	// Modifiers
+
 	// Clear all items.
 	constexpr void clear() noexcept;
 
@@ -210,6 +216,8 @@ struct unsigned_set {
 	// Insert multiple items.
 	template <class FwdIt>
 	void insert(FwdIt first, FwdIt last);
+
+	// Insert multiple items.
 	void insert(std::initializer_list<key_type>&& ilist);
 
 	// Erase item.
@@ -217,19 +225,23 @@ struct unsigned_set {
 
 	// Erase item at iterator.
 	iterator erase(iterator);
+
+	// Erase item at iterator.
 	iterator erase(const_iterator);
 
 	// Swap with another unsigned_set.
-	void swap(unsigned_set& other) noexcept;
+	void swap(id_set& other) noexcept;
 
 	// Merge with source.
 	// Items are "stolen" from source, only if they don't exist in destination.
-	void merge(unsigned_set<Key, Alloc>& source);
-	void merge(unsigned_set<Key, Alloc>&& source);
+	void merge(id_set<Key, Alloc>& source);
 
-	/**
-	 * Lookup
-	 */
+	// Merge with source.
+	// Items are "stolen" from source, only if they don't exist in destination.
+	void merge(id_set<Key, Alloc>&& source);
+
+	// Lookup
+
 	// Returns 1 if key present, 0 if not.
 	size_type count(const key_type& key) const
 			noexcept(noexcept(hasher{}(key)));
@@ -240,6 +252,8 @@ struct unsigned_set {
 	// Find the iterator for a key. Returns end() if not present.
 	const_iterator find(const key_type& key) const
 			noexcept(noexcept(hasher{}(key)));
+
+	// Find the iterator for a key. Returns end() if not present.
 	iterator find(const key_type& key) noexcept(noexcept(hasher{}(key)));
 
 private:
@@ -248,4 +262,4 @@ private:
 } // namespace experimental
 } // namespace fea
 
-#include "unsigned_set.imp.hpp"
+#include "id_set.imp.hpp"

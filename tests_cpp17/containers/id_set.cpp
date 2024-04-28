@@ -1,4 +1,4 @@
-#include <fea/containers/unsigned_set.hpp>
+#include <fea/containers/id_set.hpp>
 #include <gtest/gtest.h>
 
 namespace fea {
@@ -30,7 +30,7 @@ namespace {
 TEST(unsigned_set, basics) {
 	// Empty test
 	{
-		fea::unsigned_set<mkey> us;
+		fea::id_set<mkey> us;
 		EXPECT_EQ(us.begin(), us.end());
 		EXPECT_EQ(us.cbegin(), us.cend());
 		EXPECT_TRUE(us.empty());
@@ -61,7 +61,7 @@ TEST(unsigned_set, basics) {
 		EXPECT_EQ(us.find(mkey{ 0u }), us.end());
 
 		std::vector<mkey> v;
-		us = fea::unsigned_set<mkey>(v.begin(), v.end());
+		us = fea::id_set<mkey>(v.begin(), v.end());
 		EXPECT_EQ(us.begin(), us.end());
 		EXPECT_EQ(us.cbegin(), us.cend());
 		EXPECT_TRUE(us.empty());
@@ -88,7 +88,7 @@ TEST(unsigned_set, basics) {
 		std::vector<mkey> v{ 0u, 2u, 4u, 6u, 8u };
 		unsigned maxid = v.back().id;
 
-		fea::unsigned_set<mkey> us(v.begin(), v.end());
+		fea::id_set<mkey> us(v.begin(), v.end());
 		EXPECT_NE(us.begin(), us.end());
 		EXPECT_NE(us.cbegin(), us.cend());
 		EXPECT_FALSE(us.empty());
@@ -142,7 +142,7 @@ TEST(unsigned_set, basics) {
 		EXPECT_EQ(us.find(mkey{ 0u }), us.begin());
 		EXPECT_EQ(us.find(mkey{ 8u }), --us.end());
 
-		fea::unsigned_set<mkey> us2;
+		fea::id_set<mkey> us2;
 		us.swap(us2);
 		EXPECT_NE(us2.begin(), us2.end());
 		EXPECT_NE(us2.cbegin(), us2.cend());
@@ -170,7 +170,7 @@ TEST(unsigned_set, basics) {
 		}
 
 		std::vector<mkey> v2{ 1u, 3u, 5u, 7u, 9u };
-		us2 = fea::unsigned_set<mkey>(v2.begin(), v2.end());
+		us2 = fea::id_set<mkey>(v2.begin(), v2.end());
 		us.merge(us2);
 		for (mkey k : v) {
 			EXPECT_EQ(us.count(k), 1u);
@@ -193,7 +193,7 @@ TEST(unsigned_set, basics) {
 		std::vector<mkey> v{ 0u, 2u, 4u, 6u, 8u };
 		// unsigned maxid = v.back().id;
 
-		fea::unsigned_set<mkey> us(v.begin(), v.end());
+		fea::id_set<mkey> us(v.begin(), v.end());
 		EXPECT_FALSE(us.begin() == us.end());
 		EXPECT_TRUE(us.begin() != us.end());
 		EXPECT_TRUE(us.begin() < us.end());

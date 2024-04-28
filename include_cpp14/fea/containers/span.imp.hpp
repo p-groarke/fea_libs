@@ -6,7 +6,7 @@ template <class It>
 constexpr span<T, Extent>::span(It first, size_t count)
 		: _size(count) {
 	using cat_t = typename std::iterator_traits<It>::iterator_category;
-	static_assert(std::is_same<cat_t, std::random_access_iterator_tag>::value,
+	static_assert(std::is_same_v<cat_t, std::random_access_iterator_tag>,
 			"fea::span : iterators must be random access");
 
 	if (_size != 0) {
@@ -17,9 +17,9 @@ constexpr span<T, Extent>::span(It first, size_t count)
 template <class T, size_t Extent>
 template <class It>
 constexpr span<T, Extent>::span(It first, It last)
-		: _size(size_t(last - first)) {
+		: _size(static_cast<size_t>(last - first)) {
 	using cat_t = typename std::iterator_traits<It>::iterator_category;
-	static_assert(std::is_same<cat_t, std::random_access_iterator_tag>::value,
+	static_assert(std::is_same_v<cat_t, std::random_access_iterator_tag>,
 			"fea::span : iterators must be random access");
 
 	if (_size != 0) {
@@ -43,102 +43,92 @@ constexpr span<T, Extent>::span(const span<U, Extent>& other)
 
 template <class T, size_t Extent>
 template <class U>
-constexpr span<T, Extent>& span<T, Extent>::operator=(
-		const span<U, Extent>& other) {
+constexpr auto span<T, Extent>::operator=(const span<U, Extent>& other)
+		-> span<T, Extent>& {
 	_data = other.data();
 	_size = other.size();
 	return *this;
 }
 
 template <class T, size_t Extent>
-constexpr typename span<T, Extent>::iterator
-span<T, Extent>::begin() const noexcept {
+constexpr auto span<T, Extent>::begin() const noexcept -> iterator {
 	return _data;
 }
 
 template <class T, size_t Extent>
-constexpr typename span<T, Extent>::iterator
-span<T, Extent>::end() const noexcept {
+constexpr auto span<T, Extent>::end() const noexcept -> iterator {
 	return _data + _size;
 }
 
 template <class T, size_t Extent>
-constexpr typename span<T, Extent>::reverse_iterator
-span<T, Extent>::rbegin() const noexcept {
+constexpr auto span<T, Extent>::rbegin() const noexcept -> reverse_iterator {
 	return reverse_iterator(end());
 }
 
 template <class T, size_t Extent>
-constexpr typename span<T, Extent>::reverse_iterator
-span<T, Extent>::rend() const noexcept {
+constexpr auto span<T, Extent>::rend() const noexcept -> reverse_iterator {
 	return reverse_iterator(begin());
 }
 
 template <class T, size_t Extent>
-constexpr typename span<T, Extent>::const_reference
-span<T, Extent>::front() const {
+constexpr auto span<T, Extent>::front() const noexcept -> const_reference {
 	assert(!empty());
 	return _data[0];
 }
 
 template <class T, size_t Extent>
-constexpr typename span<T, Extent>::reference span<T, Extent>::front() {
+constexpr auto span<T, Extent>::front() noexcept -> reference {
 	assert(!empty());
 	return _data[0];
 }
 
 template <class T, size_t Extent>
-constexpr typename span<T, Extent>::const_reference
-span<T, Extent>::back() const {
+constexpr auto span<T, Extent>::back() const noexcept -> const_reference {
 	assert(!empty());
 	return _data[_size - 1];
 }
 
 template <class T, size_t Extent>
-constexpr typename span<T, Extent>::reference span<T, Extent>::back() {
+constexpr auto span<T, Extent>::back() noexcept -> reference {
 	assert(!empty());
 	return _data[_size - 1];
 }
 
 template <class T, size_t Extent>
-constexpr typename span<T, Extent>::const_reference span<T, Extent>::operator[](
-		size_type i) const {
+constexpr auto span<T, Extent>::operator[](size_type i) const noexcept
+		-> const_reference {
 	assert(i < _size);
 	return _data[i];
 }
 
 template <class T, size_t Extent>
-constexpr typename span<T, Extent>::reference span<T, Extent>::operator[](
-		size_type i) {
+constexpr auto span<T, Extent>::operator[](size_type i) noexcept -> reference {
 	assert(i < _size);
 	return _data[i];
 }
 
 template <class T, size_t Extent>
-constexpr typename span<T, Extent>::const_pointer
-span<T, Extent>::data() const noexcept {
+constexpr auto span<T, Extent>::data() const noexcept -> const_pointer {
 	return _data;
 }
 
 template <class T, size_t Extent>
-constexpr typename span<T, Extent>::pointer span<T, Extent>::data() noexcept {
+constexpr auto span<T, Extent>::data() noexcept -> pointer {
 	return _data;
 }
 
 template <class T, size_t Extent>
-constexpr typename span<T, Extent>::size_type
-span<T, Extent>::size() const noexcept {
+constexpr auto span<T, Extent>::size() const noexcept -> size_type {
 	return _size;
 }
 
 template <class T, size_t Extent>
-constexpr typename span<T, Extent>::size_type
-span<T, Extent>::size_bytes() const noexcept {
+constexpr auto span<T, Extent>::size_bytes() const noexcept -> size_type {
 	return _size * sizeof(element_type);
 }
 
 template <class T, size_t Extent>
-constexpr bool span<T, Extent>::empty() const noexcept {
+constexpr auto span<T, Extent>::empty() const noexcept -> bool {
 	return _size == 0;
 }
 
@@ -152,7 +142,7 @@ constexpr bool span<T, Extent>::empty() const noexcept {
 #if FEA_CPP20
 namespace std {
 template <class U>
-[[nodiscard]] constexpr bool operator==(span<U> lhs, span<U> rhs) {
+[[nodiscard]] constexpr auto operator==(span<U> lhs, span<U> rhs) -> bool {
 	if (lhs.size() != rhs.size()) {
 		return false;
 	}
@@ -165,7 +155,7 @@ template <class U>
 }
 
 template <class U>
-[[nodiscard]] constexpr bool operator!=(span<U> lhs, span<U> rhs) {
+[[nodiscard]] constexpr auto operator!=(span<U> lhs, span<U> rhs) -> bool {
 	return !(lhs == rhs);
 }
 } // namespace std
@@ -174,7 +164,7 @@ template <class U>
 namespace fea {
 namespace imp {
 template <class U>
-constexpr bool operator==(span<U> lhs, span<U> rhs) {
+constexpr auto operator==(span<U> lhs, span<U> rhs) -> bool {
 	if (lhs.size() != rhs.size()) {
 		return false;
 	}
@@ -187,7 +177,7 @@ constexpr bool operator==(span<U> lhs, span<U> rhs) {
 }
 
 template <class U>
-constexpr bool operator!=(span<U> lhs, span<U> rhs) {
+constexpr auto operator!=(span<U> lhs, span<U> rhs) -> bool {
 	return !(lhs == rhs);
 }
 } // namespace imp

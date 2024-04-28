@@ -49,7 +49,7 @@ namespace fea {
 namespace bench {
 using time_point_t = std::chrono::time_point<std::chrono::steady_clock>;
 
-// Outputs a fancy formatted title for benchmark.
+// Prints a fancy formatted title for benchmark.
 inline void title(const std::string& message, FILE* stream = stdout);
 
 // Start the benchmark.

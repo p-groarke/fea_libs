@@ -41,6 +41,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <span>
 #endif
 
+/*
+fea::span : A very basic span type to get around until c++20.
+Aliases std::span in c++ >= 20.
+*/
 
 namespace fea {
 namespace imp {
@@ -57,13 +61,13 @@ using span = imp::span<T, Extent>;
 #endif
 
 namespace imp {
-// A very basic span type to get around until c++20.
 template <class T, size_t Extent>
 struct span {
+	// Sanity checks.
 	static_assert(Extent == static_cast<size_t>(-1),
 			"fea::span : Doesn't support non dynamic extent.");
 
-	// constants and types
+	// Typedefs
 	using element_type = T;
 	using value_type = std::remove_cv_t<T>;
 	using size_type = size_t;
@@ -77,10 +81,9 @@ struct span {
 	using iterator = pointer;
 	using reverse_iterator = std::reverse_iterator<iterator>;
 
+	// Ctors
 	constexpr span() = default;
 	~span() = default;
-	// constexpr span(span<T, Extent>&&) = default;
-	// constexpr span& operator=(span<T, Extent>&&) = default;
 
 	template <class It>
 	constexpr span(It first, size_t count);
@@ -95,62 +98,79 @@ struct span {
 	template <class U>
 	constexpr span& operator=(const span<U, Extent>&);
 
+	// Iterators
 
-	/**
-	 * Iterators
-	 */
+	// Begin iterator, contiguous.
 	FEA_NODISCARD
 	constexpr iterator begin() const noexcept;
 
+	// Begin iterator, contiguous.
 	FEA_NODISCARD
 	constexpr iterator end() const noexcept;
 
+	// Begin iterator, contiguous.
 	FEA_NODISCARD
 	constexpr reverse_iterator rbegin() const noexcept;
 
+	// Begin iterator, contiguous.
 	FEA_NODISCARD
 	constexpr reverse_iterator rend() const noexcept;
 
-	/**
-	 * Element access
-	 */
-	FEA_NODISCARD
-	constexpr const_reference front() const;
-	FEA_NODISCARD
-	constexpr reference front();
+	// Element access
 
+	// First element, undefined if invalid.
 	FEA_NODISCARD
-	constexpr const_reference back() const;
-	FEA_NODISCARD
-	constexpr reference back();
+	constexpr const_reference front() const noexcept;
 
+	// First element, undefined if invalid.
 	FEA_NODISCARD
-	constexpr const_reference operator[](size_type i) const;
-	FEA_NODISCARD
-	constexpr reference operator[](size_type i);
+	constexpr reference front() noexcept;
 
+	// Last element, undefined if invalid.
+	FEA_NODISCARD
+	constexpr const_reference back() const noexcept;
+
+	// Last element, undefined if invalid.
+	FEA_NODISCARD
+	constexpr reference back() noexcept;
+
+	// Access element, undefined if invalid.
+	FEA_NODISCARD
+	constexpr const_reference operator[](size_type i) const noexcept;
+
+	// Access element, undefined if invalid.
+	FEA_NODISCARD
+	constexpr reference operator[](size_type i) noexcept;
+
+	// Get underlying data pointer.
 	FEA_NODISCARD
 	constexpr const_pointer data() const noexcept;
+
+	// Get underlying data pointer.
 	FEA_NODISCARD
 	constexpr pointer data() noexcept;
 
-	/**
-	 * Observers
-	 */
+	// Observers
+
+	// The span size.
 	FEA_NODISCARD
 	constexpr size_type size() const noexcept;
 
+	// The span size, in bytes.
 	FEA_NODISCARD
 	constexpr size_type size_bytes() const noexcept;
 
+	// Is the span empty?
 	FEA_NODISCARD
 	constexpr bool empty() const noexcept;
 
-	/**
-	 * Operators
-	 */
+	// Operators
+
+	// Compares 2 spans ITEM WISE.
 	template <class U>
 	friend constexpr bool operator==(span<U> lhs, span<U> rhs);
+
+	// Compares 2 spans ITEM WISE.
 	template <class U>
 	friend constexpr bool operator!=(span<U> lhs, span<U> rhs);
 

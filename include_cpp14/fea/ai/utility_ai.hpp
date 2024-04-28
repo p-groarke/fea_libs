@@ -163,14 +163,13 @@ template <class FunctionEnum, class PredicateEnum, class... PredArgs,
 		class ActionReturn, class... ActionArgs>
 struct utility_ai<FunctionEnum, PredicateEnum, float(PredArgs...),
 		ActionReturn(ActionArgs...)> {
-
-	// typedefs
+	// Typedefs
 	using utility_func_t = utility_ai_function<FunctionEnum, PredicateEnum,
 			float(PredArgs...), ActionReturn(ActionArgs...)>;
 	using action_t = typename utility_func_t::action_t;
 	using predicate_func_t = std::function<float(PredArgs...)>;
 
-	// ctors
+	// Ctors
 	utility_ai() = default;
 	~utility_ai() = default;
 	utility_ai(const utility_ai&) = default;
