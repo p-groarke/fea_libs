@@ -90,8 +90,10 @@ struct span {
 	constexpr span(const Container<std::decay_t<T>, Args...>& container);
 
 	// Enable construction of const from non-const.
-	constexpr span(const span<std::remove_const_t<T>, Extent>&);
-	constexpr span& operator=(const span<std::remove_const_t<T>, Extent>&);
+	template <class U>
+	constexpr span(const span<U, Extent>&);
+	template <class U>
+	constexpr span& operator=(const span<U, Extent>&);
 
 
 	/**
