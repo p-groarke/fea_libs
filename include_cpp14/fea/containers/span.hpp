@@ -34,49 +34,34 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #if FEA_CPP20
 #include <span>
-namespace fea {
-template <class T, size_t Extent = std::dynamic_extent>
-using span = std::span<T, Extent>;
-} // namespace fea
-
-// Defining the operator== could cause issues.
-// You may disable these by defining FEA_DISABLE_SPAN_EQ.
-#if !defined(FEA_DISABLE_SPAN_EQ_DEF)
-namespace std {
-template <class U>
-[[nodiscard]] constexpr bool operator==(span<U> lhs, span<U> rhs) {
-	if (lhs.size() != rhs.size()) {
-		return false;
-	}
-
-	if (lhs.data() == rhs.data()) {
-		return true;
-	}
-
-	return std::equal(lhs.begin(), lhs.end(), rhs.begin());
-}
-
-template <class U>
-[[nodiscard]] constexpr bool operator!=(span<U> lhs, span<U> rhs) {
-	return !(lhs == rhs);
-}
-} // namespace std
-#endif
-
 #else
 #include <algorithm>
 #include <cassert>
 #include <iterator>
+#endif
 
-/*
-A very basic span type to get around until c++20.
-*/
 
 namespace fea {
 namespace imp {
+template <class T, size_t = static_cast<size_t>(-1)>
+struct span;
+}
 
-template <class T>
+#if FEA_CPP20
+template <class T, size_t Extent = std::dynamic_extent>
+using span = std::span<T, Extent>;
+#else
+template <class T, size_t Extent = static_cast<size_t>(-1)>
+using span = imp::span<T, Extent>;
+#endif
+
+namespace imp {
+// A very basic span type to get around until c++20.
+template <class T, size_t Extent>
 struct span {
+	static_assert(Extent == static_cast<size_t>(-1),
+			"fea::span : Doesn't support non dynamic extent.");
+
 	// constants and types
 	using element_type = T;
 	using value_type = std::remove_cv_t<T>;
@@ -94,122 +79,63 @@ struct span {
 	constexpr span() = default;
 
 	template <class It>
-	constexpr span(It first, size_t count)
-			: _size(count) {
-		using cat_t = typename std::iterator_traits<It>::iterator_category;
-		static_assert(
-				std::is_same<cat_t, std::random_access_iterator_tag>::value,
-				"fea::span : iterators must be random access");
-
-		if (_size != 0) {
-			_data = &(*first);
-		}
-	}
+	constexpr span(It first, size_t count);
 
 	template <class It>
-	constexpr span(It first, It last)
-			: _size(size_t(last - first)) {
-		using cat_t = typename std::iterator_traits<It>::iterator_category;
-		static_assert(
-				std::is_same<cat_t, std::random_access_iterator_tag>::value,
-				"fea::span : iterators must be random access");
-
-		if (_size != 0) {
-			_data = &(*first);
-		}
-	}
+	constexpr span(It first, It last);
 
 	template <template <class, class...> class Container, class... Args>
-	constexpr span(const Container<std::decay_t<T>, Args...>& container)
-			: _data(container.data())
-			, _size(container.size()) {
-	}
+	constexpr span(const Container<std::decay_t<T>, Args...>& container);
 
 	/**
 	 * Iterators
 	 */
 	FEA_NODISCARD
-	constexpr iterator begin() const noexcept {
-		return _data;
-	}
+	constexpr iterator begin() const noexcept;
 
 	FEA_NODISCARD
-	constexpr iterator end() const noexcept {
-		return _data + _size;
-	}
+	constexpr iterator end() const noexcept;
 
 	FEA_NODISCARD
-	constexpr reverse_iterator rbegin() const noexcept {
-		return reverse_iterator(end());
-	}
+	constexpr reverse_iterator rbegin() const noexcept;
 
 	FEA_NODISCARD
-	constexpr reverse_iterator rend() const noexcept {
-		return reverse_iterator(begin());
-	}
+	constexpr reverse_iterator rend() const noexcept;
 
 	/**
 	 * Element access
 	 */
 	FEA_NODISCARD
-	constexpr const_reference front() const {
-		assert(!empty());
-		return _data[0];
-	}
+	constexpr const_reference front() const;
 	FEA_NODISCARD
-	constexpr reference front() {
-		assert(!empty());
-		return _data[0];
-	}
+	constexpr reference front();
 
 	FEA_NODISCARD
-	constexpr const_reference back() const {
-		assert(!empty());
-		return _data[_size - 1];
-	}
+	constexpr const_reference back() const;
 	FEA_NODISCARD
-	constexpr reference back() {
-		assert(!empty());
-		return _data[_size - 1];
-	}
+	constexpr reference back();
 
 	FEA_NODISCARD
-	constexpr const_reference operator[](size_type i) const {
-		assert(i < _size);
-		return _data[i];
-	}
+	constexpr const_reference operator[](size_type i) const;
 	FEA_NODISCARD
-	constexpr reference operator[](size_type i) {
-		assert(i < _size);
-		return _data[i];
-	}
+	constexpr reference operator[](size_type i);
 
 	FEA_NODISCARD
-	constexpr const_pointer data() const noexcept {
-		return _data;
-	}
+	constexpr const_pointer data() const noexcept;
 	FEA_NODISCARD
-	constexpr pointer data() noexcept {
-		return _data;
-	}
+	constexpr pointer data() noexcept;
 
 	/**
 	 * Observers
 	 */
 	FEA_NODISCARD
-	constexpr size_type size() const noexcept {
-		return _size;
-	}
+	constexpr size_type size() const noexcept;
 
 	FEA_NODISCARD
-	constexpr size_type size_bytes() const noexcept {
-		return _size * sizeof(element_type);
-	}
+	constexpr size_type size_bytes() const noexcept;
 
 	FEA_NODISCARD
-	constexpr bool empty() const noexcept {
-		return _size == 0;
-	}
+	constexpr bool empty() const noexcept;
 
 	/**
 	 * Operators
@@ -223,27 +149,7 @@ private:
 	pointer _data = nullptr;
 	size_type _size = 0;
 };
-
-template <class U>
-constexpr bool operator==(span<U> lhs, span<U> rhs) {
-	if (lhs.size() != rhs.size()) {
-		return false;
-	}
-
-	if (lhs.data() == rhs.data()) {
-		return true;
-	}
-
-	return std::equal(lhs.begin(), lhs.end(), rhs.begin());
-}
-
-template <class U>
-constexpr bool operator!=(span<U> lhs, span<U> rhs) {
-	return !(lhs == rhs);
-}
 } // namespace imp
-
-template <class T>
-using span = imp::span<T>;
 } // namespace fea
-#endif
+
+#include "span.imp.hpp"

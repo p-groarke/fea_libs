@@ -116,11 +116,10 @@ template <class FunctionEnum, class PredicateEnum, class... PredArgs,
 		class ActionReturn, class... ActionArgs>
 struct utility_ai_function<FunctionEnum, PredicateEnum, float(PredArgs...),
 		ActionReturn(ActionArgs...)> {
-
-	// typedefs
+	// Typedefs
 	using action_t = std::function<ActionReturn(ActionArgs...)>;
 
-	// ctors
+	// Ctors
 	utility_ai_function() = default;
 	~utility_ai_function() = default;
 	utility_ai_function(const utility_ai_function&) = default;
@@ -180,7 +179,8 @@ struct utility_ai<FunctionEnum, PredicateEnum, float(PredArgs...),
 	utility_ai& operator=(utility_ai&&) = default;
 
 	// Helper so you don't have to type all the template parameters.
-	// Returns a new state to be filled in and later re-added through add_state.
+	// Returns a new state to be filled in and later re-added through
+	// add_function.
 	static constexpr auto make_function();
 
 	// Adds the utility function F.

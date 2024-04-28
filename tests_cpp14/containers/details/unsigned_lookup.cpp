@@ -1,4 +1,4 @@
-#include <fea/containers/detail.unsigned_lookup.hpp>
+#include <fea/containers/unsigned_lookup.hpp>
 #include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
 #include <unordered_map>
@@ -48,7 +48,7 @@ TEST(unsigned_lookup, basics) {
 	}
 
 	{
-		fea::detail::unsigned_lookup<size_t> ul;
+		fea::unsigned_lookup<size_t> ul;
 
 		using ul_t = std::decay_t<decltype(ul)>;
 		static_assert(std::is_same<typename ul_t::hasher,
@@ -60,7 +60,7 @@ TEST(unsigned_lookup, basics) {
 		static_assert(std::is_same<typename ul_t::pos_type, size_t>::value,
 				test_failed_msg);
 
-		fea::detail::unsigned_lookup<size_t> ul2;
+		fea::unsigned_lookup<size_t> ul2;
 		ul.swap(ul2);
 
 		size_t k = 0u;
@@ -119,7 +119,7 @@ TEST(unsigned_lookup, basics) {
 	}
 
 	{
-		fea::detail::unsigned_lookup<my_id> ul;
+		fea::unsigned_lookup<my_id> ul;
 
 		using ul_t = std::decay_t<decltype(ul)>;
 		static_assert(

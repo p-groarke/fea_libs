@@ -30,8 +30,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
-#include "fea/containers/detail.unsigned_lookup.hpp"
 #include "fea/containers/flat_unsigned_map.hpp"
+#include "fea/containers/unsigned_lookup.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -70,7 +70,7 @@ template <class Key, class Value, class Alloc = std::allocator<Value>>
 struct flat_bf_graph_builder_node {
 	using key_type = Key;
 	using value_type = Value;
-	using underlying_key_type = fea::detail::id_hash_t<key_type>;
+	using underlying_key_type = fea::detail::id_hash_return_t<key_type>;
 
 	using allocator_type = Alloc;
 	using key_allocator_type = typename std::allocator_traits<
@@ -486,7 +486,7 @@ namespace detail {
 template <class Key, class Value, class VAlloc, class KeyAlloc, class SpanAlloc>
 struct flat_bf_graph_data {
 	// template <class UKeyT, class PairAlloc>
-	flat_bf_graph_data(fea::detail::unsigned_lookup<Key, KeyAlloc>&& mlookup,
+	flat_bf_graph_data(fea::unsigned_lookup<Key, KeyAlloc>&& mlookup,
 			std::vector<Key, KeyAlloc>&& mkeys,
 			std::vector<Value, VAlloc>&& mvalues,
 			std::vector<Key, KeyAlloc>&& mparents,
@@ -522,7 +522,7 @@ struct flat_bf_graph_data {
 
 
 	// Key -> vector index.
-	const fea::detail::unsigned_lookup<Key, KeyAlloc> lookup{};
+	const fea::unsigned_lookup<Key, KeyAlloc> lookup{};
 
 	// Our keys, ordered vertically.
 	const std::vector<Key, KeyAlloc> keys{};
@@ -570,7 +570,7 @@ flat_bf_graph_data<Key, Value, VAlloc, KeyAlloc, SpanAlloc> make_graph_data(
 	using node_t = typename builder_t::node_type;
 	// using u_key_t = typename builder_t::underlying_key_type;
 
-	fea::detail::unsigned_lookup<Key, KeyAlloc> mlookup{};
+	fea::unsigned_lookup<Key, KeyAlloc> mlookup{};
 	std::vector<Key, KeyAlloc> mkeys{};
 	std::vector<Value, VAlloc> mvalues{};
 	std::vector<Key, KeyAlloc> mparents{};

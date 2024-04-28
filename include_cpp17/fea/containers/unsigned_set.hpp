@@ -57,6 +57,7 @@ modulo = index start -> std::find -> index start + collisions
 namespace fea {
 namespace experimental {
 // TODO : Specialize for pure unsigned. Specialize for ordered/unordered.
+// Currently unsafe as it drops potential id extra data.
 
 template <class MySet>
 struct unsigned_set_const_iterator {
@@ -122,7 +123,7 @@ struct unsigned_set_iterator : public unsigned_set_const_iterator<MySet> {
 
 template <class Key, class Alloc = std::allocator<Key>>
 struct unsigned_set {
-	static_assert(std::is_unsigned_v<fea::detail::id_hash_t<Key>>,
+	static_assert(std::is_unsigned_v<fea::detail::id_hash_return_t<Key>>,
 			"unsigned_set : key or id_hash return type must be unsigned "
 			"integer");
 
@@ -143,7 +144,7 @@ struct unsigned_set {
 	using iterator = unsigned_set_iterator<unsigned_set<Key, Alloc>>;
 
 	// Internals
-	using underlying_key_type = fea::detail::id_hash_t<Key>;
+	using underlying_key_type = fea::detail::id_hash_return_t<Key>;
 	using bool_type = uint8_t;
 	using bool_allocator_type = typename std::allocator_traits<
 			Alloc>::template rebind_alloc<bool_type>;

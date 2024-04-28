@@ -2,18 +2,23 @@
 #include <gtest/gtest.h>
 
 namespace {
+#define FAILMSG "span.cpp : Unit test failed."
+
 TEST(span, basics) {
+#if FEA_CPP20
+	static_assert(std::is_same_v<std::span<int>, fea::span<int>>, FAILMSG);
+#endif
 
 	std::vector<size_t> vec{ 0u, 1u, 2u };
 	{
-		fea::span<const size_t> s{ vec }; // test const from non-const vec
+		fea::imp::span<const size_t> s{ vec }; // test const from non-const vec
 		EXPECT_EQ(s.size(), vec.size());
 		EXPECT_EQ(s[0], vec[0]);
 		EXPECT_EQ(s[1], vec[1]);
 		EXPECT_EQ(s[2], vec[2]);
 	}
 
-	fea::span<const size_t> s{ vec.data(), vec.size() };
+	fea::imp::span<const size_t> s{ vec.data(), vec.size() };
 	EXPECT_EQ(s.size(), vec.size());
 	EXPECT_EQ(s.size_bytes(), vec.size() * sizeof(size_t));
 	EXPECT_FALSE(s.empty());
@@ -47,7 +52,7 @@ TEST(span, basics) {
 
 TEST(span, empty) {
 	{
-		fea::span<const size_t> s;
+		fea::imp::span<const size_t> s;
 		EXPECT_EQ(s.size(), 0u);
 		EXPECT_EQ(s.size_bytes(), 0u);
 		EXPECT_TRUE(s.empty());
@@ -59,7 +64,7 @@ TEST(span, empty) {
 
 	{
 		std::vector<size_t> v;
-		fea::span<const size_t> s(v.begin(), v.end());
+		fea::imp::span<const size_t> s(v.begin(), v.end());
 		EXPECT_TRUE(s.empty());
 		EXPECT_EQ(s.size(), 0u);
 		EXPECT_EQ(s.data(), nullptr);

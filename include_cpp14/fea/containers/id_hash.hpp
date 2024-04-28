@@ -52,6 +52,6 @@ struct id_hash_traits {
 };
 
 template <class T>
-using id_hash_t = typename id_hash_traits<T>::type;
+using id_hash_return_t = typename id_hash_traits<T>::type;
 } // namespace detail
 } // namespace fea
