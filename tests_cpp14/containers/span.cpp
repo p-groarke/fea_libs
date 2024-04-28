@@ -78,6 +78,7 @@ TEST(span, to_const) {
 	fea::span<const int> consts = s;
 	fea::span<const int> consts2 = fea::span<int>{};
 	fea::span<const int> consts3{ fea::span<int>{} };
+	consts = s;
 	fea::unused(s);
 	fea::unused(consts);
 	fea::unused(consts2);

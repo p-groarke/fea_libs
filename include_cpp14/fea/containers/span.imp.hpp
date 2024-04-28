@@ -45,9 +45,6 @@ template <class T, size_t Extent>
 template <class U>
 constexpr span<T, Extent>& span<T, Extent>::operator=(
 		const span<U, Extent>& other) {
-	if (this == &other) {
-		return *this;
-	}
 	_data = other.data();
 	_size = other.size();
 	return *this;
