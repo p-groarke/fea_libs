@@ -129,8 +129,7 @@ struct unsigned_set {
 
 	// Is set empty? O(n)
 	[[nodiscard]]
-	bool empty() const noexcept(
-			noexcept(std::find(const_iterator{}, const_iterator{}, uint8_t{})));
+	bool empty() const noexcept;
 
 	// Size of set. O(n)
 	[[nodiscard]]
@@ -196,7 +195,7 @@ struct unsigned_set {
 	size_type count(key_type key) const noexcept;
 
 	// Returns true if key present.
-	bool contains(key_type key) const;
+	bool contains(key_type key) const noexcept;
 
 	// Find the iterator for a key. Returns end() if not present.
 	const_iterator find(key_type key) const noexcept;
@@ -205,6 +204,7 @@ struct unsigned_set {
 	iterator find(key_type key) noexcept;
 
 private:
+	// Stores true at [key] if the key is contained.
 	std::vector<bool_type, bool_allocator_type> _map;
 };
 } // namespace experimental

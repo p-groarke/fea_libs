@@ -1,4 +1,23 @@
 ﻿#pragma once
+// todo : kv iterators
+// template <class InputIt>
+// flat_unsigned_hashmap(InputIt first, InputIt last)
+//		: flat_unsigned_hashmap() {
+//	// TODO : benchmark and potentially optimize
+//	for (auto it = first; it != last; ++it) {
+//		insert(*it);
+//	}
+//}
+
+// todo : pair iterators
+// template <class InputIt>
+// void insert(InputIt first, InputIt last) {
+//	// TODO : benchmark and potentially optimize
+//	for (auto it = first; it != last; ++it) {
+//		insert(*it);
+//	}
+//}
+
 namespace fea {
 namespace detail {
 // https://stackoverflow.com/questions/30052316/find-next-prime-number-algorithm
@@ -124,8 +143,8 @@ flat_unsigned_hashmap<Key, T, Alloc>::flat_unsigned_hashmap(
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::iterator
-flat_unsigned_hashmap<Key, T, Alloc>::begin() noexcept {
+typename flat_unsigned_hashmap<Key, T, Alloc>::iterator flat_unsigned_hashmap<
+		Key, T, Alloc>::begin() noexcept {
 	return _values.begin();
 }
 
@@ -142,8 +161,8 @@ flat_unsigned_hashmap<Key, T, Alloc>::cbegin() const noexcept {
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::iterator
-flat_unsigned_hashmap<Key, T, Alloc>::end() noexcept {
+typename flat_unsigned_hashmap<Key, T, Alloc>::iterator flat_unsigned_hashmap<
+		Key, T, Alloc>::end() noexcept {
 	return _values.end();
 }
 
@@ -177,14 +196,14 @@ bool flat_unsigned_hashmap<Key, T, Alloc>::empty() const noexcept {
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::size_type
-flat_unsigned_hashmap<Key, T, Alloc>::size() const noexcept {
+typename flat_unsigned_hashmap<Key, T, Alloc>::size_type flat_unsigned_hashmap<
+		Key, T, Alloc>::size() const noexcept {
 	return _values.size();
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::size_type
-flat_unsigned_hashmap<Key, T, Alloc>::max_size() const noexcept {
+typename flat_unsigned_hashmap<Key, T, Alloc>::size_type flat_unsigned_hashmap<
+		Key, T, Alloc>::max_size() const noexcept {
 	// -1 due to sentinel
 	return idx_sentinel() - 1;
 }
@@ -197,8 +216,8 @@ void flat_unsigned_hashmap<Key, T, Alloc>::reserve(size_type new_cap) {
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::size_type
-flat_unsigned_hashmap<Key, T, Alloc>::capacity() const noexcept {
+typename flat_unsigned_hashmap<Key, T, Alloc>::size_type flat_unsigned_hashmap<
+		Key, T, Alloc>::capacity() const noexcept {
 	return _values.capacity();
 }
 
@@ -317,8 +336,8 @@ void flat_unsigned_hashmap<Key, T, Alloc>::erase(
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::size_type
-flat_unsigned_hashmap<Key, T, Alloc>::erase(key_type k) {
+typename flat_unsigned_hashmap<Key, T, Alloc>::size_type flat_unsigned_hashmap<
+		Key, T, Alloc>::erase(key_type k) {
 	auto lookup_it = find_first_slot_or_hole(k);
 	if (lookup_it == _lookup.end()) {
 		return 0;
@@ -438,8 +457,8 @@ flat_unsigned_hashmap<Key, T, Alloc>::operator[](key_type k) {
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::size_type
-flat_unsigned_hashmap<Key, T, Alloc>::count(key_type k) const {
+typename flat_unsigned_hashmap<Key, T, Alloc>::size_type flat_unsigned_hashmap<
+		Key, T, Alloc>::count(key_type k) const {
 	if (contains(k))
 		return 1;
 
@@ -466,8 +485,8 @@ flat_unsigned_hashmap<Key, T, Alloc>::find(key_type k) const {
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::iterator
-flat_unsigned_hashmap<Key, T, Alloc>::find(key_type k) {
+typename flat_unsigned_hashmap<Key, T, Alloc>::iterator flat_unsigned_hashmap<
+		Key, T, Alloc>::find(key_type k) {
 	auto const_it = static_cast<const flat_unsigned_hashmap*>(this)->find(k);
 
 	// Convert to non-const iterator.
@@ -534,15 +553,15 @@ void flat_unsigned_hashmap<Key, T, Alloc>::rehash(size_type count) {
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::size_type
-flat_unsigned_hashmap<Key, T, Alloc>::hash_max() const {
+typename flat_unsigned_hashmap<Key, T, Alloc>::size_type flat_unsigned_hashmap<
+		Key, T, Alloc>::hash_max() const {
 	assert(detail::is_prime(_hash_max) || _hash_max == 0);
 	return _hash_max;
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::size_type
-flat_unsigned_hashmap<Key, T, Alloc>::key_to_index(key_type key) const {
+typename flat_unsigned_hashmap<Key, T, Alloc>::size_type flat_unsigned_hashmap<
+		Key, T, Alloc>::key_to_index(key_type key) const {
 	size_type ret = key_to_index(key, hash_max());
 	assert(ret < _lookup.size());
 	return ret;
@@ -744,7 +763,7 @@ flat_unsigned_hashmap<Key, T, Alloc>::minsert(
 
 
 template <class Key, class T, class Alloc>
-inline bool operator==(const flat_unsigned_hashmap<Key, T, Alloc>& lhs,
+bool operator==(const flat_unsigned_hashmap<Key, T, Alloc>& lhs,
 		const flat_unsigned_hashmap<Key, T, Alloc>& rhs) {
 	if (lhs.size() != rhs.size())
 		return false;
@@ -765,7 +784,7 @@ inline bool operator==(const flat_unsigned_hashmap<Key, T, Alloc>& lhs,
 }
 
 template <class Key, class T, class Alloc>
-inline bool operator!=(const flat_unsigned_hashmap<Key, T, Alloc>& lhs,
+bool operator!=(const flat_unsigned_hashmap<Key, T, Alloc>& lhs,
 		const flat_unsigned_hashmap<Key, T, Alloc>& rhs) {
 	return !operator==(lhs, rhs);
 }

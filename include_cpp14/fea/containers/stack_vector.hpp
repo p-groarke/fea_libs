@@ -47,9 +47,7 @@ stack_vector is a pre-allocated array, on which you can "push back" elements.
 namespace fea {
 template <class T, size_t StackSize>
 struct stack_vector {
-	/**
-	 * Aliases
-	 */
+	// Typedefs
 	using value_type = T;
 	using size_type = std::size_t;
 	using difference_type = std::ptrdiff_t;
@@ -64,11 +62,7 @@ struct stack_vector {
 	using const_reverse_iterator =
 			typename std::array<T, StackSize>::const_reverse_iterator;
 
-	/**
-	 * Ctors
-	 */
-	constexpr stack_vector() = default;
-
+	// Ctors
 	template <size_t InSize>
 	constexpr stack_vector(const std::array<T, InSize>& arr);
 
@@ -85,103 +79,161 @@ struct stack_vector {
 			class = std::enable_if_t<fea::is_iterator<InputIt>::value>>
 	constexpr stack_vector(InputIt start, InputIt stop);
 
-	/**
-	 * Element access
-	 */
+	constexpr stack_vector() = default;
+	~stack_vector() = default;
+	constexpr stack_vector(const stack_vector&) = default;
+	constexpr stack_vector(stack_vector&&) = default;
+	constexpr stack_vector& operator=(const stack_vector&) = default;
+	constexpr stack_vector& operator=(stack_vector&&) = default;
+
+	// Element access
+
+	// Get value at position with bounds checking.
 	FEA_NODISCARD constexpr const_reference at(size_type i) const;
+
+	// Get value at position with bounds checking.
 	FEA_NODISCARD constexpr reference at(size_type i);
 
+	// Get value at position without bounds checking.
 	FEA_NODISCARD constexpr const_reference operator[](
 			size_type i) const noexcept;
+
+	// Get value at position without bounds checking.
 	FEA_NODISCARD constexpr reference operator[](size_type i) noexcept;
 
+	// Get first value. All hell breaks loose if container empty.
 	FEA_NODISCARD constexpr const_reference front() const noexcept;
+
+	// Get first value. All hell breaks loose if container empty.
 	FEA_NODISCARD constexpr reference front() noexcept;
 
+	// Get last value. All hell breaks loose if container empty.
 	FEA_NODISCARD constexpr const_reference back() const noexcept;
+
+	// Get last value. All hell breaks loose if container empty.
 	FEA_NODISCARD constexpr reference back() noexcept;
 
+	// Get a pointer to the internal stored data.
 	FEA_NODISCARD constexpr const_pointer data() const noexcept;
+
+	// Get a pointer to the internal stored data.
 	FEA_NODISCARD constexpr pointer data() noexcept;
 
 	/**
 	 * Iterators
 	 */
+	// Iterator pointing to the first element.
 	FEA_NODISCARD constexpr const_iterator begin() const noexcept;
+
+	// Iterator pointing to the first element.
 	FEA_NODISCARD constexpr iterator begin() noexcept;
 
+	// Iterator pointing to the first element.
+	FEA_NODISCARD constexpr const_iterator cbegin() const noexcept;
+
+	// Iterator pointing past the last element.
 	FEA_NODISCARD constexpr const_iterator end() const noexcept;
+
+	// Iterator pointing past the last element.
 	FEA_NODISCARD constexpr iterator end() noexcept;
 
-	FEA_NODISCARD constexpr const_reverse_iterator rbegin() const noexcept;
-	FEA_NODISCARD constexpr reverse_iterator rbegin() noexcept;
-
-	FEA_NODISCARD constexpr const_reverse_iterator rend() const noexcept;
-	FEA_NODISCARD constexpr reverse_iterator rend() noexcept;
-
-	FEA_NODISCARD constexpr const_iterator cbegin() const noexcept;
+	// Iterator pointing past the last element.
 	FEA_NODISCARD constexpr const_iterator cend() const noexcept;
 
+	// Reverse iterator pointing to the first element.
+	FEA_NODISCARD constexpr const_reverse_iterator rbegin() const noexcept;
+
+	// Reverse iterator pointing to the first element.
+	FEA_NODISCARD constexpr reverse_iterator rbegin() noexcept;
+
+	// Reverse iterator pointing to the first element.
 	FEA_NODISCARD constexpr const_reverse_iterator crbegin() const noexcept;
+
+	// Reverse iterator pointing past the last element.
+	FEA_NODISCARD constexpr const_reverse_iterator rend() const noexcept;
+
+	// Reverse iterator pointing past the last element.
+	FEA_NODISCARD constexpr reverse_iterator rend() noexcept;
+
+	// Reverse iterator pointing past the last element.
 	FEA_NODISCARD constexpr const_reverse_iterator crend() const noexcept;
 
-	/**
-	 * Capacity
-	 */
+	// Capacity.
+
+	// Returns true if container is empty.
 	FEA_NODISCARD constexpr bool empty() const noexcept;
 
+	// Number of stored items (!= StackSize).
 	FEA_NODISCARD constexpr size_type size() const noexcept;
 
+	// Max possible storage.
 	FEA_NODISCARD constexpr size_type max_size() const noexcept;
 
+	// Provided to match std::vector api, does nothing.
 	constexpr void reserve(size_type) noexcept;
 
+	// Returns capacity of storage (StackSize).
 	FEA_NODISCARD constexpr size_type capacity() const noexcept;
 
+	// Provided to match std::vector api, does nothing.
 	constexpr void shrink_to_fit() noexcept;
 
-	/**
-	 * Modifiers
-	 */
+	// Modifiers
+
+	// Clear all items.
 	constexpr void clear();
 
+	// Erase item at position.
 	constexpr iterator erase(const_iterator pos);
 
+	// Erase item range.
 	constexpr iterator erase(const_iterator first, const_iterator last);
 
+	// Insert item at position.
 	constexpr iterator insert(const_iterator pos, const_reference value);
 
+	// Insert item at position.
 	constexpr iterator insert(const_iterator pos, value_type&& value);
 
+	// Insert count copies of item at position.
 	constexpr iterator insert(
 			const_iterator pos, size_type count, const_reference value);
 
+	// Insert range at position.
 	template <class InputIt,
 			class = std::enable_if_t<std::is_base_of<std::input_iterator_tag,
 					typename std::iterator_traits<InputIt>::iterator_category>::
 							value>>
 	constexpr iterator insert(const_iterator pos, InputIt first, InputIt last);
 
+	// Insert items at position.
 	constexpr iterator insert(
 			const_iterator pos, std::initializer_list<value_type> ilist);
 
+	// Add single item at the end of container.
 	constexpr void push_back(const T& value);
 
+	// Add single item at the end of container.
 	constexpr void push_back(T&& value);
 
+	// Remove last item.
 	constexpr void pop_back();
 
+	// Create new_size number of items, default constructed.
 	constexpr void resize(size_type new_size);
 
+	// Create new_size number of copies of value.
 	constexpr void resize(size_type new_size, const_reference value);
 
+	// Swap with another container.
 	constexpr void swap(stack_vector& other);
 
-	//	compares the values in the unordered_map
+	// Deep comparison.
 	template <class K, size_t S>
 	friend constexpr bool operator==(
 			const stack_vector<K, S>& lhs, const stack_vector<K, S>& rhs);
 
+	// Deep comparison.
 	template <class K, size_t S>
 	friend constexpr bool operator!=(
 			const stack_vector<K, S>& lhs, const stack_vector<K, S>& rhs);

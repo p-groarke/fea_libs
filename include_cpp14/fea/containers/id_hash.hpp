@@ -36,13 +36,17 @@ namespace fea {
 // Default id hasher.
 // Specialize this struct for your own id classes.
 // Return an unsigned type.
+//
+// The type of the return value will define how large the storage is inside some
+// maps. Prefer returning precise unsigned types rather than always size_t.
 template <class Key>
 struct id_hash {
-	inline constexpr Key operator()(const Key& k) const noexcept {
+	constexpr Key operator()(const Key& k) const noexcept {
 		return k;
 	}
 };
 
+// Used internally to deduce the id_hash return type.
 namespace detail {
 template <class T>
 struct id_hash_traits {
@@ -51,6 +55,7 @@ struct id_hash_traits {
 					std::declval<T>()))>;
 };
 
+// Used internally to deduce the id_hash return type.
 template <class T>
 using id_hash_return_t = typename id_hash_traits<T>::type;
 } // namespace detail

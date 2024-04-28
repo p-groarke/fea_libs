@@ -83,13 +83,6 @@ struct flat_unsigned_map {
 			typename std::vector<key_type, key_allocator_type>::const_iterator;
 
 	// Ctors
-	flat_unsigned_map() = default;
-	~flat_unsigned_map() = default;
-	flat_unsigned_map(const flat_unsigned_map&) = default;
-	flat_unsigned_map(flat_unsigned_map&&) noexcept = default;
-	flat_unsigned_map& operator=(const flat_unsigned_map&) = default;
-	flat_unsigned_map& operator=(flat_unsigned_map&&) noexcept = default;
-
 	explicit flat_unsigned_map(size_type reserve_count);
 	explicit flat_unsigned_map(
 			size_type key_reserve_count, size_type value_reserve_count);
@@ -99,25 +92,48 @@ struct flat_unsigned_map {
 	explicit flat_unsigned_map(const std::initializer_list<key_type>& keys,
 			const std::initializer_list<value_type>& values);
 
+	flat_unsigned_map() = default;
+	~flat_unsigned_map() = default;
+	flat_unsigned_map(const flat_unsigned_map&) = default;
+	flat_unsigned_map(flat_unsigned_map&&) noexcept = default;
+	flat_unsigned_map& operator=(const flat_unsigned_map&) = default;
+	flat_unsigned_map& operator=(flat_unsigned_map&&) noexcept = default;
+
 
 	// Iterators
 
-	// returns an iterator to the beginning
+	// Returns a pair<key, value> iterator to the first element.
 	iterator begin() noexcept;
+
+	// Returns a pair<key, value> iterator to the first element.
 	const_iterator begin() const noexcept;
+
+	// Returns a pair<key, value> iterator to the first element.
 	const_iterator cbegin() const noexcept;
 
-	// returns an iterator to the end (one past last)
+	// Returns a pair<key, value> iterator past the last element.
 	iterator end() noexcept;
+
+	// Returns a pair<key, value> iterator past the last element.
 	const_iterator end() const noexcept;
+
+	// Returns a pair<key, value> iterator past the last element.
 	const_iterator cend() const noexcept;
 
-	// returns an iterator to the beginning keys
+	// Returns an iterator to the first key. Unlike the normal iterators, only
+	// points on keys (not pairs).
 	const_key_iterator key_begin() const noexcept;
+
+	// Returns an iterator to the first key. Unlike the normal iterators, only
+	// points on keys (not pairs).
 	const_key_iterator key_cbegin() const noexcept;
 
-	// returns an iterator to the end (one past last)
+	// Returns an iterator past the last key. Unlike the normal iterators, only
+	// points on keys (not pairs).
 	const_key_iterator key_end() const noexcept;
+
+	// Returns an iterator past the last key. Unlike the normal iterators, only
+	// points on keys (not pairs).
 	const_key_iterator key_cend() const noexcept;
 
 
@@ -134,6 +150,9 @@ struct flat_unsigned_map {
 
 	// reserves storage
 	void reserve(size_type new_cap);
+
+	// Reserves storage precisely, using different size for lookup vs. value
+	// storage.
 	void reserve(size_type lookup_new_cap, size_type value_new_cap);
 
 	// returns the number of elements that can be held in currently allocated
@@ -147,17 +166,24 @@ struct flat_unsigned_map {
 	// reduces memory usage by freeing unused memory
 	void shrink_to_fit();
 
+
 	// Modifiers
 
 	// clears the contents
 	void clear() noexcept;
 
-	// inserts elements or nodes
+	// Insert key value pair.
 	std::pair<iterator, bool> insert(const key_type& k, const value_type& v);
+
+	// Insert key value pair.
 	std::pair<iterator, bool> insert(key_type&& k, value_type&& v);
+
+	// Insert key value range.
 	template <class KeyIt, class ValIt>
 	void insert(
 			KeyIt first_key, KeyIt last_key, ValIt first_val, ValIt last_val);
+
+	// Insert key value range.
 	void insert(const std::initializer_list<key_type>& keys,
 			const std::initializer_list<value_type>& values);
 
@@ -175,9 +201,13 @@ struct flat_unsigned_map {
 	template <class... Args>
 	std::pair<iterator, bool> try_emplace(const key_type& key, Args&&... args);
 
-	// erases elements
+	// Erases element at position.
 	iterator erase(const_iterator pos);
+
+	// Erases element range.
 	iterator erase(const_iterator first, const_iterator last);
+
+	// Erases element at key.
 	size_type erase(const key_type& k);
 
 	// swaps the contents
@@ -187,6 +217,8 @@ struct flat_unsigned_map {
 	// Lookup
 	// Direct access to the underlying value data.
 	const value_type* data() const noexcept;
+
+	// Direct access to the underlying value data.
 	value_type* data() noexcept;
 
 	// Access to underlying reverse lookup.
@@ -201,41 +233,52 @@ struct flat_unsigned_map {
 	// Lookup size, != key/value size.
 	size_type lookup_size() const noexcept;
 
-	// access specified element with bounds checking
+	// Access specified element with bounds checking.
 	const mapped_type& at(const key_type& k) const;
+
+	// Access specified element with bounds checking.
 	mapped_type& at(const key_type& k);
 
-	// access specified element without any bounds checking
+	// Access specified element without any bounds checking.
 	const mapped_type& at_unchecked(const key_type& k) const noexcept;
+
+	// Access specified element without any bounds checking.
 	mapped_type& at_unchecked(const key_type& k) noexcept;
 
-	// access or insert specified element
+	// Access or insert specified element.
 	mapped_type& operator[](const key_type& k);
 
 	// returns the number of elements matching specific key (which is 1 or 0,
 	// since there are no duplicates)
 	size_type count(const key_type& k) const noexcept;
 
-	// finds element with specific key
+	// Find element at key. Returns end() if not found.
 	const_iterator find(const key_type& k) const noexcept;
+
+	// Find element at key. Returns end() if not found.
 	iterator find(const key_type& k) noexcept;
 
 	// checks if the container contains element with specific key
 	bool contains(const key_type& k) const noexcept;
 
-	// returns range of elements matching a specific key (in this case, 1 or 0
-	// elements)
+	// Returns range of elements matching a specific key (in this case, 1 or 0
+	// elements).
 	std::pair<const_iterator, const_iterator> equal_range(
 			const key_type& k) const noexcept;
+
+	// Returns range of elements matching a specific key (in this case, 1 or 0
+	// elements).
 	std::pair<iterator, iterator> equal_range(const key_type& k) noexcept;
 
 
 	// Non-member functions
 
-	//	compares the values in the unordered_map
+	// Deep comparison.
 	template <class K, class U, class A>
 	friend bool operator==(const flat_unsigned_map<K, U, A>& lhs,
 			const flat_unsigned_map<K, U, A>& rhs);
+
+	// Deep comparison.
 	template <class K, class U, class A>
 	friend bool operator!=(const flat_unsigned_map<K, U, A>& lhs,
 			const flat_unsigned_map<K, U, A>& rhs);

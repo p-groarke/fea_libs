@@ -120,7 +120,11 @@ public:
 	using lookup_allocator_type = typename std::allocator_traits<
 			allocator_type>::template rebind_alloc<lookup_data>;
 
-	// Constructors, destructors and assignement
+	// Ctors
+	explicit flat_unsigned_hashmap(size_t reserve_count);
+	explicit flat_unsigned_hashmap(
+			size_t key_reserve_count, size_t value_reserve_count);
+
 	flat_unsigned_hashmap() = default;
 	flat_unsigned_hashmap(const flat_unsigned_hashmap&) = default;
 	flat_unsigned_hashmap(flat_unsigned_hashmap&&) noexcept = default;
@@ -128,37 +132,34 @@ public:
 	flat_unsigned_hashmap& operator=(flat_unsigned_hashmap&&) noexcept
 			= default;
 
-	explicit flat_unsigned_hashmap(size_t reserve_count);
-	explicit flat_unsigned_hashmap(
-			size_t key_reserve_count, size_t value_reserve_count);
-
-	// todo : kv iterators
-	// template <class InputIt>
-	// flat_unsigned_hashmap(InputIt first, InputIt last)
-	//		: flat_unsigned_hashmap() {
-	//	// TODO : benchmark and potentially optimize
-	//	for (auto it = first; it != last; ++it) {
-	//		insert(*it);
-	//	}
-	//}
 	explicit flat_unsigned_hashmap(
 			const std::initializer_list<std::pair<key_type, value_type>>& init);
 
 
 	// Iterators
 
-	// returns an iterator to the beginning
+	// Returns an iterator to the first value. NOT pair iterators.
 	iterator begin() noexcept;
+
+	// Returns an iterator to the first value. NOT pair iterators.
 	const_iterator begin() const noexcept;
+
+	// Returns an iterator to the first value. NOT pair iterators.
 	const_iterator cbegin() const noexcept;
 
-	// returns an iterator to the end (one past last)
+	// Returns an iterator past the last value. NOT pair iterators.
 	iterator end() noexcept;
+
+	// Returns an iterator past the last value. NOT pair iterators.
 	const_iterator end() const noexcept;
+
+	// Returns an iterator past the last value. NOT pair iterators.
 	const_iterator cend() const noexcept;
 
-	// returns key iterators
+	// Returns an iterator to first key. NOT pair iterators.
 	const_key_iterator key_begin() const noexcept;
+
+	// Returns an iterator past the last key. NOT pair iterators.
 	const_key_iterator key_end() const noexcept;
 
 
@@ -186,23 +187,18 @@ public:
 
 	// Modifiers
 
-	// clears the contents
+	// Clears the contents.
 	void clear() noexcept;
 
-	// inserts elements or nodes
+	// Inserts new value at key.
 	std::pair<iterator, bool> insert(key_type key, const value_type& value);
+
+	// Inserts new value at key.
 	std::pair<iterator, bool> insert(key_type key, value_type&& value);
 
-	// todo : pair iterators
-	// template <class InputIt>
-	// void insert(InputIt first, InputIt last) {
-	//	// TODO : benchmark and potentially optimize
-	//	for (auto it = first; it != last; ++it) {
-	//		insert(*it);
-	//	}
-	//}
-	void
-	insert(const std::initializer_list<std::pair<key_type, value_type>>& ilist);
+	// Insert new key-value pairs.
+	void insert(const std::initializer_list<std::pair<key_type, value_type>>&
+					ilist);
 
 	// inserts an element or assigns to the current element if the key
 	// already exists
@@ -221,9 +217,13 @@ public:
 	template <class... Args>
 	std::pair<iterator, bool> try_emplace(key_type key, Args&&... args);
 
-	// erases elements
+	// Erases element at position.
 	void erase(const_iterator pos);
+
+	// Erases range of elements.
 	void erase(const_iterator first, const_iterator last);
+
+	// Erase element at key.
 	size_type erase(key_type k);
 
 	// swaps the contents
@@ -238,12 +238,16 @@ public:
 	// direct access to the keys underlying vector
 	const key_type* key_data() const noexcept;
 
-	// access specified element with bounds checking
+	// Access specified element with bounds checking.
 	const mapped_type& at(key_type k) const;
+
+	// Access specified element with bounds checking.
 	mapped_type& at(key_type k);
 
-	// access specified element without any bounds checking
+	// Access specified element without any bounds checking.
 	const mapped_type& at_unchecked(key_type k) const;
+
+	// Access specified element without any bounds checking.
 	mapped_type& at_unchecked(key_type k);
 
 	// access or insert specified element
@@ -263,19 +267,27 @@ public:
 
 	// Hash policy
 
-	// returns average number of elements per bucket
+	// Returns average number of elements per bucket.
 	float load_factor() const noexcept;
+
+	// The stored maximum load factor before a rehash.
 	float max_load_factor() const noexcept;
+
+	// Set a custom load factor to control rehashing behavior.
 	void max_load_factor(float ml) noexcept;
+
+	// Rehash the container for count elements.
 	void rehash(size_type count);
 
 
 	// Non-member functions
 
-	//	compares the values in the unordered_map
+	// Deep comparison.
 	template <class K, class U, class A>
 	friend bool operator==(const flat_unsigned_hashmap<K, U, A>& lhs,
 			const flat_unsigned_hashmap<K, U, A>& rhs);
+
+	// Deep comparison.
 	template <class K, class U, class A>
 	friend bool operator!=(const flat_unsigned_hashmap<K, U, A>& lhs,
 			const flat_unsigned_hashmap<K, U, A>& rhs);

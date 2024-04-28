@@ -47,13 +47,13 @@ auto unsigned_set<Key, Alloc>::end() noexcept -> iterator {
 }
 
 template <class Key, class Alloc>
-auto unsigned_set<Key, Alloc>::empty() const noexcept(noexcept(
-		std::find(const_iterator{}, const_iterator{}, uint8_t{}))) -> bool {
-	if (_map.empty()) {
-		return true;
+auto unsigned_set<Key, Alloc>::empty() const noexcept -> bool {
+	for (uint8_t v : _map) {
+		if (v) {
+			return false;
+		}
 	}
-	auto it = std::find(_map.begin(), _map.end(), uint8_t(true));
-	return it == _map.end();
+	return true;
 }
 
 template <class Key, class Alloc>
@@ -233,7 +233,7 @@ auto unsigned_set<Key, Alloc>::count(key_type key) const noexcept -> size_type {
 }
 
 template <class Key, class Alloc>
-auto unsigned_set<Key, Alloc>::contains(key_type key) const -> bool {
+auto unsigned_set<Key, Alloc>::contains(key_type key) const noexcept -> bool {
 	return bool(count(key));
 }
 

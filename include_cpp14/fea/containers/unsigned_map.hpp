@@ -58,6 +58,7 @@ namespace fea {
 // memory pressure.
 template <class Key, class T, class Alloc = std::allocator<T>>
 struct unsigned_map {
+	// Typedefs
 	using key_type = Key;
 	using const_key_type = const key_type;
 	using mapped_type = T;
@@ -91,7 +92,13 @@ struct unsigned_map {
 	// using insert_return_type;
 
 
-	// Constructors, destructors and assignement
+	// Ctors
+	explicit unsigned_map(size_t new_cap);
+	explicit unsigned_map(size_t key_new_cap, size_t value_new_cap);
+	template <class InputIt>
+	unsigned_map(InputIt first, InputIt last);
+	explicit unsigned_map(const std::initializer_list<value_type>& init);
+
 	unsigned_map() = default;
 	~unsigned_map() = default;
 	unsigned_map(const unsigned_map&) = default;
@@ -99,23 +106,25 @@ struct unsigned_map {
 	unsigned_map& operator=(const unsigned_map&) = default;
 	unsigned_map& operator=(unsigned_map&&) noexcept = default;
 
-	explicit unsigned_map(size_t new_cap);
-	explicit unsigned_map(size_t key_new_cap, size_t value_new_cap);
-	template <class InputIt>
-	unsigned_map(InputIt first, InputIt last);
-	explicit unsigned_map(const std::initializer_list<value_type>& init);
-
 
 	// Iterators
 
-	// returns an iterator to the beginning
+	// Returns a pair iterator to the first item.
 	iterator begin() noexcept;
+
+	// Returns a pair iterator to the first item.
 	const_iterator begin() const noexcept;
+
+	// Returns a pair iterator to the first item.
 	const_iterator cbegin() const noexcept;
 
-	// returns an iterator to the end (one past last)
+	// Returns a pair iterator past the last item.
 	iterator end() noexcept;
+
+	// Returns a pair iterator past the last item.
 	const_iterator end() const noexcept;
+
+	// Returns a pair iterator past the last item.
 	const_iterator cend() const noexcept;
 
 
@@ -130,8 +139,11 @@ struct unsigned_map {
 	// returns the maximum possible number of elements
 	size_type max_size() const noexcept;
 
-	// reserves storage
+	// Reserves storage.
 	void reserve(size_type new_cap);
+
+	// Precisely reserves storage, with different sizes for lookup and value
+	// storage.
 	void reserve(size_type key_new_cap, size_type value_new_cap);
 
 	// returns the number of elements that can be held in currently allocated
@@ -147,11 +159,17 @@ struct unsigned_map {
 	// clears the contents
 	void clear() noexcept;
 
-	// inserts elements or nodes
+	// Inserts key value pair.
 	std::pair<iterator, bool> insert(const value_type& value);
+
+	// Inserts key value pair.
 	std::pair<iterator, bool> insert(value_type&& value);
+
+	// Inserts range of key value pairs.
 	template <class InputIt>
 	void insert(InputIt first, InputIt last);
+
+	// Inserts multiple key value pairs.
 	void insert(const std::initializer_list<value_type>& ilist);
 
 	// inserts an element or assigns to the current element if the key already
@@ -168,9 +186,13 @@ struct unsigned_map {
 	template <class... Args>
 	std::pair<iterator, bool> try_emplace(const key_type& key, Args&&... args);
 
-	// erases elements
+	// Erase element at position.
 	iterator erase(const_iterator pos);
+
+	// Erase element range.
 	iterator erase(const_iterator first, const_iterator last);
+
+	// Erase element at key.
 	size_type erase(const key_type& k);
 
 	// swaps the contents
@@ -178,45 +200,59 @@ struct unsigned_map {
 
 
 	// Lookup
-	// direct access to the underlying vector
+
+	// Direct access to the underlying vector. Returns pointer to pairs.
 	const value_type* data() const noexcept;
+
+	// Direct access to the underlying vector. Returns pointer to pairs.
 	value_type* data() noexcept;
 
-	// access specified element with bounds checking
+	// Access specified element with bounds checking.
 	const mapped_type& at(const key_type& k) const;
+
+	// Access specified element with bounds checking.
 	mapped_type& at(const key_type& k);
 
-	// access specified element without any bounds checking
+	// Access specified element without any bounds checking.
 	const mapped_type& at_unchecked(const key_type& k) const noexcept;
+
+	// Access specified element without any bounds checking.
 	mapped_type& at_unchecked(const key_type& k) noexcept;
 
-	// access or insert specified element
+	// Access or insert specified element.
 	mapped_type& operator[](const key_type& k);
 
 	// returns the number of elements matching specific key (which is 1 or 0,
 	// since there are no duplicates)
 	size_type count(const key_type& k) const noexcept;
 
-	// finds element with specific key
+	// Finds element at key. Returns end() if none found.
 	const_iterator find(const key_type& k) const noexcept;
+
+	// Finds element at key. Returns end() if none found.
 	iterator find(const key_type& k) noexcept;
 
 	// checks if the container contains element with specific key
 	bool contains(const key_type& k) const noexcept;
 
-	// returns range of elements matching a specific key (in this case, 1 or 0
-	// elements)
+	// Returns range of elements matching a specific key (in this case, 1 or 0
+	// elements).
 	std::pair<const_iterator, const_iterator> equal_range(
 			const key_type& k) const noexcept;
+
+	// Returns range of elements matching a specific key (in this case, 1 or 0
+	// elements).
 	std::pair<iterator, iterator> equal_range(const key_type& k) noexcept;
 
 
 	// Non-member functions
 
-	//	compares the values in the unordered_map
+	// Deep comparison.
 	template <class K, class U, class A>
 	friend bool operator==(
 			const unsigned_map<K, U, A>& lhs, const unsigned_map<K, U, A>& rhs);
+
+	// Deep comparison.
 	template <class K, class U, class A>
 	friend bool operator!=(
 			const unsigned_map<K, U, A>& lhs, const unsigned_map<K, U, A>& rhs);
