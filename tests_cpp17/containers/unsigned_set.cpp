@@ -272,7 +272,7 @@ TEST(unsigned_set, basics) {
 		EXPECT_EQ(us.size(), size);
 		EXPECT_EQ(us.erase(us.begin(), us.end()), us.end());
 		EXPECT_TRUE(us.empty());
-		EXPECT_EQ(us.size(), 0);
+		EXPECT_EQ(us.size(), 0u);
 
 		us.insert(v.begin(), v.end());
 		size = us.size();

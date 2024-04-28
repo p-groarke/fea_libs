@@ -45,7 +45,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 fea::unsigned_set is an ordered set for unsigned numbers.
 The memory backing grows as large as biggest key.
 
-See fea::id_set for a more generic equivalent capable of storing any key type.
+TODO: See fea::id_set for a more generic equivalent capable of storing any key
+type.
 
 REMINDER
 to try hash algo
@@ -192,15 +193,18 @@ struct unsigned_set {
 	// Lookup
 
 	// Returns 1 if key present, 0 if not.
+	[[nodiscard]]
 	size_type count(key_type key) const noexcept;
 
 	// Returns true if key present.
 	bool contains(key_type key) const noexcept;
 
 	// Find the iterator for a key. Returns end() if not present.
+	[[nodiscard]]
 	const_iterator find(key_type key) const noexcept;
 
 	// Find the iterator for a key. Returns end() if not present.
+	[[nodiscard]]
 	iterator find(key_type key) noexcept;
 
 private:
