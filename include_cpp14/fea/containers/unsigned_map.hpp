@@ -100,12 +100,9 @@ struct unsigned_map {
 	unsigned_map& operator=(unsigned_map&&) noexcept = default;
 
 	explicit unsigned_map(size_t new_cap);
-
 	explicit unsigned_map(size_t key_new_cap, size_t value_new_cap);
-
 	template <class InputIt>
 	unsigned_map(InputIt first, InputIt last);
-
 	explicit unsigned_map(const std::initializer_list<value_type>& init);
 
 
@@ -113,16 +110,12 @@ struct unsigned_map {
 
 	// returns an iterator to the beginning
 	iterator begin() noexcept;
-
 	const_iterator begin() const noexcept;
-
 	const_iterator cbegin() const noexcept;
 
 	// returns an iterator to the end (one past last)
 	iterator end() noexcept;
-
 	const_iterator end() const noexcept;
-
 	const_iterator cend() const noexcept;
 
 
@@ -139,7 +132,6 @@ struct unsigned_map {
 
 	// reserves storage
 	void reserve(size_type new_cap);
-
 	void reserve(size_type key_new_cap, size_type value_new_cap);
 
 	// returns the number of elements that can be held in currently allocated
@@ -157,12 +149,9 @@ struct unsigned_map {
 
 	// inserts elements or nodes
 	std::pair<iterator, bool> insert(const value_type& value);
-
 	std::pair<iterator, bool> insert(value_type&& value);
-
 	template <class InputIt>
 	void insert(InputIt first, InputIt last);
-
 	void insert(const std::initializer_list<value_type>& ilist);
 
 	// inserts an element or assigns to the current element if the key already
@@ -181,9 +170,7 @@ struct unsigned_map {
 
 	// erases elements
 	iterator erase(const_iterator pos);
-
 	iterator erase(const_iterator first, const_iterator last);
-
 	size_type erase(const key_type& k);
 
 	// swaps the contents
@@ -193,17 +180,14 @@ struct unsigned_map {
 	// Lookup
 	// direct access to the underlying vector
 	const value_type* data() const noexcept;
-
 	value_type* data() noexcept;
 
 	// access specified element with bounds checking
 	const mapped_type& at(const key_type& k) const;
-
 	mapped_type& at(const key_type& k);
 
 	// access specified element without any bounds checking
 	const mapped_type& at_unchecked(const key_type& k) const noexcept;
-
 	mapped_type& at_unchecked(const key_type& k) noexcept;
 
 	// access or insert specified element
@@ -215,7 +199,6 @@ struct unsigned_map {
 
 	// finds element with specific key
 	const_iterator find(const key_type& k) const noexcept;
-
 	iterator find(const key_type& k) noexcept;
 
 	// checks if the container contains element with specific key
@@ -225,7 +208,6 @@ struct unsigned_map {
 	// elements)
 	std::pair<const_iterator, const_iterator> equal_range(
 			const key_type& k) const noexcept;
-
 	std::pair<iterator, iterator> equal_range(const key_type& k) noexcept;
 
 
