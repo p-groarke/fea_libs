@@ -78,6 +78,7 @@ struct jump_span_iterator {
 	operator*() const noexcept {
 		return _back_ptr->_spans[_span_idx][_lcl_idx];
 	}
+
 	[[nodiscard]]
 	constexpr pointer
 	operator->() const noexcept {

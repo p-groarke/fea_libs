@@ -18,8 +18,8 @@ constexpr auto id_set_const_iterator<MySet>::operator*() const noexcept
 }
 
 template <class MySet>
-constexpr id_set_const_iterator<MySet>&
-id_set_const_iterator<MySet>::operator++() noexcept {
+constexpr auto id_set_const_iterator<MySet>::operator++() noexcept
+		-> id_set_const_iterator<MySet>& {
 	assert(_ptr != _last);
 	do {
 		++_ptr;
@@ -28,16 +28,16 @@ id_set_const_iterator<MySet>::operator++() noexcept {
 }
 
 template <class MySet>
-constexpr id_set_const_iterator<MySet>&
-id_set_const_iterator<MySet>::operator++(int) noexcept {
+constexpr auto id_set_const_iterator<MySet>::operator++(int) noexcept
+		-> id_set_const_iterator<MySet>& {
 	id_set_const_iterator tmp = *this;
 	++*this;
 	return tmp;
 }
 
 template <class MySet>
-constexpr id_set_const_iterator<MySet>&
-id_set_const_iterator<MySet>::operator--() noexcept {
+constexpr auto id_set_const_iterator<MySet>::operator--() noexcept
+		-> id_set_const_iterator<MySet>& {
 	assert(_ptr != _first);
 	do {
 		--_ptr;
@@ -46,46 +46,46 @@ id_set_const_iterator<MySet>::operator--() noexcept {
 }
 
 template <class MySet>
-constexpr id_set_const_iterator<MySet>&
-id_set_const_iterator<MySet>::operator--(int) noexcept {
+constexpr auto id_set_const_iterator<MySet>::operator--(int) noexcept
+		-> id_set_const_iterator<MySet>& {
 	id_set_const_iterator tmp = *this;
 	--*this;
 	return tmp;
 }
 
 template <class MySet>
-bool id_set_const_iterator<MySet>::operator==(
-		const id_set_const_iterator& rhs) const noexcept {
+auto id_set_const_iterator<MySet>::operator==(
+		const id_set_const_iterator& rhs) const noexcept -> bool {
 	return _ptr == rhs._ptr;
 }
 
 template <class MySet>
-bool id_set_const_iterator<MySet>::operator!=(
-		const id_set_const_iterator& rhs) const noexcept {
+auto id_set_const_iterator<MySet>::operator!=(
+		const id_set_const_iterator& rhs) const noexcept -> bool {
 	return !(*this == rhs);
 }
 
 template <class MySet>
-bool id_set_const_iterator<MySet>::operator<(
-		const id_set_const_iterator& rhs) const noexcept {
+auto id_set_const_iterator<MySet>::operator<(
+		const id_set_const_iterator& rhs) const noexcept -> bool {
 	return _ptr < rhs._ptr;
 }
 
 template <class MySet>
-bool id_set_const_iterator<MySet>::operator>(
-		const id_set_const_iterator& rhs) const noexcept {
+auto id_set_const_iterator<MySet>::operator>(
+		const id_set_const_iterator& rhs) const noexcept -> bool {
 	return rhs < *this;
 }
 
 template <class MySet>
-bool id_set_const_iterator<MySet>::operator<=(
-		const id_set_const_iterator& rhs) const noexcept {
+auto id_set_const_iterator<MySet>::operator<=(
+		const id_set_const_iterator& rhs) const noexcept -> bool {
 	return !(rhs < *this);
 }
 
 template <class MySet>
-bool id_set_const_iterator<MySet>::operator>=(
-		const id_set_const_iterator& rhs) const noexcept {
+auto id_set_const_iterator<MySet>::operator>=(
+		const id_set_const_iterator& rhs) const noexcept -> bool {
 	return !(*this < rhs);
 }
 
@@ -106,10 +106,12 @@ auto id_set<Key, Alloc>::begin() const noexcept -> const_iterator {
 	return const_iterator{ _map.data(), _map.data() + _map.size(),
 		_map.data() };
 }
+
 template <class Key, class Alloc>
 auto id_set<Key, Alloc>::cbegin() const noexcept -> const_iterator {
 	return begin();
 }
+
 template <class Key, class Alloc>
 auto id_set<Key, Alloc>::begin() noexcept -> iterator {
 	return iterator{ _map.data(), _map.data() + _map.size(), _map.data() };
@@ -133,8 +135,8 @@ auto id_set<Key, Alloc>::end() noexcept -> iterator {
 }
 
 template <class Key, class Alloc>
-bool id_set<Key, Alloc>::empty() const noexcept(
-		noexcept(std::find(const_iterator{}, const_iterator{}, uint8_t{}))) {
+auto id_set<Key, Alloc>::empty() const noexcept(noexcept(
+		std::find(const_iterator{}, const_iterator{}, uint8_t{}))) -> bool {
 	if (_map.empty()) {
 		return true;
 	}
@@ -154,7 +156,7 @@ auto id_set<Key, Alloc>::max_size() const noexcept -> size_type {
 }
 
 template <class Key, class Alloc>
-void id_set<Key, Alloc>::reserve(const key_type& key) {
+auto id_set<Key, Alloc>::reserve(const key_type& key) -> void {
 	size_type new_cap = hasher{}(key) + size_type(1);
 	_map.reserve(new_cap);
 }
@@ -165,12 +167,12 @@ auto id_set<Key, Alloc>::capacity() const noexcept -> size_type {
 }
 
 template <class Key, class Alloc>
-void id_set<Key, Alloc>::shrink_to_fit() {
+auto id_set<Key, Alloc>::shrink_to_fit() -> void {
 	_map.shrink_to_fit();
 }
 
 template <class Key, class Alloc>
-constexpr void id_set<Key, Alloc>::clear() noexcept {
+constexpr auto id_set<Key, Alloc>::clear() noexcept -> void {
 	_map.clear();
 }
 
@@ -182,7 +184,7 @@ auto id_set<Key, Alloc>::insert(const key_type&) -> std::pair<iterator, bool> {
 
 template <class Key, class Alloc>
 template <class FwdIt>
-void id_set<Key, Alloc>::insert(FwdIt first, FwdIt last) {
+auto id_set<Key, Alloc>::insert(FwdIt first, FwdIt last) -> void {
 	using value_t = typename std::iterator_traits<FwdIt>::value_type;
 	static_assert(std::is_same_v<value_t, key_type>,
 			"unsigned_set : Invalid iterators, do not point to key_type.");
@@ -209,7 +211,8 @@ void id_set<Key, Alloc>::insert(FwdIt first, FwdIt last) {
 }
 
 template <class Key, class Alloc>
-void id_set<Key, Alloc>::insert(std::initializer_list<key_type>&& ilist) {
+auto id_set<Key, Alloc>::insert(std::initializer_list<key_type>&& ilist)
+		-> void {
 	insert(ilist.begin(), ilist.end());
 }
 
@@ -236,12 +239,12 @@ auto id_set<Key, Alloc>::erase(const key_type& key) -> size_type {
 }
 
 template <class Key, class Alloc>
-void id_set<Key, Alloc>::swap(id_set& other) noexcept {
+auto id_set<Key, Alloc>::swap(id_set& other) noexcept -> void {
 	_map.swap(other._map);
 }
 
 template <class Key, class Alloc>
-void id_set<Key, Alloc>::merge(id_set<Key, Alloc>& source) {
+auto id_set<Key, Alloc>::merge(id_set<Key, Alloc>& source) -> void {
 	if (source._map.size() > _map.size()) {
 		_map.resize(source._map.size());
 	}
@@ -260,7 +263,7 @@ void id_set<Key, Alloc>::merge(id_set<Key, Alloc>& source) {
 }
 
 template <class Key, class Alloc>
-void id_set<Key, Alloc>::merge(id_set<Key, Alloc>&& source) {
+auto id_set<Key, Alloc>::merge(id_set<Key, Alloc>&& source) -> void {
 	merge(source);
 }
 
@@ -275,7 +278,7 @@ auto id_set<Key, Alloc>::count(const key_type& key) const
 }
 
 template <class Key, class Alloc>
-bool id_set<Key, Alloc>::contains(const key_type& key) const {
+auto id_set<Key, Alloc>::contains(const key_type& key) const -> bool {
 	return bool(count(key));
 }
 
