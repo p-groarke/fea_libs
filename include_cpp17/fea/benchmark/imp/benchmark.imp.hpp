@@ -1,6 +1,4 @@
 ﻿#pragma once
-#include "benchmark.hpp"
-
 namespace fea {
 namespace bench {
 void title(const std::string& message, FILE* stream) {
