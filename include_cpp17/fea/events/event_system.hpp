@@ -128,8 +128,8 @@ private:
 			size_t(ChannelEnum::count)>());
 
 	// Channel tuple must be size 'ChannelEnum::count'.
-	static_assert(std::tuple_size<channel_tuple_t>::value
-						  == size_t(ChannelEnum::count),
+	static_assert(
+			std::tuple_size_v<channel_tuple_t> == size_t(ChannelEnum::count),
 			"event_system : channel tuple size must be equal to "
 			"ChannelEnum::count");
 

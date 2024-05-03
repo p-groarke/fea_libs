@@ -27,27 +27,27 @@ my_class::~my_class() = default;
 
 TEST(pimpl_ptr, asserts) {
 	using pimpl_t = fea::pimpl_ptr<my_class_impl>;
-	static_assert(std::is_default_constructible<pimpl_t>::value,
+	static_assert(std::is_default_constructible_v<pimpl_t>,
 			"pimpl_ptr.cpp : test failed");
-	static_assert(std::is_copy_constructible<pimpl_t>::value,
+	static_assert(std::is_copy_constructible_v<pimpl_t>,
 			"pimpl_ptr.cpp : test failed");
-	static_assert(std::is_move_constructible<pimpl_t>::value,
+	static_assert(std::is_move_constructible_v<pimpl_t>,
 			"pimpl_ptr.cpp : test failed");
-	static_assert(std::is_copy_assignable<pimpl_t>::value,
-			"pimpl_ptr.cpp : test failed");
-	static_assert(std::is_move_assignable<pimpl_t>::value,
-			"pimpl_ptr.cpp : test failed");
+	static_assert(
+			std::is_copy_assignable_v<pimpl_t>, "pimpl_ptr.cpp : test failed");
+	static_assert(
+			std::is_move_assignable_v<pimpl_t>, "pimpl_ptr.cpp : test failed");
 
-	static_assert(std::is_default_constructible<my_class>::value,
+	static_assert(std::is_default_constructible_v<my_class>,
 			"pimpl_ptr.cpp : test failed");
-	static_assert(std::is_copy_constructible<my_class>::value,
+	static_assert(std::is_copy_constructible_v<my_class>,
 			"pimpl_ptr.cpp : test failed");
-	static_assert(std::is_move_constructible<my_class>::value,
+	static_assert(std::is_move_constructible_v<my_class>,
 			"pimpl_ptr.cpp : test failed");
-	static_assert(std::is_copy_assignable<my_class>::value,
-			"pimpl_ptr.cpp : test failed");
-	static_assert(std::is_move_assignable<my_class>::value,
-			"pimpl_ptr.cpp : test failed");
+	static_assert(
+			std::is_copy_assignable_v<my_class>, "pimpl_ptr.cpp : test failed");
+	static_assert(
+			std::is_move_assignable_v<my_class>, "pimpl_ptr.cpp : test failed");
 }
 
 TEST(pimpl_ptr, basics) {

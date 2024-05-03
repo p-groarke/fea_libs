@@ -57,55 +57,47 @@ struct enum_array : public std::array<T, N> {
 	using reference = typename array_t::reference;
 	using const_reference = typename array_t::const_reference;
 
+	// Returns element at E using compile time access.
 	template <Enum E>
-	constexpr reference at() {
-		return std::get<size_t(E)>(*this);
-	}
+	constexpr reference at();
+
+	// Returns element at E using compile time access.
 	template <Enum E>
-	constexpr const_reference at() const {
-		return std::get<size_t(E)>(*this);
-	}
+	constexpr const_reference at() const;
 
-	constexpr reference at(Enum e) {
-		return array_t::at(size_t(e));
-	}
-	constexpr const_reference at(Enum e) const {
-		return array_t::at(size_t(e));
-	}
+	// Returns element at enum with bounds checking.
+	constexpr reference at(Enum e);
 
-	constexpr reference operator[](Enum e) {
-		return array_t::operator[](size_t(e));
-	}
-	constexpr const_reference operator[](Enum e) const {
-		return array_t::operator[](size_t(e));
-	}
+	// Returns element at enum with bounds checking.
+	constexpr const_reference at(Enum e) const;
+
+	// Returns element at enum without bounds checking.
+	constexpr reference operator[](Enum e);
+
+	// Returns element at enum without bounds checking.
+	constexpr const_reference operator[](Enum e) const;
 };
 
-#if FEA_CPP17
+// std::get equivelant, use with enum key as template.
+// Ex : fea::get<my_enum::value>(arr);
 template <auto I, class T, class E, size_t N>
-constexpr T& get(enum_array<T, E, N>& a) noexcept {
-	static_assert(std::is_same_v<decltype(I), E>,
-			"enum_array : passed in wrong enum type");
-	return std::get<size_t(I)>(a);
-}
+constexpr T& get(enum_array<T, E, N>& a) noexcept;
+
+// std::get equivelant, use with enum key as template.
+// Ex : fea::get<my_enum::value>(arr);
 template <auto I, class T, class E, size_t N>
-constexpr T&& get(enum_array<T, E, N>&& a) noexcept {
-	static_assert(std::is_same_v<decltype(I), E>,
-			"enum_array : passed in wrong enum type");
-	return std::get<size_t(I)>(std::move(a));
-}
+constexpr T&& get(enum_array<T, E, N>&& a) noexcept;
+
+// std::get equivelant, use with enum key as template.
+// Ex : fea::get<my_enum::value>(arr);
 template <auto I, class T, class E, size_t N>
-constexpr const T& get(const enum_array<T, E, N>& a) noexcept {
-	static_assert(std::is_same_v<decltype(I), E>,
-			"enum_array : passed in wrong enum type");
-	return std::get<size_t(I)>(a);
-}
+constexpr const T& get(const enum_array<T, E, N>& a) noexcept;
+
+// std::get equivelant, use with enum key as template.
+// Ex : fea::get<my_enum::value>(arr);
 template <auto I, class T, class E, size_t N>
-constexpr const T&& get(const enum_array<T, E, N>&& a) noexcept {
-	static_assert(std::is_same_v<decltype(I), E>,
-			"enum_array : passed in wrong enum type");
-	return std::get<size_t(I)>(std::move(a));
-}
-#endif
+constexpr const T&& get(const enum_array<T, E, N>&& a) noexcept;
 
 } // namespace fea
+
+#include "imp/enum_array.imp.hpp"

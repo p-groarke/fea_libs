@@ -40,8 +40,8 @@
 namespace fea {
 // Returns rvalue if T has a move constructor.
 template <class T>
-std::conditional_t<!std::is_move_constructible<T>::value
-				&& std::is_copy_constructible<T>::value,
+std::conditional_t<!std::is_move_constructible_v<T>
+						   && std::is_copy_constructible_v<T>,
 		const T&, T&&>
 maybe_move(T& t) noexcept;
 
@@ -193,8 +193,8 @@ constexpr OutputIt copy_or_move_backward(
 } // namespace detail
 
 template <class T>
-std::conditional_t<!std::is_move_constructible<T>::value
-				&& std::is_copy_constructible<T>::value,
+std::conditional_t<!std::is_move_constructible_v<T>
+						   && std::is_copy_constructible_v<T>,
 		const T&, T&&>
 maybe_move(T& t) noexcept {
 	return std::move(t);
@@ -223,7 +223,7 @@ constexpr OutputIt copy_or_move(InputIt first, InputIt last, OutputIt dest) {
 	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
 	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
 
-	static_assert(std::is_same<in_val_t, out_val_t>::value,
+	static_assert(std::is_same_v<in_val_t, out_val_t>,
 			"fea::copy_or_move only works with identical input and destination "
 			"types");
 
@@ -237,7 +237,7 @@ constexpr OutputIt copy_or_move_backward(
 	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
 	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
 
-	static_assert(std::is_same<in_val_t, out_val_t>::value,
+	static_assert(std::is_same_v<in_val_t, out_val_t>,
 			"fea::copy_or_move only works with identical input and destination "
 			"types");
 

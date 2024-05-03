@@ -36,14 +36,12 @@ TEST(enum_array, basics) {
 		EXPECT_EQ(arr.at<e::four>(), 4u);
 		EXPECT_EQ(arr.at<e::five>(), 5u);
 
-#if FEA_CPP17
 		EXPECT_EQ(fea::get<e::zero>(arr), 0u);
 		EXPECT_EQ(fea::get<e::one>(arr), 1u);
 		EXPECT_EQ(fea::get<e::two>(arr), 2u);
 		EXPECT_EQ(fea::get<e::three>(arr), 3u);
 		EXPECT_EQ(fea::get<e::four>(arr), 4u);
 		EXPECT_EQ(fea::get<e::five>(arr), 5u);
-#endif
 	}
 
 	{
@@ -77,14 +75,12 @@ TEST(enum_array, basics) {
 		EXPECT_EQ(arr.at<e::four>(), 4u);
 		EXPECT_EQ(arr.at<e::five>(), 5u);
 
-#if FEA_CPP17
 		EXPECT_EQ(fea::get<e::zero>(arr), 0u);
 		EXPECT_EQ(fea::get<e::one>(arr), 1u);
 		EXPECT_EQ(fea::get<e::two>(arr), 2u);
 		EXPECT_EQ(fea::get<e::three>(arr), 3u);
 		EXPECT_EQ(fea::get<e::four>(arr), 4u);
 		EXPECT_EQ(fea::get<e::five>(arr), 5u);
-#endif
 	}
 }
 } // namespace

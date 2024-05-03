@@ -1,5 +1,5 @@
 ﻿#include <fea/utils/platform.hpp>
-#if FEA_RELEASE && FEA_CPP17 && defined(FEA_BENCHMARKS_DEF)
+#if FEA_RELEASE && defined(FEA_BENCHMARKS_DEF)
 
 #include <fea/benchmark/benchmark.hpp>
 #include <fea/functional/callback.hpp>
@@ -219,7 +219,8 @@ TEST(function_cl, benchmarks) {
 		auto fea_callback = fea::make_callback([&](size_t& i) { obj.func(i); });
 
 		std::string title = std::string{ "Calling Callable " }
-				+ std::to_string(bench_count) + std::string{ " Times" };
+						  + std::to_string(bench_count)
+						  + std::string{ " Times" };
 		suite.title(title.c_str());
 		suite.benchmark("Raw Member Pointer", [&]() {
 			for (size_t i = 0; i < bench_count; ++i) {
@@ -280,7 +281,7 @@ TEST(function_cl, benchmarks) {
 				vec_size, fea_callback);
 
 		std::string title = std::to_string(vec_size)
-				+ " Callables Stored In A Vector, Iterated Linearly";
+						  + " Callables Stored In A Vector, Iterated Linearly";
 		suite.title(title.c_str());
 		suite.benchmark("Raw Member Pointer", [&]() {
 			for (size_t i = 0; i < raw_vec.size(); ++i) {
@@ -328,7 +329,7 @@ TEST(function_cl, benchmarks) {
 
 
 		title = std::to_string(vec_size)
-				+ " Callables Stored In A Vector, Iterated Randomly";
+			  + " Callables Stored In A Vector, Iterated Randomly";
 		suite.title(title.c_str());
 		suite.benchmark("Raw Member Pointer", [&]() {
 			for (size_t i = 0; i < raw_vec.size(); ++i) {

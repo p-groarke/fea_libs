@@ -45,7 +45,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 fea::unsigned_set is an ordered set for unsigned numbers.
 The memory backing grows as large as biggest key.
 
-TODO: See fea::id_set for a more generic equivalent capable of storing any key
+TODO: fea::id_set for a more generic equivalent capable of storing any key
 type.
 
 REMINDER

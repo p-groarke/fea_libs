@@ -51,8 +51,8 @@ struct max_nt<T, First, Second> {
 template <class T, T First, T Second, T... Args>
 struct max_nt<T, First, Second, Args...> {
 	static constexpr auto value = First > Second
-			? max_nt<T, First, Args...>::value
-			: max_nt<T, Second, Args...>::value;
+										? max_nt<T, First, Args...>::value
+										: max_nt<T, Second, Args...>::value;
 };
 
 template <class T, T...>
@@ -66,28 +66,26 @@ struct min_nt<T, First, Second> {
 template <class T, T First, T Second, T... Args>
 struct min_nt<T, First, Second, Args...> {
 	static constexpr auto value = First < Second
-			? min_nt<T, First, Args...>::value
-			: min_nt<T, Second, Args...>::value;
+										? min_nt<T, First, Args...>::value
+										: min_nt<T, Second, Args...>::value;
 };
 } // namespace detail
 
 // Finds the maximum value of provided non-type values.
 template <class T, T... Args>
-FEA_INLINE_VAR constexpr auto max_nt_v = detail::max_nt<T, Args...>::value;
+inline constexpr auto max_nt_v = detail::max_nt<T, Args...>::value;
 
 // Finds the minimum value of provided non-type values.
 template <class T, T... Args>
-FEA_INLINE_VAR constexpr auto min_nt_v = detail::min_nt<T, Args...>::value;
+inline constexpr auto min_nt_v = detail::min_nt<T, Args...>::value;
 
 
-#if FEA_CPP17
 // Finds the maximum value of provided non-type values.
 template <auto First, auto... Args>
-FEA_INLINE_VAR constexpr auto max_v = max_nt_v<decltype(First), First, Args...>;
+inline constexpr auto max_v = max_nt_v<decltype(First), First, Args...>;
 
 // Finds the minimum value of provided non-type values.
 template <auto First, auto... Args>
-FEA_INLINE_VAR constexpr auto min_v = min_nt_v<decltype(First), First, Args...>;
-#endif // CPP17
+inline constexpr auto min_v = min_nt_v<decltype(First), First, Args...>;
 
 } // namespace fea

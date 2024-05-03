@@ -7,12 +7,12 @@ namespace {
 TEST(tuple, basics) {
 	{
 		auto tup = fea::make_tuple_from_count<int, 4>();
-		static_assert(std::is_same<decltype(tup),
-							  std::tuple<int, int, int, int>>::value,
+		static_assert(
+				std::is_same_v<decltype(tup), std::tuple<int, int, int, int>>,
 				"tuple.cpp : test failed");
 
 		auto tup2 = fea::make_tuple_from_count<int, 0>();
-		static_assert(std::is_same<decltype(tup2), std::tuple<>>::value,
+		static_assert(std::is_same_v<decltype(tup2), std::tuple<>>,
 				"tuple.cpp : test failed");
 	}
 
@@ -51,12 +51,6 @@ TEST(tuple, basics) {
 
 	{
 
-#if FEA_CPP17
-#define FEA_CEXPR constexpr
-#else
-#define FEA_CEXPR
-#endif
-
 		std::tuple<int, double, float, short> tup{};
 		std::array<std::string, 4> visited;
 		size_t idx = 0;
@@ -64,16 +58,13 @@ TEST(tuple, basics) {
 		fea::tuple_for_each(
 				[&](auto v) {
 					std::string str{};
-					if FEA_CEXPR (std::is_same<decltype(v), int>::value) {
+					if constexpr (std::is_same_v<decltype(v), int>) {
 						str = "int";
-					} else if FEA_CEXPR (std::is_same<decltype(v),
-												 double>::value) {
+					} else if constexpr (std::is_same_v<decltype(v), double>) {
 						str = "double";
-					} else if FEA_CEXPR (std::is_same<decltype(v),
-												 float>::value) {
+					} else if constexpr (std::is_same_v<decltype(v), float>) {
 						str = "float";
-					} else if FEA_CEXPR (std::is_same<decltype(v),
-												 short>::value) {
+					} else if constexpr (std::is_same_v<decltype(v), short>) {
 						str = "short";
 					} else {
 						EXPECT_TRUE(false);
@@ -90,11 +81,11 @@ TEST(tuple, basics) {
 
 	{
 		std::tuple<int, double, float, short> tup{};
-		fea::apply(
+		std::apply(
 				[&](auto... args) {
 					EXPECT_EQ(sizeof...(args), 4u);
-					static_assert(std::is_same<std::tuple<decltype(args)...>,
-										  decltype(tup)>::value,
+					static_assert(std::is_same_v<std::tuple<decltype(args)...>,
+										  decltype(tup)>,
 							"tuple.cpp : test failed");
 				},
 				tup);
@@ -105,7 +96,7 @@ TEST(tuple, basics) {
 				std::tuple<float, short>>;
 
 		static_assert(
-				std::is_same<tup, std::tuple<int, double, float, short>>::value,
+				std::is_same_v<tup, std::tuple<int, double, float, short>>,
 				"tuple.cpp : test failed");
 	}
 }
@@ -148,7 +139,7 @@ TEST(tuple, runtime_get) {
 		}
 
 		auto lookup = fea::make_offset_lookup(tup);
-		fea::static_for<std::tuple_size<tup_t>::value>([&](auto idx) {
+		fea::static_for<std::tuple_size_v<tup_t>>([&](auto idx) {
 			EXPECT_EQ(lookup[idx], fea::tuple_offset<idx>(tup));
 			size_t off2 = fea::tuple_offset<idx>(tup);
 			EXPECT_EQ(lookup[idx], off2);
@@ -177,7 +168,6 @@ TEST(tuple, runtime_get) {
 	}
 }
 
-#if FEA_CPP17
 TEST(tuple, runtime_get_cpp17) {
 	{
 		const std::tuple<int32_t, uint32_t, int64_t, int8_t, uint8_t> tup
@@ -265,5 +255,4 @@ TEST(tuple, runtime_get_cpp17) {
 		EXPECT_EQ(ui8, 5);
 	}
 }
-#endif
 } // namespace

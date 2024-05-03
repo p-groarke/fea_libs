@@ -48,7 +48,7 @@ namespace fea {
 // Get the index of type T in Tuple.
 template <class T, class Tuple>
 struct tuple_idx {
-	static_assert(!std::is_same<Tuple, std::tuple<>>::value,
+	static_assert(!std::is_same_v<Tuple, std::tuple<>>,
 			"could not find T in given Tuple");
 };
 
@@ -68,7 +68,7 @@ struct tuple_idx<T, std::tuple<U, Types...>> {
 
 // Get the index of type T in Tuple.
 template <class T, class Tuple>
-FEA_INLINE_VAR constexpr size_t tuple_idx_v = tuple_idx<T, Tuple>::value;
+inline constexpr size_t tuple_idx_v = tuple_idx<T, Tuple>::value;
 
 
 // Does Tuple contain type T?
@@ -87,20 +87,14 @@ struct tuple_contains<T, std::tuple<T, Ts...>> : std::true_type {};
 
 // Does Tuple contain type T?
 template <class T, class Tuple>
-FEA_INLINE_VAR constexpr bool tuple_contains_v
-		= tuple_contains<T, Tuple>::value;
+inline constexpr bool tuple_contains_v = tuple_contains<T, Tuple>::value;
 
 
 namespace detail {
 template <class Func, class Tuple, size_t... I>
 constexpr void tuple_foreach(
 		Func&& func, Tuple&& tup, std::index_sequence<I...>) {
-#if FEA_CPP17
 	(func(std::get<I>(tup)), ...);
-#else
-	char dummy[] = { (void(func(std::get<I>(tup))), '0')... };
-	unused(dummy);
-#endif
 }
 } // namespace detail
 
@@ -110,30 +104,9 @@ constexpr void tuple_foreach(
 template <class Func, class Tuple>
 constexpr void tuple_for_each(Func&& func, Tuple&& tup) {
 	detail::tuple_foreach(std::forward<Func>(func), std::forward<Tuple>(tup),
-			std::make_index_sequence<
-					std::tuple_size<std::decay_t<Tuple>>::value>{});
+			std::make_index_sequence<std::tuple_size_v<std::decay_t<Tuple>>>{});
 }
 
-
-// C++ < 17 std::apply
-#if FEA_CPP17
-using std::apply;
-#else
-namespace detail {
-template <class F, class Tuple, size_t... Idx>
-constexpr decltype(auto) apply_impl(
-		F&& f, Tuple&& t, std::index_sequence<Idx...>) {
-	return std::forward<F>(f)(std::get<Idx>(std::forward<Tuple>(t))...);
-}
-} // namespace detail
-
-template <class F, class Tuple>
-constexpr decltype(auto) apply(F&& f, Tuple&& t) {
-	return detail::apply_impl(std::forward<F>(f), std::forward<Tuple>(t),
-			std::make_index_sequence<std::tuple_size<
-					typename std::remove_reference<Tuple>::type>::value>{});
-}
-#endif
 
 // tuple_cats 2 tuple types together.
 template <class, class>
@@ -238,7 +211,6 @@ void* runtime_get(size_t idx, std::tuple<Args...>& tup) {
 }
 
 
-#if FEA_CPP17
 namespace detail {
 template <size_t Idx, class FuncRet, class Func, class TupleRef>
 FuncRet unerase(Func& func, TupleRef tup) {
@@ -294,5 +266,4 @@ decltype(auto) runtime_get(Func&& func, size_t idx, std::tuple<Args...>& tup) {
 	return lookup[idx](func, tup);
 }
 
-#endif // CPP17
 } // namespace fea

@@ -89,91 +89,118 @@ struct stack_vector {
 	// Element access
 
 	// Get value at position with bounds checking.
-	FEA_NODISCARD constexpr const_reference at(size_type i) const;
+	[[nodiscard]]
+	constexpr const_reference at(size_type i) const;
 
 	// Get value at position with bounds checking.
-	FEA_NODISCARD constexpr reference at(size_type i);
+	[[nodiscard]]
+	constexpr reference at(size_type i);
 
 	// Get value at position without bounds checking.
-	FEA_NODISCARD constexpr const_reference operator[](
-			size_type i) const noexcept;
+	[[nodiscard]]
+	constexpr const_reference
+	operator[](size_type i) const noexcept;
 
 	// Get value at position without bounds checking.
-	FEA_NODISCARD constexpr reference operator[](size_type i) noexcept;
+	[[nodiscard]]
+	constexpr reference
+	operator[](size_type i) noexcept;
 
 	// Get first value. All hell breaks loose if container empty.
-	FEA_NODISCARD constexpr const_reference front() const noexcept;
+	[[nodiscard]]
+	constexpr const_reference front() const noexcept;
 
 	// Get first value. All hell breaks loose if container empty.
-	FEA_NODISCARD constexpr reference front() noexcept;
+	[[nodiscard]]
+	constexpr reference front() noexcept;
 
 	// Get last value. All hell breaks loose if container empty.
-	FEA_NODISCARD constexpr const_reference back() const noexcept;
+	[[nodiscard]]
+	constexpr const_reference back() const noexcept;
 
 	// Get last value. All hell breaks loose if container empty.
-	FEA_NODISCARD constexpr reference back() noexcept;
+	[[nodiscard]]
+	constexpr reference back() noexcept;
 
 	// Get a pointer to the internal stored data.
-	FEA_NODISCARD constexpr const_pointer data() const noexcept;
+	[[nodiscard]]
+	constexpr const_pointer data() const noexcept;
 
 	// Get a pointer to the internal stored data.
-	FEA_NODISCARD constexpr pointer data() noexcept;
+	[[nodiscard]]
+	constexpr pointer data() noexcept;
 
 	/**
 	 * Iterators
 	 */
 	// Iterator pointing to the first element.
-	FEA_NODISCARD constexpr const_iterator begin() const noexcept;
+	[[nodiscard]]
+	constexpr const_iterator begin() const noexcept;
 
 	// Iterator pointing to the first element.
-	FEA_NODISCARD constexpr iterator begin() noexcept;
+	[[nodiscard]]
+	constexpr iterator begin() noexcept;
 
 	// Iterator pointing to the first element.
-	FEA_NODISCARD constexpr const_iterator cbegin() const noexcept;
+	[[nodiscard]]
+	constexpr const_iterator cbegin() const noexcept;
 
 	// Iterator pointing past the last element.
-	FEA_NODISCARD constexpr const_iterator end() const noexcept;
+	[[nodiscard]]
+	constexpr const_iterator end() const noexcept;
 
 	// Iterator pointing past the last element.
-	FEA_NODISCARD constexpr iterator end() noexcept;
+	[[nodiscard]]
+	constexpr iterator end() noexcept;
 
 	// Iterator pointing past the last element.
-	FEA_NODISCARD constexpr const_iterator cend() const noexcept;
+	[[nodiscard]]
+	constexpr const_iterator cend() const noexcept;
 
 	// Reverse iterator pointing to the first element.
-	FEA_NODISCARD constexpr const_reverse_iterator rbegin() const noexcept;
+	[[nodiscard]]
+	constexpr const_reverse_iterator rbegin() const noexcept;
 
 	// Reverse iterator pointing to the first element.
-	FEA_NODISCARD constexpr reverse_iterator rbegin() noexcept;
+	[[nodiscard]]
+	constexpr reverse_iterator rbegin() noexcept;
 
 	// Reverse iterator pointing to the first element.
-	FEA_NODISCARD constexpr const_reverse_iterator crbegin() const noexcept;
+	[[nodiscard]]
+	constexpr const_reverse_iterator crbegin() const noexcept;
 
 	// Reverse iterator pointing past the last element.
-	FEA_NODISCARD constexpr const_reverse_iterator rend() const noexcept;
+	[[nodiscard]]
+	constexpr const_reverse_iterator rend() const noexcept;
 
 	// Reverse iterator pointing past the last element.
-	FEA_NODISCARD constexpr reverse_iterator rend() noexcept;
+	[[nodiscard]]
+	constexpr reverse_iterator rend() noexcept;
 
 	// Reverse iterator pointing past the last element.
-	FEA_NODISCARD constexpr const_reverse_iterator crend() const noexcept;
+	[[nodiscard]]
+	constexpr const_reverse_iterator crend() const noexcept;
 
 	// Capacity.
 
 	// Returns true if container is empty.
-	FEA_NODISCARD constexpr bool empty() const noexcept;
+	[[nodiscard]]
+	constexpr bool empty() const noexcept;
 
 	// Number of stored items (!= StackSize).
-	FEA_NODISCARD constexpr size_type size() const noexcept;
+	[[nodiscard]]
+	constexpr size_type size() const noexcept;
 
 	// Max possible storage.
-	FEA_NODISCARD constexpr size_type max_size() const noexcept;
+	[[nodiscard]]
+	constexpr size_type max_size() const noexcept;
 
 	// Provided to match std::vector api, does nothing.
 	constexpr void reserve(size_type) noexcept;
 
 	// Returns capacity of storage (StackSize).
-	FEA_NODISCARD constexpr size_type capacity() const noexcept;
+	[[nodiscard]]
+	constexpr size_type capacity() const noexcept;
 
 	// Provided to match std::vector api, does nothing.
 	constexpr void shrink_to_fit() noexcept;
@@ -201,9 +228,8 @@ struct stack_vector {
 
 	// Insert range at position.
 	template <class InputIt,
-			class = std::enable_if_t<std::is_base_of<std::input_iterator_tag,
-					typename std::iterator_traits<InputIt>::iterator_category>::
-							value>>
+			class = std::enable_if_t<std::is_base_of_v<std::input_iterator_tag,
+					typename std::iterator_traits<InputIt>::iterator_category>>>
 	constexpr iterator insert(const_iterator pos, InputIt first, InputIt last);
 
 	// Insert items at position.

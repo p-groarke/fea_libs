@@ -38,14 +38,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <ctime>
 #include <date/date.h>
 #include <date/tz.h>
+#include <filesystem>
 #include <iomanip>
 #include <sstream>
 #include <string>
-
-#if FEA_CPP17
-#include <filesystem>
 #include <string_view>
-#endif
 
 #if FEA_CPP20
 #include "fea/macros/literals.hpp"
@@ -53,9 +50,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 namespace fea {
-#if FEA_CPP17
 using file_clock = std::filesystem::file_time_type::clock;
-#endif
 
 using sys_seconds = date::sys_seconds;
 using sys_minutes = date::sys_time<std::chrono::minutes>;
@@ -342,7 +337,6 @@ date::sys_time<Duration> to_sys(steady_time<Duration> time) {
 	return date::sys_time<Duration>{ time.time_since_epoch() };
 }
 
-#if FEA_CPP17
 // WARNING : Looses precision.
 inline std::chrono::system_clock::time_point to_sys(
 		std::filesystem::file_time_type tp) {
@@ -351,7 +345,6 @@ inline std::chrono::system_clock::time_point to_sys(
 	return time_point_cast<system_clock::duration>(
 			tp - file_clock::now() + system_clock::now());
 }
-#endif
 
 // WARNING : Cannot represent as big values as system_clock.
 inline std::chrono::steady_clock::time_point to_steady(

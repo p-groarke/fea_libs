@@ -4,7 +4,7 @@
 #pragma once
 #include <algorithm>
 #include <cstdio>
-#include <fea/utils/cpu_info.hpp>
+#include <fea/performance/cpu_info.hpp>
 #include <iostream>
 #include <string>
 #include <unordered_map>

@@ -97,19 +97,16 @@ template <class BidirIt, class Func, class CullPredicate,
 inline void for_each_depthfirst_flat(BidirIt root, Func&& func,
 		CullPredicate cull_pred, StatePtr* state_ptr = nullptr) {
 	static_assert(
-			!std::is_same<std::input_iterator_tag,
-					typename std::iterator_traits<BidirIt>::iterator_category>::
-					value,
+			!std::is_same_v<std::input_iterator_tag,
+					typename std::iterator_traits<BidirIt>::iterator_category>,
 			"for_each_flat_depth : iterators must be at minimum bidirectional");
 	static_assert(
-			!std::is_same<std::output_iterator_tag,
-					typename std::iterator_traits<BidirIt>::iterator_category>::
-					value,
+			!std::is_same_v<std::output_iterator_tag,
+					typename std::iterator_traits<BidirIt>::iterator_category>,
 			"for_each_flat_depth : iterators must be at minimum bidirectional");
 	static_assert(
-			!std::is_same<std::forward_iterator_tag,
-					typename std::iterator_traits<BidirIt>::iterator_category>::
-					value,
+			!std::is_same_v<std::forward_iterator_tag,
+					typename std::iterator_traits<BidirIt>::iterator_category>,
 			"for_each_flat_depth : iterators must be at minimum bidirectional");
 
 	// Uses a "rolling vector" to flatten out graph and execute function on

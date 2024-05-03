@@ -51,13 +51,13 @@ TEST(id_lookup, basics) {
 		fea::id_slot_lookup<size_t> ul;
 
 		using ul_t = std::decay_t<decltype(ul)>;
-		static_assert(std::is_same<typename ul_t::hasher,
-							  fea::id_hash<size_t>>::value,
+		static_assert(
+				std::is_same_v<typename ul_t::hasher, fea::id_hash<size_t>>,
 				test_failed_msg);
 		static_assert(
-				std::is_same<typename ul_t::underlying_key_type, size_t>::value,
+				std::is_same_v<typename ul_t::underlying_key_type, size_t>,
 				test_failed_msg);
-		static_assert(std::is_same<typename ul_t::pos_type, size_t>::value,
+		static_assert(std::is_same_v<typename ul_t::pos_type, size_t>,
 				test_failed_msg);
 
 		fea::id_slot_lookup<size_t> ul2;
@@ -123,12 +123,12 @@ TEST(id_lookup, basics) {
 
 		using ul_t = std::decay_t<decltype(ul)>;
 		static_assert(
-				std::is_same<typename ul_t::hasher, fea::id_hash<my_id>>::value,
+				std::is_same_v<typename ul_t::hasher, fea::id_hash<my_id>>,
 				test_failed_msg);
-		static_assert(std::is_same<typename ul_t::underlying_key_type,
-							  uint8_t>::value,
+		static_assert(
+				std::is_same_v<typename ul_t::underlying_key_type, uint8_t>,
 				test_failed_msg);
-		static_assert(std::is_same<typename ul_t::pos_type, uint8_t>::value,
+		static_assert(std::is_same_v<typename ul_t::pos_type, uint8_t>,
 				test_failed_msg);
 	}
 }

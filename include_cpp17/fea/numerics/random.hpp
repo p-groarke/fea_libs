@@ -30,29 +30,29 @@ struct platform_mersenne<8> {
 using platform_mt19937 =
 		typename detail::platform_mersenne<sizeof(size_t)>::type;
 
-FEA_INLINE_VAR std::random_device rd;
-FEA_INLINE_VAR platform_mt19937 gen(
+inline std::random_device rd;
+inline platform_mt19937 gen(
 		size_t(std::chrono::system_clock::now().time_since_epoch().count()));
 
 } // namespace detail
 
 // Get a random int between [min, max].
 template <class T>
-std::enable_if_t<std::is_integral<T>::value, T> random_val(T min, T max) {
+std::enable_if_t<std::is_integral_v<T>, T> random_val(T min, T max) {
 	std::uniform_int_distribution<T> dist(min, max);
 	return dist(detail::gen);
 }
 
 // Get a random float between [min, max].
 template <class T>
-std::enable_if_t<std::is_floating_point<T>::value, T> random_val(T min, T max) {
+std::enable_if_t<std::is_floating_point_v<T>, T> random_val(T min, T max) {
 	std::uniform_real_distribution<T> dist(min, max);
 	return dist(detail::gen);
 }
 
 // Get a random enum between [min, max].
 template <class T>
-std::enable_if_t<std::is_enum<T>::value, T> random_val(T min, T max) {
+std::enable_if_t<std::is_enum_v<T>, T> random_val(T min, T max) {
 	using u_t = std::underlying_type_t<T>;
 	return T(random_val(u_t(min), u_t(max)));
 }
@@ -72,14 +72,14 @@ inline uint8_t random_val<uint8_t>(uint8_t min, uint8_t max) {
 
 // Get a random value between [T::min, T::max].
 template <class T>
-std::enable_if_t<!std::is_enum<T>::value, T> random_val() {
+std::enable_if_t<!std::is_enum_v<T>, T> random_val() {
 	return random_val(
 			std::numeric_limits<T>::lowest(), (std::numeric_limits<T>::max)());
 }
 
 // Get a random enum between [E{}, E::count[.
 template <class E>
-std::enable_if_t<std::is_enum<E>::value, E> random_val() {
+std::enable_if_t<std::is_enum_v<E>, E> random_val() {
 	using u_t = std::underlying_type_t<E>;
 	return random_val(E{}, E(u_t(E::count) - 1));
 }
@@ -198,7 +198,7 @@ void random_shuffle(Container& cont) {
 // The range must be sortable.
 template <class BidirIt, class T>
 void random_fixed_sum(BidirIt begin, BidirIt end, T sum) {
-	static_assert(std::is_same<std::decay_t<decltype(*begin)>, T>::value,
+	static_assert(std::is_same_v<std::decay_t<decltype(*begin)>, T>,
 			"fea::random_from_available : iterators must return same type as "
 			"sum");
 	assert(std::distance(begin, end) >= 2);

@@ -47,22 +47,13 @@ std::integral_constant<your_enum, val>...
 */
 
 namespace fea {
-namespace detail {
-template <class Enum, class Func, size_t... Idx>
-constexpr auto explode_enum(const Func& func, std::index_sequence<Idx...>) {
-	return func(std::integral_constant<Enum, Enum(Idx)>{}...);
-}
-} // namespace detail
-
 // Explodes all enum values into a non-type parameter pack and calls your
 // function with it.
 // Enum must be from 0 to N.
 // You must "extract" the non-type enum as it is passed by
 // Passes std::integral_constant...
 template <class Enum, size_t N, class Func>
-constexpr auto explode_enum(const Func& func) {
-	return detail::explode_enum<Enum>(func, std::make_index_sequence<N>{});
-}
+constexpr auto explode_enum(const Func& func);
 
 // Explodes all enum values into a non-type parameter pack and calls your
 // function with it.
@@ -70,76 +61,27 @@ constexpr auto explode_enum(const Func& func) {
 // Overload for enums that contain a 'count' member.
 // Passes std::integral_constant...
 template <class Enum, class Func>
-constexpr auto explode_enum(const Func& func) {
-	return detail::explode_enum<Enum>(
-			func, std::make_index_sequence<size_t(Enum::count)>{});
-}
+constexpr auto explode_enum(const Func& func);
 
 // Calls your function with each non-type enum values.
 // Enum must be from 0 to N.
 // Provide N if your enum doesn't have the member 'count'.
 // Passes std::integral_constant.
 template <class Enum, size_t N = size_t(Enum::count), class Func>
-constexpr void enum_for_each(const Func& func) {
-	fea::explode_enum<Enum, N>(
-			[&](auto... constants) { (func(constants), ...); });
-}
+constexpr void enum_for_each(const Func& func);
 
 // Calls your function with each non-type enum values.
 // Passes std::integral_constant.
 template <auto... Args, class Func>
-constexpr void enum_for_each(const Func& func) {
-	(func(std::integral_constant<decltype(Args), Args>{}), ...);
-}
-
-
-namespace detail {
-// Calls your function with each non-type enum values.
-// Passes idx std::integral_constant and enum std::integral_constant.
-template <class E, class Func, size_t... Idx, auto... Args>
-constexpr void enum_for_each_w_idx_imp(const Func& func,
-		std::index_sequence<Idx...>, std::integer_sequence<size_t, Args...>) {
-	(func(std::integral_constant<size_t, Idx>{},
-			 std::integral_constant<E, E(Args)>{}),
-			...);
-}
-
-// Calls your function with each non-type enum values.
-// Passes idx std::integral_constant and enum std::integral_constant.
-template <auto... Args, class Func>
-constexpr void enum_for_each_w_idx(const Func& func) {
-	using enum_t = fea::front_t<decltype(Args)...>;
-	enum_for_each_w_idx_imp<enum_t>(func,
-			std::make_index_sequence<sizeof...(Args)>{},
-			std::integer_sequence<size_t, size_t(Args)...>{});
-}
-} // namespace detail
-
+constexpr void enum_for_each(const Func& func);
 
 // Creates a lookup array of size max enum + 1.
 // Dereference the lookup with an enum value, to get its index in the variadic
 // pack.
 // Effectively, enables creation of programmatic switch-case lookups.
 template <auto... Args>
-constexpr auto make_enum_lookup() {
-	constexpr size_t arr_size
-			= size_t(fea::max_nt_v<fea::front_t<decltype(Args)...>, Args...>)
-			+ 1u;
-	std::array<size_t, arr_size> ret{};
-
-	// Initialize everything with sentinel.
-	fea::static_for<arr_size>(
-			[&](auto idx) { ret[idx] = (std::numeric_limits<size_t>::max)(); });
-
-	// Create association between enum value and actual index.
-	// Aka, slot map from enum -> pack index
-	detail::enum_for_each_w_idx<Args...>([&](auto idx, auto e_ic) {
-		constexpr size_t i = decltype(idx)::value;
-		constexpr auto e = decltype(e_ic)::value;
-		constexpr size_t e_pos = size_t(e);
-		ret[e_pos] = i;
-	});
-	return ret;
-}
+constexpr auto make_enum_lookup();
 
 } // namespace fea
+
+#include "imp/enum_traits.imp.hpp"

@@ -36,10 +36,8 @@
 #include "fea/macros/macros.hpp"
 #include "fea/utils/platform.hpp"
 
-#include <type_traits>
-#if FEA_CPP17
 #include <string_view>
-#endif
+#include <type_traits>
 
 /*
 Helpers for string literals.
@@ -120,7 +118,6 @@ Helpers for string literals.
 #define FEA_VA_U8S(...) FEA_FOR_EACH(FEA_U8S_COMMA, __VA_ARGS__)
 #endif
 
-#if FEA_CPP17
 // Creates string_view of literal, prefixed appropriately.
 #define FEA_SV(x) std::string_view(x)
 #define FEA_WSV(x) std::wstring_view(FEA_WPREFIX(x))
@@ -293,5 +290,3 @@ Helpers for string literals.
 // These are shortcuts if you use CharT as an alias or template.
 #define FEA_MAKE_CHAR_LITERAL(str) FEA_MAKE_CHAR_LITERAL_T(CharT, str)
 #define FEA_CH(ch) FEA_MAKE_CHAR_LITERAL_T(CharT, ch)
-
-#endif // FEA_CPP17

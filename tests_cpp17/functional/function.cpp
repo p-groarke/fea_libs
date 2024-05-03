@@ -85,12 +85,11 @@ TEST(function_cl, basics) {
 
 TEST(function, basics) {
 	fea::function<void(int)> f;
-	static_assert(std::is_same<decltype(f), std::function<void(int)>>::value,
+	static_assert(std::is_same_v<decltype(f), std::function<void(int)>>,
 			"function.cpp : test failed");
 
 	fea::function<void(int), true> f_ptr;
-	static_assert(
-			std::is_same<decltype(f_ptr), fea::function_cl<void(int)>>::value,
+	static_assert(std::is_same_v<decltype(f_ptr), fea::function_cl<void(int)>>,
 			"function.cpp : test failed");
 }
 } // namespace

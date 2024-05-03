@@ -23,13 +23,13 @@ TEST(enum_utility, basics) {
 	using namespace fea::literals;
 
 	using ret1_t = decltype(fea::to_underlying(e1{}));
-	static_assert(std::is_same<ret1_t, uint8_t>::value, FAILMSG);
+	static_assert(std::is_same_v<ret1_t, uint8_t>, FAILMSG);
 
 	using ret2_t = decltype(fea::to_underlying(e2{}));
-	static_assert(std::is_same<ret2_t, uint16_t>::value, FAILMSG);
+	static_assert(std::is_same_v<ret2_t, uint16_t>, FAILMSG);
 
 	using ret3_t = decltype(fea::to_underlying(e3{}));
-	static_assert(std::is_same<ret3_t, int>::value, FAILMSG);
+	static_assert(std::is_same_v<ret3_t, int>, FAILMSG);
 
 	EXPECT_EQ(fea::to_underlying(e1::bla), 0_u8);
 	EXPECT_EQ(fea::to_underlying(e1::blee), 1_u8);

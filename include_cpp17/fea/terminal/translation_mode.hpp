@@ -70,11 +70,11 @@ struct translation_resetter {
 		return translation_mode::ignore;
 	}
 };
-FEA_NODISCARD inline translation_resetter translate_io(
+[[nodiscard]] inline translation_resetter translate_io(
 		translation_mode, translation_mode, translation_mode) {
 	return {};
 }
-FEA_NODISCARD inline translation_resetter translate_io(translation_mode) {
+[[nodiscard]] inline translation_resetter translate_io(translation_mode) {
 	return {};
 }
 
@@ -164,7 +164,7 @@ private:
 };
 
 // Choose stdin, stdout, stderr
-FEA_NODISCARD inline translation_resetter translate_io(translation_mode in_mode,
+[[nodiscard]] inline translation_resetter translate_io(translation_mode in_mode,
 		translation_mode out_mode, translation_mode err_mode) {
 	int in_prev = -1;
 	int out_prev = -1;
@@ -205,7 +205,7 @@ FEA_NODISCARD inline translation_resetter translate_io(translation_mode in_mode,
 }
 
 // All set to the same mode.
-FEA_NODISCARD inline translation_resetter translate_io(
+[[nodiscard]] inline translation_resetter translate_io(
 		translation_mode all_mode) {
 	return translate_io(all_mode, all_mode, all_mode);
 }

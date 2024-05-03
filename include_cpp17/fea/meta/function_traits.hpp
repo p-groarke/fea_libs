@@ -69,7 +69,7 @@ struct member_func_ptr {
 
 template <class Ret, class T, class... Rest>
 struct member_func_ptr<Ret, T*, Rest...>
-		: detail::member_func_ptr<Ret, T, std::is_class<T>::value, Rest...> {};
+		: detail::member_func_ptr<Ret, T, std::is_class_v<T>, Rest...> {};
 
 template <class Ret, class... Args>
 using member_func_ptr_t = typename member_func_ptr<Ret, Args...>::type;
@@ -178,7 +178,7 @@ struct function_traits<R(Args...)> {
 	template <std::size_t N>
 	struct argument {
 		static_assert(N < arity, "error: invalid parameter index.");
-		using type = typename std::tuple_element<N, std::tuple<Args...>>::type;
+		using type = std::tuple_element_t<N, std::tuple<Args...>>;
 	};
 };
 

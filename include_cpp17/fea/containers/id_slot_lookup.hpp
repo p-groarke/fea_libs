@@ -49,7 +49,7 @@ namespace fea {
 template <class Key, class TAlloc = std::allocator<Key>>
 struct id_slot_lookup {
 	// Sanity checks.
-	static_assert(std::is_unsigned<fea::detail::id_hash_return_t<Key>>::value,
+	static_assert(std::is_unsigned_v<fea::detail::id_hash_return_t<Key>>,
 			"unsigned_map : key or id_hash return type must be unsigned "
 			"integer");
 
@@ -80,30 +80,37 @@ struct id_slot_lookup {
 	// Element access
 
 	// Lookups, return the index of the item.
-	FEA_NODISCARD constexpr size_type at_prehashed(
-			underlying_key_type uk) const;
-	FEA_NODISCARD constexpr size_type at(const Key& k) const;
+	[[nodiscard]]
+	constexpr size_type at_prehashed(underlying_key_type uk) const;
+	[[nodiscard]]
+	constexpr size_type at(const Key& k) const;
 
 	// Lookups, return the index of the item.
-	FEA_NODISCARD constexpr size_type at_unchecked_prehashed(
+	[[nodiscard]]
+	constexpr size_type at_unchecked_prehashed(
 			underlying_key_type uk) const noexcept;
-	FEA_NODISCARD constexpr size_type at_unchecked(const Key& k) const noexcept;
+	[[nodiscard]]
+	constexpr size_type at_unchecked(const Key& k) const noexcept;
 
 	// Lookups, return the index of the item.
 	// End size should be the size required so begin() + end_size == end().
-	FEA_NODISCARD constexpr size_type find_prehashed(
+	[[nodiscard]]
+	constexpr size_type find_prehashed(
 			underlying_key_type uk, size_type end_size) const noexcept;
-	FEA_NODISCARD constexpr size_type find(
-			const Key& k, size_type end_size) const noexcept;
+	[[nodiscard]]
+	constexpr size_type find(const Key& k, size_type end_size) const noexcept;
 
 	// Does key point to a valid item?
-	FEA_NODISCARD constexpr bool contains_prehashed(
-			underlying_key_type uk) const noexcept;
-	FEA_NODISCARD constexpr bool contains(const Key& k) const noexcept;
+	[[nodiscard]]
+	constexpr bool contains_prehashed(underlying_key_type uk) const noexcept;
+	[[nodiscard]]
+	constexpr bool contains(const Key& k) const noexcept;
 
-	FEA_NODISCARD constexpr const pos_type* data() const noexcept;
+	[[nodiscard]]
+	constexpr const pos_type* data() const noexcept;
 
-	FEA_NODISCARD constexpr size_type size() const noexcept;
+	[[nodiscard]]
+	constexpr size_type size() const noexcept;
 
 
 	// Iterators
@@ -130,13 +137,15 @@ struct id_slot_lookup {
 	// Capacity
 
 	// Maximum storable size (std::vector::max_size - 1).
-	FEA_NODISCARD constexpr size_type max_size() const noexcept;
+	[[nodiscard]]
+	constexpr size_type max_size() const noexcept;
 
 	// Reserve memory, recommended maxid + 1.
 	constexpr void reserve(size_type new_cap);
 
 	// Current capacity.
-	FEA_NODISCARD constexpr size_type capacity() const noexcept;
+	[[nodiscard]]
+	constexpr size_type capacity() const noexcept;
 
 	// Shrink memory to fit number of positions.
 	constexpr void shrink_to_fit();
@@ -176,11 +185,12 @@ struct id_slot_lookup {
 	constexpr void update(const Key& k, size_type new_idx) noexcept;
 
 	// Sentinel used to mark ids invalid.
-	FEA_NODISCARD static constexpr pos_type sentinel() noexcept;
+	[[nodiscard]]
+	static constexpr pos_type sentinel() noexcept;
 
 	// Hash a key using fea::id_hash.
-	FEA_NODISCARD static constexpr underlying_key_type hash(
-			const Key& k) noexcept;
+	[[nodiscard]]
+	static constexpr underlying_key_type hash(const Key& k) noexcept;
 
 private:
 	// Might resize our storage to fit the key.

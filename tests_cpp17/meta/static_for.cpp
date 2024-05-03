@@ -45,7 +45,7 @@ TEST(static_for, return_type) {
 		using ret_t = decltype(fea::static_for<3>(l));
 		using expected_t = void;
 
-		static_assert(std::is_same<ret_t, expected_t>::value,
+		static_assert(std::is_same_v<ret_t, expected_t>,
 				"static_for.cpp : test failed");
 	}
 
@@ -60,7 +60,7 @@ TEST(static_for, return_type) {
 		using ret_t = decltype(fea::static_for<3>(l));
 		using expected_t = std::tuple<int, double, char>;
 
-		static_assert(std::is_same<ret_t, expected_t>::value,
+		static_assert(std::is_same_v<ret_t, expected_t>,
 				"static_for.cpp : test failed");
 
 		std::tuple<int, double, char> ans = fea::static_for<3>(l);
@@ -80,7 +80,7 @@ TEST(static_for, return_type) {
 		using ret_t = decltype(fea::static_for<3>(l));
 		using expected_t = std::tuple<std::nullptr_t, double, std::nullptr_t>;
 
-		static_assert(std::is_same<ret_t, expected_t>::value,
+		static_assert(std::is_same_v<ret_t, expected_t>,
 				"static_for.cpp : test failed");
 
 		auto ans = fea::static_for<3>(l);
@@ -100,7 +100,7 @@ TEST(static_for, return_type) {
 		using ret_t = decltype(fea::static_for<3>(l));
 		using expected_t = std::array<int, 3>;
 
-		static_assert(std::is_same<ret_t, expected_t>::value,
+		static_assert(std::is_same_v<ret_t, expected_t>,
 				"static_for.cpp : test failed");
 
 		std::array<int, 3> ans = fea::static_for<3>(l);
@@ -125,7 +125,7 @@ TEST(static_for, return_type) {
 		using ret_t = decltype(fea::static_for<3>(l));
 		using expected_t = std::tuple<int&, double&, char&>;
 
-		static_assert(std::is_same<ret_t, expected_t>::value,
+		static_assert(std::is_same_v<ret_t, expected_t>,
 				"static_for.cpp : test failed");
 
 		std::tuple<int&, double&, char&> ans = fea::static_for<3>(l);
@@ -149,7 +149,7 @@ TEST(static_for, return_type) {
 		using ret_t = decltype(fea::static_for<3>(l));
 		using expected_t = std::tuple<int&, std::nullptr_t, char*>;
 
-		static_assert(std::is_same<ret_t, expected_t>::value,
+		static_assert(std::is_same_v<ret_t, expected_t>,
 				"static_for.cpp : test failed");
 
 		std::tuple<int&, std::nullptr_t, char*> ans = fea::static_for<3>(l);
@@ -159,7 +159,6 @@ TEST(static_for, return_type) {
 	}
 }
 
-#if FEA_CPP17
 TEST(static_for_reversed, basics) {
 	std::array<int, 6> got_arr{};
 	const std::array<int, 6> expected_arr{ 5, 4, 3, 2, 1, 0 };
@@ -173,6 +172,5 @@ TEST(static_for_reversed, basics) {
 		EXPECT_EQ(got_arr, expected_arr);
 	}
 }
-#endif
 
 } // namespace

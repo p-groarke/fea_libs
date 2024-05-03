@@ -47,12 +47,7 @@ namespace fea {
 // Calls your function with each of the provided variadic argument.
 template <class Func, class... Args>
 constexpr void fold(Func&& func, Args&&... args) {
-#if FEA_CPP17
 	(func(args), ...);
-#else
-	char dummy[] = { (void(func(args)), '0')... };
-	unused(dummy);
-#endif
 }
 
 namespace detail {
@@ -62,8 +57,8 @@ struct sf_all_of : std::true_type {};
 
 template <class Trait, class... Traits>
 struct sf_all_of<Trait, Traits...>
-		: std::conditional<Trait::value, sf_all_of<Traits...>,
-				  std::false_type>::type {
+		: std::conditional_t<Trait::value, sf_all_of<Traits...>,
+				  std::false_type> {
 	// Check that provided templates are type_traits. Better way?
 	static_assert(Trait::value == true || Trait::value == false,
 			"fea::all_of : must use type traits");
@@ -168,13 +163,7 @@ struct do_static_for {
 template <class Func, size_t... I>
 struct do_static_for<void, Func, I...> {
 	constexpr void operator()(Func& func) const {
-#if FEA_CPP17
 		(func(std::integral_constant<size_t, I>{}), ...);
-#else
-		char dummy[]
-				= { (void(func(std::integral_constant<size_t, I>{})), '0')... };
-		unused(dummy);
-#endif
 	}
 };
 
@@ -199,14 +188,12 @@ constexpr auto static_for(Func&& func) {
 	return detail::static_for(func, std::make_index_sequence<N>{});
 }
 
-#if FEA_CPP17
 // Same as static_for, but reversed.
 // Starts at N - 1, ends at 0.
 template <size_t N, class Func>
 constexpr auto static_for_reversed(Func&& func) {
 	return detail::static_for(func, fea::make_reverse_index_sequence<N>{});
 }
-#endif
 
 
 // "std::apply index_sequence"

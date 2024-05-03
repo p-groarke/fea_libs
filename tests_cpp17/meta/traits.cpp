@@ -18,7 +18,7 @@ TEST(traits, all_none_any) {
 	std::tuple<std::string, std::function<void()>, std::vector<int>>
 			none_numeric{};
 
-	fea::apply(
+	std::apply(
 			[](auto... args) {
 				constexpr bool all
 						= fea::all_of_v<std::is_arithmetic<decltype(args)>...>;
@@ -39,7 +39,7 @@ TEST(traits, all_none_any) {
 			},
 			all_numeric);
 
-	fea::apply(
+	std::apply(
 			[](auto... args) {
 				constexpr bool all
 						= fea::all_of_v<std::is_arithmetic<decltype(args)>...>;
@@ -57,7 +57,7 @@ TEST(traits, all_none_any) {
 			},
 			any_numeric);
 
-	fea::apply(
+	std::apply(
 			[](auto... args) {
 				constexpr bool all
 						= fea::all_of_v<std::is_arithmetic<decltype(args)>...>;
@@ -112,9 +112,9 @@ TEST(traits, is_detected) {
 enum class an_enum { a, b, c };
 
 TEST(traits, misc) {
-	static_assert(
-			std::is_same<fea::remove_nested_const_t<std::pair<const int, int>>,
-					std::pair<int, int>>::value,
+	static_assert(std::is_same_v<
+						  fea::remove_nested_const_t<std::pair<const int, int>>,
+						  std::pair<int, int>>,
 			fail_msg);
 
 	static_assert(fea::is_first_const_v<std::pair<const int, int>>, fail_msg);
@@ -144,7 +144,6 @@ TEST(traits, misc) {
 	static_assert(fea::is_static_castable_v<an_enum, int>, fail_msg);
 	static_assert(fea::is_static_castable_v<int, an_enum>, fail_msg);
 
-#if FEA_CPP17
 	auto throw_l = [](int&, const double&) { return 0; };
 	auto nothrow_l = [](int&, const double&) noexcept { return 0; };
 
@@ -152,29 +151,26 @@ TEST(traits, misc) {
 			fail_msg);
 	static_assert(fea::is_noexcept_v<decltype(nothrow_l), int&, const double&>,
 			fail_msg);
-#endif
 }
 
 TEST(traits, front_back_t) {
-	static_assert(std::is_same<fea::front_t<int, double, float>, int>::value,
-			fail_msg);
-	static_assert(std::is_same<fea::back_t<int, double, float>, float>::value,
-			fail_msg);
+	static_assert(
+			std::is_same_v<fea::front_t<int, double, float>, int>, fail_msg);
+	static_assert(
+			std::is_same_v<fea::back_t<int, double, float>, float>, fail_msg);
 }
 
 TEST(traits, reverse) {
 	using expected_t = std::tuple<double, float, int, bool>;
 	using got_t = fea::reverse_t<bool, int, float, double>;
-	static_assert(std::is_same<got_t, expected_t>::value, fail_msg);
+	static_assert(std::is_same_v<got_t, expected_t>, fail_msg);
 }
 
-#if FEA_CPP17
 TEST(traits, reversed_index_sequence) {
 	{
 		using got_t = fea::make_reverse_index_sequence<5>;
 		using expected_t = std::index_sequence<4, 3, 2, 1, 0>;
-		static_assert(std::is_same<got_t, expected_t>::value, fail_msg);
+		static_assert(std::is_same_v<got_t, expected_t>, fail_msg);
 	}
 }
-#endif
 } // namespace

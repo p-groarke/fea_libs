@@ -101,67 +101,69 @@ struct span {
 	// Iterators
 
 	// Begin iterator, contiguous.
-	FEA_NODISCARD
+	[[nodiscard]]
 	constexpr iterator begin() const noexcept;
 
 	// Begin iterator, contiguous.
-	FEA_NODISCARD
+	[[nodiscard]]
 	constexpr iterator end() const noexcept;
 
 	// Begin iterator, contiguous.
-	FEA_NODISCARD
+	[[nodiscard]]
 	constexpr reverse_iterator rbegin() const noexcept;
 
 	// Begin iterator, contiguous.
-	FEA_NODISCARD
+	[[nodiscard]]
 	constexpr reverse_iterator rend() const noexcept;
 
 	// Element access
 
 	// First element, undefined if invalid.
-	FEA_NODISCARD
+	[[nodiscard]]
 	constexpr const_reference front() const noexcept;
 
 	// First element, undefined if invalid.
-	FEA_NODISCARD
+	[[nodiscard]]
 	constexpr reference front() noexcept;
 
 	// Last element, undefined if invalid.
-	FEA_NODISCARD
+	[[nodiscard]]
 	constexpr const_reference back() const noexcept;
 
 	// Last element, undefined if invalid.
-	FEA_NODISCARD
+	[[nodiscard]]
 	constexpr reference back() noexcept;
 
 	// Access element, undefined if invalid.
-	FEA_NODISCARD
-	constexpr const_reference operator[](size_type i) const noexcept;
+	[[nodiscard]]
+	constexpr const_reference
+	operator[](size_type i) const noexcept;
 
 	// Access element, undefined if invalid.
-	FEA_NODISCARD
-	constexpr reference operator[](size_type i) noexcept;
+	[[nodiscard]]
+	constexpr reference
+	operator[](size_type i) noexcept;
 
 	// Get underlying data pointer.
-	FEA_NODISCARD
+	[[nodiscard]]
 	constexpr const_pointer data() const noexcept;
 
 	// Get underlying data pointer.
-	FEA_NODISCARD
+	[[nodiscard]]
 	constexpr pointer data() noexcept;
 
 	// Observers
 
 	// The span size.
-	FEA_NODISCARD
+	[[nodiscard]]
 	constexpr size_type size() const noexcept;
 
 	// The span size, in bytes.
-	FEA_NODISCARD
+	[[nodiscard]]
 	constexpr size_type size_bytes() const noexcept;
 
 	// Is the span empty?
-	FEA_NODISCARD
+	[[nodiscard]]
 	constexpr bool empty() const noexcept;
 
 	// Operators

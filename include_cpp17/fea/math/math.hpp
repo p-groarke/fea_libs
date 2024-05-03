@@ -45,34 +45,34 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace fea {
 // Computes the sum of items in container.
 template <class Container>
-FEA_NODISCARD constexpr auto sum(const Container& cont) {
+[[nodiscard]] constexpr auto sum(const Container& cont) {
 	using T = typename Container::value_type;
 	return std::accumulate(cont.begin(), cont.end(), T(0));
 }
 
 // Compute profit.
 template <class T>
-FEA_NODISCARD constexpr T profit(T gains, T cost) {
+[[nodiscard]] constexpr T profit(T gains, T cost) {
 	return gains - cost;
 }
 
 // Compute Return On Investment.
 template <class T>
-FEA_NODISCARD constexpr T roi(T gains, T cost) {
+[[nodiscard]] constexpr T roi(T gains, T cost) {
 	return profit(gains, cost) / cost;
 }
 
 // Compute profit margin.
 // https://www.investopedia.com/ask/answers/031815/what-formula-calculating-profit-margins.asp
 template <class T>
-FEA_NODISCARD constexpr T profit_margin(T gains, T cost) {
+[[nodiscard]] constexpr T profit_margin(T gains, T cost) {
 	return profit(gains, cost) / gains;
 }
 
 // Compute mean (average).
 // Provided function must return the value to average.
 template <class FwdIt, class Func>
-FEA_NODISCARD constexpr auto mean(FwdIt begin, FwdIt end, Func func) {
+[[nodiscard]] constexpr auto mean(FwdIt begin, FwdIt end, Func func) {
 	using type_t = std::decay_t<decltype(func(*begin))>;
 
 	double num = double(std::distance(begin, end));
@@ -90,7 +90,7 @@ FEA_NODISCARD constexpr auto mean(FwdIt begin, FwdIt end, Func func) {
 
 // Compute mean (average).
 template <class FwdIt>
-FEA_NODISCARD constexpr auto mean(FwdIt begin, FwdIt end) {
+[[nodiscard]] constexpr auto mean(FwdIt begin, FwdIt end) {
 	return mean(
 			begin, end, [](const auto& v) -> const auto& { return v; });
 }
@@ -99,7 +99,7 @@ FEA_NODISCARD constexpr auto mean(FwdIt begin, FwdIt end) {
 // Provided callback must return desired value.
 // Note : This function heap allocates. Values must be sortable.
 template <class FwdIt, class Func>
-FEA_NODISCARD constexpr auto median(FwdIt begin, FwdIt end, Func&& func) {
+[[nodiscard]] constexpr auto median(FwdIt begin, FwdIt end, Func&& func) {
 	using T = std::decay_t<decltype(func(*begin))>;
 	std::vector<T> vals;
 	vals.reserve(std::distance(begin, end));
@@ -122,7 +122,7 @@ FEA_NODISCARD constexpr auto median(FwdIt begin, FwdIt end, Func&& func) {
 // Note : This function heap allocates. Values
 // must be sortable.
 template <class FwdIt>
-FEA_NODISCARD constexpr auto median(FwdIt begin, FwdIt end) {
+[[nodiscard]] constexpr auto median(FwdIt begin, FwdIt end) {
 	return median(
 			begin, end, [](const auto& v) -> const auto& { return v; });
 }
@@ -132,7 +132,7 @@ FEA_NODISCARD constexpr auto median(FwdIt begin, FwdIt end) {
 // or an empty vector if no mode was found.
 // Note : Heap allocates.
 template <class FwdIt, class Func>
-FEA_NODISCARD auto mode(FwdIt begin, FwdIt end, Func&& func) {
+[[nodiscard]] auto mode(FwdIt begin, FwdIt end, Func&& func) {
 	using T = std::decay_t<decltype(func(*begin))>;
 
 	size_t num = std::distance(begin, end);
@@ -199,7 +199,7 @@ FEA_NODISCARD auto mode(FwdIt begin, FwdIt end, Func&& func) {
 // or an empty vector if no mode was found.
 // Note : Heap allocates.
 template <class FwdIt>
-FEA_NODISCARD auto mode(FwdIt begin, FwdIt end) {
+[[nodiscard]] auto mode(FwdIt begin, FwdIt end) {
 	return mode(
 			begin, end, [](const auto& v) -> const auto& { return v; });
 }
@@ -208,7 +208,7 @@ FEA_NODISCARD auto mode(FwdIt begin, FwdIt end) {
 // Compute variance of values, sigma^2.
 // Predicate function must return value to compute.
 template <class FwdIt, class Func>
-FEA_NODISCARD constexpr auto variance(FwdIt begin, FwdIt end, Func func) {
+[[nodiscard]] constexpr auto variance(FwdIt begin, FwdIt end, Func func) {
 	using type_t = std::decay_t<decltype(func(*begin))>;
 
 	double num = double(std::distance(begin, end));
@@ -229,7 +229,7 @@ FEA_NODISCARD constexpr auto variance(FwdIt begin, FwdIt end, Func func) {
 
 // Compute variance of values, sigma^2.
 template <class FwdIt>
-FEA_NODISCARD constexpr auto variance(FwdIt begin, FwdIt end) {
+[[nodiscard]] constexpr auto variance(FwdIt begin, FwdIt end) {
 	return variance(
 			begin, end, [](const auto& v) -> const auto& { return v; });
 }
@@ -237,14 +237,14 @@ FEA_NODISCARD constexpr auto variance(FwdIt begin, FwdIt end) {
 // Compute population standard deviation.
 // Predicate function must return the values to compute.
 template <class FwdIt, class Func>
-FEA_NODISCARD constexpr auto std_deviation(FwdIt begin, FwdIt end, Func func) {
+[[nodiscard]] constexpr auto std_deviation(FwdIt begin, FwdIt end, Func func) {
 	using type_t = std::decay_t<decltype(func(*begin))>;
 	return type_t(std::sqrt(double(variance(begin, end, func))));
 }
 
 // Compute population standard deviation.
 template <class FwdIt>
-FEA_NODISCARD constexpr auto std_deviation(FwdIt begin, FwdIt end) {
+[[nodiscard]] constexpr auto std_deviation(FwdIt begin, FwdIt end) {
 	return std_deviation(
 			begin, end, [](const auto& v) -> const auto& { return v; });
 }
@@ -284,7 +284,7 @@ constexpr void sigma_filter(FwdIt begin, FwdIt end, T sigma, Func func) {
 // Compute sample variance of values (Bessel's correction, divided by n
 // - 1). Predicate function must return value to compute.
 template <class FwdIt, class Func>
-FEA_NODISCARD constexpr auto sample_variance(
+[[nodiscard]] constexpr auto sample_variance(
 		FwdIt begin, FwdIt end, Func func) {
 	using type_t = std::decay_t<decltype(func(*begin))>;
 
@@ -306,7 +306,7 @@ FEA_NODISCARD constexpr auto sample_variance(
 
 // Compute sample variance of values (Bessel's correction, divided by n - 1).
 template <class FwdIt>
-FEA_NODISCARD constexpr auto sample_variance(FwdIt begin, FwdIt end) {
+[[nodiscard]] constexpr auto sample_variance(FwdIt begin, FwdIt end) {
 	return sample_variance(
 			begin, end, [](const auto& v) -> const auto& { return v; });
 }
@@ -314,14 +314,14 @@ FEA_NODISCARD constexpr auto sample_variance(FwdIt begin, FwdIt end) {
 // Compute sample standard deviation (Bessel's correction, divides by n - 1).
 // Predicate function must return the values to compute.
 template <class FwdIt, class Func>
-FEA_NODISCARD auto sample_std_deviation(FwdIt begin, FwdIt end, Func func) {
+[[nodiscard]] auto sample_std_deviation(FwdIt begin, FwdIt end, Func func) {
 	using type_t = std::decay_t<decltype(func(*begin))>;
 	return type_t(std::sqrt(double(sample_variance(begin, end, func))));
 }
 
 // Compute sample standard deviation (Bessel's correction, divides by n - 1).
 template <class FwdIt>
-FEA_NODISCARD auto sample_std_deviation(FwdIt begin, FwdIt end) {
+[[nodiscard]] auto sample_std_deviation(FwdIt begin, FwdIt end) {
 	return sample_std_deviation(
 			begin, end, [](const auto& v) -> const auto& { return v; });
 }
@@ -361,7 +361,7 @@ void sample_sigma_filter(FwdIt begin, FwdIt end, T sigma, Func func) {
 
 // Computes the factorial of n.
 template <class T>
-FEA_NODISCARD constexpr T factorial(T n) {
+[[nodiscard]] constexpr T factorial(T n) {
 	assert(n >= T(0));
 
 	T ret = T(1);
@@ -373,13 +373,13 @@ FEA_NODISCARD constexpr T factorial(T n) {
 
 // Computes the factorial of n.
 template <class T>
-FEA_NODISCARD constexpr T fact(T n) {
+[[nodiscard]] constexpr T fact(T n) {
 	return factorial(n);
 }
 
 // Computes the binomial coefficient given (n k).
 template <class T>
-FEA_NODISCARD constexpr T binomial_coeff(T n, T k) {
+[[nodiscard]] constexpr T binomial_coeff(T n, T k) {
 	assert(n >= k && n > 0);
 	return fact(n) / (fact(k) * fact(n - k));
 }
@@ -387,14 +387,14 @@ FEA_NODISCARD constexpr T binomial_coeff(T n, T k) {
 // Computes stars and bars for positive values (> 0).
 // https://en.wikipedia.org/wiki/Stars_and_bars_%28combinatorics%29
 template <class T>
-FEA_NODISCARD constexpr T stars_and_bars_pos(T n, T k) {
+[[nodiscard]] constexpr T stars_and_bars_pos(T n, T k) {
 	return binomial_coeff(n - 1, k - 1);
 }
 
 // Computes stars and bars for non-negative values (>= 0).
 // https://en.wikipedia.org/wiki/Stars_and_bars_%28combinatorics%29
 template <class T>
-FEA_NODISCARD constexpr T stars_and_bars_zero(T n, T k) {
+[[nodiscard]] constexpr T stars_and_bars_zero(T n, T k) {
 	return binomial_coeff(n + k - 1, k - 1);
 }
 

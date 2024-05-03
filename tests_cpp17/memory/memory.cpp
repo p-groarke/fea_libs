@@ -14,18 +14,14 @@ struct mv {};
 
 TEST(memory, basics) {
 	cpy c1;
-	static_assert(
-			std::is_lvalue_reference<decltype(fea::maybe_move(c1))>::value,
+	static_assert(std::is_lvalue_reference_v<decltype(fea::maybe_move(c1))>,
 			"memory.cpp : test failed");
-	static_assert(
-			!std::is_rvalue_reference<decltype(fea::maybe_move(c1))>::value,
+	static_assert(!std::is_rvalue_reference_v<decltype(fea::maybe_move(c1))>,
 			"memory.cpp : test failed");
 	mv m1;
-	static_assert(
-			!std::is_lvalue_reference<decltype(fea::maybe_move(m1))>::value,
+	static_assert(!std::is_lvalue_reference_v<decltype(fea::maybe_move(m1))>,
 			"memory.cpp : test failed");
-	static_assert(
-			std::is_rvalue_reference<decltype(fea::maybe_move(m1))>::value,
+	static_assert(std::is_rvalue_reference_v<decltype(fea::maybe_move(m1))>,
 			"memory.cpp : test failed");
 
 	{
@@ -34,9 +30,9 @@ TEST(memory, basics) {
 		using mv_it_t = decltype(std::make_move_iterator(vec.begin()));
 
 		auto it = fea::maybe_make_move_iterator(vec.begin());
-		static_assert(std::is_same<decltype(it), cpy_it_t>::value,
+		static_assert(std::is_same_v<decltype(it), cpy_it_t>,
 				"memory.cpp : test failed");
-		static_assert(!std::is_same<decltype(it), mv_it_t>::value,
+		static_assert(!std::is_same_v<decltype(it), mv_it_t>,
 				"memory.cpp : test failed");
 	}
 
@@ -46,9 +42,9 @@ TEST(memory, basics) {
 		using mv_it_t = decltype(std::make_move_iterator(vec.begin()));
 
 		auto it = fea::maybe_make_move_iterator(vec.begin());
-		static_assert(!std::is_same<decltype(it), cpy_it_t>::value,
+		static_assert(!std::is_same_v<decltype(it), cpy_it_t>,
 				"memory.cpp : test failed");
-		static_assert(std::is_same<decltype(it), mv_it_t>::value,
+		static_assert(std::is_same_v<decltype(it), mv_it_t>,
 				"memory.cpp : test failed");
 	}
 }
@@ -210,7 +206,7 @@ TEST(memory, copy_or_move) {
 			obj3(const obj3&) = default;
 			obj3& operator=(const obj3&) = default;
 		};
-		static_assert(std::is_trivially_copyable<obj3>::value, "");
+		static_assert(std::is_trivially_copyable_v<obj3>, "");
 
 		std::vector<obj3> vec(4);
 		EXPECT_EQ(num_ctors, 4);
@@ -352,7 +348,7 @@ TEST(memory, copy_or_move_backward) {
 			obj3(const obj3&) = default;
 			obj3& operator=(const obj3&) = default;
 		};
-		static_assert(std::is_trivially_copyable<obj3>::value, "");
+		static_assert(std::is_trivially_copyable_v<obj3>, "");
 
 		std::vector<obj3> vec(4);
 		EXPECT_EQ(num_ctors, 4);

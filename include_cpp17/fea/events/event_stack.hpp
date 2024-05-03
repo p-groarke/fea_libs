@@ -102,7 +102,7 @@ template <class EventEnum, class... FuncTypes>
 struct event_stack {
 
 	// EventEnum must be enum.
-	static_assert(std::is_enum<EventEnum>::value,
+	static_assert(std::is_enum_v<EventEnum>,
 			"event_stack : template parameter EventEnum must be enum");
 
 	// EventEnum must contain member 'count' and must not be 0.
@@ -123,13 +123,11 @@ private:
 			sizeof...(FuncTypes)>());
 
 	// Event tuple must be size 'count'.
-	static_assert(
-			std::tuple_size<event_tuple_t>::value == size_t(EventEnum::count),
+	static_assert(std::tuple_size_v<event_tuple_t> == size_t(EventEnum::count),
 			"event_stack : tuple size must be equal to count");
 
 	// Id generator tuple must be size 'count'.
-	static_assert(
-			std::tuple_size<id_gen_tuple_t>::value == size_t(EventEnum::count),
+	static_assert(std::tuple_size_v<id_gen_tuple_t> == size_t(EventEnum::count),
 			"event_stack : tuple size must be equal to count");
 
 public:

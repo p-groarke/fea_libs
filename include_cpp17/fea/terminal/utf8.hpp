@@ -52,10 +52,10 @@ Does nothing (but is still callable) on other OSes.
 namespace fea {
 #if !FEA_WINDOWS
 struct codepage_resetter {};
-FEA_NODISCARD inline codepage_resetter utf8_terminal(bool) {
+[[nodiscard]] inline codepage_resetter utf8_terminal(bool) {
 	return {};
 }
-FEA_NODISCARD inline codepage_resetter utf8_terminal() {
+[[nodiscard]] inline codepage_resetter utf8_terminal() {
 	return {};
 }
 #else
@@ -123,7 +123,7 @@ private:
 // If you set force_wide to true, the call also enables the terminal translation
 // mode for utf16. This is helpful for the legacy command prompt, and will
 // assert on any use of non 'w' prefixed input/output c++ functions.
-FEA_NODISCARD inline codepage_resetter utf8_terminal(bool force_wide) {
+[[nodiscard]] inline codepage_resetter utf8_terminal(bool force_wide) {
 	unsigned in_cp_prev = GetConsoleCP();
 	if (in_cp_prev == 0) {
 		fea::maybe_throw_on_os_error(__FUNCTION__, __LINE__);
@@ -146,7 +146,7 @@ FEA_NODISCARD inline codepage_resetter utf8_terminal(bool force_wide) {
 	}
 	return ret;
 }
-FEA_NODISCARD inline codepage_resetter utf8_terminal() {
+[[nodiscard]] inline codepage_resetter utf8_terminal() {
 	return utf8_terminal(false);
 }
 #endif

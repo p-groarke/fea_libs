@@ -69,7 +69,7 @@ namespace fea {
 template <class Key, class T, class Alloc = std::allocator<T>>
 struct unsigned_hole_hashmap {
 	// Sanity checks
-	static_assert(std::is_unsigned<Key>::value,
+	static_assert(std::is_unsigned_v<Key>,
 			"unsigned_map : key must be unsigned integer");
 
 	// Typedefs
@@ -78,8 +78,8 @@ struct unsigned_hole_hashmap {
 	using value_type = mapped_type;
 	using size_type = std::size_t;
 	using idx_type =
-			typename std::conditional<sizeof(key_type) <= sizeof(size_type),
-					key_type, size_type>::type;
+			typename std::conditional_t<sizeof(key_type) <= sizeof(size_type),
+					key_type, size_type>;
 	using difference_type = std::ptrdiff_t;
 
 	using allocator_type = Alloc;
@@ -197,8 +197,8 @@ public:
 	std::pair<iterator, bool> insert(key_type key, value_type&& value);
 
 	// Insert new key-value pairs.
-	void insert(const std::initializer_list<std::pair<key_type, value_type>>&
-					ilist);
+	void
+	insert(const std::initializer_list<std::pair<key_type, value_type>>& ilist);
 
 	// inserts an element or assigns to the current element if the key
 	// already exists
@@ -316,7 +316,8 @@ private:
 	static auto find_first_hole(Iter beg, Iter end, size_type bucket_idx);
 
 	// Grows lookup for trailing collisions.
-	FEA_NODISCARD auto trailing_resize(
+	[[nodiscard]]
+	auto trailing_resize(
 			std::vector<lookup_data, lookup_allocator_type>& lookup);
 
 	// Packs the collisions so all clashing keys are contigous.
@@ -361,4 +362,4 @@ private:
 };
 } // namespace fea
 
-#include "unsigned_hole_hashmap.imp.hpp"
+#include "imp/unsigned_hole_hashmap.imp.hpp"

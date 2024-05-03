@@ -1,4 +1,4 @@
-﻿#include <fea/utils/thread.hpp>
+﻿#include <fea/performance/thread.hpp>
 #include <gtest/gtest.h>
 
 namespace {

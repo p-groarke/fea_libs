@@ -86,25 +86,6 @@ namespace fea {
 /**
  * Helper Defines
  */
-// C++17 offers inline variables, but they can be replaced by static vars in
-// older versions.
-#if FEA_CPP17
-#undef FEA_INLINE_VAR
-#define FEA_INLINE_VAR inline
-#else
-#undef FEA_INLINE_VAR
-#define FEA_INLINE_VAR static
-#endif
-
-// Pastes [[nodiscard]] attribute in C++ >= 17.
-#if FEA_CPP17
-#undef FEA_NODISCARD
-#define FEA_NODISCARD [[nodiscard]]
-#else
-#undef FEA_NODISCARD
-#define FEA_NODISCARD
-#endif
-
 // Are we building in 32 bits or 64 bits?
 #undef FEA_ARCH
 #undef FEA_32BIT
@@ -118,13 +99,13 @@ namespace fea {
 #undef FEA_32BIT
 #define FEA_ARCH 32
 #define FEA_32BIT 1
-FEA_INLINE_VAR constexpr size_t arch = 32;
+inline constexpr size_t arch = 32;
 #else
 #undef FEA_ARCH
 #undef FEA_64BIT
 #define FEA_ARCH 64
 #define FEA_64BIT 1
-FEA_INLINE_VAR constexpr size_t arch = 64;
+inline constexpr size_t arch = 64;
 #endif
 
 // Disables exceptions in classes that support it.
@@ -136,9 +117,9 @@ FEA_INLINE_VAR constexpr size_t arch = 64;
 #if defined(FEA_NOTHROW_DEF)
 #undef FEA_NOTHROW
 #define FEA_NOTHROW 1
-FEA_INLINE_VAR constexpr bool nothrow_build = true;
+inline constexpr bool nothrow_build = true;
 #else
-FEA_INLINE_VAR constexpr bool nothrow_build = false;
+inline constexpr bool nothrow_build = false;
 #endif
 
 // Allows using MSVC regions without causing errors on other OSes.
@@ -153,13 +134,13 @@ FEA_INLINE_VAR constexpr bool nothrow_build = false;
 #if defined(NDEBUG)
 #undef FEA_RELEASE
 #define FEA_RELEASE 1
-FEA_INLINE_VAR constexpr bool release_build = true;
-FEA_INLINE_VAR constexpr bool debug_build = false;
+inline constexpr bool release_build = true;
+inline constexpr bool debug_build = false;
 #else
 #undef FEA_DEBUG
 #define FEA_DEBUG 1
-FEA_INLINE_VAR constexpr bool release_build = false;
-FEA_INLINE_VAR constexpr bool debug_build = true;
+inline constexpr bool release_build = false;
+inline constexpr bool debug_build = true;
 #endif
 
 // Used to set index type in serialization. Driven by build.
@@ -232,7 +213,7 @@ namespace fea {
 #if defined(_AIX)
 #undef FEA_AIX
 #define FEA_AIX 1
-FEA_INLINE_VAR constexpr platform_t platform = platform_t::aix;
+inline constexpr platform_t platform = platform_t::aix;
 
 #elif defined(__unix__) && !defined(__linux__)
 } // namespace fea
@@ -242,18 +223,18 @@ namespace fea {
 #if defined(BSD)
 #undef FEA_BSD
 #define FEA_BSD 1
-FEA_INLINE_VAR constexpr platform_t platform = platform_t::bsd;
+inline constexpr platform_t platform = platform_t::bsd;
 #endif
 
 #elif defined(__hpux)
 #undef FEA_HPUX
 #define FEA_HPUX 1
-FEA_INLINE_VAR constexpr platform_t platform = platform_t::hpux;
+inline constexpr platform_t platform = platform_t::hpux;
 
 #elif defined(__linux__)
 #undef FEA_LINUX
 #define FEA_LINUX 1
-FEA_INLINE_VAR constexpr platform_t platform = platform_t::linuxx;
+inline constexpr platform_t platform = platform_t::linuxx;
 
 #elif defined(__APPLE__) && defined(__MACH__)
 } // namespace fea
@@ -263,26 +244,26 @@ namespace fea {
 #if TARGET_OS_IPHONE == 1
 #undef FEA_IOS
 #define FEA_IOS 1
-FEA_INLINE_VAR constexpr platform_t platform = platform_t::ios;
+inline constexpr platform_t platform = platform_t::ios;
 
 #elif TARGET_OS_MAC == 1
 #undef FEA_MACOS
 #define FEA_MACOS 1
-FEA_INLINE_VAR constexpr platform_t platform = platform_t::macos;
+inline constexpr platform_t platform = platform_t::macos;
 #endif
 
 #elif defined(__sun) && defined(__SVR4)
 #undef FEA_SOLARIS
 #define FEA_SOLARIS 1
-FEA_INLINE_VAR constexpr platform_t platform = platform_t::solaris;
+inline constexpr platform_t platform = platform_t::solaris;
 
 #elif defined(_WIN32)
 #undef FEA_WINDOWS
 #define FEA_WINDOWS 1
-FEA_INLINE_VAR constexpr platform_t platform = platform_t::windows;
+inline constexpr platform_t platform = platform_t::windows;
 #else
 // We are on an unknown platform :scream:
-FEA_INLINE_VAR constexpr platform_t platform = platform_t::count;
+inline constexpr platform_t platform = platform_t::count;
 #endif
 
 
@@ -300,19 +281,17 @@ namespace fea {
 #define FEA_POSIX 1
 #undef FEA_UNIX
 #define FEA_UNIX 1
-FEA_INLINE_VAR constexpr platform_group_t platform_group
+inline constexpr platform_group_t platform_group
 		= platform_group_t::posix | platform_group_t::unixx;
 
 #else
 #undef FEA_UNIX
 #define FEA_UNIX 1
-FEA_INLINE_VAR constexpr platform_group_t platform_group
-		= platform_group_t::unixx;
+inline constexpr platform_group_t platform_group = platform_group_t::unixx;
 #endif
 
 #else
-FEA_INLINE_VAR constexpr platform_group_t platform_group
-		= platform_group_t::count;
+inline constexpr platform_group_t platform_group = platform_group_t::count;
 #endif
 
 // Architecture.

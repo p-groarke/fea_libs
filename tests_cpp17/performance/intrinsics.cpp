@@ -1,6 +1,6 @@
 #include <fea/meta/static_for.hpp>
 #include <fea/meta/tuple.hpp>
-#include <fea/utils/intrinsics.hpp>
+#include <fea/performance/intrinsics.hpp>
 #include <gtest/gtest.h>
 #include <tuple>
 

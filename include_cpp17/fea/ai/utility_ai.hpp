@@ -205,7 +205,7 @@ struct utility_ai<FunctionEnum, PredicateEnum, float(PredArgs...),
 #endif
 
 private:
-	static_assert(std::is_enum<FunctionEnum>::value,
+	static_assert(std::is_enum_v<FunctionEnum>,
 			"fea::utility_ai : The first template parameter must be an enum of "
 			"your functions. The enum must end with the member 'count'.");
 	static_assert(size_t(FunctionEnum::count) != 0,

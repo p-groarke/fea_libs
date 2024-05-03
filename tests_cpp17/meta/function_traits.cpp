@@ -22,24 +22,21 @@ TEST(function_traits, func_ret_and_func_args) {
 	short s = 0;
 	fea::unused(some_func(d, f, s));
 
-	static_assert(
-			std::is_same<fea::func_ret_t<decltype(&obj::func)>, void>::value,
+	static_assert(std::is_same_v<fea::func_ret_t<decltype(&obj::func)>, void>,
 			"function_traits.cpp : test failed");
-	static_assert(std::is_same<fea::func_args_t<decltype(&obj::func)>,
-						  std::tuple<int>>::value,
-			"function_traits.cpp : test failed");
-
-	static_assert(std::is_same<fea::func_ret_t<obj>, int>::value,
-			"function_traits.cpp : test failed");
-	static_assert(
-			std::is_same<fea::func_args_t<obj>, std::tuple<double>>::value,
+	static_assert(std::is_same_v<fea::func_args_t<decltype(&obj::func)>,
+						  std::tuple<int>>,
 			"function_traits.cpp : test failed");
 
-	static_assert(
-			std::is_same<fea::func_ret_t<decltype(&some_func)>, double>::value,
+	static_assert(std::is_same_v<fea::func_ret_t<obj>, int>,
 			"function_traits.cpp : test failed");
-	static_assert(std::is_same<fea::func_args_t<decltype(&some_func)>,
-						  std::tuple<double, float&, const short&>>::value,
+	static_assert(std::is_same_v<fea::func_args_t<obj>, std::tuple<double>>,
+			"function_traits.cpp : test failed");
+
+	static_assert(std::is_same_v<fea::func_ret_t<decltype(&some_func)>, double>,
+			"function_traits.cpp : test failed");
+	static_assert(std::is_same_v<fea::func_args_t<decltype(&some_func)>,
+						  std::tuple<double, float&, const short&>>,
 			"function_traits.cpp : test failed");
 
 	static_assert(
@@ -55,27 +52,26 @@ TEST(function_traits, func_ret_and_func_args) {
 }
 
 TEST(function_traits, member_func_ptr) {
-	static_assert(std::is_class<obj>::value, "");
+	static_assert(std::is_class_v<obj>, "");
 
 	using mem_fun = fea::member_func_ptr_t<void, obj*, int>;
-	static_assert(std::is_same<mem_fun, decltype(&obj::func)>::value,
+	static_assert(std::is_same_v<mem_fun, decltype(&obj::func)>,
 			"function_traits.cpp : test failed");
 
 	using mem_fun2 = fea::member_func_ptr_t<void, int>;
-	static_assert(std::is_same<mem_fun2, void*>::value,
+	static_assert(std::is_same_v<mem_fun2, void*>,
 			"function_traits.cpp : test failed");
 
 	using mem_fun3 = fea::member_func_ptr_t<void, obj, int>;
-	static_assert(std::is_same<mem_fun3, void*>::value,
+	static_assert(std::is_same_v<mem_fun3, void*>,
 			"function_traits.cpp : test failed");
 
 	using mem_fun4 = fea::member_func_ptr_t<void, obj*, int, double, float>;
-	static_assert(
-			std::is_same<mem_fun4, void (obj::*)(int, double, float)>::value,
+	static_assert(std::is_same_v<mem_fun4, void (obj::*)(int, double, float)>,
 			"function_traits.cpp : test failed");
 
 	using mem_fun5 = fea::member_func_ptr_t<void, int*>;
-	static_assert(std::is_same<mem_fun5, void*>::value,
+	static_assert(std::is_same_v<mem_fun5, void*>,
 			"function_traits.cpp : test failed");
 }
 

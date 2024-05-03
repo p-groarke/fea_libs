@@ -160,8 +160,7 @@ struct pack_element<I, fea::pack<Head, Tail...>>
 
 template <size_t I, class Pack>
 struct pack_element<I, const Pack> {
-	using type = typename std::add_const<
-			typename fea::pack_element<I, Pack>::type>::type;
+	using type = std::add_const_t<typename fea::pack_element<I, Pack>::type>;
 };
 
 // Element type at index I.

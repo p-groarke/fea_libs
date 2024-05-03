@@ -96,9 +96,8 @@ struct node {
 	}
 
 	void add_child(Id child_id) {
-		add_child(child_id,
-				std::conditional_t<MaxChildren == 0, std::true_type,
-						std::false_type>{});
+		add_child(child_id, std::conditional_t<MaxChildren == 0, std::true_type,
+									std::false_type>{});
 	}
 
 	void remove_child(Id child_id) {
@@ -121,13 +120,12 @@ struct node {
 
 	bool has_parent(Id parent_id) const {
 		return std::find(_parents.begin(), _parents.end(), parent_id)
-				!= _parents.end();
+			!= _parents.end();
 	}
 
 	void add_parent(Id parent_id) {
-		add_parent(parent_id,
-				std::conditional_t<MaxParents == 0, std::true_type,
-						std::false_type>{});
+		add_parent(parent_id, std::conditional_t<MaxParents == 0,
+									  std::true_type, std::false_type>{});
 	}
 
 	void remove_parent(Id parent_id) {
@@ -326,10 +324,10 @@ template <class Id, class NodeData = char, class DirtyVersion = uint64_t,
 		template <class...> class UnorderedContainer = std::unordered_map,
 		size_t MaxParents = 0, size_t MaxChildren = 0>
 struct lazy_graph {
-	static_assert(std::is_unsigned<DirtyVersion>::value,
+	static_assert(std::is_unsigned_v<DirtyVersion>,
 			"fea::lazy_graph : DirtyVersion must be an unsigned integral");
 
-	static_assert(std::is_default_constructible<NodeData>::value,
+	static_assert(std::is_default_constructible_v<NodeData>,
 			"fea::lazy_graph : NodeData must be default constructible.");
 
 	using node_t = node<Id, NodeData, DirtyVersion, MaxParents, MaxChildren>;

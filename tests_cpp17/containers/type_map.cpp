@@ -50,8 +50,8 @@ TEST(type_map, basics) {
 		EXPECT_EQ(ret, -1);
 
 		using find_t = std::decay_t<decltype(m.find<double>())>;
-		static_assert(std::is_same<find_t, size_t>::value,
-				"type_map.cpp : test failed");
+		static_assert(
+				std::is_same_v<find_t, size_t>, "type_map.cpp : test failed");
 
 		static_assert(std::is_same_v<decltype(m)::front_t, short>,
 				"type_map.cpp : test failed");
@@ -136,8 +136,8 @@ TEST(type_map, basics) {
 		}
 
 		using find_t = std::decay_t<decltype(m.find<double>())>;
-		static_assert(std::is_same<find_t, size_t>::value,
-				"type_map.cpp : test failed");
+		static_assert(
+				std::is_same_v<find_t, size_t>, "type_map.cpp : test failed");
 
 		static_assert(
 				std::is_same_v<decltype(m),
@@ -155,8 +155,8 @@ TEST(type_map, basics) {
 	}
 
 	{
-		auto m = fea::make_type_map(
-				fea::make_kv<int>(short(5)), fea::make_kv<double>(size_t(42)));
+		auto m = fea::make_type_map(fea::kv_t{ int{}, short(5) },
+				fea::kv_t{ double{}, size_t(42) });
 
 		static_assert(m.template contains<int>(), "type_map.cpp : test failed");
 		static_assert(
@@ -184,8 +184,8 @@ TEST(type_map, basics) {
 		});
 
 		using find_t = std::decay_t<decltype(m.find<double>())>;
-		static_assert(std::is_same<find_t, size_t>::value,
-				"type_map.cpp : test failed");
+		static_assert(
+				std::is_same_v<find_t, size_t>, "type_map.cpp : test failed");
 
 		m.for_each([](auto* ptr, auto& val) {
 			using K = std::remove_pointer_t<decltype(ptr)>;
@@ -229,8 +229,8 @@ TEST(type_map, basics) {
 		});
 
 		using find_t = std::decay_t<decltype(m.find<tm_e::two>())>;
-		static_assert(std::is_same<find_t, size_t>::value,
-				"type_map.cpp : test failed");
+		static_assert(
+				std::is_same_v<find_t, size_t>, "type_map.cpp : test failed");
 
 		m.for_each([](auto k, auto& val) {
 			// Fix VS v141, 32 bits. For some reason it deduces int

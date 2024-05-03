@@ -28,7 +28,6 @@ TEST(callback, basics) {
 	ret = my_callback(fea::make_callback(&test_func));
 	EXPECT_EQ(ret, 0.f);
 
-#if FEA_CPP17
 	fea::callback t2([](int, double) -> float { return 17.f; });
 	fea::callback t3(&test_func);
 
@@ -51,6 +50,5 @@ TEST(callback, basics) {
 
 	ret = my_callback(fea::callback{ [v = 1.f](int, double) { return v; } });
 	EXPECT_EQ(ret, 1.f);
-#endif
 }
 } // namespace

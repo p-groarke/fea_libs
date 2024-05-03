@@ -11,12 +11,10 @@ TEST(scope, basics) {
 	}
 	EXPECT_EQ(test_var, 1u);
 
-#if FEA_CPP17
 	{
 		fea::on_exit e{ [&]() { ++test_var; } };
 	}
 	EXPECT_EQ(test_var, 2u);
-#endif
 }
 
 } // namespace

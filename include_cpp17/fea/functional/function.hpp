@@ -95,7 +95,7 @@ struct function_cl<false, FuncRet(FuncArgs...)> {
 	constexpr function_cl(L&& l) noexcept
 			: _plain_func(plain_t(std::forward<L>(l))) {
 
-		static_assert(std::is_convertible<L, plain_t>::value,
+		static_assert(std::is_convertible_v<L, plain_t>,
 				"fea::function_cl : Cannot convert from L to function pointer. "
 				"Did you pass in a lambda with a capture?");
 	}
@@ -147,7 +147,7 @@ struct function_cl<true, FuncRet(T*, FuncArgs...)> {
 			: _func_union(plain_t(std::forward<L>(l)))
 			, _held_func(held_func::plain) {
 
-		static_assert(std::is_convertible<L, plain_t>::value,
+		static_assert(std::is_convertible_v<L, plain_t>,
 				"fea::function_cl : Cannot convert from L to function pointer. "
 				"Did you pass in a lambda with a capture?");
 	}
@@ -234,7 +234,7 @@ struct function_cl_selector<Ret(Args...)> {
 
 template <class Ret, class T, class... Args>
 struct function_cl_selector<Ret(T*, Args...)> {
-	using type = detail::function_cl<std::is_class<T>::value, Ret(T*, Args...)>;
+	using type = detail::function_cl<std::is_class_v<T>, Ret(T*, Args...)>;
 };
 
 } // namespace detail

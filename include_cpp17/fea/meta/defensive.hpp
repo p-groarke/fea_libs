@@ -57,17 +57,17 @@ struct defensive {
 	struct five {
 		static constexpr bool generated_ctors() {
 			return destructible && copy_constructible && move_constructible
-					&& copy_assignable && move_assignable;
+				&& copy_assignable && move_assignable;
 		}
 		static constexpr bool all_trivial() {
 			return trivially_destructible && trivially_copy_constructible
-					&& trivially_move_constructible && trivially_copy_assignable
-					&& trivially_move_assignable;
+				&& trivially_move_constructible && trivially_copy_assignable
+				&& trivially_move_assignable;
 		}
 		static constexpr bool all_non_trivial() {
 			return !trivially_destructible && !trivially_copy_constructible
-					&& !trivially_move_constructible
-					&& !trivially_copy_assignable && !trivially_move_assignable;
+				&& !trivially_move_constructible && !trivially_copy_assignable
+				&& !trivially_move_assignable;
 		}
 
 		// Rule of 5 pass.
@@ -115,24 +115,23 @@ struct defensive {
 	struct fast_vector {
 		static constexpr bool rule_pass() {
 			return (trivially_copy_constructible && trivially_destructible)
-					|| nothrow_move_constructible;
+				|| nothrow_move_constructible;
 		}
 
 		// Always silence specific error messages if the rule is passing.
 		static constexpr bool trivial_dtor_ok() {
 			// Only warn if type has trivial copy ctor
 			return rule_pass() || !trivially_copy_constructible
-					|| trivially_destructible;
+				|| trivially_destructible;
 		}
 		static constexpr bool trivial_copy_ctor_ok() {
 			// Only warn if type has trivial destructor
 			return rule_pass() || !trivially_destructible
-					|| trivially_copy_constructible;
+				|| trivially_copy_constructible;
 		}
 		static constexpr bool nothrow_move_ctor_ok() {
 			return rule_pass() || trivially_destructible
-					|| trivially_copy_constructible
-					|| nothrow_move_constructible;
+				|| trivially_copy_constructible || nothrow_move_constructible;
 		}
 	};
 
@@ -145,7 +144,7 @@ struct defensive {
 	struct move_only {
 		static constexpr bool rule_pass() {
 			return !copy_constructible && !copy_assignable && move_constructible
-					&& move_assignable;
+				&& move_assignable;
 		}
 
 		// Always silence specific error messages if the rule is passing.
@@ -168,8 +167,8 @@ struct defensive {
 	struct non_constructible {
 		static constexpr bool rule_pass() {
 			return !default_constructible && !destructible
-					&& !copy_constructible && !move_constructible
-					&& !copy_assignable && !move_assignable;
+				&& !copy_constructible && !move_constructible
+				&& !copy_assignable && !move_assignable;
 		}
 
 		// Always silence specific error messages if the rule is passing.
@@ -195,28 +194,26 @@ struct defensive {
 
 	// Required traits computed once.
 	static constexpr bool default_constructible
-			= std::is_default_constructible<T>::value;
+			= std::is_default_constructible_v<T>;
 	static constexpr bool trivially_default_constructible
-			= std::is_trivially_default_constructible<T>::value;
-	static constexpr bool destructible = std::is_destructible<T>::value;
+			= std::is_trivially_default_constructible_v<T>;
+	static constexpr bool destructible = std::is_destructible_v<T>;
 	static constexpr bool trivially_destructible
-			= std::is_trivially_destructible<T>::value;
-	static constexpr bool copy_constructible
-			= std::is_copy_constructible<T>::value;
+			= std::is_trivially_destructible_v<T>;
+	static constexpr bool copy_constructible = std::is_copy_constructible_v<T>;
 	static constexpr bool trivially_copy_constructible
-			= std::is_trivially_copy_constructible<T>::value;
-	static constexpr bool move_constructible
-			= std::is_move_constructible<T>::value;
+			= std::is_trivially_copy_constructible_v<T>;
+	static constexpr bool move_constructible = std::is_move_constructible_v<T>;
 	static constexpr bool trivially_move_constructible
-			= std::is_trivially_move_constructible<T>::value;
+			= std::is_trivially_move_constructible_v<T>;
 	static constexpr bool nothrow_move_constructible
-			= std::is_nothrow_move_constructible<T>::value;
-	static constexpr bool copy_assignable = std::is_copy_assignable<T>::value;
+			= std::is_nothrow_move_constructible_v<T>;
+	static constexpr bool copy_assignable = std::is_copy_assignable_v<T>;
 	static constexpr bool trivially_copy_assignable
-			= std::is_trivially_copy_assignable<T>::value;
-	static constexpr bool move_assignable = std::is_move_assignable<T>::value;
+			= std::is_trivially_copy_assignable_v<T>;
+	static constexpr bool move_assignable = std::is_move_assignable_v<T>;
 	static constexpr bool trivially_move_assignable
-			= std::is_trivially_move_assignable<T>::value;
+			= std::is_trivially_move_assignable_v<T>;
 };
 } // namespace defensive_detail
 

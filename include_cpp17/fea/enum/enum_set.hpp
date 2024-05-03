@@ -62,71 +62,56 @@ struct enum_set : public std::array<bool, N> {
 	using const_reference = typename array_t::const_reference;
 
 	constexpr enum_set() = default;
-	constexpr enum_set(std::initializer_list<Enum> true_set)
-			: std::array<bool, N>{} {
-		for (Enum e : true_set) {
-			operator[](e) = true;
-		}
-	}
+
+	// Initialize with provided values to true.
+	constexpr enum_set(std::initializer_list<Enum> true_set);
+
+	// Initialize with provided values to true.
 	template <class... Vals>
-	constexpr enum_set(Vals... values)
-			: std::array<bool, N>{ values... } {
-		static_assert(sizeof...(Vals) == N,
-				"fea::enum_set : Invalid number of arguments.");
-		static_assert(fea::all_of<std::is_same<Vals, bool>...>::value,
-				"fea::enum_set : Invalid constructor parameters, expected "
-				"bools.");
-	}
+	constexpr enum_set(Vals... values);
 
+	// Return item at enum E using compile-time indexing.
 	template <Enum E>
-	constexpr reference at() {
-		return std::get<size_t(E)>(*this);
-	}
+	constexpr reference at();
+
+	// Return item at enum E using compile-time indexing.
 	template <Enum E>
-	constexpr const_reference at() const {
-		return std::get<size_t(E)>(*this);
-	}
+	constexpr const_reference at() const;
 
-	constexpr reference at(Enum e) {
-		return array_t::at(size_t(e));
-	}
-	constexpr const_reference at(Enum e) const {
-		return array_t::at(size_t(e));
-	}
+	// Return item at enum e with bounds checking.
+	constexpr reference at(Enum e);
 
-	constexpr reference operator[](Enum e) {
-		return array_t::operator[](size_t(e));
-	}
-	constexpr const_reference operator[](Enum e) const {
-		return array_t::operator[](size_t(e));
-	}
+	// Return item at enum e with bounds checking.
+	constexpr const_reference at(Enum e) const;
+
+	// Return item at enum e without bounds checking.
+	constexpr reference operator[](Enum e);
+
+	// Return item at enum e without bounds checking.
+	constexpr const_reference operator[](Enum e) const;
 };
 
-#if FEA_CPP17
+
+// std::get equivelant, use with enum key as template.
+// Ex : fea::get<my_enum::value>(arr);
 template <auto I, class E, size_t N>
-constexpr bool& get(enum_set<E, N>& a) noexcept {
-	static_assert(std::is_same_v<decltype(I), E>,
-			"enum_set : passed in wrong enum type");
-	return std::get<size_t(I)>(a);
-}
+constexpr bool& get(enum_set<E, N>& a) noexcept;
+
+// std::get equivelant, use with enum key as template.
+// Ex : fea::get<my_enum::value>(arr);
 template <auto I, class E, size_t N>
-constexpr bool&& get(enum_set<E, N>&& a) noexcept {
-	static_assert(std::is_same_v<decltype(I), E>,
-			"enum_set : passed in wrong enum type");
-	return std::get<size_t(I)>(std::move(a));
-}
+constexpr bool&& get(enum_set<E, N>&& a) noexcept;
+
+// std::get equivelant, use with enum key as template.
+// Ex : fea::get<my_enum::value>(arr);
 template <auto I, class E, size_t N>
-constexpr const bool& get(const enum_set<E, N>& a) noexcept {
-	static_assert(std::is_same_v<decltype(I), E>,
-			"enum_set : passed in wrong enum type");
-	return std::get<size_t(I)>(a);
-}
+constexpr const bool& get(const enum_set<E, N>& a) noexcept;
+
+// std::get equivelant, use with enum key as template.
+// Ex : fea::get<my_enum::value>(arr);
 template <auto I, class E, size_t N>
-constexpr const bool&& get(const enum_set<E, N>&& a) noexcept {
-	static_assert(std::is_same_v<decltype(I), E>,
-			"enum_set : passed in wrong enum type");
-	return std::get<size_t(I)>(std::move(a));
-}
-#endif
+constexpr const bool&& get(const enum_set<E, N>&& a) noexcept;
 
 } // namespace fea
+
+#include "imp/enum_set.imp.hpp"

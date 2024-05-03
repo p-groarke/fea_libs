@@ -62,7 +62,7 @@ template <>
 struct default_grainsize_small<false>;
 
 template <bool B>
-FEA_INLINE_VAR constexpr size_t default_grainsize_small_v
+inline constexpr size_t default_grainsize_small_v
 		= default_grainsize_small<B>::value;
 
 
@@ -74,7 +74,7 @@ template <>
 struct default_grainsize_medium<false>;
 
 template <bool B>
-FEA_INLINE_VAR constexpr size_t default_grainsize_medium_v
+inline constexpr size_t default_grainsize_medium_v
 		= default_grainsize_medium<B>::value;
 
 
@@ -86,7 +86,7 @@ template <>
 struct default_grainsize_large<false>;
 
 template <bool B>
-FEA_INLINE_VAR constexpr size_t default_grainsize_large_v
+inline constexpr size_t default_grainsize_large_v
 		= default_grainsize_large<B>::value;
 
 

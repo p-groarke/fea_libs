@@ -1,14 +1,7 @@
-﻿#include <fea/utils/cpu_info.hpp>
+﻿#include <fea/performance/cpu_info.hpp>
 #if !FEA_ARM
 #include <gtest/gtest.h>
 #include <unordered_map>
-
-// When compiling with c++ < 17, define the structure in 1 cpp file.
-#if !FEA_CPP17
-namespace fea {
-const cpu_info_t cpu_info;
-}
-#endif
 
 #if FEA_MACOS
 #include "cpu_info_macos.hpp"
