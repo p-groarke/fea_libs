@@ -1,8 +1,8 @@
 ﻿#pragma once
 // todo : kv iterators
 // template <class InputIt>
-// flat_unsigned_hashmap(InputIt first, InputIt last)
-//		: flat_unsigned_hashmap() {
+// unsigned_hole_hashmap(InputIt first, InputIt last)
+//		: unsigned_hole_hashmap() {
 //	// TODO : benchmark and potentially optimize
 //	for (auto it = first; it != last; ++it) {
 //		insert(*it);
@@ -120,13 +120,13 @@ T next_prime(T a) {
 } // namespace detail
 
 template <class Key, class T, class Alloc>
-flat_unsigned_hashmap<Key, T, Alloc>::flat_unsigned_hashmap(
+unsigned_hole_hashmap<Key, T, Alloc>::unsigned_hole_hashmap(
 		size_t reserve_count) {
 	reserve(reserve_count);
 }
 
 template <class Key, class T, class Alloc>
-flat_unsigned_hashmap<Key, T, Alloc>::flat_unsigned_hashmap(
+unsigned_hole_hashmap<Key, T, Alloc>::unsigned_hole_hashmap(
 		size_t key_reserve_count, size_t value_reserve_count) {
 	_lookup.reserve(key_reserve_count);
 	_reverse_lookup.reserve(value_reserve_count);
@@ -134,7 +134,7 @@ flat_unsigned_hashmap<Key, T, Alloc>::flat_unsigned_hashmap(
 }
 
 template <class Key, class T, class Alloc>
-flat_unsigned_hashmap<Key, T, Alloc>::flat_unsigned_hashmap(
+unsigned_hole_hashmap<Key, T, Alloc>::unsigned_hole_hashmap(
 		const std::initializer_list<std::pair<key_type, value_type>>& init) {
 	// TODO : benchmark and potentially optimize
 	for (const std::pair<key_type, value_type>& kv : init) {
@@ -143,93 +143,93 @@ flat_unsigned_hashmap<Key, T, Alloc>::flat_unsigned_hashmap(
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::iterator flat_unsigned_hashmap<
+typename unsigned_hole_hashmap<Key, T, Alloc>::iterator unsigned_hole_hashmap<
 		Key, T, Alloc>::begin() noexcept {
 	return _values.begin();
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::const_iterator
-flat_unsigned_hashmap<Key, T, Alloc>::begin() const noexcept {
+typename unsigned_hole_hashmap<Key, T, Alloc>::const_iterator
+unsigned_hole_hashmap<Key, T, Alloc>::begin() const noexcept {
 	return _values.begin();
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::const_iterator
-flat_unsigned_hashmap<Key, T, Alloc>::cbegin() const noexcept {
+typename unsigned_hole_hashmap<Key, T, Alloc>::const_iterator
+unsigned_hole_hashmap<Key, T, Alloc>::cbegin() const noexcept {
 	return _values.cbegin();
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::iterator flat_unsigned_hashmap<
+typename unsigned_hole_hashmap<Key, T, Alloc>::iterator unsigned_hole_hashmap<
 		Key, T, Alloc>::end() noexcept {
 	return _values.end();
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::const_iterator
-flat_unsigned_hashmap<Key, T, Alloc>::end() const noexcept {
+typename unsigned_hole_hashmap<Key, T, Alloc>::const_iterator
+unsigned_hole_hashmap<Key, T, Alloc>::end() const noexcept {
 	return _values.end();
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::const_iterator
-flat_unsigned_hashmap<Key, T, Alloc>::cend() const noexcept {
+typename unsigned_hole_hashmap<Key, T, Alloc>::const_iterator
+unsigned_hole_hashmap<Key, T, Alloc>::cend() const noexcept {
 	return _values.cend();
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::const_key_iterator
-flat_unsigned_hashmap<Key, T, Alloc>::key_begin() const noexcept {
+typename unsigned_hole_hashmap<Key, T, Alloc>::const_key_iterator
+unsigned_hole_hashmap<Key, T, Alloc>::key_begin() const noexcept {
 	return _reverse_lookup.begin();
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::const_key_iterator
-flat_unsigned_hashmap<Key, T, Alloc>::key_end() const noexcept {
+typename unsigned_hole_hashmap<Key, T, Alloc>::const_key_iterator
+unsigned_hole_hashmap<Key, T, Alloc>::key_end() const noexcept {
 	return _reverse_lookup.end();
 }
 
 template <class Key, class T, class Alloc>
-bool flat_unsigned_hashmap<Key, T, Alloc>::empty() const noexcept {
+bool unsigned_hole_hashmap<Key, T, Alloc>::empty() const noexcept {
 	return _values.empty();
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::size_type flat_unsigned_hashmap<
+typename unsigned_hole_hashmap<Key, T, Alloc>::size_type unsigned_hole_hashmap<
 		Key, T, Alloc>::size() const noexcept {
 	return _values.size();
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::size_type flat_unsigned_hashmap<
+typename unsigned_hole_hashmap<Key, T, Alloc>::size_type unsigned_hole_hashmap<
 		Key, T, Alloc>::max_size() const noexcept {
 	// -1 due to sentinel
 	return idx_sentinel() - 1;
 }
 
 template <class Key, class T, class Alloc>
-void flat_unsigned_hashmap<Key, T, Alloc>::reserve(size_type new_cap) {
+void unsigned_hole_hashmap<Key, T, Alloc>::reserve(size_type new_cap) {
 	_lookup.reserve(new_cap);
 	_reverse_lookup.reserve(new_cap);
 	_values.reserve(new_cap);
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::size_type flat_unsigned_hashmap<
+typename unsigned_hole_hashmap<Key, T, Alloc>::size_type unsigned_hole_hashmap<
 		Key, T, Alloc>::capacity() const noexcept {
 	return _values.capacity();
 }
 
 template <class Key, class T, class Alloc>
-void flat_unsigned_hashmap<Key, T, Alloc>::shrink_to_fit() {
+void unsigned_hole_hashmap<Key, T, Alloc>::shrink_to_fit() {
 	_lookup.shrink_to_fit();
 	_reverse_lookup.shrink_to_fit();
 	_values.shrink_to_fit();
 }
 
 template <class Key, class T, class Alloc>
-void flat_unsigned_hashmap<Key, T, Alloc>::clear() noexcept {
+void unsigned_hole_hashmap<Key, T, Alloc>::clear() noexcept {
 	_hash_max = 0;
 	_lookup.clear();
 	_reverse_lookup.clear();
@@ -237,20 +237,20 @@ void flat_unsigned_hashmap<Key, T, Alloc>::clear() noexcept {
 }
 
 template <class Key, class T, class Alloc>
-std::pair<typename flat_unsigned_hashmap<Key, T, Alloc>::iterator, bool>
-flat_unsigned_hashmap<Key, T, Alloc>::insert(
+std::pair<typename unsigned_hole_hashmap<Key, T, Alloc>::iterator, bool>
+unsigned_hole_hashmap<Key, T, Alloc>::insert(
 		key_type key, const value_type& value) {
 	return minsert(key, value);
 }
 
 template <class Key, class T, class Alloc>
-std::pair<typename flat_unsigned_hashmap<Key, T, Alloc>::iterator, bool>
-flat_unsigned_hashmap<Key, T, Alloc>::insert(key_type key, value_type&& value) {
+std::pair<typename unsigned_hole_hashmap<Key, T, Alloc>::iterator, bool>
+unsigned_hole_hashmap<Key, T, Alloc>::insert(key_type key, value_type&& value) {
 	return minsert(key, fea::maybe_move(value));
 }
 
 template <class Key, class T, class Alloc>
-void flat_unsigned_hashmap<Key, T, Alloc>::insert(
+void unsigned_hole_hashmap<Key, T, Alloc>::insert(
 		const std::initializer_list<std::pair<key_type, value_type>>& ilist) {
 	// TODO : benchmark and potentially optimize
 	for (const std::pair<key_type, value_type>& kv : ilist) {
@@ -259,31 +259,31 @@ void flat_unsigned_hashmap<Key, T, Alloc>::insert(
 }
 
 template <class Key, class T, class Alloc>
-std::pair<typename flat_unsigned_hashmap<Key, T, Alloc>::iterator, bool>
-flat_unsigned_hashmap<Key, T, Alloc>::insert_or_assign(
+std::pair<typename unsigned_hole_hashmap<Key, T, Alloc>::iterator, bool>
+unsigned_hole_hashmap<Key, T, Alloc>::insert_or_assign(
 		key_type key, const value_type& value) {
 	return minsert(key, value, true);
 }
 
 template <class Key, class T, class Alloc>
-std::pair<typename flat_unsigned_hashmap<Key, T, Alloc>::iterator, bool>
-flat_unsigned_hashmap<Key, T, Alloc>::insert_or_assign(
+std::pair<typename unsigned_hole_hashmap<Key, T, Alloc>::iterator, bool>
+unsigned_hole_hashmap<Key, T, Alloc>::insert_or_assign(
 		key_type key, value_type&& value) {
 	return minsert(key, fea::maybe_move(value), true);
 }
 
 template <class Key, class T, class Alloc>
 template <class... Args>
-std::pair<typename flat_unsigned_hashmap<Key, T, Alloc>::iterator, bool>
-flat_unsigned_hashmap<Key, T, Alloc>::emplace(key_type key, Args&&... args) {
+std::pair<typename unsigned_hole_hashmap<Key, T, Alloc>::iterator, bool>
+unsigned_hole_hashmap<Key, T, Alloc>::emplace(key_type key, Args&&... args) {
 	// Standard emplace behavior doesn't apply. Use try_emplace.
 	return try_emplace(key, std::forward<Args>(args)...);
 }
 
 template <class Key, class T, class Alloc>
 template <class... Args>
-std::pair<typename flat_unsigned_hashmap<Key, T, Alloc>::iterator, bool>
-flat_unsigned_hashmap<Key, T, Alloc>::try_emplace(
+std::pair<typename unsigned_hole_hashmap<Key, T, Alloc>::iterator, bool>
+unsigned_hole_hashmap<Key, T, Alloc>::try_emplace(
 		key_type key, Args&&... args) {
 	if (load_factor() >= max_load_factor()) {
 		size_type new_size = hash_max() * 2;
@@ -312,13 +312,13 @@ flat_unsigned_hashmap<Key, T, Alloc>::try_emplace(
 }
 
 template <class Key, class T, class Alloc>
-void flat_unsigned_hashmap<Key, T, Alloc>::erase(const_iterator pos) {
+void unsigned_hole_hashmap<Key, T, Alloc>::erase(const_iterator pos) {
 	size_t idx = std::distance(_values.cbegin(), pos);
 	erase(_reverse_lookup[idx]);
 }
 
 template <class Key, class T, class Alloc>
-void flat_unsigned_hashmap<Key, T, Alloc>::erase(
+void unsigned_hole_hashmap<Key, T, Alloc>::erase(
 		const_iterator first, const_iterator last) {
 	size_t first_idx = std::distance(_values.cbegin(), first);
 	size_t last_idx = std::distance(_values.cbegin(), last);
@@ -336,7 +336,7 @@ void flat_unsigned_hashmap<Key, T, Alloc>::erase(
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::size_type flat_unsigned_hashmap<
+typename unsigned_hole_hashmap<Key, T, Alloc>::size_type unsigned_hole_hashmap<
 		Key, T, Alloc>::erase(key_type k) {
 	auto lookup_it = find_first_slot_or_hole(k);
 	if (lookup_it == _lookup.end()) {
@@ -386,8 +386,8 @@ typename flat_unsigned_hashmap<Key, T, Alloc>::size_type flat_unsigned_hashmap<
 }
 
 template <class Key, class T, class Alloc>
-void flat_unsigned_hashmap<Key, T, Alloc>::swap(
-		flat_unsigned_hashmap& other) noexcept {
+void unsigned_hole_hashmap<Key, T, Alloc>::swap(
+		unsigned_hole_hashmap& other) noexcept {
 	std::swap(_max_load_factor, other._max_load_factor);
 	std::swap(_hash_max, other._hash_max);
 	_lookup.swap(other._lookup);
@@ -396,26 +396,26 @@ void flat_unsigned_hashmap<Key, T, Alloc>::swap(
 }
 
 template <class Key, class T, class Alloc>
-const typename flat_unsigned_hashmap<Key, T, Alloc>::value_type*
-flat_unsigned_hashmap<Key, T, Alloc>::data() const noexcept {
+const typename unsigned_hole_hashmap<Key, T, Alloc>::value_type*
+unsigned_hole_hashmap<Key, T, Alloc>::data() const noexcept {
 	return _values.data();
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::value_type*
-flat_unsigned_hashmap<Key, T, Alloc>::data() noexcept {
+typename unsigned_hole_hashmap<Key, T, Alloc>::value_type*
+unsigned_hole_hashmap<Key, T, Alloc>::data() noexcept {
 	return _values.data();
 }
 
 template <class Key, class T, class Alloc>
-const typename flat_unsigned_hashmap<Key, T, Alloc>::key_type*
-flat_unsigned_hashmap<Key, T, Alloc>::key_data() const noexcept {
+const typename unsigned_hole_hashmap<Key, T, Alloc>::key_type*
+unsigned_hole_hashmap<Key, T, Alloc>::key_data() const noexcept {
 	return _reverse_lookup.data();
 }
 
 template <class Key, class T, class Alloc>
-const typename flat_unsigned_hashmap<Key, T, Alloc>::mapped_type&
-flat_unsigned_hashmap<Key, T, Alloc>::at(key_type k) const {
+const typename unsigned_hole_hashmap<Key, T, Alloc>::mapped_type&
+unsigned_hole_hashmap<Key, T, Alloc>::at(key_type k) const {
 	if (!contains(k)) {
 		fea::maybe_throw<std::out_of_range>(
 				__FUNCTION__, __LINE__, "value doesn't exist");
@@ -425,29 +425,29 @@ flat_unsigned_hashmap<Key, T, Alloc>::at(key_type k) const {
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::mapped_type&
-flat_unsigned_hashmap<Key, T, Alloc>::at(key_type k) {
+typename unsigned_hole_hashmap<Key, T, Alloc>::mapped_type&
+unsigned_hole_hashmap<Key, T, Alloc>::at(key_type k) {
 	return const_cast<mapped_type&>(
-			static_cast<const flat_unsigned_hashmap*>(this)->at(k));
+			static_cast<const unsigned_hole_hashmap*>(this)->at(k));
 }
 
 template <class Key, class T, class Alloc>
-const typename flat_unsigned_hashmap<Key, T, Alloc>::mapped_type&
-flat_unsigned_hashmap<Key, T, Alloc>::at_unchecked(key_type k) const {
+const typename unsigned_hole_hashmap<Key, T, Alloc>::mapped_type&
+unsigned_hole_hashmap<Key, T, Alloc>::at_unchecked(key_type k) const {
 	const_iterator it = find(k);
 	return *it;
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::mapped_type&
-flat_unsigned_hashmap<Key, T, Alloc>::at_unchecked(key_type k) {
+typename unsigned_hole_hashmap<Key, T, Alloc>::mapped_type&
+unsigned_hole_hashmap<Key, T, Alloc>::at_unchecked(key_type k) {
 	return const_cast<mapped_type&>(
-			static_cast<const flat_unsigned_hashmap*>(this)->at_unchecked(k));
+			static_cast<const unsigned_hole_hashmap*>(this)->at_unchecked(k));
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::mapped_type&
-flat_unsigned_hashmap<Key, T, Alloc>::operator[](key_type k) {
+typename unsigned_hole_hashmap<Key, T, Alloc>::mapped_type&
+unsigned_hole_hashmap<Key, T, Alloc>::operator[](key_type k) {
 	iterator it = find(k);
 	if (it != end()) {
 		return *it;
@@ -457,7 +457,7 @@ flat_unsigned_hashmap<Key, T, Alloc>::operator[](key_type k) {
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::size_type flat_unsigned_hashmap<
+typename unsigned_hole_hashmap<Key, T, Alloc>::size_type unsigned_hole_hashmap<
 		Key, T, Alloc>::count(key_type k) const {
 	if (contains(k))
 		return 1;
@@ -466,8 +466,8 @@ typename flat_unsigned_hashmap<Key, T, Alloc>::size_type flat_unsigned_hashmap<
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::const_iterator
-flat_unsigned_hashmap<Key, T, Alloc>::find(key_type k) const {
+typename unsigned_hole_hashmap<Key, T, Alloc>::const_iterator
+unsigned_hole_hashmap<Key, T, Alloc>::find(key_type k) const {
 	auto lookup_it = find_first_slot_or_hole(k);
 	if (lookup_it == _lookup.end()) {
 		return end();
@@ -485,21 +485,21 @@ flat_unsigned_hashmap<Key, T, Alloc>::find(key_type k) const {
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::iterator flat_unsigned_hashmap<
+typename unsigned_hole_hashmap<Key, T, Alloc>::iterator unsigned_hole_hashmap<
 		Key, T, Alloc>::find(key_type k) {
-	auto const_it = static_cast<const flat_unsigned_hashmap*>(this)->find(k);
+	auto const_it = static_cast<const unsigned_hole_hashmap*>(this)->find(k);
 
 	// Convert to non-const iterator.
 	return _values.erase(const_it, const_it);
 }
 
 template <class Key, class T, class Alloc>
-bool flat_unsigned_hashmap<Key, T, Alloc>::contains(key_type k) const {
+bool unsigned_hole_hashmap<Key, T, Alloc>::contains(key_type k) const {
 	return find(k) != end();
 }
 
 template <class Key, class T, class Alloc>
-float flat_unsigned_hashmap<Key, T, Alloc>::load_factor() const noexcept {
+float unsigned_hole_hashmap<Key, T, Alloc>::load_factor() const noexcept {
 	size_type h_max = hash_max();
 	if (h_max == 0) {
 		return 2.f; // dummy value to trigger growth, must be > 1.f
@@ -508,17 +508,17 @@ float flat_unsigned_hashmap<Key, T, Alloc>::load_factor() const noexcept {
 }
 
 template <class Key, class T, class Alloc>
-float flat_unsigned_hashmap<Key, T, Alloc>::max_load_factor() const noexcept {
+float unsigned_hole_hashmap<Key, T, Alloc>::max_load_factor() const noexcept {
 	return _max_load_factor;
 }
 
 template <class Key, class T, class Alloc>
-void flat_unsigned_hashmap<Key, T, Alloc>::max_load_factor(float ml) noexcept {
+void unsigned_hole_hashmap<Key, T, Alloc>::max_load_factor(float ml) noexcept {
 	_max_load_factor = ml;
 }
 
 template <class Key, class T, class Alloc>
-void flat_unsigned_hashmap<Key, T, Alloc>::rehash(size_type count) {
+void unsigned_hole_hashmap<Key, T, Alloc>::rehash(size_type count) {
 	if (count < init_count()) {
 		count = init_count();
 	} else {
@@ -553,14 +553,14 @@ void flat_unsigned_hashmap<Key, T, Alloc>::rehash(size_type count) {
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::size_type flat_unsigned_hashmap<
+typename unsigned_hole_hashmap<Key, T, Alloc>::size_type unsigned_hole_hashmap<
 		Key, T, Alloc>::hash_max() const {
 	assert(detail::is_prime(_hash_max) || _hash_max == 0);
 	return _hash_max;
 }
 
 template <class Key, class T, class Alloc>
-typename flat_unsigned_hashmap<Key, T, Alloc>::size_type flat_unsigned_hashmap<
+typename unsigned_hole_hashmap<Key, T, Alloc>::size_type unsigned_hole_hashmap<
 		Key, T, Alloc>::key_to_index(key_type key) const {
 	size_type ret = key_to_index(key, hash_max());
 	assert(ret < _lookup.size());
@@ -568,34 +568,34 @@ typename flat_unsigned_hashmap<Key, T, Alloc>::size_type flat_unsigned_hashmap<
 }
 
 template <class Key, class T, class Alloc>
-constexpr typename flat_unsigned_hashmap<Key, T, Alloc>::size_type
-flat_unsigned_hashmap<Key, T, Alloc>::key_to_index(
+constexpr typename unsigned_hole_hashmap<Key, T, Alloc>::size_type
+unsigned_hole_hashmap<Key, T, Alloc>::key_to_index(
 		key_type key, size_type h_max) {
 	return (size_type(key) % h_max) * 2;
 }
 
 template <class Key, class T, class Alloc>
-constexpr typename flat_unsigned_hashmap<Key, T, Alloc>::key_type
-flat_unsigned_hashmap<Key, T, Alloc>::key_sentinel() noexcept {
+constexpr typename unsigned_hole_hashmap<Key, T, Alloc>::key_type
+unsigned_hole_hashmap<Key, T, Alloc>::key_sentinel() noexcept {
 	return (std::numeric_limits<key_type>::max)();
 }
 
 template <class Key, class T, class Alloc>
-constexpr typename flat_unsigned_hashmap<Key, T, Alloc>::idx_type
-flat_unsigned_hashmap<Key, T, Alloc>::idx_sentinel() noexcept {
+constexpr typename unsigned_hole_hashmap<Key, T, Alloc>::idx_type
+unsigned_hole_hashmap<Key, T, Alloc>::idx_sentinel() noexcept {
 	return (std::numeric_limits<idx_type>::max)();
 }
 
 template <class Key, class T, class Alloc>
-constexpr typename flat_unsigned_hashmap<Key, T, Alloc>::size_type
-flat_unsigned_hashmap<Key, T, Alloc>::init_count() noexcept {
+constexpr typename unsigned_hole_hashmap<Key, T, Alloc>::size_type
+unsigned_hole_hashmap<Key, T, Alloc>::init_count() noexcept {
 	// return 14; // 7 * 2, hash_max == 7
 	return 3;
 }
 
 template <class Key, class T, class Alloc>
 template <class Iter, class Func>
-auto flat_unsigned_hashmap<Key, T, Alloc>::find_slot(
+auto unsigned_hole_hashmap<Key, T, Alloc>::find_slot(
 		Iter start, Iter end, Func func) {
 	// Test first.
 	if (func(*start)) {
@@ -620,7 +620,7 @@ auto flat_unsigned_hashmap<Key, T, Alloc>::find_slot(
 }
 
 template <class Key, class T, class Alloc>
-auto flat_unsigned_hashmap<Key, T, Alloc>::find_first_slot_or_hole(
+auto unsigned_hole_hashmap<Key, T, Alloc>::find_first_slot_or_hole(
 		key_type key) const {
 	if (hash_max() == 0) {
 		return _lookup.end();
@@ -637,9 +637,9 @@ auto flat_unsigned_hashmap<Key, T, Alloc>::find_first_slot_or_hole(
 }
 
 template <class Key, class T, class Alloc>
-auto flat_unsigned_hashmap<Key, T, Alloc>::find_first_slot_or_hole(
+auto unsigned_hole_hashmap<Key, T, Alloc>::find_first_slot_or_hole(
 		key_type key) {
-	auto const_it = static_cast<const flat_unsigned_hashmap*>(this)
+	auto const_it = static_cast<const unsigned_hole_hashmap*>(this)
 							->find_first_slot_or_hole(key);
 
 	if (const_it == _lookup.end()) {
@@ -652,7 +652,7 @@ auto flat_unsigned_hashmap<Key, T, Alloc>::find_first_slot_or_hole(
 
 template <class Key, class T, class Alloc>
 template <class Iter>
-auto flat_unsigned_hashmap<Key, T, Alloc>::find_first_hole(
+auto unsigned_hole_hashmap<Key, T, Alloc>::find_first_hole(
 		Iter beg, Iter end, size_type bucket_idx) {
 
 	// find first free slot
@@ -664,7 +664,7 @@ auto flat_unsigned_hashmap<Key, T, Alloc>::find_first_hole(
 }
 
 template <class Key, class T, class Alloc>
-auto flat_unsigned_hashmap<Key, T, Alloc>::trailing_resize(
+auto unsigned_hole_hashmap<Key, T, Alloc>::trailing_resize(
 		std::vector<lookup_data, lookup_allocator_type>& lookup) {
 	size_type idx = lookup.size();
 	if ((idx & 1) == 0) {
@@ -678,7 +678,7 @@ auto flat_unsigned_hashmap<Key, T, Alloc>::trailing_resize(
 }
 
 template <class Key, class T, class Alloc>
-void flat_unsigned_hashmap<Key, T, Alloc>::repack_collisions(
+void unsigned_hole_hashmap<Key, T, Alloc>::repack_collisions(
 		size_type hole_idx) {
 	assert(hole_idx < _lookup.size());
 	assert(_lookup[hole_idx].idx == idx_sentinel());
@@ -727,8 +727,8 @@ void flat_unsigned_hashmap<Key, T, Alloc>::repack_collisions(
 
 template <class Key, class T, class Alloc>
 template <class M>
-std::pair<typename flat_unsigned_hashmap<Key, T, Alloc>::iterator, bool>
-flat_unsigned_hashmap<Key, T, Alloc>::minsert(
+std::pair<typename unsigned_hole_hashmap<Key, T, Alloc>::iterator, bool>
+unsigned_hole_hashmap<Key, T, Alloc>::minsert(
 		key_type key, M&& value, bool assign_found) {
 	if (load_factor() >= max_load_factor()) {
 		size_type new_size = hash_max() * 2;
@@ -763,8 +763,8 @@ flat_unsigned_hashmap<Key, T, Alloc>::minsert(
 
 
 template <class Key, class T, class Alloc>
-bool operator==(const flat_unsigned_hashmap<Key, T, Alloc>& lhs,
-		const flat_unsigned_hashmap<Key, T, Alloc>& rhs) {
+bool operator==(const unsigned_hole_hashmap<Key, T, Alloc>& lhs,
+		const unsigned_hole_hashmap<Key, T, Alloc>& rhs) {
 	if (lhs.size() != rhs.size())
 		return false;
 
@@ -784,8 +784,8 @@ bool operator==(const flat_unsigned_hashmap<Key, T, Alloc>& lhs,
 }
 
 template <class Key, class T, class Alloc>
-bool operator!=(const flat_unsigned_hashmap<Key, T, Alloc>& lhs,
-		const flat_unsigned_hashmap<Key, T, Alloc>& rhs) {
+bool operator!=(const unsigned_hole_hashmap<Key, T, Alloc>& lhs,
+		const unsigned_hole_hashmap<Key, T, Alloc>& rhs) {
 	return !operator==(lhs, rhs);
 }
 } // namespace fea

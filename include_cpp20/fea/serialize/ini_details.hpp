@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
-#include "fea/containers/flat_unsigned_map.hpp"
+#include "fea/containers/id_flat_slotmap.hpp"
 #include "fea/string/conversions.hpp"
 #include "fea/string/string.hpp"
 #include "fea/utils/file.hpp"
@@ -126,13 +126,19 @@ inline constexpr std::string_view general_help = R"(; INI Help
 // https://www.cppstories.com/2021/heterogeneous-access-cpp20/
 struct string_hash {
 	using is_transparent = void;
-	[[nodiscard]] size_t operator()(const char* txt) const {
+	[[nodiscard]]
+	size_t
+	operator()(const char* txt) const {
 		return std::hash<std::string_view>{}(txt);
 	}
-	[[nodiscard]] size_t operator()(std::string_view txt) const {
+	[[nodiscard]]
+	size_t
+	operator()(std::string_view txt) const {
 		return std::hash<std::string_view>{}(txt);
 	}
-	[[nodiscard]] size_t operator()(const std::string& txt) const {
+	[[nodiscard]]
+	size_t
+	operator()(const std::string& txt) const {
 		return std::hash<std::string>{}(txt);
 	}
 };
@@ -159,7 +165,7 @@ struct section {
 	entry_id_t next_entry_id = entry_id_t(0);
 
 	// Our entries.
-	fea::flat_unsigned_map<entry_id_t, entry> entry_map{};
+	fea::id_flat_slotmap<entry_id_t, entry> entry_map{};
 
 	// Section id to section lookup of entry name to entry id.
 	std::unordered_map<std::string, entry_id_t, string_hash, std::equal_to<>>
@@ -171,7 +177,7 @@ struct section {
 
 struct ini_data {
 	// Our entries, sorted in order of appearance.
-	fea::flat_unsigned_map<section_id_t, section> section_map;
+	fea::id_flat_slotmap<section_id_t, section> section_map;
 
 	// Section name to section id.
 	std::unordered_map<std::string, section_id_t, string_hash, std::equal_to<>>
@@ -201,7 +207,8 @@ inline std::string variant_to_helpstr(const entry& e) {
 }
 
 // Parse a string value to expected type.
-[[nodiscard]] variant_t from_string(std::string_view str) {
+[[nodiscard]]
+variant_t from_string(std::string_view str) {
 	size_t single_idx = str.find('\'');
 	size_t double_idx = str.find('"');
 	if (single_idx != str.npos && double_idx == str.npos) {
@@ -332,17 +339,18 @@ struct return_overload {
 	}
 
 	template <class T>
-	[[nodiscard]] static auto to_variant_type() {
+	[[nodiscard]]
+	static auto to_variant_type() {
 		using m_t = std::decay_t<T>;
 		if constexpr (std::is_same_v<m_t, bool>) {
 			return bool{};
 		} else if constexpr (std::is_integral_v<m_t>
-				|| std::is_unsigned_v<m_t>) {
+							 || std::is_unsigned_v<m_t>) {
 			return intmax_t{};
 		} else if constexpr (std::is_floating_point_v<m_t>) {
 			return float_t{};
 		} else if constexpr (std::is_convertible_v<m_t, std::string>
-				|| std::is_constructible_v<std::string, m_t>) {
+							 || std::is_constructible_v<std::string, m_t>) {
 			return std::string{};
 		} else {
 			return std::nullptr_t{};
@@ -350,7 +358,8 @@ struct return_overload {
 	}
 
 	template <class ToT>
-	[[nodiscard]] static bool can_cast(const variant_t& from) {
+	[[nodiscard]]
+	static bool can_cast(const variant_t& from) {
 		if (std::is_same_v<ToT, std::string_view>) {
 			// Cannot cast, needs back reference.
 			return false;
@@ -360,17 +369,17 @@ struct return_overload {
 		case 0: {
 			using inner_t = std::decay_t<decltype(std::get<0>(from))>;
 			return std::is_convertible_v<inner_t, ToT>
-					|| std::is_constructible_v<ToT, inner_t>;
+				|| std::is_constructible_v<ToT, inner_t>;
 		} break;
 		case 1: {
 			using inner_t = std::decay_t<decltype(std::get<1>(from))>;
 			return std::is_convertible_v<inner_t, ToT>
-					|| std::is_constructible_v<ToT, inner_t>;
+				|| std::is_constructible_v<ToT, inner_t>;
 		} break;
 		case 2: {
 			using inner_t = std::decay_t<decltype(std::get<2>(from))>;
 			return std::is_convertible_v<inner_t, ToT>
-					|| std::is_constructible_v<ToT, inner_t>;
+				|| std::is_constructible_v<ToT, inner_t>;
 		} break;
 		case 3: {
 			using inner_t = std::decay_t<decltype(std::get<3>(from))>;
@@ -378,7 +387,7 @@ struct return_overload {
 					"can_cast : Need to update switch case.");
 
 			return std::is_convertible_v<inner_t, ToT>
-					|| std::is_constructible_v<ToT, inner_t>;
+				|| std::is_constructible_v<ToT, inner_t>;
 		} break;
 		case 4: {
 			using inner_t = std::decay_t<decltype(std::get<4>(from))>;
@@ -394,7 +403,8 @@ struct return_overload {
 	}
 
 	template <class ToT>
-	[[nodiscard]] static bool can_convert(const variant_t& from) {
+	[[nodiscard]]
+	static bool can_convert(const variant_t& from) {
 		if (std::is_same_v<ToT, std::string_view>) {
 			// Cannot cast, needs back reference.
 			return false;
@@ -426,40 +436,41 @@ struct return_overload {
 	}
 
 	template <class ToT>
-	[[nodiscard]] static ToT cast(const variant_t& from) {
+	[[nodiscard]]
+	static ToT cast(const variant_t& from) {
 		switch (from.index()) {
 		case 0: {
 			using inner_t = std::decay_t<decltype(std::get<0>(from))>;
 			if constexpr (std::is_convertible_v<inner_t, ToT>
-					|| std::is_constructible_v<ToT, inner_t>) {
+						  || std::is_constructible_v<ToT, inner_t>) {
 				return ToT(std::get<0>(from));
 			}
 		} break;
 		case 1: {
 			using inner_t = std::decay_t<decltype(std::get<1>(from))>;
 			if constexpr (std::is_convertible_v<inner_t, ToT>
-					|| std::is_constructible_v<ToT, inner_t>) {
+						  || std::is_constructible_v<ToT, inner_t>) {
 				return ToT(std::get<1>(from));
 			}
 		} break;
 		case 2: {
 			using inner_t = std::decay_t<decltype(std::get<2>(from))>;
 			if constexpr (std::is_convertible_v<inner_t, ToT>
-					|| std::is_constructible_v<ToT, inner_t>) {
+						  || std::is_constructible_v<ToT, inner_t>) {
 				return ToT(std::get<2>(from));
 			}
 		} break;
 		case 3: {
 			using inner_t = std::decay_t<decltype(std::get<3>(from))>;
 			if constexpr (std::is_convertible_v<inner_t, ToT>
-					|| std::is_constructible_v<ToT, inner_t>) {
+						  || std::is_constructible_v<ToT, inner_t>) {
 				return ToT(std::get<3>(from));
 			}
 		} break;
 		case 4: {
 			using inner_t = std::decay_t<decltype(std::get<4>(from))>;
 			if constexpr (std::is_convertible_v<inner_t, ToT>
-					|| std::is_constructible_v<ToT, inner_t>) {
+						  || std::is_constructible_v<ToT, inner_t>) {
 				return ToT(std::get<4>(from));
 			}
 		} break;
@@ -471,7 +482,8 @@ struct return_overload {
 	}
 
 	template <class ToT>
-	[[nodiscard]] static ToT convert(const variant_t& from) {
+	[[nodiscard]]
+	static ToT convert(const variant_t& from) {
 		if constexpr (std::is_same_v<ToT, std::string>) {
 			return to_string(from);
 		} else {
@@ -482,14 +494,17 @@ struct return_overload {
 	}
 
 	template <class T>
-	[[nodiscard]] static variant_t make_variant(T&& t) {
+	[[nodiscard]]
+	static variant_t make_variant(T&& t) {
 		using inner_t = decltype(to_variant_type<T>());
 		return variant_t{ inner_t(std::forward<T>(t)) };
 	}
 
 	// User provided default.
 	template <class T>
-	[[nodiscard]] return_overload operator|(const T& t) const&& {
+	[[nodiscard]]
+	return_overload
+	operator|(const T& t) const&& {
 		if (_entry != nullptr
 				&& !(_entry->value.valueless_by_exception()
 						|| std::holds_alternative<std::nullptr_t>(
@@ -504,7 +519,9 @@ struct return_overload {
 
 	// On non-const access, assign default if entry is invalid.
 	template <class T>
-	[[nodiscard]] return_overload operator|(const T& t) && {
+	[[nodiscard]]
+	return_overload
+	operator|(const T& t) && {
 		if (_entry == nullptr) {
 			// Return temporary pointing to user default.
 			return return_overload{ make_variant(t) };
@@ -616,14 +633,16 @@ struct return_overload {
 	//}
 
 	template <class T>
-	[[nodiscard]] bool is_valid(const variant_t& mvariant) const {
+	[[nodiscard]]
+	bool is_valid(const variant_t& mvariant) const {
 		return !mvariant.valueless_by_exception()
-				&& !std::holds_alternative<std::nullptr_t>(mvariant)
-				&& std::holds_alternative<T>(mvariant);
+			&& !std::holds_alternative<std::nullptr_t>(mvariant)
+			&& std::holds_alternative<T>(mvariant);
 	}
 
 	template <class T>
-	[[nodiscard]] T doit() const {
+	[[nodiscard]]
+	T doit() const {
 		if (_entry != nullptr) {
 			// Try as best we can to return stored value.
 			if (is_valid<T>(_entry->value)) {
@@ -653,7 +672,8 @@ struct return_overload {
 	}
 
 	template <class T>
-	[[nodiscard]] auto& doit() {
+	[[nodiscard]]
+	auto& doit() {
 		assert(_entry != nullptr);
 		_entry->value = T{};
 		return std::get<T>(_entry->value);
@@ -668,8 +688,9 @@ struct return_overload {
 
 template <class SectionT>
 struct section_ret {
-	[[nodiscard]] return_overload<const entry> operator[](
-			std::string_view entry_name) const&& {
+	[[nodiscard]]
+	return_overload<const entry>
+	operator[](std::string_view entry_name) const&& {
 		if (s == nullptr) {
 			return { &s->invalid_variant };
 		}
@@ -681,8 +702,9 @@ struct section_ret {
 		return return_overload{ &s->entry_map.at(eid_it->second) };
 	}
 
-	[[nodiscard]] return_overload<entry> operator[](
-			std::string_view entry_name) && {
+	[[nodiscard]]
+	return_overload<entry>
+	operator[](std::string_view entry_name) && {
 		assert(s != nullptr);
 
 		auto eid_it = s->entry_name_to_id.find(entry_name);
@@ -691,13 +713,13 @@ struct section_ret {
 			eid_it = s->entry_name_to_id
 							 .insert({ std::string{ entry_name }, new_id })
 							 .first;
-			s->entry_map.insert(new_id,
-					entry{
-							.entry_name = std::string{ entry_name },
-							//.str_value = "",
-							.comment = "",
-							.value = std::nullptr_t{},
-					});
+			s->entry_map.insert(
+					new_id, entry{
+									.entry_name = std::string{ entry_name },
+									//.str_value = "",
+									.comment = "",
+									.value = std::nullptr_t{},
+							});
 		}
 		return return_overload{ &s->entry_map.at(eid_it->second) };
 	}
@@ -710,7 +732,8 @@ struct section_ret {
 };
 
 // Sanitize user text, both from a security perspective and ini perspective.
-[[nodiscard]] std::string sanitize(const std::u32string& text) {
+[[nodiscard]]
+std::string sanitize(const std::u32string& text) {
 	std::u32string sanitized;
 	sanitized.reserve(text.size());
 
@@ -902,7 +925,8 @@ struct section_ret {
 }
 
 // Read data, returns utf8 string.
-[[nodiscard]] std::string read_data(const std::filesystem::path& filepath) {
+[[nodiscard]]
+std::string read_data(const std::filesystem::path& filepath) {
 	std::ifstream ifs{ filepath };
 	if (!ifs.is_open()) {
 		return {};
@@ -917,8 +941,8 @@ struct section_ret {
 
 
 // Parse data and fill map.
-[[nodiscard]] ini_data make_data(
-		const std::string& data, section_id_t& next_section_id) {
+[[nodiscard]]
+ini_data make_data(const std::string& data, section_id_t& next_section_id) {
 	if (data.empty()) {
 		return {};
 	}
@@ -935,10 +959,10 @@ struct section_ret {
 		current_section_id = next_section_id++;
 		ret.section_name_to_id.insert(
 				{ std::string{ name }, current_section_id });
-		auto p = ret.section_map.insert(current_section_id,
-				section{
-						.section_name = std::string{ name },
-				});
+		auto p = ret.section_map.insert(
+				current_section_id, section{
+											.section_name = std::string{ name },
+									});
 		current_section = &(*p.first);
 	};
 

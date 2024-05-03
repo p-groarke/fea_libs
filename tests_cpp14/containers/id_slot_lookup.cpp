@@ -1,10 +1,10 @@
-#include <fea/containers/id_lookup.hpp>
+#include <fea/containers/id_slot_lookup.hpp>
 #include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
 #include <unordered_map>
 
 namespace {
-#define test_failed_msg "id_lookup.cpp : Unit test failed."
+#define test_failed_msg "id_slot_lookup.cpp : Unit test failed."
 
 struct my_id {
 	my_id() = default;
@@ -48,7 +48,7 @@ TEST(id_lookup, basics) {
 	}
 
 	{
-		fea::id_lookup<size_t> ul;
+		fea::id_slot_lookup<size_t> ul;
 
 		using ul_t = std::decay_t<decltype(ul)>;
 		static_assert(std::is_same<typename ul_t::hasher,
@@ -60,7 +60,7 @@ TEST(id_lookup, basics) {
 		static_assert(std::is_same<typename ul_t::pos_type, size_t>::value,
 				test_failed_msg);
 
-		fea::id_lookup<size_t> ul2;
+		fea::id_slot_lookup<size_t> ul2;
 		ul.swap(ul2);
 
 		size_t k = 0u;
@@ -119,7 +119,7 @@ TEST(id_lookup, basics) {
 	}
 
 	{
-		fea::id_lookup<my_id> ul;
+		fea::id_slot_lookup<my_id> ul;
 
 		using ul_t = std::decay_t<decltype(ul)>;
 		static_assert(

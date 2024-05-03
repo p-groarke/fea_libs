@@ -67,7 +67,7 @@ namespace fea {
 
 
 template <class Key, class T, class Alloc = std::allocator<T>>
-struct flat_unsigned_hashmap {
+struct unsigned_hole_hashmap {
 	// Sanity checks
 	static_assert(std::is_unsigned<Key>::value,
 			"unsigned_map : key must be unsigned integer");
@@ -121,18 +121,18 @@ public:
 			allocator_type>::template rebind_alloc<lookup_data>;
 
 	// Ctors
-	explicit flat_unsigned_hashmap(size_t reserve_count);
-	explicit flat_unsigned_hashmap(
+	explicit unsigned_hole_hashmap(size_t reserve_count);
+	explicit unsigned_hole_hashmap(
 			size_t key_reserve_count, size_t value_reserve_count);
 
-	flat_unsigned_hashmap() = default;
-	flat_unsigned_hashmap(const flat_unsigned_hashmap&) = default;
-	flat_unsigned_hashmap(flat_unsigned_hashmap&&) noexcept = default;
-	flat_unsigned_hashmap& operator=(const flat_unsigned_hashmap&) = default;
-	flat_unsigned_hashmap& operator=(flat_unsigned_hashmap&&) noexcept
+	unsigned_hole_hashmap() = default;
+	unsigned_hole_hashmap(const unsigned_hole_hashmap&) = default;
+	unsigned_hole_hashmap(unsigned_hole_hashmap&&) noexcept = default;
+	unsigned_hole_hashmap& operator=(const unsigned_hole_hashmap&) = default;
+	unsigned_hole_hashmap& operator=(unsigned_hole_hashmap&&) noexcept
 			= default;
 
-	explicit flat_unsigned_hashmap(
+	explicit unsigned_hole_hashmap(
 			const std::initializer_list<std::pair<key_type, value_type>>& init);
 
 
@@ -227,7 +227,7 @@ public:
 	size_type erase(key_type k);
 
 	// swaps the contents
-	void swap(flat_unsigned_hashmap& other) noexcept;
+	void swap(unsigned_hole_hashmap& other) noexcept;
 
 
 	// Lookup
@@ -284,13 +284,13 @@ public:
 
 	// Deep comparison.
 	template <class K, class U, class A>
-	friend bool operator==(const flat_unsigned_hashmap<K, U, A>& lhs,
-			const flat_unsigned_hashmap<K, U, A>& rhs);
+	friend bool operator==(const unsigned_hole_hashmap<K, U, A>& lhs,
+			const unsigned_hole_hashmap<K, U, A>& rhs);
 
 	// Deep comparison.
 	template <class K, class U, class A>
-	friend bool operator!=(const flat_unsigned_hashmap<K, U, A>& lhs,
-			const flat_unsigned_hashmap<K, U, A>& rhs);
+	friend bool operator!=(const unsigned_hole_hashmap<K, U, A>& lhs,
+			const unsigned_hole_hashmap<K, U, A>& rhs);
 
 private:
 	size_type hash_max() const;
@@ -361,4 +361,4 @@ private:
 };
 } // namespace fea
 
-#include "flat_unsigned_hashmap.imp.hpp"
+#include "unsigned_hole_hashmap.imp.hpp"

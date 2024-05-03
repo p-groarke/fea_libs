@@ -1,4 +1,4 @@
-﻿#include <fea/containers/flat_unsigned_hashmap.hpp>
+﻿#include <fea/containers/unsigned_hole_hashmap.hpp>
 #include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 #include <memory>
@@ -33,7 +33,7 @@ template <class KeyT>
 void do_basic_test() {
 	constexpr KeyT small_num = 10;
 
-	fea::flat_unsigned_hashmap<KeyT, test2> map1{ size_t(small_num) };
+	fea::unsigned_hole_hashmap<KeyT, test2> map1{ size_t(small_num) };
 	map1.reserve(100);
 	EXPECT_EQ(map1.capacity(), 100u);
 	map1.shrink_to_fit();
@@ -77,9 +77,9 @@ void do_basic_test() {
 		EXPECT_EQ(*ret_pair.first, t);
 	}
 
-	fea::flat_unsigned_hashmap<KeyT, test2> map2{ map1 };
-	fea::flat_unsigned_hashmap<KeyT, test2> map_ded{ map1 };
-	fea::flat_unsigned_hashmap<KeyT, test2> map3{ std::move(map_ded) };
+	fea::unsigned_hole_hashmap<KeyT, test2> map2{ map1 };
+	fea::unsigned_hole_hashmap<KeyT, test2> map_ded{ map1 };
+	fea::unsigned_hole_hashmap<KeyT, test2> map3{ std::move(map_ded) };
 
 	EXPECT_EQ(map1, map2);
 	EXPECT_EQ(map1, map3);
@@ -256,11 +256,11 @@ void do_basic_test() {
 	map1 = map2;
 	map3 = map2;
 
-	map1 = fea::flat_unsigned_hashmap<KeyT, test2>(
+	map1 = fea::unsigned_hole_hashmap<KeyT, test2>(
 			{ { 0, { 0 } }, { 1, { 1 } }, { 2, { 2 } } });
-	map2 = fea::flat_unsigned_hashmap<KeyT, test2>(
+	map2 = fea::unsigned_hole_hashmap<KeyT, test2>(
 			{ { 3, { 3 } }, { 4, { 4 } }, { 5, { 5 } } });
-	map3 = fea::flat_unsigned_hashmap<KeyT, test2>(
+	map3 = fea::unsigned_hole_hashmap<KeyT, test2>(
 			{ { 6, { 6 } }, { 7, { 7 } }, { 8, { 8 } } });
 
 	EXPECT_EQ(map1.size(), 3u);
@@ -289,9 +289,9 @@ void do_basic_test() {
 	EXPECT_EQ(*map3.find(8), test2{ 8 });
 
 	{
-		fea::flat_unsigned_hashmap<KeyT, test2> map1_back = map1;
-		fea::flat_unsigned_hashmap<KeyT, test2> map2_back{ map2 };
-		fea::flat_unsigned_hashmap<KeyT, test2> map3_back{ map3 };
+		fea::unsigned_hole_hashmap<KeyT, test2> map1_back = map1;
+		fea::unsigned_hole_hashmap<KeyT, test2> map2_back{ map2 };
+		fea::unsigned_hole_hashmap<KeyT, test2> map3_back{ map3 };
 
 		map1.swap(map2);
 		EXPECT_EQ(map1, map2_back);
@@ -327,7 +327,7 @@ void do_basic_test() {
 	EXPECT_EQ(*map1.find(5), test2{ 5 });
 
 	// TODO :
-	// map2 = fea::flat_unsigned_hashmap<size_t, test2>(map1.begin(),
+	// map2 = fea::unsigned_hole_hashmap<size_t, test2>(map1.begin(),
 	// map1.end()); EXPECT_EQ(map1.size(), map2.size()); EXPECT_EQ(map1, map2);
 
 	// map3.clear();
@@ -392,7 +392,7 @@ TEST(flat_unsigned_hashmap, basics) {
 
 
 TEST(flat_unsigned_hashmap, uniqueptr) {
-	fea::flat_unsigned_hashmap<size_t, std::unique_ptr<unsigned>> map;
+	fea::unsigned_hole_hashmap<size_t, std::unique_ptr<unsigned>> map;
 
 	{
 		std::unique_ptr<unsigned> test = std::make_unique<unsigned>(0);
@@ -437,7 +437,7 @@ template <class KeyT>
 void do_fuzz_test() {
 	constexpr size_t max_val = 254;
 
-	fea::flat_unsigned_hashmap<KeyT, KeyT> map;
+	fea::unsigned_hole_hashmap<KeyT, KeyT> map;
 
 	auto test_it = [&](const std::vector<KeyT>& rand_numbers) {
 		std::unordered_map<KeyT, size_t> visited;
@@ -524,7 +524,7 @@ TEST(flat_unsigned_hashmap, fuzzing) {
 }
 
 TEST(flat_unsigned_hashmap, trailing_holes) {
-	fea::flat_unsigned_hashmap<size_t, size_t> map;
+	fea::unsigned_hole_hashmap<size_t, size_t> map;
 
 	// 10 will grow to hash 17, size 34.
 	constexpr size_t num = 10;
@@ -553,7 +553,7 @@ TEST(flat_unsigned_hashmap, trailing_holes) {
 }
 
 TEST(flat_unsigned_hashmap, even_resize) {
-	fea::flat_unsigned_hashmap<unsigned, unsigned> map;
+	fea::unsigned_hole_hashmap<unsigned, unsigned> map;
 	std::vector<unsigned> keys{ 1037, 2075, 70, 71, 1316, 518, 1318, 658, 659,
 		2072, 1036, 322, 2073 };
 

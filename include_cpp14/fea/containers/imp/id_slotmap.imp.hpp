@@ -1,19 +1,19 @@
 ﻿#pragma once
 namespace fea {
 template <class Key, class T, class Alloc>
-unsigned_map<Key, T, Alloc>::unsigned_map(size_t new_cap) {
+id_slotmap<Key, T, Alloc>::id_slotmap(size_t new_cap) {
 	reserve(new_cap);
 }
 
 template <class Key, class T, class Alloc>
-unsigned_map<Key, T, Alloc>::unsigned_map(
+id_slotmap<Key, T, Alloc>::id_slotmap(
 		size_t key_new_cap, size_t value_new_cap) {
 	reserve(key_new_cap, value_new_cap);
 }
 
 template <class Key, class T, class Alloc>
 template <class InputIt>
-unsigned_map<Key, T, Alloc>::unsigned_map(InputIt first, InputIt last) {
+id_slotmap<Key, T, Alloc>::id_slotmap(InputIt first, InputIt last) {
 	// TODO : benchmark and potentially optimize
 	for (auto it = first; it != last; ++it) {
 		insert(*it);
@@ -21,7 +21,7 @@ unsigned_map<Key, T, Alloc>::unsigned_map(InputIt first, InputIt last) {
 }
 
 template <class Key, class T, class Alloc>
-unsigned_map<Key, T, Alloc>::unsigned_map(
+id_slotmap<Key, T, Alloc>::id_slotmap(
 		const std::initializer_list<value_type>& init) {
 	// TODO : benchmark and potentially optimize
 	for (const value_type& kv : init) {
@@ -30,104 +30,104 @@ unsigned_map<Key, T, Alloc>::unsigned_map(
 }
 
 template <class Key, class T, class Alloc>
-typename unsigned_map<Key, T, Alloc>::iterator
-unsigned_map<Key, T, Alloc>::begin() noexcept {
+typename id_slotmap<Key, T, Alloc>::iterator id_slotmap<Key, T,
+		Alloc>::begin() noexcept {
 	return _values.begin();
 }
 
 template <class Key, class T, class Alloc>
-typename unsigned_map<Key, T, Alloc>::const_iterator
-unsigned_map<Key, T, Alloc>::begin() const noexcept {
+typename id_slotmap<Key, T, Alloc>::const_iterator id_slotmap<Key, T,
+		Alloc>::begin() const noexcept {
 	return _values.begin();
 }
 
 template <class Key, class T, class Alloc>
-typename unsigned_map<Key, T, Alloc>::const_iterator
-unsigned_map<Key, T, Alloc>::cbegin() const noexcept {
+typename id_slotmap<Key, T, Alloc>::const_iterator id_slotmap<Key, T,
+		Alloc>::cbegin() const noexcept {
 	return _values.cbegin();
 }
 
 template <class Key, class T, class Alloc>
-typename unsigned_map<Key, T, Alloc>::iterator
-unsigned_map<Key, T, Alloc>::end() noexcept {
+typename id_slotmap<Key, T, Alloc>::iterator id_slotmap<Key, T,
+		Alloc>::end() noexcept {
 	return _values.end();
 }
 
 template <class Key, class T, class Alloc>
-typename unsigned_map<Key, T, Alloc>::const_iterator
-unsigned_map<Key, T, Alloc>::end() const noexcept {
+typename id_slotmap<Key, T, Alloc>::const_iterator id_slotmap<Key, T,
+		Alloc>::end() const noexcept {
 	return _values.end();
 }
 
 template <class Key, class T, class Alloc>
-typename unsigned_map<Key, T, Alloc>::const_iterator
-unsigned_map<Key, T, Alloc>::cend() const noexcept {
+typename id_slotmap<Key, T, Alloc>::const_iterator id_slotmap<Key, T,
+		Alloc>::cend() const noexcept {
 	return _values.cend();
 }
 
 template <class Key, class T, class Alloc>
-bool unsigned_map<Key, T, Alloc>::empty() const noexcept {
+bool id_slotmap<Key, T, Alloc>::empty() const noexcept {
 	return _values.empty();
 }
 
 template <class Key, class T, class Alloc>
-typename unsigned_map<Key, T, Alloc>::size_type
-unsigned_map<Key, T, Alloc>::size() const noexcept {
+typename id_slotmap<Key, T, Alloc>::size_type id_slotmap<Key, T, Alloc>::size()
+		const noexcept {
 	return _values.size();
 }
 
 template <class Key, class T, class Alloc>
-typename unsigned_map<Key, T, Alloc>::size_type
-unsigned_map<Key, T, Alloc>::max_size() const noexcept {
+typename id_slotmap<Key, T, Alloc>::size_type id_slotmap<Key, T,
+		Alloc>::max_size() const noexcept {
 	return _lookup.max_size();
 }
 
 template <class Key, class T, class Alloc>
-void unsigned_map<Key, T, Alloc>::reserve(size_type new_cap) {
+void id_slotmap<Key, T, Alloc>::reserve(size_type new_cap) {
 	_lookup.reserve(new_cap);
 	_values.reserve(new_cap);
 }
 
 template <class Key, class T, class Alloc>
-void unsigned_map<Key, T, Alloc>::reserve(
+void id_slotmap<Key, T, Alloc>::reserve(
 		size_type key_new_cap, size_type value_new_cap) {
 	_lookup.reserve(key_new_cap);
 	_values.reserve(value_new_cap);
 }
 
 template <class Key, class T, class Alloc>
-typename unsigned_map<Key, T, Alloc>::size_type
-unsigned_map<Key, T, Alloc>::capacity() const noexcept {
+typename id_slotmap<Key, T, Alloc>::size_type id_slotmap<Key, T,
+		Alloc>::capacity() const noexcept {
 	return _values.capacity();
 }
 
 template <class Key, class T, class Alloc>
-void unsigned_map<Key, T, Alloc>::shrink_to_fit() {
+void id_slotmap<Key, T, Alloc>::shrink_to_fit() {
 	_lookup.shrink_to_fit();
 	_values.shrink_to_fit();
 }
 
 template <class Key, class T, class Alloc>
-void unsigned_map<Key, T, Alloc>::clear() noexcept {
+void id_slotmap<Key, T, Alloc>::clear() noexcept {
 	_lookup.clear();
 	_values.clear();
 }
 
 template <class Key, class T, class Alloc>
-std::pair<typename unsigned_map<Key, T, Alloc>::iterator, bool>
-unsigned_map<Key, T, Alloc>::insert(const value_type& value) {
+std::pair<typename id_slotmap<Key, T, Alloc>::iterator, bool> id_slotmap<Key, T,
+		Alloc>::insert(const value_type& value) {
 	return minsert(value.first, value.second);
 }
 
 template <class Key, class T, class Alloc>
-std::pair<typename unsigned_map<Key, T, Alloc>::iterator, bool>
-unsigned_map<Key, T, Alloc>::insert(value_type&& value) {
+std::pair<typename id_slotmap<Key, T, Alloc>::iterator, bool> id_slotmap<Key, T,
+		Alloc>::insert(value_type&& value) {
 	return minsert(value.first, fea::maybe_move(value.second));
 }
 
 template <class Key, class T, class Alloc>
 template <class InputIt>
-void unsigned_map<Key, T, Alloc>::insert(InputIt first, InputIt last) {
+void id_slotmap<Key, T, Alloc>::insert(InputIt first, InputIt last) {
 	// TODO : benchmark and potentially optimize
 	for (auto it = first; it != last; ++it) {
 		insert(*it);
@@ -135,7 +135,7 @@ void unsigned_map<Key, T, Alloc>::insert(InputIt first, InputIt last) {
 }
 
 template <class Key, class T, class Alloc>
-void unsigned_map<Key, T, Alloc>::insert(
+void id_slotmap<Key, T, Alloc>::insert(
 		const std::initializer_list<value_type>& ilist) {
 	// TODO : benchmark and potentially optimize
 	for (const value_type& kv : ilist) {
@@ -145,15 +145,15 @@ void unsigned_map<Key, T, Alloc>::insert(
 
 template <class Key, class T, class Alloc>
 template <class M>
-std::pair<typename unsigned_map<Key, T, Alloc>::iterator, bool>
-unsigned_map<Key, T, Alloc>::insert_or_assign(const key_type& k, M&& obj) {
+std::pair<typename id_slotmap<Key, T, Alloc>::iterator, bool> id_slotmap<Key, T,
+		Alloc>::insert_or_assign(const key_type& k, M&& obj) {
 	return minsert(k, std::forward<M>(obj), true);
 }
 
 template <class Key, class T, class Alloc>
 template <class... Args>
-std::pair<typename unsigned_map<Key, T, Alloc>::iterator, bool>
-unsigned_map<Key, T, Alloc>::emplace(const key_type& k, Args&&... args) {
+std::pair<typename id_slotmap<Key, T, Alloc>::iterator, bool> id_slotmap<Key, T,
+		Alloc>::emplace(const key_type& k, Args&&... args) {
 	iterator it = find(k);
 	if (it != end()) {
 		return { it, false };
@@ -166,16 +166,16 @@ unsigned_map<Key, T, Alloc>::emplace(const key_type& k, Args&&... args) {
 
 template <class Key, class T, class Alloc>
 template <class... Args>
-std::pair<typename unsigned_map<Key, T, Alloc>::iterator, bool>
-unsigned_map<Key, T, Alloc>::try_emplace(const key_type& key, Args&&... args) {
+std::pair<typename id_slotmap<Key, T, Alloc>::iterator, bool> id_slotmap<Key, T,
+		Alloc>::try_emplace(const key_type& key, Args&&... args) {
 	// Standard emplace behavior doesn't apply, always use try_emplace
 	// behavior.
 	return emplace(key, std::forward<Args>(args)...);
 }
 
 template <class Key, class T, class Alloc>
-typename unsigned_map<Key, T, Alloc>::iterator
-unsigned_map<Key, T, Alloc>::erase(const_iterator pos) {
+typename id_slotmap<Key, T, Alloc>::iterator id_slotmap<Key, T, Alloc>::erase(
+		const_iterator pos) {
 	size_t idx = std::distance(_values.cbegin(), pos);
 	erase(pos->first);
 
@@ -186,8 +186,8 @@ unsigned_map<Key, T, Alloc>::erase(const_iterator pos) {
 }
 
 template <class Key, class T, class Alloc>
-typename unsigned_map<Key, T, Alloc>::iterator
-unsigned_map<Key, T, Alloc>::erase(const_iterator first, const_iterator last) {
+typename id_slotmap<Key, T, Alloc>::iterator id_slotmap<Key, T, Alloc>::erase(
+		const_iterator first, const_iterator last) {
 	size_t first_idx = std::distance(_values.cbegin(), first);
 	size_t last_idx = std::distance(_values.cbegin(), last);
 
@@ -209,8 +209,8 @@ unsigned_map<Key, T, Alloc>::erase(const_iterator first, const_iterator last) {
 }
 
 template <class Key, class T, class Alloc>
-typename unsigned_map<Key, T, Alloc>::size_type
-unsigned_map<Key, T, Alloc>::erase(const key_type& k) {
+typename id_slotmap<Key, T, Alloc>::size_type id_slotmap<Key, T, Alloc>::erase(
+		const key_type& k) {
 	iterator it = find(k);
 	if (it == end()) {
 		return 0;
@@ -236,26 +236,26 @@ unsigned_map<Key, T, Alloc>::erase(const key_type& k) {
 }
 
 template <class Key, class T, class Alloc>
-void unsigned_map<Key, T, Alloc>::swap(unsigned_map& other) noexcept {
+void id_slotmap<Key, T, Alloc>::swap(id_slotmap& other) noexcept {
 	_lookup.swap(other._lookup);
 	_values.swap(other._values);
 }
 
 template <class Key, class T, class Alloc>
-const typename unsigned_map<Key, T, Alloc>::value_type*
-unsigned_map<Key, T, Alloc>::data() const noexcept {
+const typename id_slotmap<Key, T, Alloc>::value_type* id_slotmap<Key, T,
+		Alloc>::data() const noexcept {
 	return _values.data();
 }
 
 template <class Key, class T, class Alloc>
-typename unsigned_map<Key, T, Alloc>::value_type*
-unsigned_map<Key, T, Alloc>::data() noexcept {
+typename id_slotmap<Key, T, Alloc>::value_type* id_slotmap<Key, T,
+		Alloc>::data() noexcept {
 	return _values.data();
 }
 
 template <class Key, class T, class Alloc>
-const typename unsigned_map<Key, T, Alloc>::mapped_type&
-unsigned_map<Key, T, Alloc>::at(const key_type& k) const {
+const typename id_slotmap<Key, T, Alloc>::mapped_type& id_slotmap<Key, T,
+		Alloc>::at(const key_type& k) const {
 	auto it = find(k);
 	if (it == end()) {
 		fea::maybe_throw<std::out_of_range>(
@@ -265,28 +265,28 @@ unsigned_map<Key, T, Alloc>::at(const key_type& k) const {
 }
 
 template <class Key, class T, class Alloc>
-typename unsigned_map<Key, T, Alloc>::mapped_type&
-unsigned_map<Key, T, Alloc>::at(const key_type& k) {
+typename id_slotmap<Key, T, Alloc>::mapped_type& id_slotmap<Key, T, Alloc>::at(
+		const key_type& k) {
 	return const_cast<mapped_type&>(
-			static_cast<const unsigned_map*>(this)->at(k));
+			static_cast<const id_slotmap*>(this)->at(k));
 }
 
 template <class Key, class T, class Alloc>
-const typename unsigned_map<Key, T, Alloc>::mapped_type&
-unsigned_map<Key, T, Alloc>::at_unchecked(const key_type& k) const noexcept {
+const typename id_slotmap<Key, T, Alloc>::mapped_type& id_slotmap<Key, T,
+		Alloc>::at_unchecked(const key_type& k) const noexcept {
 	return _values[_lookup.at_unchecked(k)].second;
 }
 
 template <class Key, class T, class Alloc>
-typename unsigned_map<Key, T, Alloc>::mapped_type&
-unsigned_map<Key, T, Alloc>::at_unchecked(const key_type& k) noexcept {
+typename id_slotmap<Key, T, Alloc>::mapped_type& id_slotmap<Key, T,
+		Alloc>::at_unchecked(const key_type& k) noexcept {
 	return const_cast<mapped_type&>(
-			static_cast<const unsigned_map*>(this)->at_unchecked(k));
+			static_cast<const id_slotmap*>(this)->at_unchecked(k));
 }
 
 template <class Key, class T, class Alloc>
-typename unsigned_map<Key, T, Alloc>::mapped_type&
-unsigned_map<Key, T, Alloc>::operator[](const key_type& k) {
+typename id_slotmap<Key, T, Alloc>::mapped_type& id_slotmap<Key, T,
+		Alloc>::operator[](const key_type& k) {
 	if (!contains(k)) {
 		emplace(k, mapped_type{});
 	}
@@ -295,32 +295,32 @@ unsigned_map<Key, T, Alloc>::operator[](const key_type& k) {
 }
 
 template <class Key, class T, class Alloc>
-typename unsigned_map<Key, T, Alloc>::size_type
-unsigned_map<Key, T, Alloc>::count(const key_type& k) const noexcept {
+typename id_slotmap<Key, T, Alloc>::size_type id_slotmap<Key, T, Alloc>::count(
+		const key_type& k) const noexcept {
 	return contains(k) ? 1 : 0;
 }
 
 template <class Key, class T, class Alloc>
-typename unsigned_map<Key, T, Alloc>::const_iterator
-unsigned_map<Key, T, Alloc>::find(const key_type& k) const noexcept {
+typename id_slotmap<Key, T, Alloc>::const_iterator id_slotmap<Key, T,
+		Alloc>::find(const key_type& k) const noexcept {
 	return begin() + _lookup.find(k, size());
 }
 
 template <class Key, class T, class Alloc>
-typename unsigned_map<Key, T, Alloc>::iterator
-unsigned_map<Key, T, Alloc>::find(const key_type& k) noexcept {
+typename id_slotmap<Key, T, Alloc>::iterator id_slotmap<Key, T, Alloc>::find(
+		const key_type& k) noexcept {
 	return begin() + _lookup.find(k, size());
 }
 
 template <class Key, class T, class Alloc>
-bool unsigned_map<Key, T, Alloc>::contains(const key_type& k) const noexcept {
+bool id_slotmap<Key, T, Alloc>::contains(const key_type& k) const noexcept {
 	return _lookup.contains(k);
 }
 
 template <class Key, class T, class Alloc>
-std::pair<typename unsigned_map<Key, T, Alloc>::const_iterator,
-		typename unsigned_map<Key, T, Alloc>::const_iterator>
-unsigned_map<Key, T, Alloc>::equal_range(const key_type& k) const noexcept {
+std::pair<typename id_slotmap<Key, T, Alloc>::const_iterator,
+		typename id_slotmap<Key, T, Alloc>::const_iterator>
+id_slotmap<Key, T, Alloc>::equal_range(const key_type& k) const noexcept {
 	const_iterator it = find(k);
 	if (it == end()) {
 		return { it, it };
@@ -329,9 +329,9 @@ unsigned_map<Key, T, Alloc>::equal_range(const key_type& k) const noexcept {
 }
 
 template <class Key, class T, class Alloc>
-std::pair<typename unsigned_map<Key, T, Alloc>::iterator,
-		typename unsigned_map<Key, T, Alloc>::iterator>
-unsigned_map<Key, T, Alloc>::equal_range(const key_type& k) noexcept {
+std::pair<typename id_slotmap<Key, T, Alloc>::iterator,
+		typename id_slotmap<Key, T, Alloc>::iterator>
+id_slotmap<Key, T, Alloc>::equal_range(const key_type& k) noexcept {
 	iterator it = find(k);
 	if (it == end()) {
 		return { it, it };
@@ -341,9 +341,8 @@ unsigned_map<Key, T, Alloc>::equal_range(const key_type& k) noexcept {
 
 template <class Key, class T, class Alloc>
 template <class M>
-std::pair<typename unsigned_map<Key, T, Alloc>::iterator, bool>
-unsigned_map<Key, T, Alloc>::minsert(
-		const key_type& k, M&& obj, bool assign_found) {
+std::pair<typename id_slotmap<Key, T, Alloc>::iterator, bool> id_slotmap<Key, T,
+		Alloc>::minsert(const key_type& k, M&& obj, bool assign_found) {
 	iterator it = find(k);
 	if (it != end()) {
 		if (assign_found) {
@@ -358,8 +357,8 @@ unsigned_map<Key, T, Alloc>::minsert(
 }
 
 template <class Key, class T, class Alloc>
-bool operator==(const unsigned_map<Key, T, Alloc>& lhs,
-		const unsigned_map<Key, T, Alloc>& rhs) {
+bool operator==(const id_slotmap<Key, T, Alloc>& lhs,
+		const id_slotmap<Key, T, Alloc>& rhs) {
 	if (lhs.size() != rhs.size())
 		return false;
 
@@ -377,16 +376,16 @@ bool operator==(const unsigned_map<Key, T, Alloc>& lhs,
 }
 
 template <class Key, class T, class Alloc>
-bool operator!=(const unsigned_map<Key, T, Alloc>& lhs,
-		const unsigned_map<Key, T, Alloc>& rhs) {
+bool operator!=(const id_slotmap<Key, T, Alloc>& lhs,
+		const id_slotmap<Key, T, Alloc>& rhs) {
 	return !operator==(lhs, rhs);
 }
 } // namespace fea
 
 namespace std {
 template <class Key, class T, class Alloc>
-inline void swap(fea::unsigned_map<Key, T, Alloc>& lhs,
-		fea::unsigned_map<Key, T, Alloc>& rhs) noexcept {
+inline void swap(fea::id_slotmap<Key, T, Alloc>& lhs,
+		fea::id_slotmap<Key, T, Alloc>& rhs) noexcept {
 	lhs.swap(rhs);
 }
 } // namespace std

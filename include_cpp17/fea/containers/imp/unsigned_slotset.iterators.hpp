@@ -54,12 +54,11 @@ modulo = index start -> std::find -> index start + collisions
 */
 
 namespace fea {
-namespace experimental {
 // TODO : Specialize for pure unsigned. Specialize for ordered/unordered.
 // Currently unsafe as it drops potential id extra data.
 
 template <class MySet>
-struct unsigned_set_const_iterator {
+struct unsigned_slotset_const_iterator {
 	// Typedefs
 	using difference_type = typename MySet::difference_type;
 	using key_type = typename MySet::key_type;
@@ -74,22 +73,22 @@ struct unsigned_set_const_iterator {
 			typename std::allocator_traits<bool_allocator_type>::const_pointer;
 
 	// Ctors
-	constexpr unsigned_set_const_iterator(
+	constexpr unsigned_slotset_const_iterator(
 			bool_pointer first, bool_pointer last, bool_pointer ptr) noexcept;
 
-	constexpr unsigned_set_const_iterator() noexcept = default;
-	~unsigned_set_const_iterator() noexcept = default;
-	constexpr unsigned_set_const_iterator(
-			const unsigned_set_const_iterator&) noexcept
+	constexpr unsigned_slotset_const_iterator() noexcept = default;
+	~unsigned_slotset_const_iterator() noexcept = default;
+	constexpr unsigned_slotset_const_iterator(
+			const unsigned_slotset_const_iterator&) noexcept
 			= default;
-	constexpr unsigned_set_const_iterator(
-			unsigned_set_const_iterator&&) noexcept
+	constexpr unsigned_slotset_const_iterator(
+			unsigned_slotset_const_iterator&&) noexcept
 			= default;
-	constexpr unsigned_set_const_iterator& operator=(
-			const unsigned_set_const_iterator&) noexcept
+	constexpr unsigned_slotset_const_iterator& operator=(
+			const unsigned_slotset_const_iterator&) noexcept
 			= default;
-	constexpr unsigned_set_const_iterator& operator=(
-			unsigned_set_const_iterator&&) noexcept
+	constexpr unsigned_slotset_const_iterator& operator=(
+			unsigned_slotset_const_iterator&&) noexcept
 			= default;
 
 	// Returns a constructed key.
@@ -104,46 +103,46 @@ struct unsigned_set_const_iterator {
 			= delete;
 
 	// Pre-fix ++operator.
-	constexpr unsigned_set_const_iterator& operator++() noexcept;
+	constexpr unsigned_slotset_const_iterator& operator++() noexcept;
 
 	// Post-fix operator++.
-	constexpr unsigned_set_const_iterator& operator++(int) noexcept;
+	constexpr unsigned_slotset_const_iterator& operator++(int) noexcept;
 
 	// Pre-fix --operator.
-	constexpr unsigned_set_const_iterator& operator--() noexcept;
+	constexpr unsigned_slotset_const_iterator& operator--() noexcept;
 
 	// Post-fix operator--.
-	constexpr unsigned_set_const_iterator& operator--(int) noexcept;
+	constexpr unsigned_slotset_const_iterator& operator--(int) noexcept;
 
 	// Comparison.
 	[[nodiscard]]
 	bool
-	operator==(const unsigned_set_const_iterator& rhs) const noexcept;
+	operator==(const unsigned_slotset_const_iterator& rhs) const noexcept;
 
 	// Comparison.
 	[[nodiscard]]
 	bool
-	operator!=(const unsigned_set_const_iterator& rhs) const noexcept;
+	operator!=(const unsigned_slotset_const_iterator& rhs) const noexcept;
 
 	// Comparison.
 	[[nodiscard]]
 	bool
-	operator<(const unsigned_set_const_iterator& rhs) const noexcept;
+	operator<(const unsigned_slotset_const_iterator& rhs) const noexcept;
 
 	// Comparison.
 	[[nodiscard]]
 	bool
-	operator>(const unsigned_set_const_iterator& rhs) const noexcept;
+	operator>(const unsigned_slotset_const_iterator& rhs) const noexcept;
 
 	// Comparison.
 	[[nodiscard]]
 	bool
-	operator<=(const unsigned_set_const_iterator& rhs) const noexcept;
+	operator<=(const unsigned_slotset_const_iterator& rhs) const noexcept;
 
 	// Comparison.
 	[[nodiscard]]
 	bool
-	operator>=(const unsigned_set_const_iterator& rhs) const noexcept;
+	operator>=(const unsigned_slotset_const_iterator& rhs) const noexcept;
 
 private:
 	friend MySet;
@@ -154,10 +153,11 @@ private:
 };
 
 template <class MySet>
-struct unsigned_set_iterator : public unsigned_set_const_iterator<MySet> {
+struct unsigned_slotset_iterator
+		: public unsigned_slotset_const_iterator<MySet> {
 	// Non-const iterator does nothing special as we never return references
 	// to ids. We only return by copy (on the spot key creation).
-	using base_t = unsigned_set_const_iterator<MySet>;
+	using base_t = unsigned_slotset_const_iterator<MySet>;
 	using base_t::base_t;
 
 	using difference_type = typename base_t::difference_type;
@@ -175,10 +175,9 @@ struct unsigned_set_iterator : public unsigned_set_const_iterator<MySet> {
 	// Ctors
 	// Construct from non-const pointers, convert to const in const_iterator,
 	// permits const_cast.
-	constexpr unsigned_set_iterator(
+	constexpr unsigned_slotset_iterator(
 			bool_pointer first, bool_pointer last, bool_pointer ptr) noexcept;
 };
-} // namespace experimental
 } // namespace fea
 
-#include "unsigned_set.iterators.imp.hpp"
+#include "unsigned_slotset.iterators.imp.hpp"

@@ -129,7 +129,7 @@ private:
 
 	// Channel tuple must be size 'ChannelEnum::count'.
 	static_assert(std::tuple_size<channel_tuple_t>::value
-					== size_t(ChannelEnum::count),
+						  == size_t(ChannelEnum::count),
 			"event_system : channel tuple size must be equal to "
 			"ChannelEnum::count");
 
@@ -427,9 +427,8 @@ public:
 	// Subscribe a callback to an event from notifier nid.
 	template <EventEnum e, class Func>
 	event_sys_id<EventEnum, e> subscribe(notifier_id nid, Func&& callback) {
-		return { nid,
-			_notifier_stacks.at(nid._id).template subscribe<e>(
-					std::forward<Func>(callback)) };
+		return { nid, _notifier_stacks.at(nid._id).template subscribe<e>(
+							  std::forward<Func>(callback)) };
 	}
 
 	// Subscribe a callback to an event from a channel.
@@ -485,8 +484,7 @@ public:
 
 private:
 	// Notifier events.
-	unsigned_map<size_t, event_stack<EventEnum, FuncTypes...>>
-			_notifier_stacks{};
+	id_slotmap<size_t, event_stack<EventEnum, FuncTypes...>> _notifier_stacks{};
 
 	// Generates notifier ids.
 	size_t _notifier_id_generator = 0;

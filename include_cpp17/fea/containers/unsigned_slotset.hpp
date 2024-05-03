@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 #include "fea/containers/id_hash.hpp"
-#include "fea/containers/unsigned_set.iterators.hpp"
+#include "fea/containers/imp/unsigned_slotset.iterators.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -57,7 +57,7 @@ modulo = index start -> std::find -> index start + collisions
 
 namespace fea {
 template <class Key, class Alloc = std::allocator<Key>>
-struct unsigned_set {
+struct unsigned_slotset {
 	// Sanity checks.
 	static_assert(std::is_unsigned_v<Key>,
 			"unsigned_set : Key must be unsigned "
@@ -75,8 +75,8 @@ struct unsigned_set {
 	using pointer = typename std::allocator_traits<Alloc>::pointer;
 	using const_pointer = typename std::allocator_traits<Alloc>::const_pointer;
 	using const_iterator
-			= unsigned_set_const_iterator<unsigned_set<Key, Alloc>>;
-	using iterator = unsigned_set_iterator<unsigned_set<Key, Alloc>>;
+			= unsigned_slotset_const_iterator<unsigned_slotset<Key, Alloc>>;
+	using iterator = unsigned_slotset_iterator<unsigned_slotset<Key, Alloc>>;
 
 	// Internals
 	// using underlying_key_type = fea::detail::id_hash_return_t<Key>;
@@ -85,19 +85,19 @@ struct unsigned_set {
 			Alloc>::template rebind_alloc<bool_type>;
 
 	// Ctors
-	unsigned_set() = default;
-	~unsigned_set() = default;
-	unsigned_set(const unsigned_set&) = default;
-	unsigned_set(unsigned_set&&) = default;
-	unsigned_set& operator=(const unsigned_set&) = default;
-	unsigned_set& operator=(unsigned_set&&) = default;
+	unsigned_slotset() = default;
+	~unsigned_slotset() = default;
+	unsigned_slotset(const unsigned_slotset&) = default;
+	unsigned_slotset(unsigned_slotset&&) = default;
+	unsigned_slotset& operator=(const unsigned_slotset&) = default;
+	unsigned_slotset& operator=(unsigned_slotset&&) = default;
 
 	// Initializes with provided keys.
 	template <class FwdIt>
-	unsigned_set(FwdIt first, FwdIt last);
+	unsigned_slotset(FwdIt first, FwdIt last);
 
 	// Initializes with provided keys.
-	unsigned_set(std::initializer_list<key_type>&& ilist);
+	unsigned_slotset(std::initializer_list<key_type>&& ilist);
 
 	// Iterators
 
@@ -179,15 +179,15 @@ struct unsigned_set {
 	iterator erase(const_iterator first, const_iterator last) noexcept;
 
 	// Swap with another unsigned_set.
-	void swap(unsigned_set& other) noexcept;
+	void swap(unsigned_slotset& other) noexcept;
 
 	// Merge with source.
 	// Items are "stolen" from source, only if they don't exist in destination.
-	void merge(unsigned_set<Key, Alloc>& source);
+	void merge(unsigned_slotset<Key, Alloc>& source);
 
 	// Merge with source.
 	// Items are "stolen" from source, only if they don't exist in destination.
-	void merge(unsigned_set<Key, Alloc>&& source);
+	void merge(unsigned_slotset<Key, Alloc>&& source);
 
 	// Lookup
 
@@ -212,4 +212,4 @@ private:
 };
 } // namespace fea
 
-#include "unsigned_set.imp.hpp"
+#include "imp/unsigned_slotset.imp.hpp"

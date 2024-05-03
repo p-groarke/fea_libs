@@ -1,11 +1,11 @@
-#include <fea/containers/unsigned_set.hpp>
+#include <fea/containers/unsigned_slotset.hpp>
 #include <gtest/gtest.h>
 
 namespace {
 TEST(unsigned_set, basics) {
 	// Empty test
 	{
-		fea::unsigned_set<unsigned> us;
+		fea::unsigned_slotset<unsigned> us;
 		EXPECT_EQ(us.begin(), us.end());
 		EXPECT_EQ(us.cbegin(), us.cend());
 		EXPECT_TRUE(us.empty());
@@ -36,7 +36,7 @@ TEST(unsigned_set, basics) {
 		EXPECT_EQ(us.find(0u), us.end());
 
 		std::vector<unsigned> v;
-		us = fea::unsigned_set<unsigned>(v.begin(), v.end());
+		us = fea::unsigned_slotset<unsigned>(v.begin(), v.end());
 		EXPECT_EQ(us.begin(), us.end());
 		EXPECT_EQ(us.cbegin(), us.cend());
 		EXPECT_TRUE(us.empty());
@@ -63,7 +63,7 @@ TEST(unsigned_set, basics) {
 		std::vector<unsigned> v{ 0u, 2u, 4u, 6u, 8u };
 		unsigned maxid = v.back();
 
-		fea::unsigned_set<unsigned> us(v.begin(), v.end());
+		fea::unsigned_slotset<unsigned> us(v.begin(), v.end());
 		EXPECT_NE(us.begin(), us.end());
 		EXPECT_NE(us.cbegin(), us.cend());
 		EXPECT_FALSE(us.empty());
@@ -106,7 +106,7 @@ TEST(unsigned_set, basics) {
 		EXPECT_EQ(us.find(0u), us.begin());
 		EXPECT_EQ(us.find(8u), --us.end());
 
-		fea::unsigned_set<unsigned> us2;
+		fea::unsigned_slotset<unsigned> us2;
 		us.swap(us2);
 		EXPECT_NE(us2.begin(), us2.end());
 		EXPECT_NE(us2.cbegin(), us2.cend());
@@ -134,7 +134,7 @@ TEST(unsigned_set, basics) {
 		}
 
 		std::vector<unsigned> v2{ 1u, 3u, 5u, 7u, 9u };
-		us2 = fea::unsigned_set<unsigned>(v2.begin(), v2.end());
+		us2 = fea::unsigned_slotset<unsigned>(v2.begin(), v2.end());
 		us.merge(us2);
 		for (unsigned k : v) {
 			EXPECT_EQ(us.count(k), 1u);
@@ -157,7 +157,7 @@ TEST(unsigned_set, basics) {
 		std::vector<unsigned> v{ 0u, 2u, 4u, 6u, 8u };
 		// unsigned maxid = v.back().id;
 
-		fea::unsigned_set<unsigned> us(v.begin(), v.end());
+		fea::unsigned_slotset<unsigned> us(v.begin(), v.end());
 		EXPECT_FALSE(us.begin() == us.end());
 		EXPECT_TRUE(us.begin() != us.end());
 		EXPECT_TRUE(us.begin() < us.end());
@@ -196,7 +196,7 @@ TEST(unsigned_set, basics) {
 	// Insertion
 	{
 		std::vector<unsigned> v{ 0u, 2u, 4u, 6u, 8u };
-		fea::unsigned_set<unsigned> us;
+		fea::unsigned_slotset<unsigned> us;
 		size_t size = 0;
 		for (unsigned k : v) {
 			auto it = us.find(k);

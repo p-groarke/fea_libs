@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 #include "fea/containers/id_hash.hpp"
-#include "fea/containers/id_lookup.hpp"
+#include "fea/containers/id_slot_lookup.hpp"
 #include "fea/memory/memory.hpp"
 #include "fea/utils/throw.hpp"
 
@@ -44,14 +44,24 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <type_traits>
 #include <vector>
 
-// Notes :
-// - The container doesn't use const key_type& in apis, it uses key_type. The
-// value of a key will always be smaller or equally sized to a reference.
-// - Doesn't provide hint apis.
+/*
+fea::id_flat_slotmap is the same as fea::id_slotmap, but it's keys and values
+are stored seperately (instead of pairs). This allows you to quickly loop on
+keys or values, but is incompatible with std::pair unorered_map apis.
+
+Prefer this map if you loop on your values (or keys) often.
+
+See fea::id_map for more details. Storage grows as large as biggest id!
+
+Notes :
+- The container doesn't use const key_type& in apis, it uses key_type. The
+value of a key will always be smaller or equally sized to a reference.
+- Doesn't provide hint apis.
+*/
 
 namespace fea {
 template <class Key, class T, class Alloc = std::allocator<T>>
-struct flat_unsigned_map {
+struct id_flat_slotmap {
 	// Typedefs
 	using key_type = Key;
 	using const_key_type = const key_type;
@@ -83,21 +93,21 @@ struct flat_unsigned_map {
 			typename std::vector<key_type, key_allocator_type>::const_iterator;
 
 	// Ctors
-	explicit flat_unsigned_map(size_type reserve_count);
-	explicit flat_unsigned_map(
+	explicit id_flat_slotmap(size_type reserve_count);
+	explicit id_flat_slotmap(
 			size_type key_reserve_count, size_type value_reserve_count);
 	template <class InputIt, class InputValIt>
-	flat_unsigned_map(InputIt first_key, InputIt last_key, InputValIt first_val,
+	id_flat_slotmap(InputIt first_key, InputIt last_key, InputValIt first_val,
 			InputValIt last_val);
-	explicit flat_unsigned_map(const std::initializer_list<key_type>& keys,
+	explicit id_flat_slotmap(const std::initializer_list<key_type>& keys,
 			const std::initializer_list<value_type>& values);
 
-	flat_unsigned_map() = default;
-	~flat_unsigned_map() = default;
-	flat_unsigned_map(const flat_unsigned_map&) = default;
-	flat_unsigned_map(flat_unsigned_map&&) noexcept = default;
-	flat_unsigned_map& operator=(const flat_unsigned_map&) = default;
-	flat_unsigned_map& operator=(flat_unsigned_map&&) noexcept = default;
+	id_flat_slotmap() = default;
+	~id_flat_slotmap() = default;
+	id_flat_slotmap(const id_flat_slotmap&) = default;
+	id_flat_slotmap(id_flat_slotmap&&) noexcept = default;
+	id_flat_slotmap& operator=(const id_flat_slotmap&) = default;
+	id_flat_slotmap& operator=(id_flat_slotmap&&) noexcept = default;
 
 
 	// Iterators
@@ -211,7 +221,7 @@ struct flat_unsigned_map {
 	size_type erase(const key_type& k);
 
 	// swaps the contents
-	void swap(flat_unsigned_map& other) noexcept;
+	void swap(id_flat_slotmap& other) noexcept;
 
 
 	// Lookup
@@ -219,6 +229,7 @@ struct flat_unsigned_map {
 	const value_type* data() const noexcept;
 
 	// Direct access to the underlying value data.
+	// You may modify values, but NOT reorder them.
 	value_type* data() noexcept;
 
 	// Access to underlying reverse lookup.
@@ -275,13 +286,13 @@ struct flat_unsigned_map {
 
 	// Deep comparison.
 	template <class K, class U, class A>
-	friend bool operator==(const flat_unsigned_map<K, U, A>& lhs,
-			const flat_unsigned_map<K, U, A>& rhs);
+	friend bool operator==(const id_flat_slotmap<K, U, A>& lhs,
+			const id_flat_slotmap<K, U, A>& rhs);
 
 	// Deep comparison.
 	template <class K, class U, class A>
-	friend bool operator!=(const flat_unsigned_map<K, U, A>& lhs,
-			const flat_unsigned_map<K, U, A>& rhs);
+	friend bool operator!=(const id_flat_slotmap<K, U, A>& lhs,
+			const id_flat_slotmap<K, U, A>& rhs);
 
 private:
 	template <class M>
@@ -289,11 +300,11 @@ private:
 			const key_type& k, M&& obj, bool assign_found = false);
 
 
-	fea::id_lookup<Key, allocator_type> _lookup; // key -> position
+	fea::id_slot_lookup<Key, allocator_type> _lookup; // key -> position
 	std::vector<key_type, key_allocator_type> _reverse_lookup; // used in erase
 	std::vector<value_type, allocator_type> _values; // packed values
 };
 
 } // namespace fea
 
-#include "flat_unsigned_map.imp.hpp"
+#include "imp/id_flat_slotmap.imp.hpp"

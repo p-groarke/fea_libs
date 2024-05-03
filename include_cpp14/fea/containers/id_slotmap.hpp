@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 #include "fea/containers/id_hash.hpp"
-#include "fea/containers/id_lookup.hpp"
+#include "fea/containers/id_slot_lookup.hpp"
 #include "fea/memory/memory.hpp"
 #include "fea/utils/throw.hpp"
 
@@ -42,22 +42,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <type_traits>
 #include <utility>
 #include <vector>
-// To add custom id classes, in the fea namespace, define a struct
-// specialization to `id_hash` which returns your id type through operator().
-// Important : The return type must be an unsigned, but unlike std::hash,
-// shouldn't necessarily be of size_t.
 
-// Notes :
-// - The container doesn't use const key_type& in apis, it uses key_type. The
-// value of a key will always be smaller or equally sized to a reference.
-// - Doesn't provide hint apis.
+/*
+fea::id_slotmap is an id slot map that grows as big as the biggest id. It's apis
+and iterators use key-value pairs to make it swappable with unordered_map.
+
+To add custom id classes, in the fea namespace, define a struct
+specialization to `id_hash` which returns your id type through operator().
+Important : The return type must be an unsigned, but unlike std::hash,
+shouldn't necessarily be of size_t. The hash return type affects memory used.
+
+Notes :
+- The container doesn't use const key_type& in apis, it uses key_type. The
+value of a key will always be smaller or equally sized to a reference.
+- Doesn't provide hint apis.
+*/
 
 namespace fea {
-// An id map (indexed at key), which grows as large as biggest stored n.
-// Very fast since there is no hashing or collisions, but trades-off
-// memory pressure.
 template <class Key, class T, class Alloc = std::allocator<T>>
-struct unsigned_map {
+struct id_slotmap {
 	// Typedefs
 	using key_type = Key;
 	using const_key_type = const key_type;
@@ -93,18 +96,18 @@ struct unsigned_map {
 
 
 	// Ctors
-	explicit unsigned_map(size_t new_cap);
-	explicit unsigned_map(size_t key_new_cap, size_t value_new_cap);
+	explicit id_slotmap(size_t new_cap);
+	explicit id_slotmap(size_t key_new_cap, size_t value_new_cap);
 	template <class InputIt>
-	unsigned_map(InputIt first, InputIt last);
-	explicit unsigned_map(const std::initializer_list<value_type>& init);
+	id_slotmap(InputIt first, InputIt last);
+	explicit id_slotmap(const std::initializer_list<value_type>& init);
 
-	unsigned_map() = default;
-	~unsigned_map() = default;
-	unsigned_map(const unsigned_map&) = default;
-	unsigned_map(unsigned_map&&) noexcept = default;
-	unsigned_map& operator=(const unsigned_map&) = default;
-	unsigned_map& operator=(unsigned_map&&) noexcept = default;
+	id_slotmap() = default;
+	~id_slotmap() = default;
+	id_slotmap(const id_slotmap&) = default;
+	id_slotmap(id_slotmap&&) noexcept = default;
+	id_slotmap& operator=(const id_slotmap&) = default;
+	id_slotmap& operator=(id_slotmap&&) noexcept = default;
 
 
 	// Iterators
@@ -196,7 +199,7 @@ struct unsigned_map {
 	size_type erase(const key_type& k);
 
 	// swaps the contents
-	void swap(unsigned_map& other) noexcept;
+	void swap(id_slotmap& other) noexcept;
 
 
 	// Lookup
@@ -250,21 +253,21 @@ struct unsigned_map {
 	// Deep comparison.
 	template <class K, class U, class A>
 	friend bool operator==(
-			const unsigned_map<K, U, A>& lhs, const unsigned_map<K, U, A>& rhs);
+			const id_slotmap<K, U, A>& lhs, const id_slotmap<K, U, A>& rhs);
 
 	// Deep comparison.
 	template <class K, class U, class A>
 	friend bool operator!=(
-			const unsigned_map<K, U, A>& lhs, const unsigned_map<K, U, A>& rhs);
+			const id_slotmap<K, U, A>& lhs, const id_slotmap<K, U, A>& rhs);
 
 private:
 	template <class M>
 	std::pair<iterator, bool> minsert(
 			const key_type& k, M&& obj, bool assign_found = false);
 
-	fea::id_lookup<Key, allocator_type> _lookup; // key -> position
+	fea::id_slot_lookup<Key, allocator_type> _lookup; // key -> position
 	std::vector<value_type, allocator_type> _values; // pair with reverse_lookup
 };
 } // namespace fea
 
-#include "unsigned_map.imp.hpp"
+#include "imp/id_slotmap.imp.hpp"

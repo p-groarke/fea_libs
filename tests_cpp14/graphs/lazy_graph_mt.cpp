@@ -1,7 +1,7 @@
 ﻿#include <algorithm>
 #include <cstdint>
+#include <fea/containers/id_slotmap.hpp>
 #include <fea/graphs/lazy_graph.hpp>
-#include <fea/containers/unsigned_map.hpp>
 #include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 #include <mutex>
@@ -144,8 +144,8 @@ void test_parents(
 }
 
 TEST(fea_lazy_graph, threading) {
-	// These tests are run with an unsigned_map.
-	fea::lazy_graph<unsigned, char, uint8_t, fea::unsigned_map> graph;
+	// These tests are run with an id_slotmap.
+	fea::lazy_graph<unsigned, char, uint8_t, fea::id_slotmap> graph;
 	using my_callback_data = fea::callback_data<unsigned>;
 
 	reset_graph(graph);
@@ -272,8 +272,8 @@ TEST(fea_lazy_graph, threading) {
 }
 
 TEST(fea_lazy_graph, threading_max_parents) {
-	// These tests are run with an unsigned_map.
-	fea::lazy_graph<unsigned, char, uint8_t, fea::unsigned_map, 32> graph;
+	// These tests are run with an id_slotmap.
+	fea::lazy_graph<unsigned, char, uint8_t, fea::id_slotmap, 32> graph;
 	using my_callback_data = fea::callback_data<unsigned>;
 
 	reset_graph(graph);

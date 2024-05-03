@@ -47,7 +47,7 @@ namespace fea {
 // user data. You must synchronize the items according to this lookup yourself.
 
 template <class Key, class TAlloc = std::allocator<Key>>
-struct id_lookup {
+struct id_slot_lookup {
 	// Sanity checks.
 	static_assert(std::is_unsigned<fea::detail::id_hash_return_t<Key>>::value,
 			"unsigned_map : key or id_hash return type must be unsigned "
@@ -70,12 +70,12 @@ struct id_lookup {
 	/**
 	 * Ctors
 	 */
-	constexpr id_lookup() = default;
-	~id_lookup() = default;
-	constexpr id_lookup(const id_lookup&) = default;
-	constexpr id_lookup(id_lookup&&) = default;
-	constexpr id_lookup& operator=(const id_lookup&) = default;
-	constexpr id_lookup& operator=(id_lookup&&) = default;
+	constexpr id_slot_lookup() = default;
+	~id_slot_lookup() = default;
+	constexpr id_slot_lookup(const id_slot_lookup&) = default;
+	constexpr id_slot_lookup(id_slot_lookup&&) = default;
+	constexpr id_slot_lookup& operator=(const id_slot_lookup&) = default;
+	constexpr id_slot_lookup& operator=(id_slot_lookup&&) = default;
 
 	// Element access
 
@@ -159,8 +159,8 @@ struct id_lookup {
 	constexpr void insert(
 			FwdIt&& k_begin, FwdIt&& k_end, size_type first_new_idx);
 
-	// Swap with other id_lookup.
-	constexpr void swap(id_lookup& other) noexcept;
+	// Swap with other id_slot_lookup.
+	constexpr void swap(id_slot_lookup& other) noexcept;
 
 	// Invalidates a pre-existing id. Sets its position to our sentinel.
 	constexpr void invalidate_prehashed(underlying_key_type uk) noexcept;
@@ -190,4 +190,4 @@ private:
 };
 } // namespace fea
 
-#include "id_lookup.imp.hpp"
+#include "imp/id_slot_lookup.imp.hpp"

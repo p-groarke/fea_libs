@@ -1,11 +1,11 @@
-﻿#include <fea/containers/flat_unsigned_map.hpp>
+﻿#include <fea/containers/id_slotmap.hpp>
 #include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 #include <memory>
 #include <unordered_map>
 
 namespace {
-#define test_failed_msg "flat_unsigned_map.cpp : Unit test failed."
+#define test_failed_msg "id_slotmap.cpp : Unit test failed."
 
 struct test {
 	test() = default;
@@ -28,10 +28,10 @@ bool operator!=(const test& lhs, const test& rhs) {
 	return !operator==(lhs, rhs);
 }
 
-TEST(flat_unsigned_map, basics) {
+TEST(unsigned_map, basics) {
 	constexpr size_t small_num = 10;
 
-	fea::flat_unsigned_map<size_t, test> map1(small_num);
+	fea::id_slotmap<size_t, test> map1{ small_num };
 
 	using map1_t = std::decay_t<decltype(map1)>;
 	static_assert(std::is_same<typename map1_t::key_type, size_t>::value,
@@ -53,25 +53,25 @@ TEST(flat_unsigned_map, basics) {
 	EXPECT_EQ(map1.count(1), 0u);
 
 	for (size_t i = 0; i < small_num; ++i) {
-		auto ret_pair = map1.insert(i, { i });
+		auto ret_pair = map1.insert({ i, { i } });
 		EXPECT_TRUE(ret_pair.second);
-		EXPECT_EQ(*ret_pair.first, test{ i });
+		EXPECT_EQ(ret_pair.first->second, test{ i });
 	}
 	for (size_t i = 0; i < small_num; ++i) {
-		auto ret_pair = map1.insert(i, { i });
+		auto ret_pair = map1.insert({ i, { i } });
 		EXPECT_FALSE(ret_pair.second);
-		EXPECT_EQ(*ret_pair.first, test{ i });
+		EXPECT_EQ(ret_pair.first->second, test{ i });
 	}
 	for (size_t i = 0; i < small_num; ++i) {
 		test t{ i };
-		auto ret_pair = map1.insert(i, t);
+		auto ret_pair = map1.insert({ i, t });
 		EXPECT_FALSE(ret_pair.second);
-		EXPECT_EQ(*ret_pair.first, t);
+		EXPECT_EQ(ret_pair.first->second, t);
 	}
 
-	fea::flat_unsigned_map<size_t, test> map2{ map1 };
-	fea::flat_unsigned_map<size_t, test> map_ded{ map1 };
-	fea::flat_unsigned_map<size_t, test> map3{ std::move(map_ded) };
+	fea::id_slotmap<size_t, test> map2{ map1 };
+	fea::id_slotmap<size_t, test> map_ded{ map1 };
+	fea::id_slotmap<size_t, test> map3{ std::move(map_ded) };
 
 	EXPECT_EQ(map1, map2);
 	EXPECT_EQ(map1, map3);
@@ -115,21 +115,21 @@ TEST(flat_unsigned_map, basics) {
 		EXPECT_EQ(map1[i], test{ i });
 		EXPECT_EQ(map1.at(i), test{ i });
 		EXPECT_EQ(map1.at_unchecked(i), test{ i });
-		EXPECT_EQ(*map1.find(i), test{ i });
+		EXPECT_EQ(map1.find(i)->second, test{ i });
 		EXPECT_TRUE(map1.contains(i));
 		EXPECT_EQ(map1.count(i), 1u);
 
 		EXPECT_EQ(map2[i], test{ i });
 		EXPECT_EQ(map2.at(i), test{ i });
 		EXPECT_EQ(map2.at_unchecked(i), test{ i });
-		EXPECT_EQ(*map2.find(i), test{ i });
+		EXPECT_EQ(map2.find(i)->second, test{ i });
 		EXPECT_TRUE(map2.contains(i));
 		EXPECT_EQ(map2.count(i), 1u);
 
 		EXPECT_EQ(map3[i], test{ i });
 		EXPECT_EQ(map3.at(i), test{ i });
 		EXPECT_EQ(map3.at_unchecked(i), test{ i });
-		EXPECT_EQ(*map3.find(i), test{ i });
+		EXPECT_EQ(map3.find(i)->second, test{ i });
 		EXPECT_TRUE(map2.contains(i));
 		EXPECT_EQ(map2.count(i), 1u);
 	}
@@ -141,7 +141,7 @@ TEST(flat_unsigned_map, basics) {
 	EXPECT_FALSE(map1.contains(1));
 	EXPECT_EQ(map1.count(1), 0u);
 
-	map1.insert(1, { 1 });
+	map1.insert({ 1, { 1 } });
 	EXPECT_EQ(map1.size(), small_num);
 	EXPECT_EQ(map1, map2);
 	EXPECT_EQ(map1, map3);
@@ -183,7 +183,7 @@ TEST(flat_unsigned_map, basics) {
 	map1 = map2;
 
 	for (it = map1.begin(); it != map1.end();) {
-		if (it->val % 2 == 1)
+		if (it->second.val % 2 == 1)
 			it = map1.erase(it);
 		else
 			++it;
@@ -191,13 +191,13 @@ TEST(flat_unsigned_map, basics) {
 	EXPECT_EQ(map1.size(), small_num / 2);
 
 	for (auto t : map1) {
-		EXPECT_EQ(t.val % 2, 0u);
+		EXPECT_EQ(t.second.val % 2, 0u);
 	}
 
 	map1 = map2;
 
 	for (it = map1.begin() + 1; it != map1.end();) {
-		if (it->val % 2 == 0)
+		if (it->second.val % 2 == 0)
 			it = map1.erase(it, std::next(it, 2));
 		else
 			++it;
@@ -211,10 +211,10 @@ TEST(flat_unsigned_map, basics) {
 	map1 = map2;
 
 	{
-		auto ret_pair1 = map1.insert(19, { 19 });
+		auto ret_pair1 = map1.insert({ 19, { 19 } });
 		EXPECT_TRUE(ret_pair1.second);
 
-		auto ret_pair2 = map1.insert(19, { 42 });
+		auto ret_pair2 = map1.insert({ 19, { 42 } });
 		EXPECT_FALSE(ret_pair2.second);
 		EXPECT_EQ(ret_pair2.first, ret_pair1.first);
 		EXPECT_EQ(map1.at(19), test{ 19 });
@@ -228,15 +228,15 @@ TEST(flat_unsigned_map, basics) {
 		ret_pair2 = map1.insert_or_assign(19, test{ 19 });
 	}
 
-	map2.insert(20, { 20 });
-	map3.insert(20, { 20 });
+	map2.insert({ 20, { 20 } });
+	map3.insert({ 20, { 20 } });
 	EXPECT_NE(map1, map2);
 	EXPECT_NE(map1, map3);
 
 	{
 		auto ret_pair = map1.equal_range(19);
 		EXPECT_EQ(std::distance(ret_pair.first, ret_pair.second), 1);
-		EXPECT_EQ(*ret_pair.first, test{ 19 });
+		EXPECT_EQ(ret_pair.first->second, test{ 19 });
 
 		ret_pair = map1.equal_range(20);
 		EXPECT_EQ(std::distance(ret_pair.first, ret_pair.second), 0);
@@ -253,12 +253,12 @@ TEST(flat_unsigned_map, basics) {
 	map1 = map2;
 	map3 = map2;
 
-	map1 = fea::flat_unsigned_map<size_t, test>(
-			{ 0, 1, 2 }, { { 0 }, { 1 }, { 2 } });
-	map2 = fea::flat_unsigned_map<size_t, test>(
-			{ 3, 4, 5 }, { { 3 }, { 4 }, { 5 } });
-	map3 = fea::flat_unsigned_map<size_t, test>(
-			{ 6, 7, 8 }, { { 6 }, { 7 }, { 8 } });
+	map1 = fea::id_slotmap<size_t, test>(
+			{ { 0, { 0 } }, { 1, { 1 } }, { 2, { 2 } } });
+	map2 = fea::id_slotmap<size_t, test>(
+			{ { 3, { 3 } }, { 4, { 4 } }, { 5, { 5 } } });
+	map3 = fea::id_slotmap<size_t, test>(
+			{ { 6, { 6 } }, { 7, { 7 } }, { 8, { 8 } } });
 
 	EXPECT_EQ(map1.size(), 3u);
 	EXPECT_TRUE(map1.contains(0));
@@ -267,7 +267,7 @@ TEST(flat_unsigned_map, basics) {
 	EXPECT_EQ(map1.at(0), test{ 0 });
 	EXPECT_EQ(map1.at_unchecked(0), test{ 0 });
 	EXPECT_EQ(map1[1], test{ 1 });
-	EXPECT_EQ(*map1.find(2), test{ 2 });
+	EXPECT_EQ(map1.find(2)->second, test{ 2 });
 
 	EXPECT_EQ(map2.size(), 3u);
 	EXPECT_TRUE(map2.contains(3));
@@ -276,7 +276,7 @@ TEST(flat_unsigned_map, basics) {
 	EXPECT_EQ(map2.at(3), test{ 3 });
 	EXPECT_EQ(map2.at_unchecked(3), test{ 3 });
 	EXPECT_EQ(map2[4], test{ 4 });
-	EXPECT_EQ(*map2.find(5), test{ 5 });
+	EXPECT_EQ(map2.find(5)->second, test{ 5 });
 
 	EXPECT_EQ(map3.size(), 3u);
 	EXPECT_TRUE(map3.contains(6));
@@ -284,12 +284,12 @@ TEST(flat_unsigned_map, basics) {
 	EXPECT_TRUE(map3.contains(8));
 	EXPECT_EQ(map3.at_unchecked(6), test{ 6 });
 	EXPECT_EQ(map3[7], test{ 7 });
-	EXPECT_EQ(*map3.find(8), test{ 8 });
+	EXPECT_EQ(map3.find(8)->second, test{ 8 });
 
 	{
-		fea::flat_unsigned_map<size_t, test> map1_back = map1;
-		fea::flat_unsigned_map<size_t, test> map2_back{ map2 };
-		fea::flat_unsigned_map<size_t, test> map3_back{ map3 };
+		fea::id_slotmap<size_t, test> map1_back = map1;
+		fea::id_slotmap<size_t, test> map2_back{ map2 };
+		fea::id_slotmap<size_t, test> map3_back{ map3 };
 
 		map1.swap(map2);
 		EXPECT_EQ(map1, map2_back);
@@ -305,7 +305,7 @@ TEST(flat_unsigned_map, basics) {
 		EXPECT_EQ(map1, map1_back);
 	}
 
-	map1.insert({ 3, 4, 5 }, { { 3 }, { 4 }, { 5 } });
+	map1.insert({ { 3, { 3 } }, { 4, { 4 } }, { 5, { 5 } } });
 
 	EXPECT_EQ(map1.size(), 6u);
 	EXPECT_TRUE(map1.contains(0));
@@ -318,30 +318,29 @@ TEST(flat_unsigned_map, basics) {
 	EXPECT_EQ(map1.at(0), test{ 0 });
 	EXPECT_EQ(map1.at_unchecked(0), test{ 0 });
 	EXPECT_EQ(map1[1], test{ 1 });
-	EXPECT_EQ(*map1.find(2), test{ 2 });
+	EXPECT_EQ(map1.find(2)->second, test{ 2 });
 	EXPECT_EQ(map1.at(3), test{ 3 });
 	EXPECT_EQ(map1.at_unchecked(3), test{ 3 });
 	EXPECT_EQ(map1[4], test{ 4 });
-	EXPECT_EQ(*map1.find(5), test{ 5 });
+	EXPECT_EQ(map1.find(5)->second, test{ 5 });
 
-	map2 = fea::flat_unsigned_map<size_t, test>(
-			map1.key_begin(), map1.key_end(), map1.begin(), map1.end());
+	map2 = fea::id_slotmap<size_t, test>(map1.begin(), map1.end());
 	EXPECT_EQ(map1.size(), map2.size());
 	EXPECT_EQ(map1, map2);
 
 	map3.clear();
-	map3.insert(map1.key_begin(), map1.key_end(), map1.begin(), map1.end());
+	map3.insert(map1.begin(), map1.end());
 	EXPECT_EQ(map1.size(), map3.size());
 	EXPECT_EQ(map1, map3);
 	EXPECT_EQ(map2.size(), map3.size());
 	EXPECT_EQ(map2, map3);
 }
 
-TEST(flat_unsigned_map, random) {
+TEST(unsigned_map, random) {
 }
 
-TEST(flat_unsigned_map, uniqueptr) {
-	fea::flat_unsigned_map<size_t, std::unique_ptr<unsigned>> map;
+TEST(unsigned_map, uniqueptr) {
+	fea::id_slotmap<size_t, std::unique_ptr<unsigned>> map;
 
 	{
 		std::unique_ptr<unsigned> test = std::make_unique<unsigned>(0);
@@ -353,7 +352,7 @@ TEST(flat_unsigned_map, uniqueptr) {
 	}
 	{
 		std::unique_ptr<unsigned> test = std::make_unique<unsigned>(2);
-		map.insert(2, std::move(test));
+		map.insert({ 2, std::move(test) });
 	}
 
 	for (size_t i = 3; i < 10; ++i) {
@@ -377,35 +376,35 @@ TEST(flat_unsigned_map, uniqueptr) {
 struct my_id {
 	my_id() = default;
 	my_id(size_t id_)
-			: id(uint16_t(id_)) {
+			: id(uint8_t(id_)) {
 	}
 
-	uint16_t id = 0;
+	uint8_t id = 0;
 	unsigned bla = 0;
 };
 
-// bool operator==(const my_id& lhs, const my_id& rhs) {
-//	return lhs.id == rhs.id;
-// }
-//  bool operator!=(const my_id& lhs, const my_id& rhs) {
+bool operator==(const my_id& lhs, const my_id& rhs) {
+	return lhs.id == rhs.id;
+}
+// bool operator!=(const my_id& lhs, const my_id& rhs) {
 //	return !(lhs.id == rhs.id);
-//  }
+// }
 } // namespace
 
 namespace fea {
 template <>
 struct id_hash<my_id> {
-	inline constexpr uint16_t operator()(const my_id& k) const noexcept {
+	inline constexpr uint8_t operator()(const my_id& k) const noexcept {
 		return k.id;
 	}
 };
 } // namespace fea
 
 namespace {
-TEST(flat_unsigned_map, ids) {
+TEST(unsigned_map, ids) {
 	constexpr size_t small_num = 10;
 
-	fea::flat_unsigned_map<my_id, int> map(small_num);
+	fea::id_slotmap<my_id, int> map;
 
 	using map_t = std::decay_t<decltype(map)>;
 	static_assert(std::is_same<typename map_t::key_type, my_id>::value,
@@ -427,25 +426,25 @@ TEST(flat_unsigned_map, ids) {
 	EXPECT_EQ(map.count(1), 0u);
 
 	for (size_t i = 0; i < small_num; ++i) {
-		auto ret_pair = map.insert(my_id(i), int(i));
+		auto ret_pair = map.insert({ my_id(i), int(i) });
 		EXPECT_TRUE(ret_pair.second);
-		EXPECT_EQ(*ret_pair.first, int(i));
+		EXPECT_EQ(ret_pair.first->second, int(i));
 	}
 	for (size_t i = 0; i < small_num; ++i) {
-		auto ret_pair = map.insert(my_id(i), int(i));
+		auto ret_pair = map.insert({ my_id(i), int(i) });
 		EXPECT_FALSE(ret_pair.second);
-		EXPECT_EQ(*ret_pair.first, int(i));
+		EXPECT_EQ(ret_pair.first->second, int(i));
 	}
 	for (size_t i = 0; i < small_num; ++i) {
 		int t = int(i);
-		auto ret_pair = map.insert(my_id(i), t);
+		auto ret_pair = map.insert({ my_id(i), t });
 		EXPECT_FALSE(ret_pair.second);
-		EXPECT_EQ(*ret_pair.first, t);
+		EXPECT_EQ(ret_pair.first->second, t);
 	}
 
-	fea::flat_unsigned_map<my_id, int> map2{ map };
-	fea::flat_unsigned_map<my_id, int> map_ded{ map };
-	fea::flat_unsigned_map<my_id, int> map3{ std::move(map_ded) };
+	fea::id_slotmap<my_id, int> map2{ map };
+	fea::id_slotmap<my_id, int> map_ded{ map };
+	fea::id_slotmap<my_id, int> map3{ std::move(map_ded) };
 
 	EXPECT_EQ(map, map2);
 	EXPECT_EQ(map, map3);
@@ -490,21 +489,21 @@ TEST(flat_unsigned_map, ids) {
 		EXPECT_EQ(map[i], v);
 		EXPECT_EQ(map.at(i), v);
 		EXPECT_EQ(map.at_unchecked(i), v);
-		EXPECT_EQ(*map.find(i), v);
+		EXPECT_EQ(map.find(i)->second, v);
 		EXPECT_TRUE(map.contains(i));
 		EXPECT_EQ(map.count(i), 1u);
 
 		EXPECT_EQ(map2[i], v);
 		EXPECT_EQ(map2.at(i), v);
 		EXPECT_EQ(map2.at_unchecked(i), v);
-		EXPECT_EQ(*map2.find(i), v);
+		EXPECT_EQ(map2.find(i)->second, v);
 		EXPECT_TRUE(map2.contains(i));
 		EXPECT_EQ(map2.count(i), 1u);
 
 		EXPECT_EQ(map3[i], v);
 		EXPECT_EQ(map3.at(i), v);
 		EXPECT_EQ(map3.at_unchecked(i), v);
-		EXPECT_EQ(*map3.find(i), v);
+		EXPECT_EQ(map3.find(i)->second, v);
 		EXPECT_TRUE(map2.contains(i));
 		EXPECT_EQ(map2.count(i), 1u);
 	}
@@ -516,7 +515,7 @@ TEST(flat_unsigned_map, ids) {
 	EXPECT_FALSE(map.contains(1));
 	EXPECT_EQ(map.count(1), 0u);
 
-	map.insert(1, { 1 });
+	map.insert({ 1, { 1 } });
 	EXPECT_EQ(map.size(), small_num);
 	EXPECT_EQ(map, map2);
 	EXPECT_EQ(map, map3);
@@ -558,21 +557,21 @@ TEST(flat_unsigned_map, ids) {
 	map = map2;
 
 	for (it = map.begin(); it != map.end();) {
-		if (*it % 2 == 1)
+		if (it->second % 2 == 1)
 			it = map.erase(it);
 		else
 			++it;
 	}
 	EXPECT_EQ(map.size(), small_num / 2);
 
-	for (auto t : map) {
-		EXPECT_EQ(t % 2, 0);
+	for (std::pair<my_id, int> t : map) {
+		EXPECT_EQ(t.second % 2, 0);
 	}
 
 	map = map2;
 
 	for (it = map.begin() + 1; it != map.end();) {
-		if (*it % 2 == 0)
+		if (it->second % 2 == 0)
 			it = map.erase(it, std::next(it, 2));
 		else
 			++it;
@@ -586,10 +585,10 @@ TEST(flat_unsigned_map, ids) {
 	map = map2;
 
 	{
-		auto ret_pair1 = map.insert(19, { 19 });
+		auto ret_pair1 = map.insert({ 19, { 19 } });
 		EXPECT_TRUE(ret_pair1.second);
 
-		auto ret_pair2 = map.insert(19, { 42 });
+		auto ret_pair2 = map.insert({ 19, { 42 } });
 		EXPECT_FALSE(ret_pair2.second);
 		EXPECT_EQ(ret_pair2.first, ret_pair1.first);
 		EXPECT_EQ(map.at(19), 19);
@@ -603,15 +602,15 @@ TEST(flat_unsigned_map, ids) {
 		ret_pair2 = map.insert_or_assign(19, 19);
 	}
 
-	map2.insert(20, { 20 });
-	map3.insert(20, { 20 });
+	map2.insert({ 20, { 20 } });
+	map3.insert({ 20, { 20 } });
 	EXPECT_NE(map, map2);
 	EXPECT_NE(map, map3);
 
 	{
 		auto ret_pair = map.equal_range(19);
 		EXPECT_EQ(std::distance(ret_pair.first, ret_pair.second), 1);
-		EXPECT_EQ(*ret_pair.first, 19);
+		EXPECT_EQ(ret_pair.first->second, 19);
 
 		ret_pair = map.equal_range(20);
 		EXPECT_EQ(std::distance(ret_pair.first, ret_pair.second), 0);
@@ -628,12 +627,21 @@ TEST(flat_unsigned_map, ids) {
 	map = map2;
 	map3 = map2;
 
-	map = fea::flat_unsigned_map<my_id, int>(
-			{ my_id(0), my_id(1), my_id(2) }, { 0, 1, 2 });
-	map2 = fea::flat_unsigned_map<my_id, int>(
-			{ my_id(3), my_id(4), my_id(5) }, { 3, 4, 5 });
-	map3 = fea::flat_unsigned_map<my_id, int>(
-			{ my_id(6), my_id(7), my_id(8) }, { 6, 7, 8 });
+	map = fea::id_slotmap<my_id, int>({
+			{ my_id(0), 0 },
+			{ my_id(1), 1 },
+			{ my_id(2), 2 },
+	});
+	map2 = fea::id_slotmap<my_id, int>({
+			{ my_id(3), 3 },
+			{ my_id(4), 4 },
+			{ my_id(5), 5 },
+	});
+	map3 = fea::id_slotmap<my_id, int>({
+			{ my_id(6), 6 },
+			{ my_id(7), 7 },
+			{ my_id(8), 8 },
+	});
 
 	EXPECT_EQ(map.size(), 3u);
 	EXPECT_TRUE(map.contains(0));
@@ -642,7 +650,7 @@ TEST(flat_unsigned_map, ids) {
 	EXPECT_EQ(map.at(0), 0);
 	EXPECT_EQ(map.at_unchecked(0), 0);
 	EXPECT_EQ(map[1], 1);
-	EXPECT_EQ(*map.find(2), 2);
+	EXPECT_EQ(map.find(2)->second, 2);
 
 	EXPECT_EQ(map2.size(), 3u);
 	EXPECT_TRUE(map2.contains(3));
@@ -651,7 +659,7 @@ TEST(flat_unsigned_map, ids) {
 	EXPECT_EQ(map2.at(3), 3);
 	EXPECT_EQ(map2.at_unchecked(3), 3);
 	EXPECT_EQ(map2[4], 4);
-	EXPECT_EQ(*map2.find(5), 5);
+	EXPECT_EQ(map2.find(5)->second, 5);
 
 	EXPECT_EQ(map3.size(), 3u);
 	EXPECT_TRUE(map3.contains(6));
@@ -659,12 +667,12 @@ TEST(flat_unsigned_map, ids) {
 	EXPECT_TRUE(map3.contains(8));
 	EXPECT_EQ(map3.at_unchecked(6), 6);
 	EXPECT_EQ(map3[7], 7);
-	EXPECT_EQ(*map3.find(8), 8);
+	EXPECT_EQ(map3.find(8)->second, 8);
 
 	{
-		fea::flat_unsigned_map<my_id, int> map1_back = map;
-		fea::flat_unsigned_map<my_id, int> map2_back{ map2 };
-		fea::flat_unsigned_map<my_id, int> map3_back{ map3 };
+		fea::id_slotmap<my_id, int> map1_back = map;
+		fea::id_slotmap<my_id, int> map2_back{ map2 };
+		fea::id_slotmap<my_id, int> map3_back{ map3 };
 
 		map.swap(map2);
 		EXPECT_EQ(map, map2_back);
@@ -680,7 +688,11 @@ TEST(flat_unsigned_map, ids) {
 		EXPECT_EQ(map, map1_back);
 	}
 
-	map.insert({ 3, 4, 5 }, { 3, 4, 5 });
+	map.insert({
+			{ 3, 3 },
+			{ 4, 4 },
+			{ 5, 5 },
+	});
 
 	EXPECT_EQ(map.size(), 6u);
 	EXPECT_TRUE(map.contains(0));
@@ -693,22 +705,22 @@ TEST(flat_unsigned_map, ids) {
 	EXPECT_EQ(map.at(0), 0);
 	EXPECT_EQ(map.at_unchecked(0), 0);
 	EXPECT_EQ(map[1], 1);
-	EXPECT_EQ(*map.find(2), 2);
+	EXPECT_EQ(map.find(2)->second, 2);
 	EXPECT_EQ(map.at(3), 3);
 	EXPECT_EQ(map.at_unchecked(3), 3);
 	EXPECT_EQ(map[4], 4);
-	EXPECT_EQ(*map.find(5), 5);
+	EXPECT_EQ(map.find(5)->second, 5);
 
-	map2 = fea::flat_unsigned_map<my_id, int>(
-			map.key_begin(), map.key_end(), map.begin(), map.end());
+	map2 = fea::id_slotmap<my_id, int>(map.begin(), map.end());
 	EXPECT_EQ(map.size(), map2.size());
 	EXPECT_EQ(map, map2);
 
 	map3.clear();
-	map3.insert(map.key_begin(), map.key_end(), map.begin(), map.end());
+	map3.insert(map.begin(), map.end());
 	EXPECT_EQ(map.size(), map3.size());
 	EXPECT_EQ(map, map3);
 	EXPECT_EQ(map2.size(), map3.size());
 	EXPECT_EQ(map2, map3);
 }
+
 } // namespace

@@ -32,7 +32,7 @@
  **/
 
 #pragma once
-#include "fea/containers/unsigned_map.hpp"
+#include "fea/containers/id_slotmap.hpp"
 #include "fea/meta/tuple.hpp"
 #include "fea/performance/constants.hpp"
 #include "fea/utils/platform.hpp"
@@ -115,8 +115,8 @@ struct event_stack {
 
 private:
 	// Stores the callbacks.
-	using event_tuple_t = std::tuple<
-			fea::unsigned_map<size_t, std::function<FuncTypes>>...>;
+	using event_tuple_t
+			= std::tuple<fea::id_slotmap<size_t, std::function<FuncTypes>>...>;
 
 	// Stores the counters to generate ids.
 	using id_gen_tuple_t = decltype(fea::make_tuple_from_count<size_t,

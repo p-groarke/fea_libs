@@ -1,7 +1,7 @@
 ﻿#include <algorithm>
 #include <cstdint>
+#include <fea/containers/id_slotmap.hpp>
 #include <fea/graphs/lazy_graph.hpp>
-#include <fea/containers/unsigned_map.hpp>
 #include <fea/utils/platform.hpp>
 #include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
@@ -16,7 +16,7 @@ bool contains(fea::span<const fea::parent_status<unsigned>> vec, unsigned i) {
 				   [&](const fea::parent_status<unsigned>& s) {
 					   return s.parent_id == i;
 				   })
-			!= vec.end();
+		!= vec.end();
 }
 
 size_t get_index(fea::span<const unsigned> vec, unsigned i) {
@@ -144,7 +144,7 @@ TEST(lazy_graph, advanced_example) {
 	// container fulfills std::unordered_map APIs.
 
 	// fea::lazy_graph<id_type, node_data, versioning_type, unordered_map>
-	fea::lazy_graph<my_id_t, char, uint8_t, fea::unsigned_map> graph;
+	fea::lazy_graph<my_id_t, char, uint8_t, fea::id_slotmap> graph;
 	using my_callback_data = typename decltype(graph)::callback_data_t;
 
 	graph.add_dependency(1, 0);

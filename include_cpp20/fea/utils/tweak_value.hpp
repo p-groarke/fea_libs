@@ -35,7 +35,7 @@
 #include "fea/utils/platform.hpp"
 
 #if !FEA_MACOS // Missing std::from_chars float.
-#include "fea/containers/flat_unsigned_hashmap.hpp"
+#include "fea/containers/unsigned_hole_hashmap.hpp"
 #include "fea/string/string.hpp"
 #include "fea/string/string_literal.hpp"
 #include "fea/utils/file.hpp"
@@ -103,7 +103,7 @@ struct tweak_file {
 };
 
 // Files that contain tweak values and their accompanying data.
-inline fea::flat_unsigned_hashmap<size_t, tweak_file> tweak_files;
+inline fea::unsigned_hole_hashmap<size_t, tweak_file> tweak_files;
 
 template <src_stamp loc, class T>
 T tweak_value(T&& val) {
