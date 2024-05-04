@@ -1,7 +1,4 @@
 #pragma once
-#include "fea/memory/memory.hpp"
-#include "unsigned_compact_slotset.hpp"
-
 namespace fea {
 template <class Key, class Alloc>
 template <class FwdIt>

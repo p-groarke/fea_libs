@@ -1,6 +1,5 @@
 #pragma once
 namespace fea {
-
 template <class MySet>
 constexpr ucss_const_iterator<MySet>::ucss_const_iterator(
 		bool_const_iterator first, bool_const_iterator last,
