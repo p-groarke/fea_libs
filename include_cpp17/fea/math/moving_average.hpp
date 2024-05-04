@@ -99,7 +99,7 @@ struct cumulative_average : detail::moving_avg_base<T> {
 		// Unbounded.
 		if (_n == 0 || _size != _n) {
 			_last = (mfloat_t(in) + mfloat_t(_size) * _last)
-					/ mfloat_t(_size + 1);
+				  / mfloat_t(_size + 1);
 			++_size;
 			if constexpr (is_int_v) {
 				return T(std::round(_last));
@@ -208,7 +208,7 @@ struct weighted_moving_average : detail::moving_avg_base<T> {
 	using detail::moving_avg_base<T>::get;
 
 	T operator()(const T& in) {
-		using msize_t = typename std::make_signed<size_t>::type;
+		using msize_t = std::make_signed_t<size_t>;
 
 		if (_size != _circle_buf.size()) {
 			_circle_buf[_size++] = mfloat_t(in);

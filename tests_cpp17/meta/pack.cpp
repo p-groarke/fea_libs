@@ -14,29 +14,29 @@ TEST(pack, basics) {
 				= fea::pack_cat(p1, p2);
 		constexpr auto p_cat2 = fea::pack_cat(p1, p2);
 
-		static_assert(std::is_same<decltype(p_cat), decltype(p_cat2)>::value,
+		static_assert(std::is_same_v<decltype(p_cat), decltype(p_cat2)>,
 				"pack.cpp : test failed");
 
 		using p_cat_t = decltype(p_cat);
 
 		static_assert(fea::pack_size_v<p_cat_t> == 6, "pack.cpp : test failed");
 		static_assert(
-				std::is_same<fea::pack_element_t<0, p_cat_t>, const int>::value,
-				"pack.cpp : test failed");
-		static_assert(std::is_same<fea::pack_element_t<1, p_cat_t>,
-							  const double>::value,
-				"pack.cpp : test failed");
-		static_assert(std::is_same<fea::pack_element_t<2, p_cat_t>,
-							  const float>::value,
+				std::is_same_v<fea::pack_element_t<0, p_cat_t>, const int>,
 				"pack.cpp : test failed");
 		static_assert(
-				std::is_same<fea::pack_element_t<3, p_cat_t>, const int>::value,
+				std::is_same_v<fea::pack_element_t<1, p_cat_t>, const double>,
 				"pack.cpp : test failed");
-		static_assert(std::is_same<fea::pack_element_t<4, p_cat_t>,
-							  const double>::value,
+		static_assert(
+				std::is_same_v<fea::pack_element_t<2, p_cat_t>, const float>,
 				"pack.cpp : test failed");
-		static_assert(std::is_same<fea::pack_element_t<5, p_cat_t>,
-							  const float>::value,
+		static_assert(
+				std::is_same_v<fea::pack_element_t<3, p_cat_t>, const int>,
+				"pack.cpp : test failed");
+		static_assert(
+				std::is_same_v<fea::pack_element_t<4, p_cat_t>, const double>,
+				"pack.cpp : test failed");
+		static_assert(
+				std::is_same_v<fea::pack_element_t<5, p_cat_t>, const float>,
 				"pack.cpp : test failed");
 
 		static_assert(
@@ -47,18 +47,18 @@ TEST(pack, basics) {
 				fea::pack_idx_v<float, p_cat_t> == 2, "pack.cpp : test failed");
 
 		using int_idxes = fea::pack_idxes_t<int, p_cat_t>;
-		static_assert(std::is_same<int_idxes,
-							  fea::pack_nt<size_t(0), size_t(3)>>::value,
+		static_assert(
+				std::is_same_v<int_idxes, fea::pack_nt<size_t(0), size_t(3)>>,
 				"pack.cpp : test failed");
 
 		using double_idxes = fea::pack_idxes_t<double, p_cat_t>;
-		static_assert(std::is_same<double_idxes,
-							  fea::pack_nt<size_t(1), size_t(4)>>::value,
+		static_assert(std::is_same_v<double_idxes,
+							  fea::pack_nt<size_t(1), size_t(4)>>,
 				"pack.cpp : test failed");
 
 		using float_idxes = fea::pack_idxes_t<float, p_cat_t>;
-		static_assert(std::is_same<float_idxes,
-							  fea::pack_nt<size_t(2), size_t(5)>>::value,
+		static_assert(
+				std::is_same_v<float_idxes, fea::pack_nt<size_t(2), size_t(5)>>,
 				"pack.cpp : test failed");
 
 		static_assert(
@@ -90,7 +90,7 @@ TEST(pack, basics) {
 				p_cat = fea::pack_cat(p1, p2);
 		constexpr auto p_cat2 = fea::pack_cat(p1, p2);
 
-		static_assert(std::is_same<decltype(p_cat), decltype(p_cat2)>::value,
+		static_assert(std::is_same_v<decltype(p_cat), decltype(p_cat2)>,
 				"pack.cpp : test failed");
 
 		using p_cat_t = decltype(p_cat);
@@ -119,18 +119,18 @@ TEST(pack, basics) {
 
 
 		using one_indexes = fea::pack_idxes_nt_t<e::one, p_cat_t>;
-		static_assert(std::is_same<one_indexes,
-							  fea::pack_nt<size_t(0), size_t(3)>>::value,
+		static_assert(
+				std::is_same_v<one_indexes, fea::pack_nt<size_t(0), size_t(3)>>,
 				"pack.cpp : test failed");
 
 		using three_idxes = fea::pack_idxes_nt_t<e::three, p_cat_t>;
-		static_assert(std::is_same<three_idxes,
-							  fea::pack_nt<size_t(1), size_t(4)>>::value,
+		static_assert(
+				std::is_same_v<three_idxes, fea::pack_nt<size_t(1), size_t(4)>>,
 				"pack.cpp : test failed");
 
 		using two_idxes = fea::pack_idxes_nt_t<e::two, p_cat_t>;
-		static_assert(std::is_same<two_idxes,
-							  fea::pack_nt<size_t(2), size_t(5)>>::value,
+		static_assert(
+				std::is_same_v<two_idxes, fea::pack_nt<size_t(2), size_t(5)>>,
 				"pack.cpp : test failed");
 
 
@@ -181,74 +181,82 @@ TEST(pack, basics) {
 }
 
 TEST(pack, splice) {
-	static_assert(std::is_same<fea::idx_splice_t<0, int, double, float, short>,
-						  int>::value,
+	static_assert(
+			std::is_same_v<fea::idx_splice_t<0, int, double, float, short>,
+					int>,
 			"pack.cpp : test failed");
 	static_assert(
-			std::is_same<fea::idx_splice_before_t<0, int, double, float, short>,
-					fea::pack<>>::value,
+			std::is_same_v<
+					fea::idx_splice_before_t<0, int, double, float, short>,
+					fea::pack<>>,
 			"pack.cpp : test failed");
-	static_assert(
-			std::is_same<fea::idx_splice_after_t<0, int, double, float, short>,
-					fea::pack<double, float, short>>::value,
+	static_assert(std::is_same_v<
+						  fea::idx_splice_after_t<0, int, double, float, short>,
+						  fea::pack<double, float, short>>,
 			"pack.cpp : test failed");
 
-	static_assert(std::is_same<fea::idx_splice_t<1, int, double, float, short>,
-						  double>::value,
+	static_assert(
+			std::is_same_v<fea::idx_splice_t<1, int, double, float, short>,
+					double>,
 			"pack.cpp : test failed");
 	static_assert(
-			std::is_same<fea::idx_splice_before_t<1, int, double, float, short>,
-					fea::pack<int>>::value,
+			std::is_same_v<
+					fea::idx_splice_before_t<1, int, double, float, short>,
+					fea::pack<int>>,
 			"pack.cpp : test failed");
-	static_assert(
-			std::is_same<fea::idx_splice_after_t<1, int, double, float, short>,
-					fea::pack<float, short>>::value,
+	static_assert(std::is_same_v<
+						  fea::idx_splice_after_t<1, int, double, float, short>,
+						  fea::pack<float, short>>,
 			"pack.cpp : test failed");
 
-	static_assert(std::is_same<fea::idx_splice_t<2, int, double, float, short>,
-						  float>::value,
+	static_assert(
+			std::is_same_v<fea::idx_splice_t<2, int, double, float, short>,
+					float>,
 			"pack.cpp : test failed");
 	static_assert(
-			std::is_same<fea::idx_splice_before_t<2, int, double, float, short>,
-					fea::pack<int, double>>::value,
+			std::is_same_v<
+					fea::idx_splice_before_t<2, int, double, float, short>,
+					fea::pack<int, double>>,
 			"pack.cpp : test failed");
-	static_assert(
-			std::is_same<fea::idx_splice_after_t<2, int, double, float, short>,
-					fea::pack<short>>::value,
+	static_assert(std::is_same_v<
+						  fea::idx_splice_after_t<2, int, double, float, short>,
+						  fea::pack<short>>,
 			"pack.cpp : test failed");
 
-	static_assert(std::is_same<fea::idx_splice_t<3, int, double, float, short>,
-						  short>::value,
+	static_assert(
+			std::is_same_v<fea::idx_splice_t<3, int, double, float, short>,
+					short>,
 			"pack.cpp : test failed");
 	static_assert(
-			std::is_same<fea::idx_splice_before_t<3, int, double, float, short>,
-					fea::pack<int, double, float>>::value,
+			std::is_same_v<
+					fea::idx_splice_before_t<3, int, double, float, short>,
+					fea::pack<int, double, float>>,
 			"pack.cpp : test failed");
-	static_assert(
-			std::is_same<fea::idx_splice_after_t<3, int, double, float, short>,
-					fea::pack<>>::value,
+	static_assert(std::is_same_v<
+						  fea::idx_splice_after_t<3, int, double, float, short>,
+						  fea::pack<>>,
 			"pack.cpp : test failed");
 
 	{
 		std::tuple<int, double, float, char> tup;
-		static_assert(std::is_same<decltype(fea::make_pack_from(tup)),
-							  fea::pack<int, double, float, char>>::value,
+		static_assert(std::is_same_v<decltype(fea::make_pack_from(tup)),
+							  fea::pack<int, double, float, char>>,
 				"pack.cpp : test failed");
 		static_assert(
-				std::is_same<decltype(fea::make_pack_from(
-									 std::tuple<int, double, float, char>{})),
-						fea::pack<int, double, float, char>>::value,
+				std::is_same_v<decltype(fea::make_pack_from(
+									   std::tuple<int, double, float, char>{})),
+						fea::pack<int, double, float, char>>,
 				"pack.cpp : test failed");
 	}
 
 	{
 		std::array<int, 5> arr;
-		static_assert(std::is_same<decltype(fea::make_pack_from(arr)),
-							  fea::pack<int, int, int, int, int>>::value,
+		static_assert(std::is_same_v<decltype(fea::make_pack_from(arr)),
+							  fea::pack<int, int, int, int, int>>,
 				"pack.cpp : test failed");
-		static_assert(std::is_same<decltype(fea::make_pack_from(
-										   std::array<double, 1>{})),
-							  fea::pack<double>>::value,
+		static_assert(std::is_same_v<decltype(fea::make_pack_from(
+											 std::array<double, 1>{})),
+							  fea::pack<double>>,
 				"pack.cpp : test failed");
 	}
 }

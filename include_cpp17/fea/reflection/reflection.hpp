@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
-#include "fea/maps/type_map.hpp"
+#include "fea/containers/type_map.hpp"
 #include "fea/reflection/filters.hpp"
 #include "fea/reflection/reflection_macros.hpp"
 

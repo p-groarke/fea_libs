@@ -1,0 +1,423 @@
+﻿/*
+BSD 3-Clause License
+
+Copyright (c) 2024, Philippe Groarke
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+* Neither the name of the copyright holder nor the names of its
+  contributors may be used to endorse or promote products derived from
+  this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+#pragma once
+#include "fea/utils/platform.hpp"
+
+#include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <iterator>
+#include <limits>
+#include <numeric>
+#include <type_traits>
+#include <utility>
+#include <vector>
+
+namespace fea {
+// Computes the sum of items in container.
+template <class Container>
+[[nodiscard]] constexpr auto sum(const Container& cont) {
+	using T = typename Container::value_type;
+	return std::accumulate(cont.begin(), cont.end(), T(0));
+}
+
+// Compute profit.
+template <class T>
+[[nodiscard]] constexpr T profit(T gains, T cost) {
+	return gains - cost;
+}
+
+// Compute Return On Investment.
+template <class T>
+[[nodiscard]] constexpr T roi(T gains, T cost) {
+	return profit(gains, cost) / cost;
+}
+
+// Compute profit margin.
+// https://www.investopedia.com/ask/answers/031815/what-formula-calculating-profit-margins.asp
+template <class T>
+[[nodiscard]] constexpr T profit_margin(T gains, T cost) {
+	return profit(gains, cost) / gains;
+}
+
+// Compute mean (average).
+// Provided function must return the value to average.
+template <class FwdIt, class Func>
+[[nodiscard]] constexpr auto mean(FwdIt begin, FwdIt end, Func func) {
+	using type_t = std::decay_t<decltype(func(*begin))>;
+
+	double num = double(std::distance(begin, end));
+	if (num == 0.0) {
+		return type_t(0);
+	}
+
+	type_t ret(0);
+	for (auto it = begin; it != end; ++it) {
+		ret += func(*it);
+	}
+
+	return type_t(ret / num);
+}
+
+// Compute mean (average).
+template <class FwdIt>
+[[nodiscard]] constexpr auto mean(FwdIt begin, FwdIt end) {
+	return mean(
+			begin, end, [](const auto& v) -> const auto& { return v; });
+}
+
+// Compute the median (middle value of given set).
+// Provided callback must return desired value.
+// Note : This function heap allocates. Values must be sortable.
+template <class FwdIt, class Func>
+[[nodiscard]] constexpr auto median(FwdIt begin, FwdIt end, Func&& func) {
+	using T = std::decay_t<decltype(func(*begin))>;
+	std::vector<T> vals;
+	vals.reserve(std::distance(begin, end));
+	for (auto it = begin; it != end; ++it) {
+		vals.push_back(func(*it));
+	}
+	std::sort(vals.begin(), vals.end());
+
+	if (vals.size() % 2 == 0) {
+		// Even set, average middle values.
+		const T& v1 = vals[(vals.size() / 2) - 1];
+		const T& v2 = vals[vals.size() / 2];
+		return T((v1 + v2) / 2.0);
+	}
+
+	return vals[(vals.size() - 1) / 2];
+}
+
+// Compute the median (middle value of given set).
+// Note : This function heap allocates. Values
+// must be sortable.
+template <class FwdIt>
+[[nodiscard]] constexpr auto median(FwdIt begin, FwdIt end) {
+	return median(
+			begin, end, [](const auto& v) -> const auto& { return v; });
+}
+
+// Compute the mode (the most common number in set).
+// Returns a vector of highest frequency items,
+// or an empty vector if no mode was found.
+// Note : Heap allocates.
+template <class FwdIt, class Func>
+[[nodiscard]] auto mode(FwdIt begin, FwdIt end, Func&& func) {
+	using T = std::decay_t<decltype(func(*begin))>;
+
+	size_t num = std::distance(begin, end);
+	if (num == 0) {
+		return std::vector<T>{};
+	}
+	if (num == 1) {
+		return std::vector<T>{ func(*begin) };
+	}
+
+	// Copy iters in candidate vec.
+	// std::vector<std::remove_cv_t<FwdIt>> candidates;
+	std::vector<T> candidates;
+	candidates.reserve(num);
+	for (auto it = begin; it != end; ++it) {
+		candidates.push_back(func(*it));
+	}
+
+	// Stores : { value count, iter index }.
+	std::vector<std::pair<size_t, size_t>> counts;
+
+	// Count candidates, and remove duplicates.
+	for (size_t i = 0; i < candidates.size(); ++i) {
+		const T& c = candidates[i];
+		counts.push_back({ i, 1u });
+
+		auto new_end = std::remove_if(
+				candidates.begin() + i + 1, candidates.end(), [&](const T& v) {
+					if (v == c) {
+						++counts[i].second;
+						return true;
+					}
+					return false;
+				});
+		candidates.erase(new_end, candidates.end());
+	}
+
+	// Now reverse sort counts to find highest frequency numbers.
+	std::sort(counts.begin(), counts.end(),
+			[](const std::pair<size_t, size_t>& lhs,
+					const std::pair<size_t, size_t>& rhs) {
+				return lhs.second > rhs.second;
+			});
+
+	// The final candidates are the front values who's counts are equal.
+	// If first count is 1, no mode found.
+	if (counts.front().second == 1u) {
+		return std::vector<T>{};
+	}
+
+	std::vector<T> ret;
+	size_t max_count = counts.front().second;
+	for (const std::pair<size_t, size_t>& c : counts) {
+		if (c.second != max_count) {
+			break;
+		}
+		ret.push_back(candidates[c.first]);
+	}
+	return ret;
+}
+
+// Compute the mode (the most common number in set).
+// Returns a vector of the highest frequency items,
+// or an empty vector if no mode was found.
+// Note : Heap allocates.
+template <class FwdIt>
+[[nodiscard]] auto mode(FwdIt begin, FwdIt end) {
+	return mode(
+			begin, end, [](const auto& v) -> const auto& { return v; });
+}
+
+
+// Compute variance of values, sigma^2.
+// Predicate function must return value to compute.
+template <class FwdIt, class Func>
+[[nodiscard]] constexpr auto variance(FwdIt begin, FwdIt end, Func func) {
+	using type_t = std::decay_t<decltype(func(*begin))>;
+
+	double num = double(std::distance(begin, end));
+	if (num == 0.0) {
+		return type_t(0);
+	}
+
+	type_t avg = fea::mean(begin, end, func);
+
+	type_t ret(0);
+	for (auto it = begin; it != end; ++it) {
+		type_t v = func(*it) - avg;
+		ret += v * v;
+	}
+
+	return type_t(ret / num);
+}
+
+// Compute variance of values, sigma^2.
+template <class FwdIt>
+[[nodiscard]] constexpr auto variance(FwdIt begin, FwdIt end) {
+	return variance(
+			begin, end, [](const auto& v) -> const auto& { return v; });
+}
+
+// Compute population standard deviation.
+// Predicate function must return the values to compute.
+template <class FwdIt, class Func>
+[[nodiscard]] constexpr auto std_deviation(FwdIt begin, FwdIt end, Func func) {
+	using type_t = std::decay_t<decltype(func(*begin))>;
+	return type_t(std::sqrt(double(variance(begin, end, func))));
+}
+
+// Compute population standard deviation.
+template <class FwdIt>
+[[nodiscard]] constexpr auto std_deviation(FwdIt begin, FwdIt end) {
+	return std_deviation(
+			begin, end, [](const auto& v) -> const auto& { return v; });
+}
+
+// Filters values above or below sigma * standard deviation.
+// Your callback will be called with values that pass test.
+// The ValuePredicate returns values to compute.
+template <class FwdIt, class ValuePredicate, class T, class Func>
+constexpr void sigma_filter(
+		FwdIt begin, FwdIt end, T sigma, ValuePredicate v_pred, Func func) {
+	// Compute mean.
+	auto avg = fea::mean(begin, end, v_pred);
+	// Compute standard deviation.
+	auto std_dev = fea::std_deviation(begin, end, v_pred);
+
+	auto high_benchmark = avg + sigma * std_dev;
+	auto low_benchmark = avg - sigma * std_dev;
+
+	for (auto it = begin; it != end; ++it) {
+		decltype(v_pred(*it)) val = v_pred(*it);
+		if (low_benchmark < val && val < high_benchmark) {
+			func(*it);
+		}
+	}
+}
+
+// Filters values above or below sigma * standard deviation.
+// Your callback will be called with values that pass test.
+template <class FwdIt, class T, class Func>
+constexpr void sigma_filter(FwdIt begin, FwdIt end, T sigma, Func func) {
+	return sigma_filter(
+			begin, end, sigma, [](const auto& v) -> const auto& { return v; },
+			func);
+}
+
+
+// Compute sample variance of values (Bessel's correction, divided by n
+// - 1). Predicate function must return value to compute.
+template <class FwdIt, class Func>
+[[nodiscard]] constexpr auto sample_variance(
+		FwdIt begin, FwdIt end, Func func) {
+	using type_t = std::decay_t<decltype(func(*begin))>;
+
+	double num = double(std::distance(begin, end));
+	if (num <= 1.0) {
+		return type_t(0);
+	}
+
+	type_t avg = fea::mean(begin, end, func);
+
+	type_t ret(0);
+	for (auto it = begin; it != end; ++it) {
+		type_t v = func(*it) - avg;
+		ret += v * v;
+	}
+
+	return type_t(ret / (num - 1));
+}
+
+// Compute sample variance of values (Bessel's correction, divided by n - 1).
+template <class FwdIt>
+[[nodiscard]] constexpr auto sample_variance(FwdIt begin, FwdIt end) {
+	return sample_variance(
+			begin, end, [](const auto& v) -> const auto& { return v; });
+}
+
+// Compute sample standard deviation (Bessel's correction, divides by n - 1).
+// Predicate function must return the values to compute.
+template <class FwdIt, class Func>
+[[nodiscard]] auto sample_std_deviation(FwdIt begin, FwdIt end, Func func) {
+	using type_t = std::decay_t<decltype(func(*begin))>;
+	return type_t(std::sqrt(double(sample_variance(begin, end, func))));
+}
+
+// Compute sample standard deviation (Bessel's correction, divides by n - 1).
+template <class FwdIt>
+[[nodiscard]] auto sample_std_deviation(FwdIt begin, FwdIt end) {
+	return sample_std_deviation(
+			begin, end, [](const auto& v) -> const auto& { return v; });
+}
+
+// Filters values above or below sigma * standard deviation.
+// Uses sample standard deviation (Bussel's correction, divided by n - 1).
+// Your callback will be called with values that pass test.
+// The ValuePredicate returns values to compute.
+template <class FwdIt, class ValuePredicate, class T, class Func>
+void sample_sigma_filter(
+		FwdIt begin, FwdIt end, T sigma, ValuePredicate v_pred, Func func) {
+	// Compute mean.
+	auto avg = fea::mean(begin, end, v_pred);
+	// Compute standard deviation.
+	auto std_dev = fea::sample_std_deviation(begin, end, v_pred);
+
+	auto high_benchmark = avg + sigma * std_dev;
+	auto low_benchmark = avg - sigma * std_dev;
+
+	for (auto it = begin; it != end; ++it) {
+		decltype(v_pred(*it)) val = v_pred(*it);
+		if (low_benchmark < val && val < high_benchmark) {
+			func(*it);
+		}
+	}
+}
+
+// Filters values above or below sigma * standard deviation.
+// Uses sample standard deviation (Bussel's correction, divided by n - 1).
+// Your callback will be called with values that pass test.
+template <class FwdIt, class T, class Func>
+void sample_sigma_filter(FwdIt begin, FwdIt end, T sigma, Func func) {
+	return sample_sigma_filter(
+			begin, end, sigma, [](const auto& v) -> const auto& { return v; },
+			func);
+}
+
+// Computes the factorial of n.
+template <class T>
+[[nodiscard]] constexpr T factorial(T n) {
+	assert(n >= T(0));
+
+	T ret = T(1);
+	for (T i = T(1); i <= n; ++i) {
+		ret *= i;
+	}
+	return ret;
+}
+
+// Computes the factorial of n.
+template <class T>
+[[nodiscard]] constexpr T fact(T n) {
+	return factorial(n);
+}
+
+// Computes the binomial coefficient given (n k).
+template <class T>
+[[nodiscard]] constexpr T binomial_coeff(T n, T k) {
+	assert(n >= k && n > 0);
+	return fact(n) / (fact(k) * fact(n - k));
+}
+
+// Computes stars and bars for positive values (> 0).
+// https://en.wikipedia.org/wiki/Stars_and_bars_%28combinatorics%29
+template <class T>
+[[nodiscard]] constexpr T stars_and_bars_pos(T n, T k) {
+	return binomial_coeff(n - 1, k - 1);
+}
+
+// Computes stars and bars for non-negative values (>= 0).
+// https://en.wikipedia.org/wiki/Stars_and_bars_%28combinatorics%29
+template <class T>
+[[nodiscard]] constexpr T stars_and_bars_zero(T n, T k) {
+	return binomial_coeff(n + k - 1, k - 1);
+}
+
+// Returns magnitude of vector.
+// TODO : variadic
+template <class T>
+T magnitude(const T& x, const T& y) {
+	return std::sqrt(x * x + y * y);
+}
+
+// Normalizes vector.
+template <class T>
+// TODO : variadic
+void normalize(T& x, T& y) {
+	T mag = magnitude(x, y);
+	x /= mag;
+	y /= mag;
+}
+
+// For ints and unsigned ints, divides with proper rounding.
+template <class T>
+constexpr T divide_round(const T& dividend, const T& divisor) {
+	return (dividend + (divisor - T(1))) / divisor;
+}
+
+} // namespace fea

@@ -73,10 +73,15 @@ struct jump_span_iterator {
 			, _lcl_idx(lcl_idx) {
 	}
 
-	[[nodiscard]] constexpr reference operator*() const noexcept {
+	[[nodiscard]]
+	constexpr reference
+	operator*() const noexcept {
 		return _back_ptr->_spans[_span_idx][_lcl_idx];
 	}
-	[[nodiscard]] constexpr pointer operator->() const noexcept {
+
+	[[nodiscard]]
+	constexpr pointer
+	operator->() const noexcept {
 		return &_back_ptr->_spans[_span_idx][_lcl_idx];
 	}
 
@@ -123,14 +128,16 @@ struct jump_span_iterator {
 		}
 		return *this;
 	}
-	[[nodiscard]] constexpr jump_span_iterator operator+(
-			const difference_type off) const noexcept {
+	[[nodiscard]]
+	constexpr jump_span_iterator
+	operator+(const difference_type off) const noexcept {
 		jump_span_iterator ret{ *this };
 		ret += off;
 		return ret;
 	}
-	[[nodiscard]] friend constexpr jump_span_iterator operator+(
-			const difference_type offset, jump_span_iterator next) noexcept {
+	[[nodiscard]]
+	friend constexpr jump_span_iterator
+	operator+(const difference_type offset, jump_span_iterator next) noexcept {
 		next += offset;
 		return next;
 	}
@@ -148,15 +155,17 @@ struct jump_span_iterator {
 		}
 		return *this;
 	}
-	[[nodiscard]] constexpr jump_span_iterator operator-(
-			const difference_type off) const noexcept {
+	[[nodiscard]]
+	constexpr jump_span_iterator
+	operator-(const difference_type off) const noexcept {
 		jump_span_iterator ret{ *this };
 		ret -= off;
 		return ret;
 	}
 
-	[[nodiscard]] constexpr difference_type operator-(
-			const jump_span_iterator& right) const noexcept {
+	[[nodiscard]]
+	constexpr difference_type
+	operator-(const jump_span_iterator& right) const noexcept {
 		if (_span_idx == right._span_idx) {
 			return difference_type(_lcl_idx) - difference_type(right._lcl_idx);
 		} else if (_span_idx < right._span_idx) {
@@ -179,18 +188,21 @@ struct jump_span_iterator {
 		}
 	}
 
-	[[nodiscard]] constexpr reference operator[](
-			const difference_type offset) const noexcept {
+	[[nodiscard]]
+	constexpr reference
+	operator[](const difference_type offset) const noexcept {
 		return *(*this + offset);
 	}
 
-	[[nodiscard]] constexpr bool operator==(
-			const jump_span_iterator& right) const noexcept {
+	[[nodiscard]]
+	constexpr bool
+	operator==(const jump_span_iterator& right) const noexcept {
 		return _span_idx == right._span_idx && _lcl_idx == right._lcl_idx;
 	}
 
-	[[nodiscard]] constexpr std::strong_ordering operator<=>(
-			const jump_span_iterator& right) const noexcept {
+	[[nodiscard]]
+	constexpr std::strong_ordering
+	operator<=>(const jump_span_iterator& right) const noexcept {
 		if (_span_idx == right._span_idx) {
 			return _lcl_idx <=> right._lcl_idx;
 		}
@@ -213,14 +225,15 @@ private:
 };
 
 template <class T, class Alloc>
-[[nodiscard]] constexpr bool are_contiguous(
-		const jump_span_iterator<T, Alloc>& lhs,
+[[nodiscard]]
+constexpr bool are_contiguous(const jump_span_iterator<T, Alloc>& lhs,
 		const jump_span_iterator<T, Alloc>& rhs) noexcept {
 	return lhs._span_idx == rhs._span_idx;
 }
 
 template <class It>
-[[nodiscard]] constexpr bool are_contiguous(It, It) noexcept {
+[[nodiscard]]
+constexpr bool are_contiguous(It, It) noexcept {
 	// wtf msvc
 	// return std::is_same_v<typename
 	// std::iterator_traits<It>::iterator_concept,
@@ -232,7 +245,8 @@ template <class It>
 // By calling this, you promise that you've checked whether the iterators are
 // truly contiguous.
 template <class T, class Alloc>
-[[nodiscard]] constexpr typename std::span<T>::iterator make_contiguous(
+[[nodiscard]]
+constexpr typename std::span<T>::iterator make_contiguous(
 		const jump_span_iterator<T, Alloc>& it) noexcept {
 	const std::span<T>& s = it._back_ptr->data()[it._span_idx];
 	return s.begin() + it._lcl_idx;
@@ -289,8 +303,8 @@ struct jump_span {
 	// Accept any container<T> with data() and size().
 	template <class Container>
 		requires fea::is_contiguous_v<Container>
-			&& std::is_convertible_v<typename Container::value_type,
-					element_type>
+			  && std::is_convertible_v<typename Container::value_type,
+					  element_type>
 	constexpr jump_span(const Container& container) {
 		push_back(container);
 	}
@@ -298,9 +312,9 @@ struct jump_span {
 	// Accept any container<container<T>> with recursive data() and size().
 	template <class Container>
 		requires fea::is_contiguous_v<Container>
-			&& fea::is_contiguous_v<typename Container::value_type>
-			&& std::is_convertible_v<typename Container::value_type::value_type,
-					element_type>
+			  && fea::is_contiguous_v<typename Container::value_type>
+			  && std::is_convertible_v<
+					  typename Container::value_type::value_type, element_type>
 	constexpr jump_span(const Container& container) {
 		push_back(container);
 	}
@@ -309,11 +323,12 @@ struct jump_span {
 	// size().
 	template <class Container>
 		requires fea::is_contiguous_v<Container>
-			&& fea::is_contiguous_v<typename Container::value_type>
-			&& fea::is_contiguous_v<typename Container::value_type::value_type>
-			&& std::is_convertible_v<
-					typename Container::value_type::value_type::value_type,
-					element_type>
+			  && fea::is_contiguous_v<typename Container::value_type>
+			  && fea::is_contiguous_v<
+					  typename Container::value_type::value_type>
+			  && std::is_convertible_v<
+					  typename Container::value_type::value_type::value_type,
+					  element_type>
 	constexpr jump_span(const Container& container) {
 		push_back(container);
 	}
@@ -322,42 +337,52 @@ struct jump_span {
 	// data() and size().
 	template <class Container>
 		requires fea::is_contiguous_v<Container>
-			&& fea::is_contiguous_v<typename Container::value_type>
-			&& fea::is_contiguous_v<typename Container::value_type::value_type>
-			&& fea::is_contiguous_v<
-					typename Container::value_type::value_type::value_type>
-			&& std::is_convertible_v<typename Container::value_type::
-											 value_type::value_type::value_type,
-					element_type>
+			  && fea::is_contiguous_v<typename Container::value_type>
+			  && fea::is_contiguous_v<
+					  typename Container::value_type::value_type>
+			  && fea::is_contiguous_v<
+					  typename Container::value_type::value_type::value_type>
+			  && std::is_convertible_v<
+					  typename Container::value_type::value_type::value_type::
+							  value_type,
+					  element_type>
 	constexpr jump_span(const Container& container) {
 		push_back(container);
 	}
 
 	// Iterators
-	[[nodiscard]] constexpr iterator begin() const noexcept {
+	[[nodiscard]]
+	constexpr iterator begin() const noexcept {
 		return iterator{ *this, 0, 0 };
 	}
-	[[nodiscard]] constexpr iterator end() const noexcept {
+	[[nodiscard]]
+	constexpr iterator end() const noexcept {
 		return iterator{ *this, _spans.size(), 0 };
 	}
-	[[nodiscard]] constexpr reverse_iterator rbegin() const noexcept {
+	[[nodiscard]]
+	constexpr reverse_iterator rbegin() const noexcept {
 		return std::make_reverse_iterator(end());
 	}
-	[[nodiscard]] constexpr reverse_iterator rend() const noexcept {
+	[[nodiscard]]
+	constexpr reverse_iterator rend() const noexcept {
 		return std::make_reverse_iterator(begin());
 	}
 
 	// Element access
-	[[nodiscard]] constexpr reference front() const noexcept {
+	[[nodiscard]]
+	constexpr reference front() const noexcept {
 		assert(!empty());
 		return _spans.front().front();
 	}
-	[[nodiscard]] constexpr reference back() const noexcept {
+	[[nodiscard]]
+	constexpr reference back() const noexcept {
 		assert(!empty());
 		return _spans.back().back();
 	}
 
-	[[nodiscard]] constexpr reference operator[](size_type idx) const noexcept {
+	[[nodiscard]]
+	constexpr reference
+	operator[](size_type idx) const noexcept {
 		assert(idx < size());
 
 		size_type accum = 0; // modulo is expensive, go with addition.
@@ -371,27 +396,30 @@ struct jump_span {
 		return _spans.back()[_spans.back().size()];
 	}
 
-	[[nodiscard]] constexpr std::span<const std::span<element_type>>
-	data() const noexcept {
+	[[nodiscard]]
+	constexpr std::span<const std::span<element_type>> data() const noexcept {
 		return { _spans };
 	}
 
 	// Observers
-	[[nodiscard]] constexpr size_type size() const noexcept {
+	[[nodiscard]]
+	constexpr size_type size() const noexcept {
 		size_type ret = 0;
 		for (const std::span<element_type>& s : _spans) {
 			ret += s.size();
 		}
 		return ret;
 	}
-	[[nodiscard]] constexpr size_type size_bytes() const noexcept {
+	[[nodiscard]]
+	constexpr size_type size_bytes() const noexcept {
 		size_type ret = 0;
 		for (const std::span<element_type>& s : _spans) {
 			ret += s.size_bytes();
 		}
 		return ret;
 	}
-	[[nodiscard]] constexpr bool empty() const noexcept {
+	[[nodiscard]]
+	constexpr bool empty() const noexcept {
 		bool ret = true;
 		for (const std::span<element_type>& s : _spans) {
 			ret &= s.empty();
@@ -422,8 +450,8 @@ struct jump_span {
 	// Push back any container<T> that has data() and size().
 	template <class Container>
 		requires fea::is_contiguous_v<Container>
-			&& std::is_convertible_v<typename Container::value_type,
-					element_type>
+			  && std::is_convertible_v<typename Container::value_type,
+					  element_type>
 	constexpr void push_back(const Container& container) {
 		if (container.empty()) {
 			return;
@@ -435,9 +463,9 @@ struct jump_span {
 	// Push back any container<container<T>> with recursive data() and size().
 	template <class Container>
 		requires fea::is_contiguous_v<Container>
-			&& fea::is_contiguous_v<typename Container::value_type>
-			&& std::is_convertible_v<typename Container::value_type::value_type,
-					element_type>
+			  && fea::is_contiguous_v<typename Container::value_type>
+			  && std::is_convertible_v<
+					  typename Container::value_type::value_type, element_type>
 	constexpr void push_back(const Container& container) {
 		_spans.insert(_spans.end(), container.begin(), container.end());
 		clean_empty();
@@ -447,11 +475,12 @@ struct jump_span {
 	// and size().
 	template <class Container>
 		requires fea::is_contiguous_v<Container>
-			&& fea::is_contiguous_v<typename Container::value_type>
-			&& fea::is_contiguous_v<typename Container::value_type::value_type>
-			&& std::is_convertible_v<
-					typename Container::value_type::value_type::value_type,
-					element_type>
+			  && fea::is_contiguous_v<typename Container::value_type>
+			  && fea::is_contiguous_v<
+					  typename Container::value_type::value_type>
+			  && std::is_convertible_v<
+					  typename Container::value_type::value_type::value_type,
+					  element_type>
 	constexpr void push_back(const Container& container) {
 		for (const auto& nested1 : container) {
 			for (const auto& nested2 : nested1) {
@@ -466,13 +495,15 @@ struct jump_span {
 	// recursive data() and size().
 	template <class Container>
 		requires fea::is_contiguous_v<Container>
-			&& fea::is_contiguous_v<typename Container::value_type>
-			&& fea::is_contiguous_v<typename Container::value_type::value_type>
-			&& fea::is_contiguous_v<
-					typename Container::value_type::value_type::value_type>
-			&& std::is_convertible_v<typename Container::value_type::
-											 value_type::value_type::value_type,
-					element_type>
+			  && fea::is_contiguous_v<typename Container::value_type>
+			  && fea::is_contiguous_v<
+					  typename Container::value_type::value_type>
+			  && fea::is_contiguous_v<
+					  typename Container::value_type::value_type::value_type>
+			  && std::is_convertible_v<
+					  typename Container::value_type::value_type::value_type::
+							  value_type,
+					  element_type>
 	constexpr void push_back(const Container& container) {
 		for (const auto& nested1 : container) {
 			for (const auto& nested2 : nested1) {

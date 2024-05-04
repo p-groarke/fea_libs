@@ -36,7 +36,7 @@
 #include "fea/macros/foreach.hpp"
 #include "fea/macros/literals.hpp"
 #include "fea/macros/macros.hpp"
-#include "fea/maps/type_map.hpp"
+#include "fea/containers/type_map.hpp"
 #include "fea/meta/pack.hpp"
 #include "fea/meta/traits.hpp"
 #include "fea/string/string.hpp"
