@@ -145,9 +145,9 @@ protected:
 			size_type sub_idx) noexcept;
 
 
-	bool_const_iterator _first = nullptr;
-	bool_const_iterator _last = nullptr;
-	bool_const_iterator _current = nullptr;
+	bool_const_iterator _first = {};
+	bool_const_iterator _last = {};
+	bool_const_iterator _current = {};
 	size_type _local_idx = 0;
 };
 

@@ -139,9 +139,9 @@ protected:
 	constexpr uss_const_iterator(bool_const_iterator first,
 			bool_const_iterator last, bool_const_iterator ptr) noexcept;
 
-	bool_const_iterator _first = nullptr;
-	bool_const_iterator _last = nullptr;
-	bool_const_iterator _current = nullptr;
+	bool_const_iterator _first = {};
+	bool_const_iterator _last = {};
+	bool_const_iterator _current = {};
 };
 
 } // namespace fea
