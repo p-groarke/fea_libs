@@ -89,15 +89,4 @@ auto uss_const_iterator<MySet>::operator>=(
 	return !(*this < rhs);
 }
 
-template <class MySet>
-constexpr uss_iterator<MySet>::uss_iterator(base_t it) noexcept
-		: base_t(it) {
-}
-
-template <class MySet>
-constexpr uss_iterator<MySet>::uss_iterator(
-		bool_iterator first, bool_iterator last, bool_iterator current) noexcept
-		: base_t(first, last, current) {
-}
-
 } // namespace fea

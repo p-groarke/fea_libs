@@ -34,11 +34,6 @@ auto unsigned_compact_slotset<Key, Alloc>::cbegin() const noexcept
 }
 
 template <class Key, class Alloc>
-auto unsigned_compact_slotset<Key, Alloc>::begin() noexcept -> iterator {
-	return iterator{ cbegin() };
-}
-
-template <class Key, class Alloc>
 auto unsigned_compact_slotset<Key, Alloc>::end() const noexcept
 		-> const_iterator {
 	return const_iterator{ _lookup.begin(), _lookup.end(), _lookup.end(),
@@ -49,11 +44,6 @@ template <class Key, class Alloc>
 auto unsigned_compact_slotset<Key, Alloc>::cend() const noexcept
 		-> const_iterator {
 	return end();
-}
-
-template <class Key, class Alloc>
-auto unsigned_compact_slotset<Key, Alloc>::end() noexcept -> iterator {
-	return iterator{ cend() };
 }
 
 template <class Key, class Alloc>
@@ -103,8 +93,8 @@ constexpr auto unsigned_compact_slotset<Key, Alloc>::clear() noexcept -> void {
 
 template <class Key, class Alloc>
 auto unsigned_compact_slotset<Key, Alloc>::insert(key_type key)
-		-> std::pair<iterator, bool> {
-	iterator it = find(key);
+		-> std::pair<const_iterator, bool> {
+	const_iterator it = find(key);
 	if (it != end()) {
 		return { it, false };
 	}
@@ -115,8 +105,8 @@ auto unsigned_compact_slotset<Key, Alloc>::insert(key_type key)
 	++_size;
 
 	return {
-		iterator{ _lookup.begin(), _lookup.end(), _lookup.begin() + lkp_idx,
-				lcl_idx },
+		const_iterator{ _lookup.begin(), _lookup.end(),
+				_lookup.begin() + lkp_idx, lcl_idx },
 		true,
 	};
 }
@@ -171,24 +161,22 @@ auto unsigned_compact_slotset<Key, Alloc>::erase(key_type key) noexcept
 
 template <class Key, class Alloc>
 auto unsigned_compact_slotset<Key, Alloc>::erase(const_iterator cit) noexcept
-		-> iterator {
-	if (cit != end() && (*cit._current)[cit._local_idx] && erase(*cit)) {
+		-> const_iterator {
+	if (cit != end() && (*cit._current)[cit._local_idx]) {
+		bool_type& bitset
+				= *const_cast<bool_type*>(std::addressof(*cit._current));
+		bitset[cit._local_idx] = false;
+		--_size;
 		++cit;
 	}
-	return iterator{ cit };
+	return cit;
 }
 
 template <class Key, class Alloc>
-auto unsigned_compact_slotset<Key, Alloc>::erase(iterator it) noexcept
-		-> iterator {
-	return erase(const_iterator{ it });
-}
-
-template <class Key, class Alloc>
-auto unsigned_compact_slotset<Key, Alloc>::erase(
-		const_iterator cfirst, const_iterator clast) noexcept -> iterator {
+auto unsigned_compact_slotset<Key, Alloc>::erase(const_iterator cfirst,
+		const_iterator clast) noexcept -> const_iterator {
 	if (cfirst == clast) {
-		return iterator{ clast };
+		return clast;
 	}
 
 	const_iterator it = cfirst;
@@ -198,7 +186,7 @@ auto unsigned_compact_slotset<Key, Alloc>::erase(
 	if (it != cend()) {
 		++it;
 	}
-	return iterator{ it };
+	return it;
 }
 
 template <class Key, class Alloc>
@@ -268,13 +256,6 @@ auto unsigned_compact_slotset<Key, Alloc>::find(key_type key) const noexcept
 	}
 	return const_iterator{ _lookup.begin(), _lookup.end(),
 		_lookup.begin() + lkp_idx, lcl_idx };
-}
-
-template <class Key, class Alloc>
-auto unsigned_compact_slotset<Key, Alloc>::find(key_type key) noexcept
-		-> iterator {
-	const_iterator it = std::as_const(*this).find(key);
-	return iterator{ it._first, it._last, it._current, it._local_idx };
 }
 
 template <class Key, class Alloc>

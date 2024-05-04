@@ -71,7 +71,7 @@ struct unsigned_compact_slotset {
 	using pointer = typename std::allocator_traits<Alloc>::pointer;
 	using const_pointer = typename std::allocator_traits<Alloc>::const_pointer;
 	using const_iterator = ucss_const_iterator<unsigned_compact_slotset>;
-	using iterator = ucss_iterator<unsigned_compact_slotset>;
+	// using iterator = ucss_iterator<unsigned_compact_slotset>;
 
 	// Internals
 	static constexpr size_type bitset_size = fea::arch;
@@ -107,10 +107,6 @@ struct unsigned_compact_slotset {
 	[[nodiscard]]
 	const_iterator cbegin() const noexcept;
 
-	// Begin iterator, bidirectional.
-	[[nodiscard]]
-	iterator begin() noexcept;
-
 	// End iterator, bidirectional.
 	[[nodiscard]]
 	const_iterator end() const noexcept;
@@ -119,9 +115,6 @@ struct unsigned_compact_slotset {
 	[[nodiscard]]
 	const_iterator cend() const noexcept;
 
-	// End iterator, bidirectional.
-	[[nodiscard]]
-	iterator end() noexcept;
 
 	// Capacity
 
@@ -153,7 +146,7 @@ struct unsigned_compact_slotset {
 	constexpr void clear() noexcept;
 
 	// Insert an item. Returns iterator to item and true if inserted.
-	std::pair<iterator, bool> insert(key_type key);
+	std::pair<const_iterator, bool> insert(key_type key);
 
 	// Insert multiple items.
 	template <class FwdIt>
@@ -167,14 +160,10 @@ struct unsigned_compact_slotset {
 
 	// Erase item at iterator.
 	// Returns 1 past erased item if erased, else returns it.
-	iterator erase(const_iterator it) noexcept;
-
-	// Erase item at iterator.
-	// Returns 1 past erased item if erased, else returns it.
-	iterator erase(iterator it) noexcept;
+	const_iterator erase(const_iterator it) noexcept;
 
 	// Erase multiple items.
-	iterator erase(const_iterator first, const_iterator last) noexcept;
+	const_iterator erase(const_iterator first, const_iterator last) noexcept;
 
 	// Swap with another unsigned_set.
 	void swap(unsigned_compact_slotset& other) noexcept;
@@ -199,10 +188,6 @@ struct unsigned_compact_slotset {
 	// Find the iterator for a key. Returns end() if not present.
 	[[nodiscard]]
 	const_iterator find(key_type key) const noexcept;
-
-	// Find the iterator for a key. Returns end() if not present.
-	[[nodiscard]]
-	iterator find(key_type key) noexcept;
 
 private:
 	// Returns the absolute (lookup) index of key.

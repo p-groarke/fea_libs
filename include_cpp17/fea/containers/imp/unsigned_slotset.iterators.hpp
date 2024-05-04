@@ -144,41 +144,6 @@ protected:
 	bool_const_iterator _current = nullptr;
 };
 
-template <class MySet>
-struct uss_iterator : public uss_const_iterator<MySet> {
-	// Non-const iterator does nothing special as we never return references
-	// to ids. We only return by copy (on the spot key creation).
-	using base_t = uss_const_iterator<MySet>;
-	// using base_t::base_t;
-
-	constexpr uss_iterator() noexcept = default;
-	~uss_iterator() noexcept = default;
-	constexpr uss_iterator(const uss_iterator&) noexcept = default;
-	constexpr uss_iterator(uss_iterator&&) noexcept = default;
-	constexpr uss_iterator& operator=(const uss_iterator&) noexcept = default;
-	constexpr uss_iterator& operator=(uss_iterator&&) noexcept = default;
-
-	using difference_type = typename base_t::difference_type;
-	using key_type = typename base_t::key_type;
-	using value_type = key_type;
-	using pointer = key_type;
-	using reference = key_type;
-	using iterator_category = std::bidirectional_iterator_tag;
-
-	// Internals.
-	using bool_iterator = typename MySet::bool_iterator;
-
-private:
-	friend MySet;
-
-	// Ctors
-	// Construct from non-const pointers, convert to const in const_iterator,
-	// permits const_cast.
-	constexpr uss_iterator(base_t it) noexcept;
-
-	constexpr uss_iterator(bool_iterator first, bool_iterator last,
-			bool_iterator current) noexcept;
-};
 } // namespace fea
 
 #include "unsigned_slotset.iterators.imp.hpp"

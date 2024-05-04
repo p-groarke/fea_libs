@@ -101,16 +101,4 @@ auto ucss_const_iterator<MySet>::operator>=(
 	return !(*this < rhs);
 }
 
-template <class MySet>
-constexpr ucss_iterator<MySet>::ucss_iterator(base_t it)
-	:base_t(it)
-{
-}
-
-template <class MySet>
-constexpr ucss_iterator<MySet>::ucss_iterator(bool_iterator first,
-		bool_iterator last, bool_iterator ptr, size_type sub_idx) noexcept
-		: base_t(first, last, ptr, sub_idx) {
-}
-
 } // namespace fea
