@@ -31,6 +31,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
+#include <fea/utils/platform.hpp>
+
 #include <cassert>
 #include <cstdint>
 #include <functional>
