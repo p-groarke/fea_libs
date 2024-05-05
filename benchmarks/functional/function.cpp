@@ -185,6 +185,7 @@ struct bench_obj {
 	void func(size_t& i) {
 		++i;
 	}
+	int v;
 };
 
 
