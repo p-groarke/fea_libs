@@ -35,6 +35,7 @@
 #include "fea/utils/platform.hpp"
 
 #include <array> // for std::begin, std::end
+#include <memory>
 #include <tuple> // for std::get
 #include <type_traits>
 #include <utility>
@@ -389,5 +390,9 @@ constexpr auto reverse_index_sequence(std::index_sequence<Is...>)
 template <size_t N>
 using make_reverse_index_sequence = decltype(detail::reverse_index_sequence(
 		std::make_index_sequence<N>{}));
+
+template <class Alloc, class Value>
+using rebind_alloc_t =
+		typename std::allocator_traits<Alloc>::template rebind_alloc<Value>;
 
 } // namespace fea

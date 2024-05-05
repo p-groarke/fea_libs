@@ -30,10 +30,12 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
-#include "fea/containers/imp/unsigned_slotset.iterators.hpp"
+#include "fea/containers/imp/unsigned_compact_slotset.iterators.hpp"
 #include "fea/meta/traits.hpp"
+#include "fea/utils/platform.hpp"
 
 #include <algorithm>
+#include <bitset>
 #include <cassert>
 #include <cstdint>
 #include <iterator>
@@ -42,28 +44,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 /*
-fea::unsigned_slotset is an ordered set for unsigned numbers.
-The memory backing grows as large as biggest key.
+fea::unsigned_compact_slotset is an ordered set for unsigned numbers.
+The memory backing is a bitset and grows as large as biggest key / ARCH_BITS.
+It isn't thread safe.
 
-See fea::unsigned_compact_slotset for a version which uses less memory, but has
-higher cpu cost and isn't thread-safe.
-
-TODO: fea::id_set for a more generic equivalent capable of storing any key
-type.
-
-REMINDER
-to try hash algo
-modulo -> lookup number of collisions -> ++collisions
-	if collisions > max collisions -> rehash
-modulo = index start -> std::find -> index start + collisions
+See fea::unsigned_compact_slotset for a version which uses more memory, but has
+less cpu cost and is thread-safe.
 */
 
 namespace fea {
 template <class Key, class Alloc = std::allocator<Key>>
-struct unsigned_slotset {
+struct unsigned_compact_slotset {
 	// Sanity checks.
 	static_assert(std::is_unsigned_v<Key>,
-			"unsigned_set : Key must be unsigned "
+			"unsigned_compact_set : Key must be unsigned "
 			"integer. Use fea::id_set for id types.");
 
 	// Typedefs
@@ -76,30 +70,32 @@ struct unsigned_slotset {
 	using const_reference = const value_type&;
 	using pointer = typename std::allocator_traits<Alloc>::pointer;
 	using const_pointer = typename std::allocator_traits<Alloc>::const_pointer;
-	using const_iterator = uss_const_iterator<unsigned_slotset>;
-	using iterator = const_iterator;
+	using const_iterator = ucss_const_iterator<unsigned_compact_slotset>;
+	// using iterator = ucss_iterator<unsigned_compact_slotset>;
 
 	// Internals
-	using bool_type = uint8_t;
+	static constexpr size_type bitset_size = fea::arch;
+	using bool_type = std::bitset<bitset_size>;
 	using bool_allocator_type = fea::rebind_alloc_t<Alloc, bool_type>;
 	using bool_lookup_t = std::vector<bool_type, bool_allocator_type>;
 	using bool_const_iterator = typename bool_lookup_t::const_iterator;
 	using bool_iterator = typename bool_lookup_t::iterator;
 
 	// Ctors
-	unsigned_slotset() = default;
-	~unsigned_slotset() = default;
-	unsigned_slotset(const unsigned_slotset&) = default;
-	unsigned_slotset(unsigned_slotset&&) = default;
-	unsigned_slotset& operator=(const unsigned_slotset&) = default;
-	unsigned_slotset& operator=(unsigned_slotset&&) = default;
+	unsigned_compact_slotset() = default;
+	~unsigned_compact_slotset() = default;
+	unsigned_compact_slotset(const unsigned_compact_slotset&) = default;
+	unsigned_compact_slotset(unsigned_compact_slotset&&) = default;
+	unsigned_compact_slotset& operator=(const unsigned_compact_slotset&)
+			= default;
+	unsigned_compact_slotset& operator=(unsigned_compact_slotset&&) = default;
 
 	// Initializes with provided keys.
 	template <class FwdIt>
-	unsigned_slotset(FwdIt first, FwdIt last);
+	unsigned_compact_slotset(FwdIt first, FwdIt last);
 
 	// Initializes with provided keys.
-	unsigned_slotset(std::initializer_list<key_type>&& ilist);
+	unsigned_compact_slotset(std::initializer_list<key_type>&& ilist);
 
 	// Iterators
 
@@ -122,11 +118,11 @@ struct unsigned_slotset {
 
 	// Capacity
 
-	// Is set empty? O(n)
+	// Is set empty?
 	[[nodiscard]]
 	bool empty() const noexcept;
 
-	// Size of set. O(n)
+	// Size of set.
 	[[nodiscard]]
 	size_type size() const noexcept;
 
@@ -147,7 +143,7 @@ struct unsigned_slotset {
 	// Modifiers
 
 	// Clear all items.
-	void clear() noexcept;
+	constexpr void clear() noexcept;
 
 	// Insert an item. Returns iterator to item and true if inserted.
 	std::pair<const_iterator, bool> insert(key_type key);
@@ -170,15 +166,15 @@ struct unsigned_slotset {
 	const_iterator erase(const_iterator first, const_iterator last) noexcept;
 
 	// Swap with another unsigned_set.
-	void swap(unsigned_slotset& other) noexcept;
+	void swap(unsigned_compact_slotset& other) noexcept;
 
 	// Merge with source.
 	// Items are "stolen" from source, only if they don't exist in destination.
-	void merge(unsigned_slotset& source);
+	void merge(unsigned_compact_slotset& source);
 
 	// Merge with source.
 	// Items are "stolen" from source, only if they don't exist in destination.
-	void merge(unsigned_slotset&& source);
+	void merge(unsigned_compact_slotset&& source);
 
 	// Lookup
 
@@ -194,10 +190,30 @@ struct unsigned_slotset {
 	const_iterator find(key_type key) const noexcept;
 
 private:
+	// Returns the absolute (lookup) index of key.
+	[[nodiscard]]
+	static size_type lookup_idx(key_type key) noexcept;
+
+	// Returns the local (bitset) index of key.
+	[[nodiscard]]
+	static size_type local_idx(key_type key) noexcept;
+
+	// Returns the absolute (lookup) index of iterator.
+	[[nodiscard]]
+	static size_type lookup_idx(const_iterator it) noexcept;
+
+	// Returns the local (bitset) index of key.
+	[[nodiscard]]
+	static size_type local_idx(const_iterator it) noexcept;
+
+	// Potentially resizes the lookup if it is required to fit key.
+	// Returns the absolute bitset index of key.
+	size_type maybe_resize(key_type key);
+
 	// Stores true at [key] if the key is contained.
 	bool_lookup_t _lookup{};
 	size_type _size = 0;
 };
 } // namespace fea
 
-#include "imp/unsigned_slotset.imp.hpp"
+#include "imp/unsigned_compact_slotset.imp.hpp"

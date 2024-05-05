@@ -99,13 +99,13 @@ namespace fea {
 #undef FEA_32BIT
 #define FEA_ARCH 32
 #define FEA_32BIT 1
-inline constexpr size_t arch = 32;
+inline constexpr size_t arch = 32u;
 #else
 #undef FEA_ARCH
 #undef FEA_64BIT
 #define FEA_ARCH 64
 #define FEA_64BIT 1
-inline constexpr size_t arch = 64;
+inline constexpr size_t arch = 64u;
 #endif
 
 // Disables exceptions in classes that support it.

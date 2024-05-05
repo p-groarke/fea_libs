@@ -87,6 +87,8 @@ struct suite {
 
 	// Useful when profiling. Sleeps in between runs of the benchmarks.
 	inline void sleep_between(std::chrono::seconds seconds);
+
+	// Useful when profiling. Sleeps in between runs of the benchmarks.
 	inline void sleep_between(std::chrono::milliseconds milli_seconds);
 
 	// Run a benchmark on func.

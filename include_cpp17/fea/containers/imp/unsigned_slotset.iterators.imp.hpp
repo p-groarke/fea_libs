@@ -1,98 +1,91 @@
 #pragma once
 namespace fea {
-
 template <class MySet>
-constexpr unsigned_slotset_const_iterator<
-		MySet>::unsigned_slotset_const_iterator(bool_pointer first,
-		bool_pointer last, bool_pointer ptr) noexcept
+constexpr uss_const_iterator<MySet>::uss_const_iterator(
+		bool_const_iterator first, bool_const_iterator last,
+		bool_const_iterator ptr) noexcept
 		: _first(first)
 		, _last(last)
-		, _ptr(ptr) {
+		, _current(ptr) {
 }
 
 template <class MySet>
-constexpr auto unsigned_slotset_const_iterator<MySet>::operator*()
-		const noexcept -> key_type {
-	assert(*_ptr);
-	return key_type(std::distance(_first, _ptr));
+constexpr auto uss_const_iterator<MySet>::operator*() const noexcept
+		-> key_type {
+	assert(*_current);
+	return key_type(std::distance(_first, _current));
 }
 
 template <class MySet>
-constexpr auto unsigned_slotset_const_iterator<MySet>::operator++() noexcept
-		-> unsigned_slotset_const_iterator<MySet>& {
-	assert(_ptr != _last);
+constexpr auto uss_const_iterator<MySet>::operator++() noexcept
+		-> uss_const_iterator<MySet>& {
+	assert(_current != _last);
 	do {
-		++_ptr;
-	} while (!*_ptr && _ptr != _last);
+		++_current;
+	} while (_current != _last && !*_current);
 	return *this;
 }
 
 template <class MySet>
-constexpr auto unsigned_slotset_const_iterator<MySet>::operator++(int) noexcept
-		-> unsigned_slotset_const_iterator<MySet>& {
-	unsigned_slotset_const_iterator tmp = *this;
+constexpr auto uss_const_iterator<MySet>::operator++(int) noexcept
+		-> uss_const_iterator<MySet>& {
+	uss_const_iterator tmp = *this;
 	++*this;
 	return tmp;
 }
 
 template <class MySet>
-constexpr auto unsigned_slotset_const_iterator<MySet>::operator--() noexcept
-		-> unsigned_slotset_const_iterator<MySet>& {
-	assert(_ptr != _first);
+constexpr auto uss_const_iterator<MySet>::operator--() noexcept
+		-> uss_const_iterator<MySet>& {
+	assert(_current != _first);
 	do {
-		--_ptr;
-	} while (!*_ptr && _ptr != _first);
+		--_current;
+	} while (!*_current && _current != _first);
 	return *this;
 }
 
 template <class MySet>
-constexpr auto unsigned_slotset_const_iterator<MySet>::operator--(int) noexcept
-		-> unsigned_slotset_const_iterator<MySet>& {
-	unsigned_slotset_const_iterator tmp = *this;
+constexpr auto uss_const_iterator<MySet>::operator--(int) noexcept
+		-> uss_const_iterator<MySet>& {
+	uss_const_iterator tmp = *this;
 	--*this;
 	return tmp;
 }
 
 template <class MySet>
-auto unsigned_slotset_const_iterator<MySet>::operator==(
-		const unsigned_slotset_const_iterator& rhs) const noexcept -> bool {
-	return _ptr == rhs._ptr;
+auto uss_const_iterator<MySet>::operator==(
+		const uss_const_iterator& rhs) const noexcept -> bool {
+	return _current == rhs._current;
 }
 
 template <class MySet>
-auto unsigned_slotset_const_iterator<MySet>::operator!=(
-		const unsigned_slotset_const_iterator& rhs) const noexcept -> bool {
+auto uss_const_iterator<MySet>::operator!=(
+		const uss_const_iterator& rhs) const noexcept -> bool {
 	return !(*this == rhs);
 }
 
 template <class MySet>
-auto unsigned_slotset_const_iterator<MySet>::operator<(
-		const unsigned_slotset_const_iterator& rhs) const noexcept -> bool {
-	return _ptr < rhs._ptr;
+auto uss_const_iterator<MySet>::operator<(
+		const uss_const_iterator& rhs) const noexcept -> bool {
+	return _current < rhs._current;
 }
 
 template <class MySet>
-auto unsigned_slotset_const_iterator<MySet>::operator>(
-		const unsigned_slotset_const_iterator& rhs) const noexcept -> bool {
+auto uss_const_iterator<MySet>::operator>(
+		const uss_const_iterator& rhs) const noexcept -> bool {
 	return rhs < *this;
 }
 
 template <class MySet>
-auto unsigned_slotset_const_iterator<MySet>::operator<=(
-		const unsigned_slotset_const_iterator& rhs) const noexcept -> bool {
+auto uss_const_iterator<MySet>::operator<=(
+		const uss_const_iterator& rhs) const noexcept -> bool {
 	return !(rhs < *this);
 }
 
 template <class MySet>
-auto unsigned_slotset_const_iterator<MySet>::operator>=(
-		const unsigned_slotset_const_iterator& rhs) const noexcept -> bool {
+auto uss_const_iterator<MySet>::operator>=(
+		const uss_const_iterator& rhs) const noexcept -> bool {
 	return !(*this < rhs);
-}
-
-template <class MySet>
-constexpr unsigned_slotset_iterator<MySet>::unsigned_slotset_iterator(
-		bool_pointer first, bool_pointer last, bool_pointer ptr) noexcept
-		: base_t(first, last, ptr) {
 }
 
 } // namespace fea

@@ -58,9 +58,10 @@ namespace fea {
 // Currently unsafe as it drops potential id extra data.
 
 template <class MySet>
-struct uss_const_iterator {
+struct ucss_const_iterator {
 	// Typedefs
 	using difference_type = typename MySet::difference_type;
+	using size_type = typename MySet::size_type;
 	using key_type = typename MySet::key_type;
 	using value_type = key_type;
 	using pointer = void;
@@ -69,15 +70,18 @@ struct uss_const_iterator {
 
 	// Internals.
 	using bool_const_iterator = typename MySet::bool_const_iterator;
+	static constexpr size_type bitset_size = MySet::bitset_size;
 
 	// Ctors
-	constexpr uss_const_iterator() noexcept = default;
-	~uss_const_iterator() noexcept = default;
-	constexpr uss_const_iterator(const uss_const_iterator&) noexcept = default;
-	constexpr uss_const_iterator(uss_const_iterator&&) noexcept = default;
-	constexpr uss_const_iterator& operator=(const uss_const_iterator&) noexcept
+	constexpr ucss_const_iterator() noexcept = default;
+	~ucss_const_iterator() noexcept = default;
+	constexpr ucss_const_iterator(const ucss_const_iterator&) noexcept
 			= default;
-	constexpr uss_const_iterator& operator=(uss_const_iterator&&) noexcept
+	constexpr ucss_const_iterator(ucss_const_iterator&&) noexcept = default;
+	constexpr ucss_const_iterator& operator=(
+			const ucss_const_iterator&) noexcept
+			= default;
+	constexpr ucss_const_iterator& operator=(ucss_const_iterator&&) noexcept
 			= default;
 
 	// Returns a constructed key.
@@ -92,58 +96,61 @@ struct uss_const_iterator {
 			= delete;
 
 	// Pre-fix ++operator.
-	constexpr uss_const_iterator& operator++() noexcept;
+	constexpr ucss_const_iterator& operator++() noexcept;
 
 	// Post-fix operator++.
-	constexpr uss_const_iterator& operator++(int) noexcept;
+	constexpr ucss_const_iterator& operator++(int) noexcept;
 
 	// Pre-fix --operator.
-	constexpr uss_const_iterator& operator--() noexcept;
+	constexpr ucss_const_iterator& operator--() noexcept;
 
 	// Post-fix operator--.
-	constexpr uss_const_iterator& operator--(int) noexcept;
+	constexpr ucss_const_iterator& operator--(int) noexcept;
 
 	// Comparison.
 	[[nodiscard]]
 	bool
-	operator==(const uss_const_iterator& rhs) const noexcept;
+	operator==(const ucss_const_iterator& rhs) const noexcept;
 
 	// Comparison.
 	[[nodiscard]]
 	bool
-	operator!=(const uss_const_iterator& rhs) const noexcept;
+	operator!=(const ucss_const_iterator& rhs) const noexcept;
 
 	// Comparison.
 	[[nodiscard]]
 	bool
-	operator<(const uss_const_iterator& rhs) const noexcept;
+	operator<(const ucss_const_iterator& rhs) const noexcept;
 
 	// Comparison.
 	[[nodiscard]]
 	bool
-	operator>(const uss_const_iterator& rhs) const noexcept;
+	operator>(const ucss_const_iterator& rhs) const noexcept;
 
 	// Comparison.
 	[[nodiscard]]
 	bool
-	operator<=(const uss_const_iterator& rhs) const noexcept;
+	operator<=(const ucss_const_iterator& rhs) const noexcept;
 
 	// Comparison.
 	[[nodiscard]]
 	bool
-	operator>=(const uss_const_iterator& rhs) const noexcept;
+	operator>=(const ucss_const_iterator& rhs) const noexcept;
 
 protected:
 	friend MySet;
 
-	constexpr uss_const_iterator(bool_const_iterator first,
-			bool_const_iterator last, bool_const_iterator ptr) noexcept;
+	constexpr ucss_const_iterator(bool_const_iterator first,
+			bool_const_iterator last, bool_const_iterator ptr,
+			size_type sub_idx) noexcept;
+
 
 	bool_const_iterator _first = {};
 	bool_const_iterator _last = {};
 	bool_const_iterator _current = {};
+	size_type _local_idx = 0;
 };
 
 } // namespace fea
 
-#include "unsigned_slotset.iterators.imp.hpp"
+#include "unsigned_compact_slotset.iterators.imp.hpp"
