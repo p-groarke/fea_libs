@@ -58,6 +58,13 @@ By default, it returns a std::function type. Pass true as a second template
 argument to use raw function pointers.
 */
 
+#if FEA_LINUX
+// GCC flags partly out of bounds on member function deref.
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105523
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
+
 namespace fea {
 namespace detail {
 template <bool, class>
@@ -271,5 +278,8 @@ struct function<Func, true> {
 template <class Func, bool UsePtr = false>
 using function = typename detail::function<Func, UsePtr>::type;
 
-
 } // namespace fea
+
+#if FEA_LINUX
+#pragma GCC diagnostic pop
+#endif
