@@ -72,7 +72,6 @@ struct translation_resetter {
 	inline translation_mode previous_stderr_mode() const;
 };
 
-
 #else
 enum class translation_mode : int {
 	ignore = -1,

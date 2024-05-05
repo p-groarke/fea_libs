@@ -1,6 +1,6 @@
 #include <cassert>
 #include <cstdio>
-#include <fea/terminal/utf8.hpp>
+#include <fea/terminal/utf8_io.hpp>
 #include <fea/utils/platform.hpp>
 #include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
@@ -20,7 +20,7 @@ namespace {
 		}
 
 
-TEST(utf8, utf8_terminal) {
+TEST(utf8, utf8_io) {
 #if FEA_WINDOWS
 	SetConsoleCP(28591);
 	SetConsoleOutputCP(28591);
@@ -34,7 +34,7 @@ TEST(utf8, utf8_terminal) {
 	fea::unused(tr1);
 
 	{
-		auto e = fea::utf8_terminal();
+		auto e = fea::utf8_io();
 		fea::unused(e);
 		std::cout << "Shouldn't assert.\n";
 
@@ -69,7 +69,7 @@ TEST(utf8, utf8_terminal) {
 #endif
 
 	{
-		auto e = fea::utf8_terminal(true);
+		auto e = fea::utf8_io(true);
 		fea::unused(e);
 
 		// Should have changed,

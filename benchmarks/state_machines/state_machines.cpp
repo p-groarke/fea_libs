@@ -1,18 +1,14 @@
-﻿#include <fea/utils/platform.hpp>
-
-#if FEA_RELEASE && defined(FEA_BENCHMARKS_DEF)
-//#include "transitions_and_states.gen.hpp"
-
-#include <fea/benchmark/benchmark.hpp>
+﻿#include <fea/benchmark/benchmark.hpp>
 #include <fea/state_machines/fsm.hpp>
 #include <fea/state_machines/hfsm.hpp>
+#include <fea/utils/platform.hpp>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <memory>
 #include <string>
 
 
-//#if defined(NDEBUG)
+// #if defined(NDEBUG)
 
 namespace {
 // constexpr size_t num_trans_and_states = 10;
@@ -22,8 +18,8 @@ namespace {
 //
 //	ofs << "#pragma once" << std::endl;
 //	ofs << R"(
-//#include <fea_state_machines/fsm.hpp>
-//#include <memory>
+// #include <fea_state_machines/fsm.hpp>
+// #include <memory>
 //)";
 //
 //	ofs << "enum class transition : unsigned {" << std::endl;
@@ -130,5 +126,3 @@ namespace {
 //	// printf("\nNum total events called : %zu\n", event_counter);
 //}
 } // namespace
-
-#endif // NDEBUG

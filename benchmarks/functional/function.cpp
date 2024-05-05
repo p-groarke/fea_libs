@@ -1,11 +1,9 @@
-﻿#include <fea/utils/platform.hpp>
-#if FEA_RELEASE && defined(FEA_BENCHMARKS_DEF)
-
-#include <fea/benchmark/benchmark.hpp>
+﻿#include <fea/benchmark/benchmark.hpp>
 #include <fea/functional/callback.hpp>
 #include <fea/functional/function.hpp>
 #include <fea/meta/pack.hpp>
 #include <fea/meta/traits.hpp>
+#include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 #include <random>
 #include <vector>
@@ -382,5 +380,3 @@ TEST(function_cl, benchmarks) {
 	printf("\n\n%zu\n", answer);
 }
 } // namespace
-
-#endif
