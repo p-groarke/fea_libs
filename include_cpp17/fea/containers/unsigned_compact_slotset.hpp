@@ -118,11 +118,11 @@ struct unsigned_compact_slotset {
 
 	// Capacity
 
-	// Is set empty?
+	// Any keys in set?
 	[[nodiscard]]
 	bool empty() const noexcept;
 
-	// Size of set.
+	// Number of keys in set.
 	[[nodiscard]]
 	size_type size() const noexcept;
 

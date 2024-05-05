@@ -1,5 +1,5 @@
 ﻿#include <fea/terminal/pipe.hpp>
-#include <fea/terminal/utf8.hpp>
+#include <fea/terminal/utf8_io.hpp>
 #include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
 #include <iostream>
@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
 		test_num = std::stoi(argv[1]);
 	}
 
-	auto e = fea::utf8_terminal();
+	auto e = fea::utf8_io();
 	fea::unused(e);
 
 	argv0 = argv[0];
