@@ -43,7 +43,7 @@ constexpr auto ucss_const_iterator<MySet>::operator++(int) noexcept
 template <class MySet>
 constexpr auto ucss_const_iterator<MySet>::operator--() noexcept
 		-> ucss_const_iterator<MySet>& {
-	assert(_current != _first || _local_idx > 0);
+	assert(!(_current == _first && _local_idx == 0));
 	do {
 		if (_local_idx == 0) {
 			_local_idx = bitset_size - size_type(1);
@@ -51,7 +51,7 @@ constexpr auto ucss_const_iterator<MySet>::operator--() noexcept
 		} else {
 			--_local_idx;
 		}
-	} while (_current != _first || !(*_current)[_local_idx]);
+	} while (!(*_current)[_local_idx]);
 	return *this;
 }
 

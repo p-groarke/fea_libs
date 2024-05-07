@@ -1,14 +1,19 @@
-﻿#include <fea/utils/platform.hpp>
-#if FEA_RELEASE && defined(FEA_BENCHMARKS_DEF)
-
-#include <fea/benchmark/benchmark.hpp>
+﻿#include <fea/benchmark/benchmark.hpp>
 #include <fea/functional/callback.hpp>
 #include <fea/functional/function.hpp>
 #include <fea/meta/pack.hpp>
 #include <fea/meta/traits.hpp>
+#include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 #include <random>
 #include <vector>
+
+#if FEA_LINUX
+// GCC flags partly out of bounds on member function deref.
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105523
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
 
 namespace {
 template <class>
@@ -187,6 +192,7 @@ struct bench_obj {
 	void func(size_t& i) {
 		++i;
 	}
+	int v;
 };
 
 
@@ -383,4 +389,6 @@ TEST(function_cl, benchmarks) {
 }
 } // namespace
 
+#if FEA_LINUX
+#pragma GCC diagnostic pop
 #endif

@@ -52,9 +52,9 @@ auto unsigned_compact_slotset<Key, Alloc>::empty() const noexcept -> bool {
 
 template <class Key, class Alloc>
 auto unsigned_compact_slotset<Key, Alloc>::size() const noexcept -> size_type {
-	assert(size_type(std::count_if(begin(), end(), [](key_type) {
-		return true;
-	})) == _size);
+	assert(std::accumulate(_lookup.begin(), _lookup.end(), size_type(0),
+				   [](size_t sum, bool_type v) { return sum + v.count(); })
+			== _size);
 
 	return _size;
 }
@@ -127,8 +127,10 @@ void unsigned_compact_slotset<Key, Alloc>::insert(FwdIt first, FwdIt last) {
 	for (FwdIt it = first; it != last; ++it) {
 		size_type lkp_idx = lookup_idx(*it);
 		size_type lcl_idx = local_idx(*it);
-		_lookup[lkp_idx][lcl_idx] = true;
-		++_size;
+		if (!_lookup[lkp_idx][lcl_idx]) {
+			_lookup[lkp_idx][lcl_idx] = true;
+			++_size;
+		}
 	}
 }
 

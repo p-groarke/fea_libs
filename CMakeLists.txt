@@ -8,7 +8,7 @@ include(GoogleTest)
 
 # User options, build related.
 option(FEA_TESTS "Build and run tests." On)
-option(FEA_BENCHMARKS "Build and run bencharks, requires tests." Off)
+option(FEA_BENCHMARKS "Build and run bencharks, requires tests." On)
 option(FEA_CPP17 "Use C++17 (default is C++20)." Off)
 option(FEA_PULL_CONAN "Executes conan install from cmake." On)
 option(FEA_CONAN2 "If pulling conan dependencies, are we running conan 2?" Off)
@@ -261,4 +261,38 @@ if (FEA_TESTS)
 	# Copy test data on build.
 	fea_copy_on_build(${TEST_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/tests_cpp17/data $<TARGET_FILE_DIR:${TEST_NAME}>/tests_data)
 	fea_copy_on_build(${TEST_NAME_PIPE} ${CMAKE_CURRENT_SOURCE_DIR}/tests_pipe/data $<TARGET_FILE_DIR:${TEST_NAME_PIPE}>/tests_data)
+endif()
+
+
+if (FEA_BENCHMARKS AND CMAKE_CXX_STANDARD GREATER_EQUAL 20)
+	if (NOT TARGET GTest::GTest)
+		find_package(GTest CONFIG REQUIRED)
+	endif()
+
+	# Test Project
+	set(BENCHMARKS_NAME ${PROJECT_NAME}_benchmarks)
+
+	file(GLOB_RECURSE BENCHMARKS_SOURCES "benchmarks/*.cpp" "benchmarks/*.hpp" "benchmarks/*.tpp")
+	file(GLOB_RECURSE BENCHMARKS_HEADERS_CPP17 "include_cpp17/*.hpp")
+	file(GLOB_RECURSE BENCHMARKS_HEADERS_CPP20 "include_cpp20/*.hpp")
+
+	add_executable(${BENCHMARKS_NAME}
+		${BENCHMARKS_SOURCES}
+		${BENCHMARKS_HEADERS_CPP17}
+		${BENCHMARKS_HEADERS_CPP20}
+	)
+
+	fea_set_compile_options(${BENCHMARKS_NAME} PRIVATE)
+	set_target_properties(${BENCHMARKS_NAME} PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "--gtest_catch_exceptions=0 --gtest_filter=*")
+
+	# g++ 8 needs to link with seperate filesystem library.
+	target_link_libraries(${BENCHMARKS_NAME} PUBLIC ${PROJECT_NAME} GTest::GTest)
+
+	if (FEA_WITH_TBB)
+		target_link_libraries(${BENCHMARKS_NAME} PUBLIC TBB::tbb)
+	endif()
+
+	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/benchmarks PREFIX "Source Files" FILES ${BENCHMARKS_SOURCES})
+	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include_cpp17 PREFIX "Header Files" FILES ${BENCHMARKS_HEADERS_CPP17})
+	source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}/include_cpp20 PREFIX "Header Files" FILES ${BENCHMARKS_HEADERS_CPP20})
 endif()

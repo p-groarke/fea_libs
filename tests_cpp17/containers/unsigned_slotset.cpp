@@ -1,5 +1,8 @@
 #include <fea/containers/unsigned_slotset.hpp>
+#include <fea/numerics/random.hpp>
 #include <gtest/gtest.h>
+#include <numeric>
+#include <set>
 
 namespace {
 TEST(unsigned_slotset, basics) {
@@ -322,6 +325,278 @@ TEST(unsigned_slotset, basics) {
 		EXPECT_EQ(us.find(0u), us.end());
 		EXPECT_EQ(us.find(2u), us.begin());
 		EXPECT_EQ(us.find(8u), --us.end());
+	}
+}
+
+TEST(unsigned_slotset, fuzzing) {
+	constexpr size_t fuzz_count = 1'000;
+
+	enum class op : unsigned {
+		shrink,
+		insert_key,
+		insert_batch,
+		erase_key,
+		erase_it,
+		erase_batched,
+		swap,
+		merge,
+		clear,
+		count,
+	};
+	const std::array<size_t, size_t(op::count)> probabilities{
+		10,
+		150,
+		10,
+		50,
+		50,
+		10,
+		10,
+		10,
+		1,
+	};
+	const size_t max_rand = std::accumulate(probabilities.begin(),
+									probabilities.end(), size_t(0))
+						  - 1u;
+
+	auto get_op = [&](size_t rand_val) {
+		for (size_t i = 0; i < probabilities.size(); ++i) {
+			if (rand_val < probabilities[i]) {
+				return op(i);
+			}
+			rand_val -= probabilities[i];
+		}
+		assert(false);
+		return op::count;
+	};
+
+	std::vector<unsigned> keys(fuzz_count * 10u);
+	fea::random_fill(keys.begin(), keys.end(), 0u, unsigned(fuzz_count));
+
+	std::set<unsigned> expected;
+	fea::unsigned_slotset<unsigned> tested;
+	for (size_t i = 0; i < fuzz_count; ++i) {
+		size_t rand_op = fea::random_val(size_t(0), max_rand);
+		op mop = get_op(rand_op);
+
+		switch (mop) {
+		case op::shrink: {
+			tested.shrink_to_fit();
+			EXPECT_TRUE(
+					std::equal(tested.begin(), tested.end(), expected.begin()));
+			EXPECT_EQ(expected.size(), tested.size());
+			EXPECT_EQ(std::distance(expected.begin(), expected.end()),
+					std::distance(tested.begin(), tested.end()));
+			EXPECT_EQ(expected.empty(), tested.empty());
+		} break;
+		case op::insert_key: {
+			unsigned k = keys.back();
+			keys.pop_back();
+
+			auto ep = expected.insert(k);
+			auto tp = tested.insert(k);
+
+			EXPECT_EQ(ep.second, tp.second);
+			EXPECT_TRUE(
+					std::equal(tested.begin(), tested.end(), expected.begin()));
+			EXPECT_EQ(expected.size(), tested.size());
+			EXPECT_EQ(std::distance(expected.begin(), expected.end()),
+					std::distance(tested.begin(), tested.end()));
+			EXPECT_EQ(expected.empty(), tested.empty());
+			EXPECT_EQ(std::distance(expected.begin(), ep.first),
+					std::distance(tested.begin(), tp.first));
+			EXPECT_EQ(expected.count(k), tested.count(k));
+			EXPECT_NE(tested.find(k), tested.end());
+			EXPECT_EQ(std::distance(expected.begin(), expected.find(k)),
+					std::distance(tested.begin(), tested.find(k)));
+		} break;
+		case op::insert_batch: {
+			std::vector<unsigned> range(keys.end() - 10, keys.end());
+			keys.erase(keys.end() - 10, keys.end());
+
+			expected.insert(range.begin(), range.end());
+			tested.insert(range.begin(), range.end());
+
+			EXPECT_TRUE(
+					std::equal(tested.begin(), tested.end(), expected.begin()));
+			EXPECT_EQ(expected.size(), tested.size());
+			EXPECT_EQ(std::distance(expected.begin(), expected.end()),
+					std::distance(tested.begin(), tested.end()));
+			EXPECT_EQ(expected.empty(), tested.empty());
+
+			for (unsigned k : range) {
+				EXPECT_EQ(expected.count(k), tested.count(k));
+				EXPECT_NE(tested.find(k), tested.end());
+				EXPECT_EQ(std::distance(expected.begin(), expected.find(k)),
+						std::distance(tested.begin(), tested.find(k)));
+			}
+		} break;
+		case op::erase_key: {
+			unsigned k = keys.back();
+			keys.pop_back();
+
+			size_t er = expected.erase(k);
+			size_t tr = tested.erase(k);
+
+			EXPECT_EQ(er, tr);
+			EXPECT_TRUE(
+					std::equal(tested.begin(), tested.end(), expected.begin()));
+			EXPECT_EQ(expected.size(), tested.size());
+			EXPECT_EQ(std::distance(expected.begin(), expected.end()),
+					std::distance(tested.begin(), tested.end()));
+			EXPECT_EQ(expected.empty(), tested.empty());
+			EXPECT_EQ(expected.count(k), tested.count(k));
+			EXPECT_EQ(tested.find(k), tested.end());
+			EXPECT_EQ(std::distance(expected.begin(), expected.find(k)),
+					std::distance(tested.begin(), tested.find(k)));
+		} break;
+		case op::erase_it: {
+			unsigned k = keys.back();
+			keys.pop_back();
+
+			auto feit = expected.find(k);
+			auto ftit = tested.find(k);
+			if (feit == expected.end()) {
+				EXPECT_EQ(ftit, tested.end());
+				continue;
+			}
+
+			auto eit = expected.erase(feit);
+			auto tit = tested.erase(ftit);
+
+			EXPECT_EQ(std::distance(expected.begin(), eit),
+					std::distance(tested.begin(), tit));
+			EXPECT_TRUE(
+					std::equal(tested.begin(), tested.end(), expected.begin()));
+			EXPECT_EQ(expected.size(), tested.size());
+			EXPECT_EQ(std::distance(expected.begin(), expected.end()),
+					std::distance(tested.begin(), tested.end()));
+			EXPECT_EQ(expected.empty(), tested.empty());
+			EXPECT_EQ(expected.count(k), tested.count(k));
+			EXPECT_EQ(tested.find(k), tested.end());
+			EXPECT_EQ(std::distance(expected.begin(), expected.find(k)),
+					std::distance(tested.begin(), tested.find(k)));
+		} break;
+		case op::erase_batched: {
+			if (expected.size() < 10) {
+				EXPECT_EQ(expected.size(), tested.size());
+				continue;
+			}
+			std::vector<unsigned> range(
+					std::next(tested.end(), -10), tested.end());
+			EXPECT_EQ(std::vector<unsigned>(
+							  std::next(expected.end(), -10), expected.end()),
+					range);
+
+			auto eit = expected.erase(
+					std::next(expected.end(), -10), expected.end());
+			auto tit = tested.erase(std::next(tested.end(), -10), tested.end());
+			EXPECT_EQ(std::distance(expected.begin(), eit),
+					std::distance(tested.begin(), tit));
+
+			EXPECT_TRUE(
+					std::equal(tested.begin(), tested.end(), expected.begin()));
+			EXPECT_EQ(expected.size(), tested.size());
+			EXPECT_EQ(std::distance(expected.begin(), expected.end()),
+					std::distance(tested.begin(), tested.end()));
+			EXPECT_EQ(expected.empty(), tested.empty());
+
+			for (unsigned k : range) {
+				EXPECT_EQ(expected.count(k), tested.count(k));
+				EXPECT_EQ(tested.find(k), tested.end());
+				EXPECT_EQ(std::distance(expected.begin(), expected.find(k)),
+						std::distance(tested.begin(), tested.find(k)));
+			}
+		} break;
+		case op::swap: {
+			std::set<unsigned> expected_s;
+			fea::unsigned_slotset<unsigned> tested_s;
+			expected.swap(expected_s);
+			tested.swap(tested_s);
+
+			EXPECT_TRUE(
+					std::equal(tested.begin(), tested.end(), expected.begin()));
+			EXPECT_EQ(expected.size(), tested.size());
+			EXPECT_EQ(std::distance(expected.begin(), expected.end()),
+					std::distance(tested.begin(), tested.end()));
+			EXPECT_EQ(expected.empty(), tested.empty());
+			EXPECT_TRUE(std::equal(
+					tested_s.begin(), tested_s.end(), expected_s.begin()));
+			EXPECT_EQ(expected_s.size(), tested_s.size());
+			EXPECT_EQ(std::distance(expected_s.begin(), expected_s.end()),
+					std::distance(tested_s.begin(), tested_s.end()));
+			EXPECT_EQ(expected_s.empty(), tested_s.empty());
+
+			expected.swap(expected_s);
+			tested.swap(tested_s);
+
+			EXPECT_TRUE(
+					std::equal(tested.begin(), tested.end(), expected.begin()));
+			EXPECT_EQ(expected.size(), tested.size());
+			EXPECT_EQ(std::distance(expected.begin(), expected.end()),
+					std::distance(tested.begin(), tested.end()));
+			EXPECT_EQ(expected.empty(), tested.empty());
+			EXPECT_TRUE(std::equal(
+					tested_s.begin(), tested_s.end(), expected_s.begin()));
+			EXPECT_EQ(expected_s.size(), tested_s.size());
+			EXPECT_EQ(std::distance(expected_s.begin(), expected_s.end()),
+					std::distance(tested_s.begin(), tested_s.end()));
+			EXPECT_EQ(expected_s.empty(), tested_s.empty());
+
+		} break;
+		case op::merge: {
+			std::vector<unsigned> range(keys.end() - 20, keys.end());
+			keys.erase(keys.end() - 20, keys.end());
+
+			std::set<unsigned> expected_m(range.begin(), range.end());
+			fea::unsigned_slotset<unsigned> tested_m(
+					range.begin(), range.end());
+
+			EXPECT_TRUE(std::equal(
+					tested_m.begin(), tested_m.end(), expected_m.begin()));
+			EXPECT_EQ(expected_m.size(), tested_m.size());
+			EXPECT_EQ(std::distance(expected_m.begin(), expected_m.end()),
+					std::distance(tested_m.begin(), tested_m.end()));
+			EXPECT_EQ(expected_m.empty(), tested_m.empty());
+
+			expected.merge(expected_m);
+			tested.merge(tested_m);
+
+			EXPECT_TRUE(
+					std::equal(tested.begin(), tested.end(), expected.begin()));
+			EXPECT_EQ(expected.size(), tested.size());
+			EXPECT_EQ(std::distance(expected.begin(), expected.end()),
+					std::distance(tested.begin(), tested.end()));
+			EXPECT_EQ(expected.empty(), tested.empty());
+			EXPECT_TRUE(std::equal(
+					tested_m.begin(), tested_m.end(), expected_m.begin()));
+			EXPECT_EQ(expected_m.size(), tested_m.size());
+			EXPECT_EQ(std::distance(expected_m.begin(), expected_m.end()),
+					std::distance(tested_m.begin(), tested_m.end()));
+			EXPECT_EQ(expected_m.empty(), tested_m.empty());
+
+			for (unsigned k : range) {
+				EXPECT_EQ(expected.count(k), tested.count(k));
+				EXPECT_NE(tested.find(k), tested.end());
+				EXPECT_EQ(std::distance(expected.begin(), expected.find(k)),
+						std::distance(tested.begin(), tested.find(k)));
+			}
+
+		} break;
+		case op::clear: {
+			expected.clear();
+			tested.clear();
+
+			EXPECT_TRUE(
+					std::equal(tested.begin(), tested.end(), expected.begin()));
+			EXPECT_EQ(expected.size(), tested.size());
+			EXPECT_EQ(std::distance(expected.begin(), expected.end()),
+					std::distance(tested.begin(), tested.end()));
+			EXPECT_EQ(expected.empty(), tested.empty());
+		} break;
+		default: {
+			assert(false);
+		}
+		}
 	}
 }
 } // namespace

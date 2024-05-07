@@ -39,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cassert>
 #include <cstdint>
 #include <iterator>
+#include <numeric>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -118,11 +119,11 @@ struct unsigned_compact_slotset {
 
 	// Capacity
 
-	// Is set empty?
+	// Any keys in set?
 	[[nodiscard]]
 	bool empty() const noexcept;
 
-	// Size of set.
+	// Number of keys in set.
 	[[nodiscard]]
 	size_type size() const noexcept;
 

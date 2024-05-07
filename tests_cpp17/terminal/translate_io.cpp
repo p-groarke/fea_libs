@@ -1,4 +1,4 @@
-#include <fea/terminal/translation_mode.hpp>
+#include <fea/terminal/translate_io.hpp>
 #include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
 

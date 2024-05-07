@@ -113,8 +113,10 @@ auto unsigned_slotset<Key, Alloc>::insert(FwdIt first, FwdIt last) -> void {
 	FwdIt max_it = std::max_element(
 			first, last, [](key_type lhs, key_type rhs) { return lhs < rhs; });
 
-	size_type size = size_type(*max_it) + size_type(1);
-	_lookup.resize(size);
+	size_type max_key_idx = size_type(*max_it);
+	if (max_key_idx >= _lookup.size()) {
+		_lookup.resize(max_key_idx + size_type(1));
+	}
 
 	// Fill the set.
 	for (FwdIt it = first; it != last; ++it) {

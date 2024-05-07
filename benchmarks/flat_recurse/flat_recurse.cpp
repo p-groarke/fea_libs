@@ -1,12 +1,11 @@
-﻿#include <fea/utils/platform.hpp>
-#if FEA_RELEASE && defined(FEA_BENCHMARKS_DEF)
-#include "global.hpp"
+﻿#include "global.hpp"
 #include "small_obj.hpp"
 
 #include <array>
 #include <chrono>
 #include <fea/benchmark/benchmark.hpp>
 #include <fea/flat_recurse/flat_recurse.hpp>
+#include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 #include <random>
 #include <thread>
@@ -72,8 +71,8 @@ TEST(flat_recurse, deep_gather_benchmarks) {
 
 
 	std::string title_prefix = "Gather Small Objects - " + std::to_string(depth)
-			+ " deep, " + std::to_string(width) + " wide, "
-			+ std::to_string(num_nodes) + " nodes";
+							 + " deep, " + std::to_string(width) + " wide, "
+							 + std::to_string(num_nodes) + " nodes";
 
 	{
 		std::string title = title_prefix + " (with allocation cost)";
@@ -189,8 +188,8 @@ TEST(flat_recurse, wide_gather_benchmarks) {
 	std::this_thread::sleep_for(std::chrono::seconds(1));
 
 	std::string title_prefix = "Gather Small Objects - " + std::to_string(depth)
-			+ " deep, " + std::to_string(width) + " wide, "
-			+ std::to_string(num_nodes) + " nodes";
+							 + " deep, " + std::to_string(width) + " wide, "
+							 + std::to_string(num_nodes) + " nodes";
 
 	{
 		std::string title = title_prefix + " (with allocation cost)";
@@ -297,5 +296,3 @@ TEST(flat_recurse, wide_gather_benchmarks) {
 	}
 }
 } // namespace
-
-#endif // NDEBUG
