@@ -1,6 +1,4 @@
-﻿#pragma once
-
-namespace fea {
+﻿namespace fea {
 namespace detail {
 template <class Enum, class Func, size_t... Idx>
 constexpr auto explode_enum(const Func& func, std::index_sequence<Idx...>) {

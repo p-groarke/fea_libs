@@ -1,4 +1,4 @@
-/*
+﻿/*
 BSD 3-Clause License
 
 Copyright (c) 2024, Philippe Groarke
@@ -30,50 +30,31 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/utils/platform.hpp"
+
+#include <cassert>
 #include <cmath>
+#include <iterator>
 
 namespace fea {
-
-// Returns the percentage of v, given the range [a, b].
+// Returns magnitude of vector.
+// TODO : variadic
 template <class T>
-T percentage(const T& v, const T& a, const T& b) {
-	T mag = b - a;
-	if (mag == T(0)) {
-		return T(0);
-	}
-	return (v - a) / mag;
-}
+[[nodiscard]]
+T magnitude(const T& x, const T& y);
 
-// Linearly interpolates between [a, b], given per percentage.
+// Normalizes vector.
+// TODO : variadic
 template <class T>
-T lerp(const T& per, const T& a, const T& b) {
-	return a + per * (b - a);
-}
+[[nodiscard]]
+void normalize(T& x, T& y);
 
-// Linearly interpolates between [to_a, to_b], given v a value between [from_a,
-// from_b].
+// For ints and unsigned ints, divides with proper rounding.
+// Q : Where to put this?
 template <class T>
-T lerp(const T& v, const T& from_a, const T& from_b, const T& to_a,
-		const T& to_b) {
-	T per = fea::percentage(v, from_a, from_b);
-	return fea::lerp(per, to_a, to_b);
-}
-
-// Interpolates in either linear, quadratic or logarithmic fashion.
-// k == 0, linear
-// k > 0, quadratic
-// k < 0, logarithmic
-// a is the zero value in y, given x == 0
-// b is the upper value in y, given x == 1
-// https://www.desmos.com/calculator/ezudd38ncy
-
-template <class T>
-T lerp_linquadlog(const T& per, const T& k, T a = T(0), T b = T(1)) {
-	if (k == T(0)) {
-		return fea::lerp(per, a, b);
-	}
-	return a + ((std::exp(k * per) - T(1)) / (std::exp(k) - T(1))) * (b - a);
-}
-
+[[nodiscard]]
+constexpr T divide_round(const T& dividend, const T& divisor);
 
 } // namespace fea
+
+#include "imp/linear_algebra.imp.hpp"

@@ -1,5 +1,4 @@
-﻿#pragma once
-namespace fea {
+﻿namespace fea {
 namespace detail {
 template <class Enum, size_t N, class Funcs, Enum... Es>
 struct switcher;

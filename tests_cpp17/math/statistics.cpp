@@ -1,11 +1,11 @@
 #include <array>
-#include <fea/math/math.hpp>
+#include <fea/math/statistics.hpp>
 #include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 #include <vector>
 
 namespace {
-TEST(math, basics) {
+TEST(statistics, basics) {
 	static_assert(fea::fact(0) == 1, "math.cpp : unit test failed");
 	static_assert(fea::fact(1) == 1, "math.cpp : unit test failed");
 	static_assert(fea::fact(2) == 2, "math.cpp : unit test failed");
@@ -104,6 +104,64 @@ TEST(math, basics) {
 		answer = fea::mode(v.begin(), v.end());
 		EXPECT_EQ(answer.size(), 1u);
 		EXPECT_EQ(answer.front(), 1);
+	}
+
+	// simple linear regression
+	{
+		std::vector<std::pair<float, float>> v{
+			{ 0.f, 0.f },
+			{ 1.f, 1.f },
+			{ 2.f, 2.f },
+		};
+		std::pair<float, float> ab
+				= fea::simple_linear_regression(v.begin(), v.end());
+		EXPECT_EQ(ab.first, 0.f);
+		EXPECT_EQ(ab.second, 1.f);
+
+		v = {
+			{ 0.f, 0.f },
+			{ 1.f, 1.f },
+			{ 5.f, 5.f },
+		};
+		ab = fea::simple_linear_regression(v.begin(), v.end());
+		EXPECT_EQ(ab.first, 0.f);
+		EXPECT_EQ(ab.second, 1.f);
+
+		v = {
+			{ 0.f, 0.f },
+			{ 1.f, 1.f },
+			{ 2.f, -2.f },
+		};
+		ab = fea::simple_linear_regression(v.begin(), v.end());
+		EXPECT_NEAR(ab.first, 2.f / 3.f, 0.000001f);
+		EXPECT_EQ(ab.second, -1.f);
+
+		v = {
+			{ 0.f, 0.f },
+			{ 1.f, 1.f },
+			{ -2.f, -2.f },
+		};
+		ab = fea::simple_linear_regression(v.begin(), v.end());
+		EXPECT_EQ(ab.first, 0.f);
+		EXPECT_EQ(ab.second, 1.f);
+
+		v = {
+			{ 0.f, 0.f },
+			{ -1.f, 1.f },
+			{ 2.f, -2.f },
+		};
+		ab = fea::simple_linear_regression(v.begin(), v.end());
+		EXPECT_EQ(ab.first, 0.f);
+		EXPECT_EQ(ab.second, -1.f);
+
+		v = {
+			{ 0.f, 0.f },
+			{ -1.f, 22.f },
+			{ 2.f, -2.f },
+		};
+		ab = fea::simple_linear_regression(v.begin(), v.end());
+		EXPECT_EQ(ab.first, 9.f);
+		EXPECT_EQ(ab.second, -7.f);
 	}
 }
 } // namespace

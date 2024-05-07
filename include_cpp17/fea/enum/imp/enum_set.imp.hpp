@@ -1,6 +1,4 @@
-﻿#pragma once
-
-namespace fea {
+﻿namespace fea {
 template <class Enum, size_t N>
 constexpr enum_set<Enum, N>::enum_set(std::initializer_list<Enum> true_set)
 		: std::array<bool, N>{} {

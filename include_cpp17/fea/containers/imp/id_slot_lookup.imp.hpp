@@ -1,4 +1,3 @@
-#pragma once
 namespace fea {
 template <class Key, class TAlloc>
 constexpr auto id_slot_lookup<Key, TAlloc>::at_prehashed(

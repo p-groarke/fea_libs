@@ -1,4 +1,3 @@
-#pragma once
 namespace fea {
 template <class Key, class Alloc>
 template <class FwdIt>

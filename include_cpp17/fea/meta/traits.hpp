@@ -379,7 +379,6 @@ struct reverse<T> {
 template <class... Ts>
 using reverse_t = typename detail::reverse<Ts...>::type;
 
-
 namespace detail {
 // https://stackoverflow.com/questions/51408771/c-reversed-integer-sequence-implementation
 template <size_t... Is>
@@ -387,12 +386,18 @@ constexpr auto reverse_index_sequence(std::index_sequence<Is...>)
 		-> decltype(std::index_sequence<sizeof...(Is) - 1U - Is...>{});
 } // namespace detail
 
+// Creates a reverse index sequence of size N.
 template <size_t N>
 using make_reverse_index_sequence = decltype(detail::reverse_index_sequence(
 		std::make_index_sequence<N>{}));
 
+// Get the allocator_traits rebind_alloc type.
 template <class Alloc, class Value>
 using rebind_alloc_t =
 		typename std::allocator_traits<Alloc>::template rebind_alloc<Value>;
+
+// Get the iterator_traits value_type type.
+template <class Iter>
+using iterator_value_t = typename std::iterator_traits<Iter>::value_type;
 
 } // namespace fea

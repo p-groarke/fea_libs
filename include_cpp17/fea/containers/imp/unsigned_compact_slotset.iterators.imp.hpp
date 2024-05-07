@@ -1,4 +1,3 @@
-#pragma once
 namespace fea {
 template <class MySet>
 constexpr ucss_const_iterator<MySet>::ucss_const_iterator(

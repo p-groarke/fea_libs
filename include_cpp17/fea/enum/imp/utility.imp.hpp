@@ -1,6 +1,4 @@
-﻿#pragma once
-
-namespace fea {
+﻿namespace fea {
 template <class Enum>
 constexpr std::underlying_type_t<Enum> to_underlying(Enum e) {
 	static_assert(std::is_enum_v<Enum>,
