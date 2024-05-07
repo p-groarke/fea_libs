@@ -8,6 +8,13 @@
 #include <random>
 #include <vector>
 
+#if FEA_LINUX
+// GCC flags partly out of bounds on member function deref.
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105523
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
+
 namespace {
 template <class>
 struct raw_function_with_erasure;
@@ -381,3 +388,7 @@ TEST(function_cl, benchmarks) {
 	printf("\n\n%zu\n", answer);
 }
 } // namespace
+
+#if FEA_LINUX
+#pragma GCC diagnostic pop
+#endif
