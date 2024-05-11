@@ -187,11 +187,21 @@ struct unsigned_slotset {
 	size_type count(key_type key) const noexcept;
 
 	// Returns true if key present.
+	[[nodiscard]]
 	bool contains(key_type key) const noexcept;
 
 	// Find the iterator for a key. Returns end() if not present.
 	[[nodiscard]]
 	const_iterator find(key_type key) const noexcept;
+
+	// Access the underlying lookup data.
+	// Vector of "bool" chars.
+	[[nodiscard]]
+	const uint8_t* lookup_data() const noexcept;
+
+	// Access the underlying lookup data size.
+	[[nodiscard]]
+	size_type lookup_size() const noexcept;
 
 private:
 	// Stores true at [key] if the key is contained.

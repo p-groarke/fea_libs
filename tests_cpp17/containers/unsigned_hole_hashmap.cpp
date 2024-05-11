@@ -102,10 +102,11 @@ void do_basic_test() {
 	auto it = map1.find(1);
 	EXPECT_EQ(it, map1.end());
 
+	test2 ttt;
 #if FEA_DEBUG || FEA_NOTHROW
-	EXPECT_DEATH(map1.at(1), "");
+	EXPECT_DEATH(ttt = map1.at(1), "");
 #else
-	EXPECT_THROW(map1.at(1), std::out_of_range);
+	EXPECT_THROW(ttt = map1.at(1), std::out_of_range);
 #endif
 
 	EXPECT_FALSE(map1.contains(1));
@@ -164,9 +165,9 @@ void do_basic_test() {
 	EXPECT_EQ(it, map1.end());
 
 #if FEA_DEBUG || FEA_NOTHROW
-	EXPECT_DEATH(map1.at(1), "");
+	EXPECT_DEATH(ttt = map1.at(1), "");
 #else
-	EXPECT_THROW(map1.at(1), std::out_of_range);
+	EXPECT_THROW(ttt = map1.at(1), std::out_of_range);
 #endif
 
 	EXPECT_FALSE(map1.contains(1));
@@ -183,9 +184,9 @@ void do_basic_test() {
 	EXPECT_EQ(map1.count(0), 0u);
 
 #if FEA_DEBUG || FEA_NOTHROW
-	EXPECT_DEATH(map1.at(0), "");
+	EXPECT_DEATH(ttt = map1.at(0), "");
 #else
-	EXPECT_THROW(map1.at(0), std::out_of_range);
+	EXPECT_THROW(ttt = map1.at(0), std::out_of_range);
 #endif
 
 	map1 = map2;

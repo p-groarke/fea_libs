@@ -14,6 +14,6 @@ void normalize(T& x, T& y) {
 
 template <class T>
 constexpr T divide_round(const T& dividend, const T& divisor) {
-	return (dividend + (divisor - T(1))) / divisor;
+	return (dividend + (divisor / T(2))) / divisor;
 }
 } // namespace fea

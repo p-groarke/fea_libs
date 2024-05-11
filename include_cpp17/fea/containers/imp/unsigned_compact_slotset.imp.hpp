@@ -257,6 +257,17 @@ auto unsigned_compact_slotset<Key, Alloc>::find(key_type key) const noexcept
 }
 
 template <class Key, class Alloc>
+const auto* unsigned_compact_slotset<Key, Alloc>::lookup_data() const noexcept {
+	return _lookup.data();
+}
+
+template <class Key, class Alloc>
+auto unsigned_compact_slotset<Key, Alloc>::lookup_size() const noexcept
+		-> size_type {
+	return _lookup.size();
+}
+
+template <class Key, class Alloc>
 auto unsigned_compact_slotset<Key, Alloc>::lookup_idx(key_type key) noexcept
 		-> size_type {
 	return size_type(key) / bitset_size;

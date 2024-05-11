@@ -113,49 +113,62 @@ struct id_flat_slotmap {
 	// Iterators
 
 	// Returns a pair<key, value> iterator to the first element.
+	[[nodiscard]]
 	iterator begin() noexcept;
 
 	// Returns a pair<key, value> iterator to the first element.
+	[[nodiscard]]
 	const_iterator begin() const noexcept;
 
 	// Returns a pair<key, value> iterator to the first element.
+	[[nodiscard]]
 	const_iterator cbegin() const noexcept;
 
 	// Returns a pair<key, value> iterator past the last element.
+	[[nodiscard]]
 	iterator end() noexcept;
 
 	// Returns a pair<key, value> iterator past the last element.
+	[[nodiscard]]
 	const_iterator end() const noexcept;
 
 	// Returns a pair<key, value> iterator past the last element.
+	[[nodiscard]]
 	const_iterator cend() const noexcept;
 
 	// Returns an iterator to the first key. Unlike the normal iterators, only
 	// points on keys (not pairs).
+	[[nodiscard]]
 	const_key_iterator key_begin() const noexcept;
 
 	// Returns an iterator to the first key. Unlike the normal iterators, only
 	// points on keys (not pairs).
+	[[nodiscard]]
 	const_key_iterator key_cbegin() const noexcept;
 
 	// Returns an iterator past the last key. Unlike the normal iterators, only
 	// points on keys (not pairs).
+	[[nodiscard]]
 	const_key_iterator key_end() const noexcept;
 
 	// Returns an iterator past the last key. Unlike the normal iterators, only
 	// points on keys (not pairs).
+	[[nodiscard]]
 	const_key_iterator key_cend() const noexcept;
 
 
 	// Capacity
 
 	// checks whether the container is empty
+	[[nodiscard]]
 	bool empty() const noexcept;
 
 	// returns the number of elements
+	[[nodiscard]]
 	size_type size() const noexcept;
 
 	// returns the maximum possible number of elements
+	[[nodiscard]]
 	size_type max_size() const noexcept;
 
 	// reserves storage
@@ -167,10 +180,12 @@ struct id_flat_slotmap {
 
 	// returns the number of elements that can be held in currently allocated
 	// storage
+	[[nodiscard]]
 	size_type lookup_capacity() const noexcept;
 
 	// returns the number of elements that can be held in currently allocated
 	// storage
+	[[nodiscard]]
 	size_type capacity() const noexcept;
 
 	// reduces memory usage by freeing unused memory
@@ -226,59 +241,76 @@ struct id_flat_slotmap {
 
 	// Lookup
 	// Direct access to the underlying value data.
+	[[nodiscard]]
 	const value_type* data() const noexcept;
 
 	// Direct access to the underlying value data.
 	// You may modify values, but NOT reorder them.
+	[[nodiscard]]
 	value_type* data() noexcept;
 
 	// Access to underlying reverse lookup.
 	// That is, keys ordered in the same order as values.
+	[[nodiscard]]
 	const key_type* key_data() const noexcept;
 
 	// Access to underlying lookup.
 	// Dereferencing this with key returns the index of
 	// the associated value.
+	[[nodiscard]]
 	const auto* lookup_data() const noexcept;
 
 	// Lookup size, != key/value size.
+	[[nodiscard]]
 	size_type lookup_size() const noexcept;
 
 	// Access specified element with bounds checking.
+	[[nodiscard]]
 	const mapped_type& at(const key_type& k) const;
 
 	// Access specified element with bounds checking.
+	[[nodiscard]]
 	mapped_type& at(const key_type& k);
 
 	// Access specified element without any bounds checking.
+	[[nodiscard]]
 	const mapped_type& at_unchecked(const key_type& k) const noexcept;
 
 	// Access specified element without any bounds checking.
+	[[nodiscard]]
 	mapped_type& at_unchecked(const key_type& k) noexcept;
 
 	// Access or insert specified element.
-	mapped_type& operator[](const key_type& k);
+	[[nodiscard]]
+	mapped_type&
+	operator[](const key_type& k);
 
 	// returns the number of elements matching specific key (which is 1 or 0,
 	// since there are no duplicates)
+	[[nodiscard]]
 	size_type count(const key_type& k) const noexcept;
 
 	// Find element at key. Returns end() if not found.
+	[[nodiscard]]
 	const_iterator find(const key_type& k) const noexcept;
 
 	// Find element at key. Returns end() if not found.
+	[[nodiscard]]
 	iterator find(const key_type& k) noexcept;
 
 	// checks if the container contains element with specific key
+	[[nodiscard]]
 	bool contains(const key_type& k) const noexcept;
 
 	// Returns range of elements matching a specific key (in this case, 1 or 0
 	// elements).
+	[[nodiscard]]
 	std::pair<const_iterator, const_iterator> equal_range(
 			const key_type& k) const noexcept;
 
 	// Returns range of elements matching a specific key (in this case, 1 or 0
 	// elements).
+	[[nodiscard]]
 	std::pair<iterator, iterator> equal_range(const key_type& k) noexcept;
 
 
@@ -286,12 +318,16 @@ struct id_flat_slotmap {
 
 	// Deep comparison.
 	template <class K, class U, class A>
-	friend bool operator==(const id_flat_slotmap<K, U, A>& lhs,
+	[[nodiscard]]
+	friend bool
+	operator==(const id_flat_slotmap<K, U, A>& lhs,
 			const id_flat_slotmap<K, U, A>& rhs);
 
 	// Deep comparison.
 	template <class K, class U, class A>
-	friend bool operator!=(const id_flat_slotmap<K, U, A>& lhs,
+	[[nodiscard]]
+	friend bool
+	operator!=(const id_flat_slotmap<K, U, A>& lhs,
 			const id_flat_slotmap<K, U, A>& rhs);
 
 private:

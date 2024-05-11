@@ -78,7 +78,7 @@ struct id_slotmap {
 	using const_pointer =
 			typename std::allocator_traits<allocator_type>::const_pointer;
 
-	// TODO : cont key type
+	// TODO : const key type
 	using iter_value_type = std::pair<const_key_type, mapped_type>;
 	using iter_allocator_type = typename std::allocator_traits<
 			Alloc>::template rebind_alloc<iter_value_type>;
@@ -113,33 +113,42 @@ struct id_slotmap {
 	// Iterators
 
 	// Returns a pair iterator to the first item.
+	[[nodiscard]]
 	iterator begin() noexcept;
 
 	// Returns a pair iterator to the first item.
+	[[nodiscard]]
 	const_iterator begin() const noexcept;
 
 	// Returns a pair iterator to the first item.
+	[[nodiscard]]
 	const_iterator cbegin() const noexcept;
 
 	// Returns a pair iterator past the last item.
+	[[nodiscard]]
 	iterator end() noexcept;
 
 	// Returns a pair iterator past the last item.
+	[[nodiscard]]
 	const_iterator end() const noexcept;
 
 	// Returns a pair iterator past the last item.
+	[[nodiscard]]
 	const_iterator cend() const noexcept;
 
 
 	// Capacity
 
 	// checks whether the container is empty
+	[[nodiscard]]
 	bool empty() const noexcept;
 
 	// returns the number of elements
+	[[nodiscard]]
 	size_type size() const noexcept;
 
 	// returns the maximum possible number of elements
+	[[nodiscard]]
 	size_type max_size() const noexcept;
 
 	// Reserves storage.
@@ -151,6 +160,7 @@ struct id_slotmap {
 
 	// returns the number of elements that can be held in currently allocated
 	// storage
+	[[nodiscard]]
 	size_type capacity() const noexcept;
 
 	// reduces memory usage by freeing unused memory
@@ -205,54 +215,70 @@ struct id_slotmap {
 	// Lookup
 
 	// Direct access to the underlying vector. Returns pointer to pairs.
+	[[nodiscard]]
 	const value_type* data() const noexcept;
 
 	// Direct access to the underlying vector. Returns pointer to pairs.
+	[[nodiscard]]
 	value_type* data() noexcept;
 
 	// Access to underlying lookup.
 	// Dereferencing this with key returns the index of
 	// the associated value.
+	[[nodiscard]]
 	const auto* lookup_data() const noexcept;
 
 	// Lookup size, != key/value size.
+	[[nodiscard]]
 	size_type lookup_size() const noexcept;
 
 	// Access specified element with bounds checking.
+	[[nodiscard]]
 	const mapped_type& at(const key_type& k) const;
 
 	// Access specified element with bounds checking.
+	[[nodiscard]]
 	mapped_type& at(const key_type& k);
 
 	// Access specified element without any bounds checking.
+	[[nodiscard]]
 	const mapped_type& at_unchecked(const key_type& k) const noexcept;
 
 	// Access specified element without any bounds checking.
+	[[nodiscard]]
 	mapped_type& at_unchecked(const key_type& k) noexcept;
 
 	// Access or insert specified element.
-	mapped_type& operator[](const key_type& k);
+	[[nodiscard]]
+	mapped_type&
+	operator[](const key_type& k);
 
 	// returns the number of elements matching specific key (which is 1 or 0,
 	// since there are no duplicates)
+	[[nodiscard]]
 	size_type count(const key_type& k) const noexcept;
 
 	// Finds element at key. Returns end() if none found.
+	[[nodiscard]]
 	const_iterator find(const key_type& k) const noexcept;
 
 	// Finds element at key. Returns end() if none found.
+	[[nodiscard]]
 	iterator find(const key_type& k) noexcept;
 
 	// checks if the container contains element with specific key
+	[[nodiscard]]
 	bool contains(const key_type& k) const noexcept;
 
 	// Returns range of elements matching a specific key (in this case, 1 or 0
 	// elements).
+	[[nodiscard]]
 	std::pair<const_iterator, const_iterator> equal_range(
 			const key_type& k) const noexcept;
 
 	// Returns range of elements matching a specific key (in this case, 1 or 0
 	// elements).
+	[[nodiscard]]
 	std::pair<iterator, iterator> equal_range(const key_type& k) noexcept;
 
 
@@ -260,13 +286,15 @@ struct id_slotmap {
 
 	// Deep comparison.
 	template <class K, class U, class A>
-	friend bool operator==(
-			const id_slotmap<K, U, A>& lhs, const id_slotmap<K, U, A>& rhs);
+	[[nodiscard]]
+	friend bool
+	operator==(const id_slotmap<K, U, A>& lhs, const id_slotmap<K, U, A>& rhs);
 
 	// Deep comparison.
 	template <class K, class U, class A>
-	friend bool operator!=(
-			const id_slotmap<K, U, A>& lhs, const id_slotmap<K, U, A>& rhs);
+	[[nodiscard]]
+	friend bool
+	operator!=(const id_slotmap<K, U, A>& lhs, const id_slotmap<K, U, A>& rhs);
 
 private:
 	template <class M>

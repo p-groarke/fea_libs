@@ -139,39 +139,50 @@ public:
 	// Iterators
 
 	// Returns an iterator to the first value. NOT pair iterators.
+	[[nodiscard]]
 	iterator begin() noexcept;
 
 	// Returns an iterator to the first value. NOT pair iterators.
+	[[nodiscard]]
 	const_iterator begin() const noexcept;
 
 	// Returns an iterator to the first value. NOT pair iterators.
+	[[nodiscard]]
 	const_iterator cbegin() const noexcept;
 
 	// Returns an iterator past the last value. NOT pair iterators.
+	[[nodiscard]]
 	iterator end() noexcept;
 
 	// Returns an iterator past the last value. NOT pair iterators.
+	[[nodiscard]]
 	const_iterator end() const noexcept;
 
 	// Returns an iterator past the last value. NOT pair iterators.
+	[[nodiscard]]
 	const_iterator cend() const noexcept;
 
 	// Returns an iterator to first key. NOT pair iterators.
+	[[nodiscard]]
 	const_key_iterator key_begin() const noexcept;
 
 	// Returns an iterator past the last key. NOT pair iterators.
+	[[nodiscard]]
 	const_key_iterator key_end() const noexcept;
 
 
 	// Capacity
 
 	// checks whether the container is empty
+	[[nodiscard]]
 	bool empty() const noexcept;
 
 	// returns the number of elements
+	[[nodiscard]]
 	size_type size() const noexcept;
 
 	// returns the maximum possible number of elements
+	[[nodiscard]]
 	size_type max_size() const noexcept;
 
 	// reserves storage
@@ -179,6 +190,7 @@ public:
 
 	// returns the number of elements that can be held in currently
 	// allocated storage
+	[[nodiscard]]
 	size_type capacity() const noexcept;
 
 	// reduces memory usage by freeing unused memory
@@ -232,45 +244,65 @@ public:
 
 	// Lookup
 	// direct access to the underlying vector
+	[[nodiscard]]
 	const value_type* data() const noexcept;
+
+	// direct access to the underlying vector
+	[[nodiscard]]
 	value_type* data() noexcept;
 
-	// direct access to the keys underlying vector
+	// Direct access to the keys underlying vector.
+	// Same size as values.
+	[[nodiscard]]
 	const key_type* key_data() const noexcept;
 
 	// Access specified element with bounds checking.
+	[[nodiscard]]
 	const mapped_type& at(key_type k) const;
 
 	// Access specified element with bounds checking.
+	[[nodiscard]]
 	mapped_type& at(key_type k);
 
 	// Access specified element without any bounds checking.
+	[[nodiscard]]
 	const mapped_type& at_unchecked(key_type k) const;
 
 	// Access specified element without any bounds checking.
+	[[nodiscard]]
 	mapped_type& at_unchecked(key_type k);
 
 	// access or insert specified element
-	mapped_type& operator[](key_type k);
+	[[nodiscard]]
+	mapped_type&
+	operator[](key_type k);
 
 	// returns the number of elements matching specific key (which is 1 or 0,
 	// since there are no duplicates)
+	[[nodiscard]]
 	size_type count(key_type k) const;
 
 	// finds element with specific key
+	[[nodiscard]]
 	const_iterator find(key_type k) const;
+
+	// finds element with specific key
+	[[nodiscard]]
 	iterator find(key_type k);
 
 	// checks if the container contains element with specific key
+	[[nodiscard]]
 	bool contains(key_type k) const;
 
 
 	// Hash policy
 
 	// Returns average number of elements per bucket.
+	[[nodiscard]]
 	float load_factor() const noexcept;
 
 	// The stored maximum load factor before a rehash.
+	[[nodiscard]]
 	float max_load_factor() const noexcept;
 
 	// Set a custom load factor to control rehashing behavior.
@@ -284,35 +316,50 @@ public:
 
 	// Deep comparison.
 	template <class K, class U, class A>
-	friend bool operator==(const unsigned_hole_hashmap<K, U, A>& lhs,
+	[[nodiscard]]
+	friend bool
+	operator==(const unsigned_hole_hashmap<K, U, A>& lhs,
 			const unsigned_hole_hashmap<K, U, A>& rhs);
 
 	// Deep comparison.
 	template <class K, class U, class A>
-	friend bool operator!=(const unsigned_hole_hashmap<K, U, A>& lhs,
+	[[nodiscard]]
+	friend bool
+	operator!=(const unsigned_hole_hashmap<K, U, A>& lhs,
 			const unsigned_hole_hashmap<K, U, A>& rhs);
 
 private:
+	[[nodiscard]]
 	size_type hash_max() const;
+
+	[[nodiscard]]
 	size_type key_to_index(key_type key) const;
 
+	[[nodiscard]]
 	static constexpr size_type key_to_index(key_type key, size_type h_max);
+	[[nodiscard]]
 	static constexpr key_type key_sentinel() noexcept;
+	[[nodiscard]]
 	static constexpr idx_type idx_sentinel() noexcept;
+	[[nodiscard]]
 	static constexpr size_type init_count() noexcept;
 
 	// Custom find_if.
 	// todo : benchmark simd search
 	template <class Iter, class Func>
+	[[nodiscard]]
 	static auto find_slot(Iter start, Iter end, Func func);
 
 	// Returns lookup iterator to either the lookup if it exists, or the first
 	// free slot.
+	[[nodiscard]]
 	auto find_first_slot_or_hole(key_type key) const;
+	[[nodiscard]]
 	auto find_first_slot_or_hole(key_type key);
 
 	// Find first free slot given a lookup idx.
 	template <class Iter>
+	[[nodiscard]]
 	static auto find_first_hole(Iter beg, Iter end, size_type bucket_idx);
 
 	// Grows lookup for trailing collisions.
