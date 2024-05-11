@@ -316,16 +316,12 @@ public:
 
 	// Deep comparison.
 	template <class K, class U, class A>
-	[[nodiscard]]
-	friend bool
-	operator==(const unsigned_hole_hashmap<K, U, A>& lhs,
+	friend bool operator==(const unsigned_hole_hashmap<K, U, A>& lhs,
 			const unsigned_hole_hashmap<K, U, A>& rhs);
 
 	// Deep comparison.
 	template <class K, class U, class A>
-	[[nodiscard]]
-	friend bool
-	operator!=(const unsigned_hole_hashmap<K, U, A>& lhs,
+	friend bool operator!=(const unsigned_hole_hashmap<K, U, A>& lhs,
 			const unsigned_hole_hashmap<K, U, A>& rhs);
 
 private:
