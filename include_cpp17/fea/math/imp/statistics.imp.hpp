@@ -418,13 +418,13 @@ constexpr T stars_and_bars_zero(T n, T k) {
 template <class FwdIt, class Func>
 fea::iterator_value_t<FwdIt> simple_linear_regression(
 		FwdIt first, FwdIt last, Func&& func) {
+	// You can customize std::get for your types in your namespace.
+	using std::get;
+
 	using vec_t = std::decay_t<decltype(func(*first))>;
 	using T = std::decay_t<decltype(get<0>(std::declval<vec_t>()))>;
 	using cast_t = std::conditional_t<fea::is_static_castable_v<T, floatmax_t>,
 			floatmax_t, T>;
-
-	// You can customize std::get for your types in your namespace.
-	using std::get;
 
 	cast_t count = cast_t(std::distance(first, last));
 	if (count == cast_t(0)) {
