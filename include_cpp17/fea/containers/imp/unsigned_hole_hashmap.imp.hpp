@@ -762,6 +762,7 @@ unsigned_hole_hashmap<Key, T, Alloc>::minsert(
 
 
 template <class Key, class T, class Alloc>
+[[nodiscard]]
 bool operator==(const unsigned_hole_hashmap<Key, T, Alloc>& lhs,
 		const unsigned_hole_hashmap<Key, T, Alloc>& rhs) {
 	if (lhs.size() != rhs.size())
@@ -783,6 +784,7 @@ bool operator==(const unsigned_hole_hashmap<Key, T, Alloc>& lhs,
 }
 
 template <class Key, class T, class Alloc>
+[[nodiscard]]
 bool operator!=(const unsigned_hole_hashmap<Key, T, Alloc>& lhs,
 		const unsigned_hole_hashmap<Key, T, Alloc>& rhs) {
 	return !operator==(lhs, rhs);
