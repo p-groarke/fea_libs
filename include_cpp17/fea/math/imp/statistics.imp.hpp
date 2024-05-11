@@ -1,14 +1,31 @@
 ﻿namespace fea {
 
+namespace detail {
+template <class To, class From>
+constexpr To maybe_round(const From& from) {
+	// You can add a round overload in your namespace if your custom type is to
+	// be treated as an integral. Also specialize std::is_integral.
+	using std::round;
+	if constexpr (std::is_integral_v<To>) {
+		return To(round(from));
+	} else {
+		return To(from);
+	}
+}
+} // namespace detail
+
 template <class FwdIt, class Func>
 [[nodiscard]]
 constexpr auto sum(FwdIt first, FwdIt last, Func&& func) {
 	using T = std::decay_t<decltype(func(*first))>;
-	T ret = T(0);
+	using cast_t = std::conditional_t<fea::is_static_castable_v<T, floatmax_t>,
+			floatmax_t, T>;
+
+	cast_t ret(0);
 	for (auto it = first; it != last; ++it) {
-		ret += func(*it);
+		ret += cast_t(func(*it));
 	}
-	return ret;
+	return detail::maybe_round<T>(ret);
 }
 
 template <class FwdIt>
@@ -25,34 +42,44 @@ constexpr auto sum(const Container& cont) {
 
 template <class T>
 constexpr T profit(T gains, T cost) {
-	return gains - cost;
+	using cast_t = std::conditional_t<fea::is_static_castable_v<T, floatmax_t>,
+			floatmax_t, T>;
+	cast_t ret = cast_t(gains) - cast_t(cost);
+	return detail::maybe_round<T>(ret);
 }
 
 template <class T>
 constexpr T roi(T gains, T cost) {
-	return profit(gains, cost) / cost;
+	using cast_t = std::conditional_t<fea::is_static_castable_v<T, floatmax_t>,
+			floatmax_t, T>;
+	cast_t ret = cast_t(profit(gains, cost)) / cast_t(cost);
+	return detail::maybe_round<T>(ret);
 }
 
 template <class T>
 constexpr T profit_margin(T gains, T cost) {
-	return profit(gains, cost) / gains;
+	using cast_t = std::conditional_t<fea::is_static_castable_v<T, floatmax_t>,
+			floatmax_t, T>;
+	cast_t ret = cast_t(profit(gains, cost)) / cast_t(gains);
+	return detail::maybe_round<T>(ret);
 }
 
 template <class FwdIt, class Func>
 constexpr auto mean(FwdIt begin, FwdIt end, Func func) {
-	using type_t = std::decay_t<decltype(func(*begin))>;
+	using T = std::decay_t<decltype(func(*begin))>;
+	using cast_t = std::conditional_t<fea::is_static_castable_v<T, floatmax_t>,
+			floatmax_t, T>;
 
-	double num = double(std::distance(begin, end));
-	if (num == 0.0) {
-		return type_t(0);
+	cast_t count = cast_t(std::distance(begin, end));
+	if (count == cast_t(0)) {
+		return T(0);
 	}
 
-	type_t ret(0);
+	cast_t ret(0);
 	for (auto it = begin; it != end; ++it) {
-		ret += func(*it);
+		ret += cast_t(func(*it));
 	}
-
-	return type_t(ret / num);
+	return detail::maybe_round<T>(ret / count);
 }
 
 template <class FwdIt>
@@ -63,6 +90,9 @@ constexpr auto mean(FwdIt begin, FwdIt end) {
 template <class FwdIt, class Func>
 constexpr auto median(FwdIt begin, FwdIt end, Func&& func) {
 	using T = std::decay_t<decltype(func(*begin))>;
+	using cast_t = std::conditional_t<fea::is_static_castable_v<T, floatmax_t>,
+			floatmax_t, T>;
+
 	std::vector<T> vals;
 	vals.reserve(std::distance(begin, end));
 	for (auto it = begin; it != end; ++it) {
@@ -74,7 +104,7 @@ constexpr auto median(FwdIt begin, FwdIt end, Func&& func) {
 		// Even set, average middle values.
 		const T& v1 = vals[(vals.size() / 2) - 1];
 		const T& v2 = vals[vals.size() / 2];
-		return T((v1 + v2) / 2.0);
+		return detail::maybe_round<T>((cast_t(v1) + cast_t(v2)) / cast_t(2));
 	}
 
 	return vals[(vals.size() - 1) / 2];
@@ -153,24 +183,50 @@ auto mode(FwdIt begin, FwdIt end) {
 	return mode(begin, end, [](const auto& v) -> const auto& { return v; });
 }
 
+namespace detail {
+// Computes variance numerator.
+template <class FwdIt, class Func>
+constexpr auto variance_num_imp(FwdIt begin, FwdIt end, Func func) {
+	using T = std::decay_t<decltype(func(*begin))>;
+	using cast_t = std::conditional_t<fea::is_static_castable_v<T, floatmax_t>,
+			floatmax_t, T>;
+
+	cast_t avg{};
+	if constexpr (!std::is_same_v<T, cast_t>) {
+		// Converts the return value of user 'func' to biggest float type.
+		// Keeps as much precision as possible when computing mean.
+		avg = fea::mean(
+				begin, end, [&](const auto& v) { return cast_t(func(v)); });
+	} else {
+		avg = fea::mean(begin, end, func);
+	}
+
+	cast_t ret(0);
+	for (auto it = begin; it != end; ++it) {
+		if constexpr (!std::is_same_v<T, cast_t>) {
+			cast_t v = cast_t(func(*it)) - avg;
+			ret += v * v;
+		} else {
+			auto v = func(*it) - avg;
+			ret += v * v;
+		}
+	}
+	return ret;
+}
+} // namespace detail
+
 template <class FwdIt, class Func>
 constexpr auto variance(FwdIt begin, FwdIt end, Func func) {
-	using type_t = std::decay_t<decltype(func(*begin))>;
+	using T = std::decay_t<decltype(func(*begin))>;
+	using cast_t = std::conditional_t<fea::is_static_castable_v<T, floatmax_t>,
+			floatmax_t, T>;
 
-	double num = double(std::distance(begin, end));
-	if (num == 0.0) {
-		return type_t(0);
+	cast_t count = cast_t(std::distance(begin, end));
+	if (count == cast_t(0)) {
+		return T(0);
 	}
-
-	type_t avg = fea::mean(begin, end, func);
-
-	type_t ret(0);
-	for (auto it = begin; it != end; ++it) {
-		type_t v = func(*it) - avg;
-		ret += v * v;
-	}
-
-	return type_t(ret / num);
+	cast_t ret = detail::variance_num_imp(begin, end, func);
+	return detail::maybe_round<T>(ret / count);
 }
 
 template <class FwdIt>
@@ -179,9 +235,44 @@ constexpr auto variance(FwdIt begin, FwdIt end) {
 }
 
 template <class FwdIt, class Func>
+constexpr auto sample_variance(FwdIt begin, FwdIt end, Func func) {
+	using T = std::decay_t<decltype(func(*begin))>;
+	using cast_t = std::conditional_t<fea::is_static_castable_v<T, floatmax_t>,
+			floatmax_t, T>;
+
+	cast_t count = cast_t(std::distance(begin, end));
+	if (count <= cast_t(1)) {
+		return T(0);
+	}
+	cast_t ret = detail::variance_num_imp(begin, end, func);
+	return detail::maybe_round<T>(ret / (count - cast_t(1)));
+}
+
+template <class FwdIt>
+constexpr auto sample_variance(FwdIt begin, FwdIt end) {
+	return sample_variance(
+			begin, end, [](const auto& v) -> const auto& { return v; });
+}
+
+
+template <class FwdIt, class Func>
 constexpr auto std_deviation(FwdIt begin, FwdIt end, Func func) {
-	using type_t = std::decay_t<decltype(func(*begin))>;
-	return type_t(std::sqrt(double(variance(begin, end, func))));
+	using T = std::decay_t<decltype(func(*begin))>;
+	using cast_t = std::conditional_t<fea::is_static_castable_v<T, floatmax_t>,
+			floatmax_t, T>;
+
+	// You can customize sqrt for your custom types.
+	using std::sqrt;
+
+	if constexpr (!std::is_same_v<T, cast_t>) {
+		auto mfunc = [&](const auto& v) { return cast_t(func(v)); };
+		cast_t ret = sqrt(variance(begin, end, mfunc));
+		return detail::maybe_round<T>(ret);
+	} else {
+		static_assert(!std::is_integral_v<T>,
+				"fea::std_deviation : should never happen");
+		return T(sqrt(variance(begin, end, func)));
+	}
 }
 
 template <class FwdIt>
@@ -190,23 +281,85 @@ constexpr auto std_deviation(FwdIt begin, FwdIt end) {
 			begin, end, [](const auto& v) -> const auto& { return v; });
 }
 
+template <class FwdIt, class Func>
+auto sample_std_deviation(FwdIt begin, FwdIt end, Func func) {
+	using T = std::decay_t<decltype(func(*begin))>;
+	using cast_t = std::conditional_t<fea::is_static_castable_v<T, floatmax_t>,
+			floatmax_t, T>;
+
+	// You can customize sqrt for your custom types.
+	using std::sqrt;
+
+	if constexpr (!std::is_same_v<T, cast_t>) {
+		auto mfunc = [&](const auto& v) { return cast_t(func(v)); };
+		cast_t ret = sqrt(sample_variance(begin, end, mfunc));
+		return detail::maybe_round<T>(ret);
+	} else {
+		static_assert(!std::is_integral_v<T>,
+				"fea::std_deviation : should never happen");
+		return T(sqrt(sample_variance(begin, end, func)));
+	}
+}
+
+template <class FwdIt>
+auto sample_std_deviation(FwdIt begin, FwdIt end) {
+	return sample_std_deviation(
+			begin, end, [](const auto& v) -> const auto& { return v; });
+}
+
+namespace detail {
+template <bool Sample, class FwdIt, class ValuePredicate, class SigmaT,
+		class Func>
+constexpr void sigma_filter_imp(FwdIt begin, FwdIt end, SigmaT sigma,
+		ValuePredicate v_pred, Func func) {
+	using T = std::decay_t<decltype(v_pred(*begin))>;
+	using cast_t = std::conditional_t<fea::is_static_castable_v<T, floatmax_t>,
+			floatmax_t, T>;
+
+	// Mean and standard deviation.
+	cast_t avg{};
+	cast_t std_dev{};
+	if constexpr (!std::is_same_v<T, cast_t>) {
+		auto mv_pred = [&](const auto& v) { return cast_t(v_pred(v)); };
+		avg = fea::mean(begin, end, mv_pred);
+		if constexpr (Sample) {
+			std_dev = fea::sample_std_deviation(begin, end, mv_pred);
+		} else {
+			std_dev = fea::std_deviation(begin, end, mv_pred);
+		}
+	} else {
+		avg = fea::mean(begin, end, v_pred);
+		if constexpr (Sample) {
+			avg = fea::std_deviation(begin, end, v_pred);
+		} else {
+			avg = fea::sample_std_deviation(begin, end, v_pred);
+		}
+	}
+
+	cast_t msigma = cast_t(sigma);
+	cast_t high_benchmark = avg + msigma * std_dev;
+	cast_t low_benchmark = avg - msigma * std_dev;
+
+	for (auto it = begin; it != end; ++it) {
+		if constexpr (!std::is_same_v<T, cast_t>) {
+			cast_t val = cast_t(v_pred(*it));
+			if (low_benchmark < val && val < high_benchmark) {
+				func(*it);
+			}
+		} else {
+			decltype(v_pred(*it)) val = v_pred(*it);
+			if (low_benchmark < val && val < high_benchmark) {
+				func(*it);
+			}
+		}
+	}
+}
+} // namespace detail
+
 template <class FwdIt, class ValuePredicate, class T, class Func>
 constexpr void sigma_filter(
 		FwdIt begin, FwdIt end, T sigma, ValuePredicate v_pred, Func func) {
-	// Compute mean.
-	auto avg = fea::mean(begin, end, v_pred);
-	// Compute standard deviation.
-	auto std_dev = fea::std_deviation(begin, end, v_pred);
-
-	auto high_benchmark = avg + sigma * std_dev;
-	auto low_benchmark = avg - sigma * std_dev;
-
-	for (auto it = begin; it != end; ++it) {
-		decltype(v_pred(*it)) val = v_pred(*it);
-		if (low_benchmark < val && val < high_benchmark) {
-			func(*it);
-		}
-	}
+	detail::sigma_filter_imp<false>(begin, end, sigma, v_pred, func);
 }
 
 template <class FwdIt, class T, class Func>
@@ -216,61 +369,10 @@ constexpr void sigma_filter(FwdIt begin, FwdIt end, T sigma, Func func) {
 			func);
 }
 
-template <class FwdIt, class Func>
-constexpr auto sample_variance(FwdIt begin, FwdIt end, Func func) {
-	using type_t = std::decay_t<decltype(func(*begin))>;
-
-	double num = double(std::distance(begin, end));
-	if (num <= 1.0) {
-		return type_t(0);
-	}
-
-	type_t avg = fea::mean(begin, end, func);
-
-	type_t ret(0);
-	for (auto it = begin; it != end; ++it) {
-		type_t v = func(*it) - avg;
-		ret += v * v;
-	}
-
-	return type_t(ret / (num - 1));
-}
-
-template <class FwdIt>
-constexpr auto sample_variance(FwdIt begin, FwdIt end) {
-	return sample_variance(
-			begin, end, [](const auto& v) -> const auto& { return v; });
-}
-
-template <class FwdIt, class Func>
-auto sample_std_deviation(FwdIt begin, FwdIt end, Func func) {
-	using type_t = std::decay_t<decltype(func(*begin))>;
-	return type_t(std::sqrt(double(sample_variance(begin, end, func))));
-}
-
-template <class FwdIt>
-auto sample_std_deviation(FwdIt begin, FwdIt end) {
-	return sample_std_deviation(
-			begin, end, [](const auto& v) -> const auto& { return v; });
-}
-
 template <class FwdIt, class ValuePredicate, class T, class Func>
 void sample_sigma_filter(
 		FwdIt begin, FwdIt end, T sigma, ValuePredicate v_pred, Func func) {
-	// Compute mean.
-	auto avg = fea::mean(begin, end, v_pred);
-	// Compute standard deviation.
-	auto std_dev = fea::sample_std_deviation(begin, end, v_pred);
-
-	auto high_benchmark = avg + sigma * std_dev;
-	auto low_benchmark = avg - sigma * std_dev;
-
-	for (auto it = begin; it != end; ++it) {
-		decltype(v_pred(*it)) val = v_pred(*it);
-		if (low_benchmark < val && val < high_benchmark) {
-			func(*it);
-		}
-	}
+	detail::sigma_filter_imp<true>(begin, end, sigma, v_pred, func);
 }
 
 template <class FwdIt, class T, class Func>
@@ -284,11 +386,12 @@ template <class T>
 constexpr T factorial(T n) {
 	assert(n >= T(0));
 
-	T ret = T(1);
-	for (T i = T(1); i <= n; ++i) {
+	size_t ret = 1;
+	size_t count = size_t(n);
+	for (size_t i = 2; i <= count; ++i) {
 		ret *= i;
 	}
-	return ret;
+	return T(ret);
 }
 
 template <class T>
@@ -312,32 +415,59 @@ constexpr T stars_and_bars_zero(T n, T k) {
 	return binomial_coeff(n + k - 1, k - 1);
 }
 
-template <class FwdIt>
-fea::iterator_value_t<FwdIt> simple_linear_regression_2d(
-		FwdIt first, FwdIt last) {
-	auto xmean = fea::mean(
-			first, last, [](const auto& pt) { return std::get<0>(pt); });
-	auto ymean = fea::mean(
-			first, last, [](const auto& pt) { return std::get<1>(pt); });
+template <class FwdIt, class Func>
+fea::iterator_value_t<FwdIt> simple_linear_regression(
+		FwdIt first, FwdIt last, Func&& func) {
+	using vec_t = std::decay_t<decltype(func(*first))>;
+	using T = std::decay_t<decltype(get<0>(std::declval<vec_t>()))>;
+	using cast_t = std::conditional_t<fea::is_static_castable_v<T, floatmax_t>,
+			floatmax_t, T>;
 
-	auto snum = fea::sum(first, last, [&](const auto& pt) {
-		return (std::get<0>(pt) - xmean) * (std::get<1>(pt) - ymean);
-	});
-	auto sdenom = fea::sum(first, last, [&](const auto& pt) {
-		auto v = std::get<0>(pt) - xmean;
-		return v * v;
-	});
+	// You can customize std::get for your types in your namespace.
+	using std::get;
 
-	using T = std::decay_t<decltype(sdenom)>;
-	auto b = snum;
-	if (sdenom == T(0)) {
-		b = T(0);
-	} else {
-		b /= sdenom;
+	cast_t count = cast_t(std::distance(first, last));
+	if (count == cast_t(0)) {
+		return {};
 	}
 
-	auto a = ymean - (b * xmean);
-	return { a, b };
+	// Compute the means.
+	cast_t xmean(0);
+	cast_t ymean(0);
+	for (auto it = first; it != last; ++it) {
+		decltype(func(*it)) pt = func(*it);
+		xmean += cast_t(get<0>(pt));
+		ymean += cast_t(get<1>(pt));
+	}
+	xmean /= count;
+	ymean /= count;
+
+	// Compute intermediates.
+	cast_t num(0);
+	cast_t denom(0);
+	for (auto it = first; it != last; ++it) {
+		decltype(func(*it)) pt = func(*it);
+		num += (cast_t(get<0>(pt)) - xmean) * (cast_t(get<1>(pt)) - ymean);
+		cast_t d = get<0>(pt) - xmean;
+		denom += d * d;
+	}
+
+	// Compute a and b.
+	cast_t b = num;
+	if (denom == cast_t(0)) {
+		b = cast_t(0);
+	} else {
+		b /= denom;
+	}
+	cast_t a = ymean - (b * xmean);
+
+	return { detail::maybe_round<T>(a), detail::maybe_round<T>(b) };
+}
+
+template <class FwdIt>
+fea::iterator_value_t<FwdIt> simple_linear_regression(FwdIt first, FwdIt last) {
+	return simple_linear_regression(
+			first, last, [](const auto& val) -> const auto& { return val; });
 }
 
 } // namespace fea

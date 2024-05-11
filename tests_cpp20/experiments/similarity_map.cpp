@@ -158,7 +158,7 @@ std::pair<float, float> linear_regression(std::string_view sv) {
 		float y = float(char_lookup[sv[i]]);
 		v.push_back({ x, y });
 	}
-	return fea::simple_linear_regression_2d(v.begin(), v.end());
+	return fea::simple_linear_regression(v.begin(), v.end());
 }
 
 TEST(similarity_map, experiments) {

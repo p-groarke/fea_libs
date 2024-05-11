@@ -339,7 +339,7 @@ struct back<> {
 template <class... Args>
 using back_t = typename detail::back<Args...>::type;
 
-
+// https://stackoverflow.com/questions/23762224/check-if-primitive-types-are-castable-in-c
 template <class From, class To, class = To>
 struct is_static_castable : std::false_type {};
 

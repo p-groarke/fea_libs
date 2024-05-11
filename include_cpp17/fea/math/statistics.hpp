@@ -31,9 +31,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 #include "fea/meta/traits.hpp"
+#include "fea/numerics/numerics.hpp"
 #include "fea/utils/platform.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cmath>
 #include <iterator>
@@ -42,6 +44,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <type_traits>
 #include <utility>
 #include <vector>
+
+/*
+Statistics functions.
+
+Notes :
+Tries to use double precision for intermediate computations if possible.
+*/
 
 namespace fea {
 // Computes the sum of items in range, predicate should return value to sum.
@@ -128,11 +137,34 @@ template <class FwdIt>
 [[nodiscard]]
 constexpr auto variance(FwdIt begin, FwdIt end);
 
+// Compute sample variance of values (Bessel's correction, divided by n
+// - 1). Predicate function must return value to compute.
+template <class FwdIt, class Func>
+[[nodiscard]]
+constexpr auto sample_variance(FwdIt begin, FwdIt end, Func func);
+
+// Compute sample variance of values (Bessel's correction, divided by n - 1).
+template <class FwdIt>
+[[nodiscard]]
+constexpr auto sample_variance(FwdIt begin, FwdIt end);
+
 // Compute population standard deviation.
 // Predicate function must return the values to compute.
 template <class FwdIt, class Func>
 [[nodiscard]]
 constexpr auto std_deviation(FwdIt begin, FwdIt end, Func func);
+
+// Compute sample standard deviation (Bessel's correction, divides by n - 1).
+// Predicate function must return the values to compute.
+template <class FwdIt, class Func>
+[[nodiscard]]
+auto sample_std_deviation(FwdIt begin, FwdIt end, Func func);
+
+// Compute sample standard deviation (Bessel's correction, divides by n - 1).
+template <class FwdIt>
+[[nodiscard]]
+auto sample_std_deviation(FwdIt begin, FwdIt end);
+
 
 // Compute population standard deviation.
 template <class FwdIt>
@@ -150,29 +182,6 @@ constexpr void sigma_filter(
 // Your callback will be called with values that pass test.
 template <class FwdIt, class T, class Func>
 constexpr void sigma_filter(FwdIt begin, FwdIt end, T sigma, Func func);
-
-
-// Compute sample variance of values (Bessel's correction, divided by n
-// - 1). Predicate function must return value to compute.
-template <class FwdIt, class Func>
-[[nodiscard]]
-constexpr auto sample_variance(FwdIt begin, FwdIt end, Func func);
-
-// Compute sample variance of values (Bessel's correction, divided by n - 1).
-template <class FwdIt>
-[[nodiscard]]
-constexpr auto sample_variance(FwdIt begin, FwdIt end);
-
-// Compute sample standard deviation (Bessel's correction, divides by n - 1).
-// Predicate function must return the values to compute.
-template <class FwdIt, class Func>
-[[nodiscard]]
-auto sample_std_deviation(FwdIt begin, FwdIt end, Func func);
-
-// Compute sample standard deviation (Bessel's correction, divides by n - 1).
-template <class FwdIt>
-[[nodiscard]]
-auto sample_std_deviation(FwdIt begin, FwdIt end);
 
 // Filters values above or below sigma * standard deviation.
 // Uses sample standard deviation (Bussel's correction, divided by n - 1).
@@ -215,14 +224,26 @@ template <class T>
 [[nodiscard]]
 constexpr T stars_and_bars_zero(T n, T k);
 
-// Computes simple linear regression.
+// Computes simple linear regression (2d) on values returned by func.
 // https://en.wikipedia.org/wiki/Simple_linear_regression
 // Given 2 dimensional values, outputs a and b respectively.
-// Iterator values should support std::get<0/1> (std::pairs or std::tuples).
+//
+// Returned values should support std::get<0> and std::get<1>,
+// or the equivalent in your namespace.
+template <class FwdIt, class Func>
+[[nodiscard]]
+fea::iterator_value_t<FwdIt> simple_linear_regression(
+		FwdIt first, FwdIt last, Func&& func);
+
+// Computes simple linear regression (2d)
+// https://en.wikipedia.org/wiki/Simple_linear_regression
+// Given 2 dimensional values, outputs a and b respectively.
+//
+// Iterator values should support std::get<0> and std::get<1>,
+// or the equivalent in your namespace.
 template <class FwdIt>
 [[nodiscard]]
-fea::iterator_value_t<FwdIt> simple_linear_regression_2d(
-		FwdIt first, FwdIt last);
+fea::iterator_value_t<FwdIt> simple_linear_regression(FwdIt first, FwdIt last);
 
 } // namespace fea
 
