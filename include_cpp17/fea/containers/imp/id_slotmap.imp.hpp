@@ -368,6 +368,7 @@ id_slotmap<Key, T, Alloc>::minsert(
 }
 
 template <class Key, class T, class Alloc>
+[[nodiscard]]
 bool operator==(const id_slotmap<Key, T, Alloc>& lhs,
 		const id_slotmap<Key, T, Alloc>& rhs) {
 	if (lhs.size() != rhs.size())
@@ -387,6 +388,7 @@ bool operator==(const id_slotmap<Key, T, Alloc>& lhs,
 }
 
 template <class Key, class T, class Alloc>
+[[nodiscard]]
 bool operator!=(const id_slotmap<Key, T, Alloc>& lhs,
 		const id_slotmap<Key, T, Alloc>& rhs) {
 	return !operator==(lhs, rhs);

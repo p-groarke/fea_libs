@@ -318,16 +318,12 @@ struct id_flat_slotmap {
 
 	// Deep comparison.
 	template <class K, class U, class A>
-	[[nodiscard]]
-	friend bool
-	operator==(const id_flat_slotmap<K, U, A>& lhs,
+	friend bool operator==(const id_flat_slotmap<K, U, A>& lhs,
 			const id_flat_slotmap<K, U, A>& rhs);
 
 	// Deep comparison.
 	template <class K, class U, class A>
-	[[nodiscard]]
-	friend bool
-	operator!=(const id_flat_slotmap<K, U, A>& lhs,
+	friend bool operator!=(const id_flat_slotmap<K, U, A>& lhs,
 			const id_flat_slotmap<K, U, A>& rhs);
 
 private:
