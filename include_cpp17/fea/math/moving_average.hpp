@@ -30,7 +30,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
-#include "fea/math/math.hpp"
+#include "fea/math/statistics.hpp"
 
 #include <algorithm>
 #include <array>
@@ -48,32 +48,11 @@ TODO : linear regression moving average?
 https://www.incrediblecharts.com/indicators/linear_regression.php
 */
 
-
 namespace fea {
 namespace detail {
 template <class T>
-struct moving_avg_base {
-	static constexpr bool is_int_v = std::is_integral_v<T>;
-	using mfloat_t = std::conditional_t<sizeof(T) == 8, double, float>;
-
-	// Prime the average to an initial value.
-	void prime(const T& v) {
-		_last = mfloat_t(v);
-	}
-
-	// Get the latest average.
-	T get() const {
-		if constexpr (is_int_v) {
-			return T(std::round(_last));
-		} else {
-			return T(_last);
-		}
-	}
-
-protected:
-	mfloat_t _last = mfloat_t(0);
-};
-} // namespace detail
+struct moving_avg_base;
+}
 
 
 // Computes the cumulative average (rolling / running average).
@@ -91,29 +70,12 @@ struct cumulative_average : detail::moving_avg_base<T> {
 	using detail::moving_avg_base<T>::get;
 
 	cumulative_average() noexcept = default;
-	cumulative_average(size_t n) noexcept
-			: _n(n) {
-	}
 
-	T operator()(const T& in) {
-		// Unbounded.
-		if (_n == 0 || _size != _n) {
-			_last = (mfloat_t(in) + mfloat_t(_size) * _last)
-				  / mfloat_t(_size + 1);
-			++_size;
-			if constexpr (is_int_v) {
-				return T(std::round(_last));
-			} else {
-				return T(_last);
-			}
-		}
+	// Prime with n values. The first added value will start here.
+	cumulative_average(size_t n) noexcept;
 
-		// Bounded.
-		_last -= _last / _n;
-		_last += mfloat_t(in) / _n;
-
-		return get();
-	}
+	// Push a value into the average. Returns newly computed average.
+	T operator()(const T& in);
 
 private:
 	using detail::moving_avg_base<T>::prime;
@@ -134,28 +96,8 @@ struct simple_moving_average : detail::moving_avg_base<T> {
 
 	simple_moving_average() noexcept = default;
 
-	T operator()(const T& in) {
-		if (_size != _circle_buf.size()) {
-			// cumulative
-			_circle_buf[_size++] = mfloat_t(in);
-			_last = fea::mean(_circle_buf.begin(), _circle_buf.begin() + _size);
-
-			if constexpr (is_int_v) {
-				return T(std::round(_last));
-			} else {
-				return T(_last);
-			}
-		}
-
-		// 1/k * (pn+1 - p1)
-		mfloat_t new_v = (mfloat_t(in) - _circle_buf[_playhead]) * _divider;
-		_last = _last + new_v;
-
-		_circle_buf[_playhead] = mfloat_t(in);
-		_playhead = _playhead + 1 == _circle_buf.size() ? 0 : _playhead + 1;
-
-		return get();
-	}
+	// Push a value into the average. Returns newly computed average.
+	T operator()(const T& in);
 
 private:
 	using detail::moving_avg_base<T>::prime;
@@ -177,20 +119,12 @@ struct exponential_moving_average : detail::moving_avg_base<T> {
 	using detail::moving_avg_base<T>::get;
 
 	exponential_moving_average() noexcept = default;
-	exponential_moving_average(mfloat_t alpha) noexcept
-			: _alpha(alpha) {
-		assert(_alpha > mfloat_t(0) && _alpha < mfloat_t(1));
-	}
 
-	T operator()(const T& in) {
-		mfloat_t in_f = mfloat_t(in);
-		_last = (in_f * _alpha) + _last * _alpha_inv;
-		if constexpr (is_int_v) {
-			return T(std::round(_last));
-		} else {
-			return T(_last);
-		}
-	}
+	// Prime with a different alpha. By default, uses 0.5.
+	exponential_moving_average(mfloat_t alpha) noexcept;
+
+	// Push a value into the average. Returns newly computed average.
+	T operator()(const T& in);
 
 private:
 	using detail::moving_avg_base<T>::_last;
@@ -207,41 +141,8 @@ struct weighted_moving_average : detail::moving_avg_base<T> {
 	using detail::moving_avg_base<T>::is_int_v;
 	using detail::moving_avg_base<T>::get;
 
-	T operator()(const T& in) {
-		using msize_t = std::make_signed_t<size_t>;
-
-		if (_size != _circle_buf.size()) {
-			_circle_buf[_size++] = mfloat_t(in);
-
-			_last = mfloat_t(0);
-			mfloat_t denom = (_size * (_size + 1)) / mfloat_t(2);
-			for (msize_t i = _size - 1; i >= 0; --i) {
-				_last += _circle_buf[i] * mfloat_t(i + 1);
-			}
-			_last /= denom;
-
-			if constexpr (is_int_v) {
-				return T(std::round(_last));
-			} else {
-				return T(_last);
-			}
-		}
-
-		_circle_buf[_playhead] = mfloat_t(in);
-		_playhead = _playhead + 1 == _circle_buf.size() ? 0 : _playhead + 1;
-
-		_last = mfloat_t(0);
-		mfloat_t w = mfloat_t(1);
-		for (size_t i = _playhead; i < _circle_buf.size(); ++i) {
-			_last += _circle_buf[i] * w++;
-		}
-		for (size_t i = 0; i < _playhead; ++i) {
-			_last += _circle_buf[i] * w++;
-		}
-		_last /= _denom;
-
-		return get();
-	}
+	// Push a value into the average. Returns newly computed average.
+	T operator()(const T& in);
 
 private:
 	using detail::moving_avg_base<T>::prime;
@@ -263,44 +164,8 @@ struct moving_median : detail::moving_avg_base<T> {
 	using detail::moving_avg_base<T>::is_int_v;
 	using detail::moving_avg_base<T>::get;
 
-	T operator()(const T& in) {
-		if (_size != N) {
-			_circle_buf[_size++] = mfloat_t(in);
-			std::copy(_circle_buf.begin(), _circle_buf.begin() + _size,
-					_sorted.begin());
-			std::sort(_sorted.begin(), _sorted.begin() + _size);
-
-			if (_size % 2 == 0) {
-				mfloat_t v1 = _sorted[(_size / 2) - 1];
-				mfloat_t v2 = _sorted[_size / 2];
-				_last = (v1 + v2) / mfloat_t(2);
-			} else {
-				_last = _sorted[(_size - 1) / 2];
-			}
-
-			if constexpr (is_int_v) {
-				return T(std::round(_last));
-			} else {
-				return T(_last);
-			}
-		}
-
-		_circle_buf[_playhead] = mfloat_t(in);
-		_playhead = _playhead + 1 == _circle_buf.size() ? 0 : _playhead + 1;
-
-		std::copy(_circle_buf.begin(), _circle_buf.end(), _sorted.begin());
-		std::sort(_sorted.begin(), _sorted.end());
-
-		if constexpr (N % 2 == 0) {
-			mfloat_t v1 = _sorted[(_size / 2) - 1];
-			mfloat_t v2 = _sorted[_size / 2];
-			_last = (v1 + v2) / mfloat_t(2);
-		} else {
-			_last = _sorted[(_size - 1) / 2];
-		}
-
-		return get();
-	}
+	// Push a value into the average. Returns newly computed average.
+	T operator()(const T& in);
 
 private:
 	using detail::moving_avg_base<T>::prime;
@@ -336,3 +201,5 @@ using mm = moving_median<T, N>;
 } // namespace abbrev
 } // namespace moving_average
 } // namespace fea
+
+#include "imp/moving_average.imp.hpp"

@@ -3,21 +3,23 @@
 
 namespace {
 enum class bm {
+	zero = 0b0000,
 	one = 0b0001,
 	two = 0b0010,
 	three = 0b0100,
 	four = 0b1000,
 	all_set = 0b1111,
 };
-FEA_ENABLE_BITMASK_OPERATORS(bm)
 } // namespace
-FEA_ENABLE_IS_BITMASK(bm)
+namespace fea {
+FEA_REGISTER_BITMASK(bm);
+}
 
 namespace {
-static_assert(fea::is_bitmask<bm>::value,
-		"utils : fea::is_bitmask type-trait should be true");
+static_assert(fea::register_bitmask<bm>::value,
+		"utils : fea::register_bitmask type-trait should be true");
 static_assert(fea::is_bitmask_v<bm>,
-		"utils : fea::is_bitmask type-trait should be true");
+		"utils : fea::register_bitmask type-trait should be true");
 
 TEST(utils, bitmask) {
 
@@ -35,6 +37,10 @@ TEST(utils, bitmask) {
 	EXPECT_EQ(size_t(bm::one << 1), 0b0010u);
 	EXPECT_EQ(size_t(bm::all_set >> 1), 0b0111u);
 	EXPECT_EQ(size_t(bm::all_set << 1), 0b11110u);
+	EXPECT_TRUE(!bm::zero);
+	EXPECT_FALSE(!!bm::zero);
+	EXPECT_FALSE(!bm::one);
+	EXPECT_TRUE(!!bm::one);
 
 	bm t = bm::one;
 

@@ -1,5 +1,4 @@
-﻿#pragma once
-namespace fea {
+﻿namespace fea {
 
 namespace detail {
 template <class Func, class T>

@@ -184,11 +184,22 @@ struct unsigned_compact_slotset {
 	size_type count(key_type key) const noexcept;
 
 	// Returns true if key present.
+	[[nodiscard]]
 	bool contains(key_type key) const noexcept;
 
 	// Find the iterator for a key. Returns end() if not present.
 	[[nodiscard]]
 	const_iterator find(key_type key) const noexcept;
+
+	// Access the underlying lookup data.
+	// Vector of bitsets.
+	[[nodiscard]]
+	const auto* lookup_data() const noexcept;
+
+	// Access the underlying lookup data size.
+	// Number of bitsets.
+	[[nodiscard]]
+	size_type lookup_size() const noexcept;
 
 private:
 	// Returns the absolute (lookup) index of key.

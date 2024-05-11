@@ -1,5 +1,4 @@
-﻿#pragma once
-namespace fea {
+﻿namespace fea {
 namespace bench {
 void title(const std::string& message, FILE* stream) {
 	fea::unused(message);

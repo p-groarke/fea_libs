@@ -1,6 +1,4 @@
-﻿#pragma once
-
-namespace fea {
+﻿namespace fea {
 template <class T, class Enum, size_t N>
 template <Enum E>
 constexpr typename enum_array<T, Enum, N>::reference

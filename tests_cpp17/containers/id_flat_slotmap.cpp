@@ -95,9 +95,11 @@ TEST(flat_unsigned_map, basics) {
 	EXPECT_EQ(it, map1.end());
 
 #if FEA_DEBUG || FEA_NOTHROW
-	EXPECT_DEATH(map1.at(1), "");
+	test ttt;
+	EXPECT_DEATH(ttt = map1.at(1), "");
 #else
-	EXPECT_THROW(map1.at(1), std::out_of_range);
+	test ttt;
+	EXPECT_THROW(ttt = map1.at(1), std::out_of_range);
 #endif
 
 	EXPECT_FALSE(map1.contains(1));
@@ -156,9 +158,9 @@ TEST(flat_unsigned_map, basics) {
 	EXPECT_EQ(it, map1.end());
 
 #if FEA_DEBUG || FEA_NOTHROW
-	EXPECT_DEATH(map1.at(1), "");
+	EXPECT_DEATH(ttt = map1.at(1), "");
 #else
-	EXPECT_THROW(map1.at(1), std::out_of_range);
+	EXPECT_THROW(ttt = map1.at(1), std::out_of_range);
 #endif
 
 	EXPECT_FALSE(map1.contains(1));
@@ -175,9 +177,9 @@ TEST(flat_unsigned_map, basics) {
 	EXPECT_EQ(map1.count(0), 0u);
 
 #if FEA_DEBUG || FEA_NOTHROW
-	EXPECT_DEATH(map1.at(0), "");
+	EXPECT_DEATH(ttt = map1.at(0), "");
 #else
-	EXPECT_THROW(map1.at(0), std::out_of_range);
+	EXPECT_THROW(ttt = map1.at(0), std::out_of_range);
 #endif
 
 	map1 = map2;
@@ -468,10 +470,11 @@ TEST(flat_unsigned_map, ids) {
 	auto it = map.find(1);
 	EXPECT_EQ(it, map.end());
 
+	test ttt;
 #if FEA_DEBUG || FEA_NOTHROW
-	EXPECT_DEATH(map.at(1), "");
+	EXPECT_DEATH(ttt = map.at(1), "");
 #else
-	EXPECT_THROW(map.at(1), std::out_of_range);
+	EXPECT_THROW(ttt = map.at(1), std::out_of_range);
 #endif
 
 	EXPECT_FALSE(map.contains(1));
@@ -531,9 +534,9 @@ TEST(flat_unsigned_map, ids) {
 	EXPECT_EQ(it, map.end());
 
 #if FEA_DEBUG || FEA_NOTHROW
-	EXPECT_DEATH(map.at(1), "");
+	EXPECT_DEATH(ttt = map.at(1), "");
 #else
-	EXPECT_THROW(map.at(1), std::out_of_range);
+	EXPECT_THROW(ttt = map.at(1), std::out_of_range);
 #endif
 
 	EXPECT_FALSE(map.contains(1));
@@ -550,9 +553,9 @@ TEST(flat_unsigned_map, ids) {
 	EXPECT_EQ(map.count(0), 0u);
 
 #if FEA_DEBUG || FEA_NOTHROW
-	EXPECT_DEATH(map.at(0), "");
+	EXPECT_DEATH(ttt = map.at(0), "");
 #else
-	EXPECT_THROW(map.at(0), std::out_of_range);
+	EXPECT_THROW(ttt = map.at(0), std::out_of_range);
 #endif
 
 	map = map2;

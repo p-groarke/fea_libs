@@ -184,9 +184,8 @@ enum class platform_group_t : unsigned {
 	unixx = 0b0010,
 	count = 0b0000,
 };
-FEA_ENABLE_BITMASK_OPERATORS(platform_group_t)
+FEA_REGISTER_BITMASK(platform_group_t);
 } // namespace fea
-FEA_ENABLE_IS_BITMASK(platform_group_t)
 
 namespace fea {
 #undef FEA_AIX

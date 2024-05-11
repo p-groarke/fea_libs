@@ -147,4 +147,17 @@ constexpr T abs(T v) {
 		}
 	}
 }
+
+// Float aliases.
+using float32_t = float;
+#if FEA_64BIT
+using float64_t = double;
+#endif
+
+#if FEA_32BIT
+using floatmax_t = float;
+#elif FEA_64BIT
+using floatmax_t = double;
+#endif
+
 } // namespace fea

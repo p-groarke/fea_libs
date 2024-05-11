@@ -1,5 +1,4 @@
-﻿#pragma once
-namespace fea {
+﻿namespace fea {
 namespace imp {
 template <class T, size_t Extent>
 template <class It>

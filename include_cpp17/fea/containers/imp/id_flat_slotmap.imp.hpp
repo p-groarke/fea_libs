@@ -1,5 +1,4 @@
-﻿#pragma once
-namespace fea {
+﻿namespace fea {
 template <class Key, class T, class Alloc>
 id_flat_slotmap<Key, T, Alloc>::id_flat_slotmap(size_type reserve_count) {
 	reserve(reserve_count);
@@ -49,62 +48,62 @@ id_flat_slotmap<Key, T, Alloc>::id_flat_slotmap(
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::iterator id_flat_slotmap<Key, T,
-		Alloc>::begin() noexcept {
+typename id_flat_slotmap<Key, T, Alloc>::iterator
+id_flat_slotmap<Key, T, Alloc>::begin() noexcept {
 	return _values.begin();
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::const_iterator id_flat_slotmap<Key, T,
-		Alloc>::begin() const noexcept {
+typename id_flat_slotmap<Key, T, Alloc>::const_iterator
+id_flat_slotmap<Key, T, Alloc>::begin() const noexcept {
 	return _values.begin();
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::const_iterator id_flat_slotmap<Key, T,
-		Alloc>::cbegin() const noexcept {
+typename id_flat_slotmap<Key, T, Alloc>::const_iterator
+id_flat_slotmap<Key, T, Alloc>::cbegin() const noexcept {
 	return _values.cbegin();
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::iterator id_flat_slotmap<Key, T,
-		Alloc>::end() noexcept {
+typename id_flat_slotmap<Key, T, Alloc>::iterator
+id_flat_slotmap<Key, T, Alloc>::end() noexcept {
 	return _values.end();
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::const_iterator id_flat_slotmap<Key, T,
-		Alloc>::end() const noexcept {
+typename id_flat_slotmap<Key, T, Alloc>::const_iterator
+id_flat_slotmap<Key, T, Alloc>::end() const noexcept {
 	return _values.end();
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::const_iterator id_flat_slotmap<Key, T,
-		Alloc>::cend() const noexcept {
+typename id_flat_slotmap<Key, T, Alloc>::const_iterator
+id_flat_slotmap<Key, T, Alloc>::cend() const noexcept {
 	return _values.cend();
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::const_key_iterator id_flat_slotmap<Key,
-		T, Alloc>::key_begin() const noexcept {
+typename id_flat_slotmap<Key, T, Alloc>::const_key_iterator
+id_flat_slotmap<Key, T, Alloc>::key_begin() const noexcept {
 	return _reverse_lookup.begin();
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::const_key_iterator id_flat_slotmap<Key,
-		T, Alloc>::key_cbegin() const noexcept {
+typename id_flat_slotmap<Key, T, Alloc>::const_key_iterator
+id_flat_slotmap<Key, T, Alloc>::key_cbegin() const noexcept {
 	return _reverse_lookup.cbegin();
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::const_key_iterator id_flat_slotmap<Key,
-		T, Alloc>::key_end() const noexcept {
+typename id_flat_slotmap<Key, T, Alloc>::const_key_iterator
+id_flat_slotmap<Key, T, Alloc>::key_end() const noexcept {
 	return _reverse_lookup.end();
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::const_key_iterator id_flat_slotmap<Key,
-		T, Alloc>::key_cend() const noexcept {
+typename id_flat_slotmap<Key, T, Alloc>::const_key_iterator
+id_flat_slotmap<Key, T, Alloc>::key_cend() const noexcept {
 	return _reverse_lookup.cend();
 }
 
@@ -114,14 +113,14 @@ bool id_flat_slotmap<Key, T, Alloc>::empty() const noexcept {
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::size_type id_flat_slotmap<Key, T,
-		Alloc>::size() const noexcept {
+typename id_flat_slotmap<Key, T, Alloc>::size_type
+id_flat_slotmap<Key, T, Alloc>::size() const noexcept {
 	return _values.size();
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::size_type id_flat_slotmap<Key, T,
-		Alloc>::max_size() const noexcept {
+typename id_flat_slotmap<Key, T, Alloc>::size_type
+id_flat_slotmap<Key, T, Alloc>::max_size() const noexcept {
 	return _lookup.max_size();
 }
 
@@ -141,14 +140,14 @@ void id_flat_slotmap<Key, T, Alloc>::reserve(
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::size_type id_flat_slotmap<Key, T,
-		Alloc>::lookup_capacity() const noexcept {
+typename id_flat_slotmap<Key, T, Alloc>::size_type
+id_flat_slotmap<Key, T, Alloc>::lookup_capacity() const noexcept {
 	return _lookup.capacity();
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::size_type id_flat_slotmap<Key, T,
-		Alloc>::capacity() const noexcept {
+typename id_flat_slotmap<Key, T, Alloc>::size_type
+id_flat_slotmap<Key, T, Alloc>::capacity() const noexcept {
 	return _values.capacity();
 }
 
@@ -250,8 +249,8 @@ id_flat_slotmap<Key, T, Alloc>::try_emplace(
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::iterator id_flat_slotmap<Key, T,
-		Alloc>::erase(const_iterator pos) {
+typename id_flat_slotmap<Key, T, Alloc>::iterator
+id_flat_slotmap<Key, T, Alloc>::erase(const_iterator pos) {
 	size_t idx = std::distance(_values.cbegin(), pos);
 	erase(_reverse_lookup[idx]);
 	assert(_values.size() == _reverse_lookup.size());
@@ -264,8 +263,9 @@ typename id_flat_slotmap<Key, T, Alloc>::iterator id_flat_slotmap<Key, T,
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::iterator id_flat_slotmap<Key, T,
-		Alloc>::erase(const_iterator first, const_iterator last) {
+typename id_flat_slotmap<Key, T, Alloc>::iterator
+id_flat_slotmap<Key, T, Alloc>::erase(
+		const_iterator first, const_iterator last) {
 	size_t first_idx = std::distance(_values.cbegin(), first);
 	size_t last_idx = std::distance(_values.cbegin(), last);
 	assert(first_idx < _values.size());
@@ -290,8 +290,8 @@ typename id_flat_slotmap<Key, T, Alloc>::iterator id_flat_slotmap<Key, T,
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::size_type id_flat_slotmap<Key, T,
-		Alloc>::erase(const key_type& k) {
+typename id_flat_slotmap<Key, T, Alloc>::size_type
+id_flat_slotmap<Key, T, Alloc>::erase(const key_type& k) {
 	iterator it = find(k);
 	if (it == end()) {
 		return 0;
@@ -330,20 +330,20 @@ void id_flat_slotmap<Key, T, Alloc>::swap(id_flat_slotmap& other) noexcept {
 }
 
 template <class Key, class T, class Alloc>
-const typename id_flat_slotmap<Key, T, Alloc>::value_type* id_flat_slotmap<Key,
-		T, Alloc>::data() const noexcept {
+const typename id_flat_slotmap<Key, T, Alloc>::value_type*
+id_flat_slotmap<Key, T, Alloc>::data() const noexcept {
 	return _values.data();
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::value_type* id_flat_slotmap<Key, T,
-		Alloc>::data() noexcept {
+typename id_flat_slotmap<Key, T, Alloc>::value_type*
+id_flat_slotmap<Key, T, Alloc>::data() noexcept {
 	return _values.data();
 }
 
 template <class Key, class T, class Alloc>
-const typename id_flat_slotmap<Key, T, Alloc>::key_type* id_flat_slotmap<Key, T,
-		Alloc>::key_data() const noexcept {
+const typename id_flat_slotmap<Key, T, Alloc>::key_type*
+id_flat_slotmap<Key, T, Alloc>::key_data() const noexcept {
 	return _reverse_lookup.data();
 }
 
@@ -353,14 +353,14 @@ const auto* id_flat_slotmap<Key, T, Alloc>::lookup_data() const noexcept {
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::size_type id_flat_slotmap<Key, T,
-		Alloc>::lookup_size() const noexcept {
+typename id_flat_slotmap<Key, T, Alloc>::size_type
+id_flat_slotmap<Key, T, Alloc>::lookup_size() const noexcept {
 	return _lookup.size();
 }
 
 template <class Key, class T, class Alloc>
-const typename id_flat_slotmap<Key, T, Alloc>::mapped_type& id_flat_slotmap<Key,
-		T, Alloc>::at(const key_type& k) const {
+const typename id_flat_slotmap<Key, T, Alloc>::mapped_type&
+id_flat_slotmap<Key, T, Alloc>::at(const key_type& k) const {
 	auto it = find(k);
 	if (it == end()) {
 		fea::maybe_throw<std::out_of_range>(
@@ -370,28 +370,28 @@ const typename id_flat_slotmap<Key, T, Alloc>::mapped_type& id_flat_slotmap<Key,
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::mapped_type& id_flat_slotmap<Key, T,
-		Alloc>::at(const key_type& k) {
+typename id_flat_slotmap<Key, T, Alloc>::mapped_type&
+id_flat_slotmap<Key, T, Alloc>::at(const key_type& k) {
 	return const_cast<mapped_type&>(
 			static_cast<const id_flat_slotmap*>(this)->at(k));
 }
 
 template <class Key, class T, class Alloc>
-const typename id_flat_slotmap<Key, T, Alloc>::mapped_type& id_flat_slotmap<Key,
-		T, Alloc>::at_unchecked(const key_type& k) const noexcept {
+const typename id_flat_slotmap<Key, T, Alloc>::mapped_type&
+id_flat_slotmap<Key, T, Alloc>::at_unchecked(const key_type& k) const noexcept {
 	return _values[_lookup.at_unchecked(k)];
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::mapped_type& id_flat_slotmap<Key, T,
-		Alloc>::at_unchecked(const key_type& k) noexcept {
+typename id_flat_slotmap<Key, T, Alloc>::mapped_type&
+id_flat_slotmap<Key, T, Alloc>::at_unchecked(const key_type& k) noexcept {
 	return const_cast<mapped_type&>(
 			static_cast<const id_flat_slotmap*>(this)->at_unchecked(k));
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::mapped_type& id_flat_slotmap<Key, T,
-		Alloc>::operator[](const key_type& k) {
+typename id_flat_slotmap<Key, T, Alloc>::mapped_type&
+id_flat_slotmap<Key, T, Alloc>::operator[](const key_type& k) {
 	if (!contains(k)) {
 		emplace(k, mapped_type{});
 	}
@@ -400,20 +400,20 @@ typename id_flat_slotmap<Key, T, Alloc>::mapped_type& id_flat_slotmap<Key, T,
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::size_type id_flat_slotmap<Key, T,
-		Alloc>::count(const key_type& k) const noexcept {
+typename id_flat_slotmap<Key, T, Alloc>::size_type
+id_flat_slotmap<Key, T, Alloc>::count(const key_type& k) const noexcept {
 	return contains(k) ? 1 : 0;
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::const_iterator id_flat_slotmap<Key, T,
-		Alloc>::find(const key_type& k) const noexcept {
+typename id_flat_slotmap<Key, T, Alloc>::const_iterator
+id_flat_slotmap<Key, T, Alloc>::find(const key_type& k) const noexcept {
 	return begin() + _lookup.find(k, size());
 }
 
 template <class Key, class T, class Alloc>
-typename id_flat_slotmap<Key, T, Alloc>::iterator id_flat_slotmap<Key, T,
-		Alloc>::find(const key_type& k) noexcept {
+typename id_flat_slotmap<Key, T, Alloc>::iterator
+id_flat_slotmap<Key, T, Alloc>::find(const key_type& k) noexcept {
 	return begin() + _lookup.find(k, size());
 }
 
@@ -467,6 +467,7 @@ id_flat_slotmap<Key, T, Alloc>::minsert(
 
 
 template <class Key, class T, class Alloc>
+[[nodiscard]]
 bool operator==(const id_flat_slotmap<Key, T, Alloc>& lhs,
 		const id_flat_slotmap<Key, T, Alloc>& rhs) {
 	if (lhs.size() != rhs.size())
@@ -486,6 +487,7 @@ bool operator==(const id_flat_slotmap<Key, T, Alloc>& lhs,
 	return true;
 }
 template <class Key, class T, class Alloc>
+[[nodiscard]]
 bool operator!=(const id_flat_slotmap<Key, T, Alloc>& lhs,
 		const id_flat_slotmap<Key, T, Alloc>& rhs) {
 	return !operator==(lhs, rhs);

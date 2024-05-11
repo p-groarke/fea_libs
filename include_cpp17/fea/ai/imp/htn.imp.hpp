@@ -1,4 +1,3 @@
-#pragma once
 namespace fea {
 namespace detail {
 template <size_t N, class T>

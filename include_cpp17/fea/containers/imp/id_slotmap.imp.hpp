@@ -1,5 +1,4 @@
-﻿#pragma once
-namespace fea {
+﻿namespace fea {
 template <class Key, class T, class Alloc>
 id_slotmap<Key, T, Alloc>::id_slotmap(size_t new_cap) {
 	reserve(new_cap);
@@ -30,38 +29,38 @@ id_slotmap<Key, T, Alloc>::id_slotmap(
 }
 
 template <class Key, class T, class Alloc>
-typename id_slotmap<Key, T, Alloc>::iterator id_slotmap<Key, T,
-		Alloc>::begin() noexcept {
+typename id_slotmap<Key, T, Alloc>::iterator
+id_slotmap<Key, T, Alloc>::begin() noexcept {
 	return _values.begin();
 }
 
 template <class Key, class T, class Alloc>
-typename id_slotmap<Key, T, Alloc>::const_iterator id_slotmap<Key, T,
-		Alloc>::begin() const noexcept {
+typename id_slotmap<Key, T, Alloc>::const_iterator
+id_slotmap<Key, T, Alloc>::begin() const noexcept {
 	return _values.begin();
 }
 
 template <class Key, class T, class Alloc>
-typename id_slotmap<Key, T, Alloc>::const_iterator id_slotmap<Key, T,
-		Alloc>::cbegin() const noexcept {
+typename id_slotmap<Key, T, Alloc>::const_iterator
+id_slotmap<Key, T, Alloc>::cbegin() const noexcept {
 	return _values.cbegin();
 }
 
 template <class Key, class T, class Alloc>
-typename id_slotmap<Key, T, Alloc>::iterator id_slotmap<Key, T,
-		Alloc>::end() noexcept {
+typename id_slotmap<Key, T, Alloc>::iterator
+id_slotmap<Key, T, Alloc>::end() noexcept {
 	return _values.end();
 }
 
 template <class Key, class T, class Alloc>
-typename id_slotmap<Key, T, Alloc>::const_iterator id_slotmap<Key, T,
-		Alloc>::end() const noexcept {
+typename id_slotmap<Key, T, Alloc>::const_iterator
+id_slotmap<Key, T, Alloc>::end() const noexcept {
 	return _values.end();
 }
 
 template <class Key, class T, class Alloc>
-typename id_slotmap<Key, T, Alloc>::const_iterator id_slotmap<Key, T,
-		Alloc>::cend() const noexcept {
+typename id_slotmap<Key, T, Alloc>::const_iterator
+id_slotmap<Key, T, Alloc>::cend() const noexcept {
 	return _values.cend();
 }
 
@@ -71,14 +70,14 @@ bool id_slotmap<Key, T, Alloc>::empty() const noexcept {
 }
 
 template <class Key, class T, class Alloc>
-typename id_slotmap<Key, T, Alloc>::size_type id_slotmap<Key, T, Alloc>::size()
-		const noexcept {
+typename id_slotmap<Key, T, Alloc>::size_type
+id_slotmap<Key, T, Alloc>::size() const noexcept {
 	return _values.size();
 }
 
 template <class Key, class T, class Alloc>
-typename id_slotmap<Key, T, Alloc>::size_type id_slotmap<Key, T,
-		Alloc>::max_size() const noexcept {
+typename id_slotmap<Key, T, Alloc>::size_type
+id_slotmap<Key, T, Alloc>::max_size() const noexcept {
 	return _lookup.max_size();
 }
 
@@ -96,8 +95,8 @@ void id_slotmap<Key, T, Alloc>::reserve(
 }
 
 template <class Key, class T, class Alloc>
-typename id_slotmap<Key, T, Alloc>::size_type id_slotmap<Key, T,
-		Alloc>::capacity() const noexcept {
+typename id_slotmap<Key, T, Alloc>::size_type
+id_slotmap<Key, T, Alloc>::capacity() const noexcept {
 	return _values.capacity();
 }
 
@@ -114,14 +113,14 @@ void id_slotmap<Key, T, Alloc>::clear() noexcept {
 }
 
 template <class Key, class T, class Alloc>
-std::pair<typename id_slotmap<Key, T, Alloc>::iterator, bool> id_slotmap<Key, T,
-		Alloc>::insert(const value_type& value) {
+std::pair<typename id_slotmap<Key, T, Alloc>::iterator, bool>
+id_slotmap<Key, T, Alloc>::insert(const value_type& value) {
 	return minsert(value.first, value.second);
 }
 
 template <class Key, class T, class Alloc>
-std::pair<typename id_slotmap<Key, T, Alloc>::iterator, bool> id_slotmap<Key, T,
-		Alloc>::insert(value_type&& value) {
+std::pair<typename id_slotmap<Key, T, Alloc>::iterator, bool>
+id_slotmap<Key, T, Alloc>::insert(value_type&& value) {
 	return minsert(value.first, fea::maybe_move(value.second));
 }
 
@@ -145,15 +144,15 @@ void id_slotmap<Key, T, Alloc>::insert(
 
 template <class Key, class T, class Alloc>
 template <class M>
-std::pair<typename id_slotmap<Key, T, Alloc>::iterator, bool> id_slotmap<Key, T,
-		Alloc>::insert_or_assign(const key_type& k, M&& obj) {
+std::pair<typename id_slotmap<Key, T, Alloc>::iterator, bool>
+id_slotmap<Key, T, Alloc>::insert_or_assign(const key_type& k, M&& obj) {
 	return minsert(k, std::forward<M>(obj), true);
 }
 
 template <class Key, class T, class Alloc>
 template <class... Args>
-std::pair<typename id_slotmap<Key, T, Alloc>::iterator, bool> id_slotmap<Key, T,
-		Alloc>::emplace(const key_type& k, Args&&... args) {
+std::pair<typename id_slotmap<Key, T, Alloc>::iterator, bool>
+id_slotmap<Key, T, Alloc>::emplace(const key_type& k, Args&&... args) {
 	iterator it = find(k);
 	if (it != end()) {
 		return { it, false };
@@ -166,8 +165,8 @@ std::pair<typename id_slotmap<Key, T, Alloc>::iterator, bool> id_slotmap<Key, T,
 
 template <class Key, class T, class Alloc>
 template <class... Args>
-std::pair<typename id_slotmap<Key, T, Alloc>::iterator, bool> id_slotmap<Key, T,
-		Alloc>::try_emplace(const key_type& key, Args&&... args) {
+std::pair<typename id_slotmap<Key, T, Alloc>::iterator, bool>
+id_slotmap<Key, T, Alloc>::try_emplace(const key_type& key, Args&&... args) {
 	// Standard emplace behavior doesn't apply, always use try_emplace
 	// behavior.
 	return emplace(key, std::forward<Args>(args)...);
@@ -242,20 +241,31 @@ void id_slotmap<Key, T, Alloc>::swap(id_slotmap& other) noexcept {
 }
 
 template <class Key, class T, class Alloc>
-const typename id_slotmap<Key, T, Alloc>::value_type* id_slotmap<Key, T,
-		Alloc>::data() const noexcept {
+const typename id_slotmap<Key, T, Alloc>::value_type*
+id_slotmap<Key, T, Alloc>::data() const noexcept {
 	return _values.data();
 }
 
 template <class Key, class T, class Alloc>
-typename id_slotmap<Key, T, Alloc>::value_type* id_slotmap<Key, T,
-		Alloc>::data() noexcept {
+typename id_slotmap<Key, T, Alloc>::value_type*
+id_slotmap<Key, T, Alloc>::data() noexcept {
 	return _values.data();
 }
 
 template <class Key, class T, class Alloc>
-const typename id_slotmap<Key, T, Alloc>::mapped_type& id_slotmap<Key, T,
-		Alloc>::at(const key_type& k) const {
+const auto* id_slotmap<Key, T, Alloc>::lookup_data() const noexcept {
+	return _lookup.data();
+}
+
+template <class Key, class T, class Alloc>
+typename id_slotmap<Key, T, Alloc>::size_type
+id_slotmap<Key, T, Alloc>::lookup_size() const noexcept {
+	return _lookup.size();
+}
+
+template <class Key, class T, class Alloc>
+const typename id_slotmap<Key, T, Alloc>::mapped_type&
+id_slotmap<Key, T, Alloc>::at(const key_type& k) const {
 	auto it = find(k);
 	if (it == end()) {
 		fea::maybe_throw<std::out_of_range>(
@@ -272,21 +282,21 @@ typename id_slotmap<Key, T, Alloc>::mapped_type& id_slotmap<Key, T, Alloc>::at(
 }
 
 template <class Key, class T, class Alloc>
-const typename id_slotmap<Key, T, Alloc>::mapped_type& id_slotmap<Key, T,
-		Alloc>::at_unchecked(const key_type& k) const noexcept {
+const typename id_slotmap<Key, T, Alloc>::mapped_type&
+id_slotmap<Key, T, Alloc>::at_unchecked(const key_type& k) const noexcept {
 	return _values[_lookup.at_unchecked(k)].second;
 }
 
 template <class Key, class T, class Alloc>
-typename id_slotmap<Key, T, Alloc>::mapped_type& id_slotmap<Key, T,
-		Alloc>::at_unchecked(const key_type& k) noexcept {
+typename id_slotmap<Key, T, Alloc>::mapped_type&
+id_slotmap<Key, T, Alloc>::at_unchecked(const key_type& k) noexcept {
 	return const_cast<mapped_type&>(
 			static_cast<const id_slotmap*>(this)->at_unchecked(k));
 }
 
 template <class Key, class T, class Alloc>
-typename id_slotmap<Key, T, Alloc>::mapped_type& id_slotmap<Key, T,
-		Alloc>::operator[](const key_type& k) {
+typename id_slotmap<Key, T, Alloc>::mapped_type&
+id_slotmap<Key, T, Alloc>::operator[](const key_type& k) {
 	if (!contains(k)) {
 		emplace(k, mapped_type{});
 	}
@@ -301,8 +311,8 @@ typename id_slotmap<Key, T, Alloc>::size_type id_slotmap<Key, T, Alloc>::count(
 }
 
 template <class Key, class T, class Alloc>
-typename id_slotmap<Key, T, Alloc>::const_iterator id_slotmap<Key, T,
-		Alloc>::find(const key_type& k) const noexcept {
+typename id_slotmap<Key, T, Alloc>::const_iterator
+id_slotmap<Key, T, Alloc>::find(const key_type& k) const noexcept {
 	return begin() + _lookup.find(k, size());
 }
 
@@ -341,8 +351,9 @@ id_slotmap<Key, T, Alloc>::equal_range(const key_type& k) noexcept {
 
 template <class Key, class T, class Alloc>
 template <class M>
-std::pair<typename id_slotmap<Key, T, Alloc>::iterator, bool> id_slotmap<Key, T,
-		Alloc>::minsert(const key_type& k, M&& obj, bool assign_found) {
+std::pair<typename id_slotmap<Key, T, Alloc>::iterator, bool>
+id_slotmap<Key, T, Alloc>::minsert(
+		const key_type& k, M&& obj, bool assign_found) {
 	iterator it = find(k);
 	if (it != end()) {
 		if (assign_found) {
@@ -357,6 +368,7 @@ std::pair<typename id_slotmap<Key, T, Alloc>::iterator, bool> id_slotmap<Key, T,
 }
 
 template <class Key, class T, class Alloc>
+[[nodiscard]]
 bool operator==(const id_slotmap<Key, T, Alloc>& lhs,
 		const id_slotmap<Key, T, Alloc>& rhs) {
 	if (lhs.size() != rhs.size())
@@ -376,6 +388,7 @@ bool operator==(const id_slotmap<Key, T, Alloc>& lhs,
 }
 
 template <class Key, class T, class Alloc>
+[[nodiscard]]
 bool operator!=(const id_slotmap<Key, T, Alloc>& lhs,
 		const id_slotmap<Key, T, Alloc>& rhs) {
 	return !operator==(lhs, rhs);

@@ -1,4 +1,3 @@
-#pragma once
 namespace fea {
 template <class Key, class Alloc>
 template <class FwdIt>
@@ -231,6 +230,16 @@ auto unsigned_slotset<Key, Alloc>::find(key_type key) const noexcept
 	}
 	return const_iterator{ _lookup.begin(), _lookup.end(),
 		_lookup.begin() + idx };
+}
+
+template <class Key, class Alloc>
+const uint8_t* unsigned_slotset<Key, Alloc>::lookup_data() const noexcept {
+	return _lookup.data();
+}
+
+template <class Key, class Alloc>
+auto unsigned_slotset<Key, Alloc>::lookup_size() const noexcept -> size_type {
+	return _lookup.size();
 }
 
 } // namespace fea

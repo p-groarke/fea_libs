@@ -138,7 +138,7 @@ constexpr std::enable_if_t<fea::is_bitmask_v<E>, E>& operator>>=(
 }
 
 template <class E>
-constexpr std::enable_if_t<fea::is_bitmask_v<E>, bool> operator!(E rhs) {
+constexpr std::enable_if_t<fea::is_bitmask_v<E>, E>& operator!(E rhs) {
 	using underlying_t = std::underlying_type_t<E>;
 	return underlying_t(rhs) == underlying_t(0);
 }

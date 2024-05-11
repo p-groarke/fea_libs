@@ -1,5 +1,4 @@
-﻿#pragma once
-namespace fea {
+﻿namespace fea {
 template <class T, size_t StackSize>
 template <size_t InSize>
 constexpr stack_vector<T, StackSize>::stack_vector(

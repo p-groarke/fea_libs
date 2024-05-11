@@ -1,5 +1,5 @@
 ﻿#include <cstdio>
-#include <fea/math/math.hpp>
+#include <fea/math/statistics.hpp>
 #include <fea/numerics/random.hpp>
 #include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
