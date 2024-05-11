@@ -210,6 +210,14 @@ struct id_slotmap {
 	// Direct access to the underlying vector. Returns pointer to pairs.
 	value_type* data() noexcept;
 
+	// Access to underlying lookup.
+	// Dereferencing this with key returns the index of
+	// the associated value.
+	const auto* lookup_data() const noexcept;
+
+	// Lookup size, != key/value size.
+	size_type lookup_size() const noexcept;
+
 	// Access specified element with bounds checking.
 	const mapped_type& at(const key_type& k) const;
 

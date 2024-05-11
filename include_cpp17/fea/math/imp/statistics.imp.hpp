@@ -313,7 +313,8 @@ constexpr T stars_and_bars_zero(T n, T k) {
 }
 
 template <class FwdIt>
-fea::iterator_value_t<FwdIt> simple_linear_regression(FwdIt first, FwdIt last) {
+fea::iterator_value_t<FwdIt> simple_linear_regression_2d(
+		FwdIt first, FwdIt last) {
 	auto xmean = fea::mean(
 			first, last, [](const auto& pt) { return std::get<0>(pt); });
 	auto ymean = fea::mean(

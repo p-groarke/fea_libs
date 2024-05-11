@@ -114,7 +114,7 @@ TEST(statistics, basics) {
 			{ 2.f, 2.f },
 		};
 		std::pair<float, float> ab
-				= fea::simple_linear_regression(v.begin(), v.end());
+				= fea::simple_linear_regression_2d(v.begin(), v.end());
 		EXPECT_EQ(ab.first, 0.f);
 		EXPECT_EQ(ab.second, 1.f);
 
@@ -123,7 +123,7 @@ TEST(statistics, basics) {
 			{ 1.f, 1.f },
 			{ 5.f, 5.f },
 		};
-		ab = fea::simple_linear_regression(v.begin(), v.end());
+		ab = fea::simple_linear_regression_2d(v.begin(), v.end());
 		EXPECT_EQ(ab.first, 0.f);
 		EXPECT_EQ(ab.second, 1.f);
 
@@ -132,7 +132,7 @@ TEST(statistics, basics) {
 			{ 1.f, 1.f },
 			{ 2.f, -2.f },
 		};
-		ab = fea::simple_linear_regression(v.begin(), v.end());
+		ab = fea::simple_linear_regression_2d(v.begin(), v.end());
 		EXPECT_NEAR(ab.first, 2.f / 3.f, 0.000001f);
 		EXPECT_EQ(ab.second, -1.f);
 
@@ -141,7 +141,7 @@ TEST(statistics, basics) {
 			{ 1.f, 1.f },
 			{ -2.f, -2.f },
 		};
-		ab = fea::simple_linear_regression(v.begin(), v.end());
+		ab = fea::simple_linear_regression_2d(v.begin(), v.end());
 		EXPECT_EQ(ab.first, 0.f);
 		EXPECT_EQ(ab.second, 1.f);
 
@@ -150,7 +150,7 @@ TEST(statistics, basics) {
 			{ -1.f, 1.f },
 			{ 2.f, -2.f },
 		};
-		ab = fea::simple_linear_regression(v.begin(), v.end());
+		ab = fea::simple_linear_regression_2d(v.begin(), v.end());
 		EXPECT_EQ(ab.first, 0.f);
 		EXPECT_EQ(ab.second, -1.f);
 
@@ -159,7 +159,7 @@ TEST(statistics, basics) {
 			{ -1.f, 22.f },
 			{ 2.f, -2.f },
 		};
-		ab = fea::simple_linear_regression(v.begin(), v.end());
+		ab = fea::simple_linear_regression_2d(v.begin(), v.end());
 		EXPECT_EQ(ab.first, 9.f);
 		EXPECT_EQ(ab.second, -7.f);
 	}

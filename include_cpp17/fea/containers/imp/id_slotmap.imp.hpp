@@ -253,6 +253,17 @@ id_slotmap<Key, T, Alloc>::data() noexcept {
 }
 
 template <class Key, class T, class Alloc>
+const auto* id_slotmap<Key, T, Alloc>::lookup_data() const noexcept {
+	return _lookup.data();
+}
+
+template <class Key, class T, class Alloc>
+typename id_slotmap<Key, T, Alloc>::size_type
+id_slotmap<Key, T, Alloc>::lookup_size() const noexcept {
+	return _lookup.size();
+}
+
+template <class Key, class T, class Alloc>
 const typename id_slotmap<Key, T, Alloc>::mapped_type&
 id_slotmap<Key, T, Alloc>::at(const key_type& k) const {
 	auto it = find(k);

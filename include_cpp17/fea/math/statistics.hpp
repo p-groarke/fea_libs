@@ -216,11 +216,13 @@ template <class T>
 constexpr T stars_and_bars_zero(T n, T k);
 
 // Computes simple linear regression.
+// https://en.wikipedia.org/wiki/Simple_linear_regression
 // Given 2 dimensional values, outputs a and b respectively.
 // Iterator values should support std::get<0/1> (std::pairs or std::tuples).
 template <class FwdIt>
 [[nodiscard]]
-fea::iterator_value_t<FwdIt> simple_linear_regression(FwdIt first, FwdIt last);
+fea::iterator_value_t<FwdIt> simple_linear_regression_2d(
+		FwdIt first, FwdIt last);
 
 } // namespace fea
 
