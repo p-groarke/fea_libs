@@ -1,4 +1,3 @@
-
 /**
  * BSD 3-Clause License
  *
@@ -31,12 +30,6 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  **/
-
-#pragma once
-#include "fea/iso_codes/details/language_types.hpp"
-
-#include <array>
-
 namespace fea {
 namespace detail {
 
@@ -44,6 +37,7 @@ namespace detail {
 // https://iso639-3.sil.org/code_tables/download_tables
 // Dataset : iso-639-3_Code_Tables_20210218
 
+// clang-format off
 inline constexpr std::array<iso_639_lang, 8253> iso_639_languages{
 iso_639_lang{iso_639_scope::individual,iso_639_type::living,iso_639_status::active,iso_639_deprecation_reason::count,0,65535,"aaa","","","","Ghotuo","Ghotuo","","",},
 iso_639_lang{iso_639_scope::individual,iso_639_type::living,iso_639_status::active,iso_639_deprecation_reason::count,1,65535,"aab","","","","Alumu-Tesu","Alumu-Tesu","","",},
@@ -8299,6 +8293,7 @@ iso_639_lang{iso_639_scope::count,iso_639_type::count,iso_639_status::deprecated
 iso_639_lang{iso_639_scope::count,iso_639_type::count,iso_639_status::deprecated,iso_639_deprecation_reason::split,8251,65535,"vki","","","","Ija-Zuba","","","",},
 iso_639_lang{iso_639_scope::count,iso_639_type::count,iso_639_status::deprecated,iso_639_deprecation_reason::split,8252,65535,"wra","","","","Warapu","","","",},
 };
+
 inline constexpr std::array<iso_639_id_t, 26420> iso_639_3_code_to_id{
 0,510,1143,1468,1760,1886,1980,2318,65535,2684,2822,3466,3811,4444,4937,65535,65535,5511,5670,6188,65535,6841,6934,7160,7474,7710,65535,65535,65535,65535,
 65535,65535,22,531,65535,1489,65535,65535,2005,2344,2516,65535,2847,8217,3833,4467,65535,65535,65535,65535,5693,6213,6712,65535,6959,8195,7500,7735,65535,65535,
@@ -10058,6 +10053,7 @@ inline constexpr std::array<iso_639_id_t, 26220> iso_639_2b_code_to_id{
 65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,
 65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,3762,
 };
+
 inline constexpr std::array<iso_639_id_t, 26220> iso_639_2t_code_to_id{
 65535,65535,65535,65535,65535,65535,1980,65535,65535,65535,2822,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,
 65535,65535,65535,65535,65535,65535,65535,65535,2005,65535,2516,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,
@@ -10964,6 +10960,7 @@ inline constexpr std::array<iso_639_id_t, 821> iso_639_1_code_to_id{
 4398,4902,65535,65535,65535,65535,65535,6195,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,502,65535,65535,1759,65535,65535,65535,2362,65535,65535,
 65535,65535,65535,65535,65535,65535,65535,65535,65535,65535,6838,
 };
+// clang-format on
 
 } // namespace detail
 } // namespace fea

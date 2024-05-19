@@ -37,6 +37,7 @@
 #include <string_view>
 
 namespace fea {
+// Language scope, as per ISO standard.
 enum class iso_639_scope : uint8_t {
 	individual,
 	macrolanguage,
@@ -44,6 +45,7 @@ enum class iso_639_scope : uint8_t {
 	count,
 };
 
+// Language type, as per ISO standard.
 enum class iso_639_type : uint8_t {
 	ancient,
 	constructed,
@@ -54,12 +56,14 @@ enum class iso_639_type : uint8_t {
 	count,
 };
 
+// Language status, as per ISO standard.
 enum class iso_639_status : uint8_t {
 	active,
 	deprecated,
 	count,
 };
 
+// Language deprecation reason, as per ISO standard.
 enum class iso_639_deprecation_reason : uint8_t {
 	change,
 	duplicate,

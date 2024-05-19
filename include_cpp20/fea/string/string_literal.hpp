@@ -48,8 +48,9 @@ struct basic_string_literal;
 // Pass in string_view.size(), string_view must point to string literal (end
 // with null char).
 template <size_t N, class CharT>
-[[nodiscard]] consteval fea::basic_string_literal<CharT, N + 1>
-make_string_literal(std::basic_string_view<CharT> sv) {
+[[nodiscard]]
+consteval fea::basic_string_literal<CharT, N + 1> make_string_literal(
+		std::basic_string_view<CharT> sv) {
 	FEA_CONSTEXPR_ASSERT(*(sv.data() + N) == CharT(0));
 	CharT arr[N + 1]{};
 	std::copy_n(sv.data(), N + 1, std::begin(arr));
@@ -61,8 +62,8 @@ make_string_literal(std::basic_string_view<CharT> sv) {
 // fnv1a
 // https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
 template <class CharT>
-[[nodiscard]] consteval size_t cexpr_make_hash(
-		std::basic_string_view<CharT> str) noexcept {
+[[nodiscard]]
+consteval size_t cexpr_make_hash(std::basic_string_view<CharT> str) noexcept {
 #if FEA_32BIT
 	constexpr size_t fnv_offset_basis = 2166136261u;
 	constexpr size_t fnv_prime = 16777619u;
@@ -95,7 +96,8 @@ template <class CharT>
 // Makes a fnv1a hash at compile time.
 // A null-terminated vs. non-null-terminated string return the same hash.
 template <class CharT, size_t N>
-[[nodiscard]] consteval size_t cexpr_make_hash(const CharT (&str)[N]) noexcept {
+[[nodiscard]]
+consteval size_t cexpr_make_hash(const CharT (&str)[N]) noexcept {
 	if (str[N - 1] == CharT(0)) {
 		return cexpr_make_hash(std::basic_string_view<CharT>{ str, N - 1 });
 	} else {
@@ -106,8 +108,8 @@ template <class CharT, size_t N>
 // Makes a fnv1a hash at compile time.
 // A null-terminated vs. non-null-terminated string return the same hash.
 template <class CharT, size_t N>
-[[nodiscard]] consteval size_t cexpr_make_hash(
-		const std::array<CharT, N>& str) noexcept {
+[[nodiscard]]
+consteval size_t cexpr_make_hash(const std::array<CharT, N>& str) noexcept {
 	if (str[N - 1] == CharT(0)) {
 		return cexpr_make_hash(
 				std::basic_string_view<CharT>{ str.data(), N - 1 });
@@ -118,16 +120,17 @@ template <class CharT, size_t N>
 
 // The total size of concatenation + 1 null char.
 template <fea::basic_string_literal... Literals>
-[[nodiscard]] consteval auto cexpr_concat_size() noexcept {
+[[nodiscard]]
+consteval auto cexpr_concat_size() noexcept {
 	return (Literals.size() + ...) + 1;
 }
 
 // Concatenate multiple string literals.
 template <fea::basic_string_literal... Literals>
-[[nodiscard]] consteval fea::basic_string_literal<
+[[nodiscard]]
+consteval fea::basic_string_literal<
 		typename fea::front_t<std::decay_t<decltype(Literals)>...>::value_type,
-		fea::cexpr_concat_size<Literals...>()>
-cexpr_concat() noexcept {
+		fea::cexpr_concat_size<Literals...>()> cexpr_concat() noexcept {
 	constexpr size_t N = fea::cexpr_concat_size<Literals...>();
 	using lit_t = fea::front_t<std::decay_t<decltype(Literals)>...>;
 	using CharT = typename lit_t::value_type;
@@ -157,29 +160,41 @@ struct basic_string_literal {
 	}
 
 	// Number of chars without null char.
-	[[nodiscard]] consteval size_t size() const noexcept {
+	[[nodiscard]]
+	consteval size_t size() const noexcept {
 		return N - 1;
 	}
 
 	// Returns the full size, including null char.
-	[[nodiscard]] consteval size_t capacity() const noexcept {
+	[[nodiscard]]
+	consteval size_t capacity() const noexcept {
 		return N;
 	}
 
+	// Typical operator[]
+	[[nodiscard]]
+	consteval CharT
+	operator[](size_t idx) const noexcept {
+		return data[idx];
+	}
+
 	// Return a compile-time computed fnv1a hash.
-	[[nodiscard]] consteval size_t hash() const noexcept {
+	[[nodiscard]]
+	consteval size_t hash() const noexcept {
 		return fea::cexpr_make_hash(data);
 	}
 
 	// Converts to string_view for all the niceties.
-	[[nodiscard]] consteval std::basic_string_view<CharT> sv() const noexcept {
+	[[nodiscard]]
+	consteval std::basic_string_view<CharT> sv() const noexcept {
 		return std::basic_string_view<CharT>(data, size());
 	}
 
 	// Syntactically compare string literals.
 	template <size_t N2>
-	[[nodiscard]] consteval bool operator==(
-			basic_string_literal<CharT, N2> rhs) const noexcept {
+	[[nodiscard]]
+	consteval bool
+	operator==(basic_string_literal<CharT, N2> rhs) const noexcept {
 		if constexpr (N == N2) {
 			for (size_t i = 0; i < N; ++i) {
 				if (data[i] != rhs.data[i]) {
@@ -215,8 +230,9 @@ struct basic_string_literal {
 
 	// Syntactically compare string literals.
 	template <size_t N2>
-	[[nodiscard]] consteval bool operator!=(
-			basic_string_literal<CharT, N2> rhs) const noexcept {
+	[[nodiscard]]
+	consteval bool
+	operator!=(basic_string_literal<CharT, N2> rhs) const noexcept {
 		return !(*this == rhs);
 	}
 

@@ -1,6 +1,7 @@
+#if 0
 #include <algorithm>
 #include <cassert>
-#include <fea/iso_codes/language.hpp>
+#include <fea/language/language.hpp>
 #include <fea/string/string.hpp>
 #include <fea/utils/file.hpp>
 #include <filesystem>
@@ -15,7 +16,6 @@ namespace {
 // Parses the iso 639 dataset and generates a header.
 // Expects dataset to be in bin folder, named :
 // 'iso-639-3_Code_Tables_dddddddd/'
-#if 0
 const std::string file_header = R"xx(
 /**
  * BSD 3-Clause License
@@ -49,20 +49,16 @@ const std::string file_header = R"xx(
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  **/
-
-#pragma once
-#include "fea/iso_codes/language_types.hpp"
-
-#include <array>
-
 namespace fea {
 namespace detail {
 
 // All codes and information come from :
 // https://iso639-3.sil.org/code_tables/download_tables
+// clang-format off
 )xx";
 
 const std::string file_footer = R"xx(
+// clang-format on
 } // namespace detail
 } // namespace fea
 )xx";
@@ -731,7 +727,7 @@ void gen_header(const std::filesystem::path& path,
 	ofs << file_footer;
 }
 
-TEST(languages, generate_header) {
+TEST(languages, gen_iso_639_header) {
 	std::filesystem::path exe_path = fea::executable_dir(argv0);
 	std::filesystem::path iso_dir = get_iso_folderpath(exe_path);
 	ASSERT_FALSE(iso_dir.empty());
@@ -762,5 +758,5 @@ TEST(languages, generate_header) {
 	gen_header(exe_path / "language_database.hpp", iso_dir.filename().string(),
 			map);
 }
-#endif
 } // namespace
+#endif

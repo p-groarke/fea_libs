@@ -2,9 +2,12 @@
 #include <cmath>
 #include <fea/macros/literals.hpp>
 #include <fea/math/statistics.hpp>
+#include <fea/string/string.hpp>
+#include <format>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <limits>
+#include <numbers>
 #include <numeric>
 #include <string>
 #include <string_view>
@@ -161,9 +164,45 @@ std::pair<float, float> linear_regression(std::string_view sv) {
 	return fea::simple_linear_regression(v.begin(), v.end());
 }
 
+std::vector<double> dct2(std::string_view sv) {
+	auto rectify = [](char c) {
+		c = fea::to_lower_ascii(c);
+		c -= 'a';
+		constexpr double n = double('z' - 'a') * 0.5;
+		return (double(c) - n) / n;
+	};
+
+	std::vector<double> ret(sv.size());
+	double N = double(sv.size());
+
+	for (size_t k = 0; k < sv.size(); ++k) {
+		double sum = 0.0;
+		for (size_t n = 0; n < sv.size(); ++n) {
+			double xn = rectify(sv[n]);
+			double c = (std::numbers::pi / N) * (double(n) + 0.5) * double(k);
+			sum += xn * std::cos(c);
+		}
+		ret[k] = sum;
+	}
+
+	// Do ortho?
+	if constexpr (false) {
+		double x0_mul = 1.0 / std::sqrt(N);
+		ret[0] *= x0_mul;
+
+		double xn_mul = std::sqrt(2.0 / N);
+		for (size_t i = 1; i < ret.size(); ++i) {
+			ret[i] *= xn_mul;
+		}
+	}
+	return ret;
+}
+
+
 TEST(similarity_map, experiments) {
 	using namespace std::string_view_literals;
 	std::vector<std::string_view> words{
+		"zzz"sv,
 		"kitten"sv,
 		"kittens"sv,
 		"sitten"sv,
@@ -181,9 +220,24 @@ TEST(similarity_map, experiments) {
 		"tomatoss"sv,
 	};
 
-	for (std::string_view sv : words) {
-		auto [a, b] = linear_regression(sv);
-		std::cout << sv << ": a = " << a << ", b = " << b << std::endl;
+	std::cout << "Linear Regression" << std::endl;
+	for (std::string_view word : words) {
+		auto [a, b] = linear_regression(word);
+		std::cout << std::format("{} : a = {}, b = {}\n", word, a, b);
+	}
+
+	std::cout << std::endl;
+	std::cout << "DHT" << std::endl;
+	for (std::string_view word : words) {
+		std::vector<double> dht = dct2(word);
+		std::cout << word << " : ";
+		double tot = 0.0;
+		for (double d : dht) {
+			std::cout << std::format("{:.6f},", d);
+			tot += d;
+		}
+		std::cout << std::format("\n  total : {:.6f}\n", tot);
+		// std::cout << sv << ": a = " << a << ", b = " << b << std::endl;
 	}
 }
 

@@ -32,108 +32,100 @@
  **/
 
 #pragma once
-#include "fea/iso_codes/details/language_database.hpp"
+#include "fea/language/iso_639_lang.hpp"
+#include "fea/string/string.hpp"
+#include "fea/string/string_literal.hpp"
 
+#include <algorithm>
 #include <array>
 #include <cassert>
+#include <cstdint>
 #include <limits>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
 
 /*
+A collection of language related functions and data.
+
 ISO 639-1, 639-2B, 639-2T, 639-3 lookups.
 Codes attribution : https://www.iso639-3.sil.org
 */
 
 namespace fea {
-namespace detail {
-constexpr inline uint16_t compress_3char_code(std::string_view code) {
-	assert(code.size() == 3);
-	return uint16_t(code[2] - 'a') << 10 | uint16_t(code[1] - 'a') << 5
-			| uint16_t(code[0] - 'a');
-}
-
-constexpr inline uint16_t compress_2char_code(std::string_view code) {
-	assert(code.size() == 2);
-	return uint16_t(code[1] - 'a') << 5 | uint16_t(code[0] - 'a');
-}
-} // namespace detail
+// Check if your code is valid.
+[[nodiscard]]
+inline bool iso_639_3_valid(std::string_view code) noexcept;
 
 // Check if your code is valid.
-inline bool iso_639_3_valid(std::string_view code) {
-	if (code.size() != 3) {
-		return false;
-	}
-	uint16_t idx
-			= detail::iso_639_3_code_to_id[detail::compress_3char_code(code)];
-	return (idx != (std::numeric_limits<uint16_t>::max)());
-}
+[[nodiscard]]
+inline bool iso_639_2b_valid(std::string_view code) noexcept;
 
 // Check if your code is valid.
-inline bool iso_639_2b_valid(std::string_view code) {
-	if (code.size() != 3) {
-		return false;
-	}
-	uint16_t idx
-			= detail::iso_639_2b_code_to_id[detail::compress_3char_code(code)];
-	return (idx != (std::numeric_limits<uint16_t>::max)());
-}
+[[nodiscard]]
+inline bool iso_639_2t_valid(std::string_view code) noexcept;
 
 // Check if your code is valid.
-inline bool iso_639_2t_valid(std::string_view code) {
-	if (code.size() != 3) {
-		return false;
-	}
-	uint16_t idx
-			= detail::iso_639_2t_code_to_id[detail::compress_3char_code(code)];
-	return (idx != (std::numeric_limits<uint16_t>::max)());
-}
-
-// Check if your code is valid.
-inline bool iso_639_1_valid(std::string_view code) {
-	if (code.size() != 2) {
-		return false;
-	}
-	uint16_t idx
-			= detail::iso_639_1_code_to_id[detail::compress_2char_code(code)];
-	return (idx != (std::numeric_limits<uint16_t>::max)());
-}
+[[nodiscard]]
+inline bool iso_639_1_valid(std::string_view code) noexcept;
 
 
 // Returns the language associated with the provided ISO 639-3 code.
 // Code must be 3 characters and lowercase.
-inline const iso_639_lang& iso_639_3_lookup(std::string_view code) {
-	assert(iso_639_3_valid(code));
-	uint16_t idx
-			= detail::iso_639_3_code_to_id[detail::compress_3char_code(code)];
-	return detail::iso_639_languages[idx];
-}
+[[nodiscard]]
+inline const iso_639_lang& iso_639_3_lookup(std::string_view code) noexcept;
 
 // Returns the language associated with the provided ISO 639-2b code.
 // Code must be 3 characters and lowercase.
-inline const iso_639_lang& iso_639_2b_lookup(std::string_view code) {
-	assert(iso_639_2b_valid(code));
-	uint16_t idx
-			= detail::iso_639_2b_code_to_id[detail::compress_3char_code(code)];
-	return detail::iso_639_languages[idx];
-}
+[[nodiscard]]
+inline const iso_639_lang& iso_639_2b_lookup(std::string_view code) noexcept;
 
 // Returns the language associated with the provided ISO 639-2t code.
 // Code must be 3 characters and lowercase.
-inline const iso_639_lang& iso_639_2t_lookup(std::string_view code) {
-	assert(iso_639_2t_valid(code));
-	uint16_t idx
-			= detail::iso_639_2t_code_to_id[detail::compress_3char_code(code)];
-	return detail::iso_639_languages[idx];
-}
+[[nodiscard]]
+inline const iso_639_lang& iso_639_2t_lookup(std::string_view code) noexcept;
 
 // Returns the language associated with the provided ISO 639-1 code.
 // Code must be 2 characters and lowercase.
-inline const iso_639_lang& iso_639_1_lookup(std::string_view code) {
-	assert(iso_639_1_valid(code));
-	uint16_t idx
-			= detail::iso_639_1_code_to_id[detail::compress_2char_code(code)];
-	return detail::iso_639_languages[idx];
-}
+[[nodiscard]]
+inline const iso_639_lang& iso_639_1_lookup(std::string_view code) noexcept;
+
+
+namespace en {
+// Returns the alphabet letters, sorted by frequency.
+// Wikipedia original source.
+// https://web.archive.org/web/20210304152631/http://en.algoritmy.net/article/40379/Letter-frequency-English
+[[nodiscard]]
+constexpr std::span<const char> letters() noexcept;
+
+// Returns the letter frequency percentage. Wikipedia source.
+// Expects ascii letter.
+[[nodiscard]]
+constexpr double letter_frequency(char l) noexcept;
+
+// Returns the letter frequency percentage. Wikipedia source.
+// Expects ascii letter.
+[[nodiscard]]
+constexpr double letter_frequency(uint8_t l) noexcept;
+
+// Returns a small english dictionary of popular words.
+// Peter Norvig's dataset from google corpus analysis, trimmed.
+// https://norvig.com/mayzner.html
+// Unique, lower-case, sorted by popularity.
+[[nodiscard]]
+constexpr std::span<const std::string_view> dictionary() noexcept;
+
+// Returns a popularity sorted list of bigrams. Norvig's dataset.
+// Unique, lower-case, sorted by popularity.
+[[nodiscard]]
+constexpr std::span<const std::string_view> bigrams() noexcept;
+
+// Returns the bigram frequency percentage. Norvig's dataset.
+// Expects lower-case letter pair.
+[[nodiscard]]
+constexpr double bigram_frequency(std::string_view bigram) noexcept;
+} // namespace en
 } // namespace fea
+
+#include "imp/language.imp.hpp"
