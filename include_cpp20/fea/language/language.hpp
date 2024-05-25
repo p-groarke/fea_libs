@@ -99,15 +99,24 @@ namespace en {
 [[nodiscard]]
 constexpr std::span<const char> letters() noexcept;
 
-// Returns the letter frequency percentage. Wikipedia source.
+// Returns the absolute letter frequency percentage. Wikipedia source.
+// Aka, the frequency in all of the english language.
 // Expects ascii letter.
 [[nodiscard]]
 constexpr double letter_frequency(char l) noexcept;
 
-// Returns the letter frequency percentage. Wikipedia source.
+// Returns the absolute frequency percentage. Wikipedia source.
+// Aka, the frequency in all of the english language.
 // Expects ascii letter.
 [[nodiscard]]
 constexpr double letter_frequency(uint8_t l) noexcept;
+
+// Returns the local letter frequency at word position. Norvig source.
+// Aka, how often does this letter appear in a word at given position.
+// Expects ascii letter.
+[[nodiscard]]
+constexpr double letter_frequency(uint8_t l) noexcept;
+
 
 // Returns a small english dictionary of popular words.
 // Peter Norvig's dataset from google corpus analysis, trimmed.
