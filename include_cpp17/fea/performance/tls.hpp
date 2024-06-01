@@ -31,11 +31,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
+#include "fea/meta/traits.hpp"
 #include "fea/utils/throw.hpp"
 
 #include <cassert>
 #include <cstdint>
 #include <deque>
+#include <forward_list>
 #include <limits>
 #include <memory>
 #include <shared_mutex>
@@ -65,53 +67,28 @@ Unique Behavior
 	nested tbb calls.
 
 Warning : The lock call is SLOW and meant to be called once.
-No effort has or shall go into making the lock faster.
+No effort has gone into making the lock faster.
 */
 
 namespace fea {
+using std_thread_id_t = decltype(std::this_thread::get_id());
+
 template <class T, class = std::allocator<T>>
 struct tls;
 
+// A lock to thread data.
+// Construct by providing the tls storage.
 template <class T, class Alloc = std::allocator<T>>
 struct tls_lock {
-	using thread_id_t = decltype(std::this_thread::get_id());
-
-	tls_lock(thread_id_t tid, uint32_t data_idx, T& value,
-			tls<T, Alloc>& storage) noexcept
-			: _tid(tid)
-			, _data_idx(data_idx)
-			, _value(value)
-			, _storage(storage) {
-		assert(_tid == std::this_thread::get_id());
-		assert(_tid != thread_id_t{});
-		assert(_data_idx != (std::numeric_limits<uint32_t>::max)());
-	}
-
-	explicit tls_lock(tls_lock&& other) noexcept
-			: _tid(other._tid)
-			, _data_idx(other._data_idx)
-			, _value(other._value)
-			, _storage(other._storage) {
-		other._tid = thread_id_t{};
-		other._data_idx = (std::numeric_limits<uint32_t>::max)();
-		assert(_tid == std::this_thread::get_id());
-		assert(_tid != thread_id_t{});
-		assert(_data_idx != (std::numeric_limits<uint32_t>::max)());
-	}
-
+	// Create a lock for tls storage.
 	// std::lock_guard symmetry.
-	explicit tls_lock(tls<T, Alloc>& storage)
-			: tls_lock(std::move(storage.lock())) {
-	}
+	explicit tls_lock(tls<T, Alloc>& storage);
+
+	// Move lock ownership.
+	explicit tls_lock(tls_lock&& other) noexcept;
 
 	// Release our lock.
-	~tls_lock() {
-		if (_tid != thread_id_t{}) {
-			assert(_tid == std::this_thread::get_id());
-			assert(_data_idx != (std::numeric_limits<uint32_t>::max)());
-			_storage.unlock(_tid, _data_idx);
-		}
-	}
+	~tls_lock();
 
 	tls_lock(const tls_lock&) = delete;
 	tls_lock& operator=(const tls_lock&) = delete;
@@ -122,23 +99,20 @@ struct tls_lock {
 	T& local() && = delete;
 
 	// Access thread data.
-	const T& local() const& {
-		assert(_tid == std::this_thread::get_id());
-		assert(_tid != thread_id_t{});
-		assert(_data_idx != (std::numeric_limits<uint32_t>::max)());
-		return _value;
-	}
+	const T& local() const&;
 
 	// Access thread data.
-	T& local() & {
-		assert(_tid == std::this_thread::get_id());
-		assert(_tid != thread_id_t{});
-		assert(_data_idx != (std::numeric_limits<uint32_t>::max)());
-		return _value;
-	}
+	T& local() &;
 
 private:
-	thread_id_t _tid{};
+	template <class, class>
+	friend struct tls;
+
+	// Creates a lock, used internally.
+	tls_lock(std_thread_id_t tid, uint32_t data_idx, T& value,
+			tls<T, Alloc>& storage) noexcept;
+
+	std_thread_id_t _tid = (std::numeric_limits<std_thread_id_t>::max)();
 	uint32_t _data_idx = (std::numeric_limits<uint32_t>::max)();
 	T& _value;
 	tls<T, Alloc>& _storage;
@@ -146,12 +120,6 @@ private:
 
 template <class T, class Alloc /*= std::allocator<T>*/>
 struct tls {
-	struct thread_info {
-		bool locked = false;
-		uint32_t data_idx = (std::numeric_limits<uint32_t>::max)();
-	};
-	using thread_id_t = decltype(std::this_thread::get_id());
-
 	using value_type = T;
 	using allocator_type = Alloc;
 	using size_type = std::size_t;
@@ -159,204 +127,96 @@ struct tls {
 	using reference = T&;
 	using pointer = typename std::allocator_traits<Alloc>::pointer;
 
-	using map_alloctor_type =
-			typename std::allocator_traits<Alloc>::template rebind_alloc<
-					std::pair<const thread_id_t, thread_info>>;
-
-	tls() {
-		int num_threads = std::thread::hardware_concurrency();
-		if (num_threads > 0) {
-			_thread_info.reserve(size_t(num_threads));
-		}
-	}
-
-	~tls() {
-		std::lock_guard<std::shared_mutex> g{ _mutex };
-		assert(_thread_info.size() == _thread_data.size());
-
-		for (const std::pair<const thread_id_t, thread_info>& p :
-				_thread_info) {
-			if (p.second.locked) {
-				fea::maybe_throw<std::runtime_error>(__FUNCTION__, __LINE__,
-						"Destroying storage with unreleased locks. Make sure "
-						"all your threads are done working before destroying "
-						"storage.");
-			}
-		}
-	}
+	// Ctors
+	tls();
+	~tls();
 
 	tls(const tls&) = delete;
 	tls(tls&&) = delete;
 	tls& operator=(const tls&) = delete;
 	tls& operator=(tls&&) = delete;
 
+	// Used internally. Also called by clear.
+	void init();
+
 	// Lock this thread's storage for use.
 	// Returns a RAII type, which handles unlocking to enable safe operation.
-	[[nodiscard]] tls_lock<T, Alloc> lock() {
-		thread_id_t tid = std::this_thread::get_id();
+	[[nodiscard]]
+	tls_lock<T, Alloc> lock();
 
-		// Prefer safety over speed.
-		// This could be acheived with reader / writer paradigm,
-		// but standard adopt lock doesn't mention supporting promotion
-		// from reader to writer.
-		std::lock_guard<std::shared_mutex> g{ _mutex };
+	// Unlocks the thread.
+	void unlock(std_thread_id_t tid, uint32_t data_idx);
 
-		// Create thread data if we don't recognize this thread id
-		// or if this thread already has a lock.
-		auto it = find_first_unlocked(tid);
-		if (it == _thread_info.end()) {
-			it = make_entry(tid);
-		}
+	// Do we contain any thread data?
+	[[nodiscard]]
+	bool empty() const;
 
-		// Lock data and return RAII helper.
-		thread_info& tinfo = it->second;
-		if (tinfo.locked) {
-			fea::maybe_throw<std::runtime_error>(__FUNCTION__, __LINE__,
-					"Trying to access data locked by an other thread.");
-		}
-
-		assert(tinfo.data_idx < _thread_data.size());
-		assert(!tinfo.locked);
-		tinfo.locked = true;
-		return tls_lock<T, Alloc>{
-			tid,
-			tinfo.data_idx,
-			_thread_data[tinfo.data_idx],
-			*this,
-		};
-	}
-
-	void unlock(thread_id_t tid, uint32_t data_idx) {
-		std::lock_guard<std::shared_mutex> g{ _mutex };
-		auto range = _thread_info.equal_range(tid);
-		assert(std::distance(range.first, range.second) >= 1);
-
-		auto it = std::find_if(range.first, range.second,
-				[&](const std::pair<const thread_id_t, thread_info>& tinfo) {
-					return tinfo.second.data_idx == data_idx;
-				});
-
-		assert(it != range.second);
-		assert(it->second.locked);
-		it->second.locked = false;
-	}
-
-	bool empty() const {
-		std::lock_guard<std::shared_mutex> g{ _mutex };
-		assert(_thread_info.size() == _thread_data.size());
-		return _thread_data.empty();
-	}
-
-	size_type size() const {
-		std::lock_guard<std::shared_mutex> g{ _mutex };
-		assert(_thread_info.size() == _thread_data.size());
-		return _thread_data.size();
-	}
+	// How many thread datas do we contain?
+	[[nodiscard]]
+	size_type size() const;
 
 	// Clear contents of the storage.
 	// All threads must have released their locks before calling this.
-	void clear() {
-		std::lock_guard<std::shared_mutex> g{ _mutex };
-		assert(_thread_info.size() == _thread_data.size());
-
-		for (const std::pair<const thread_id_t, thread_info>& p :
-				_thread_info) {
-			if (p.second.locked) {
-				fea::maybe_throw<std::runtime_error>(__FUNCTION__, __LINE__,
-						"Cannot clear storage, at least 1 thread currently "
-						"owns a lock on storage.");
-			}
-		}
-		_thread_info.clear();
-		_thread_data.clear();
-	}
+	void clear();
 
 	// Calls your callback with a reference to each stored T.
 	// All Ts' are initialized, but may have never been used.
 	// All threads must have released their locks before calling this.
 	template <class Func>
-	void combine_each(Func&& func) const {
-		std::lock_guard<std::shared_mutex> g{ _mutex };
-		assert(_thread_info.size() == _thread_data.size());
-
-		for (const std::pair<const thread_id_t, thread_info>& p :
-				_thread_info) {
-			if (p.second.locked) {
-				fea::maybe_throw<std::runtime_error>(__FUNCTION__, __LINE__,
-						"Cannot combine storage, at least 1 thread still holds "
-						"a lock.");
-			}
-		}
-
-		for (const T& t : _thread_data) {
-			func(t);
-		}
-	}
+	void combine_each(Func&& func) const;
 
 	// Calls your callback with a reference to each stored T.
 	// All Ts' are initialized, but may have never been used.
 	// All threads must have released their locks before calling this.
 	template <class Func>
-	void combine_each(Func&& func) {
-		std::lock_guard<std::shared_mutex> g{ _mutex };
-		assert(_thread_info.size() == _thread_data.size());
-
-		for (const std::pair<const thread_id_t, thread_info>& p :
-				_thread_info) {
-			if (p.second.locked) {
-				fea::maybe_throw<std::runtime_error>(__FUNCTION__, __LINE__,
-						"Cannot combine storage, at least 1 thread still holds "
-						"a lock.");
-			}
-		}
-
-		for (T& t : _thread_data) {
-			func(t);
-		}
-	}
+	void combine_each(Func&& func);
 
 private:
-	auto make_entry(thread_id_t tid) {
-		assert(_thread_info.size() == _thread_data.size());
-		// assert(_thread_info.count(tid) == 0);
+	struct thread_info {
+		thread_info* next = nullptr;
+		std_thread_id_t thread_id
+				= (std::numeric_limits<std_thread_id_t>::max)();
+		uint32_t data_idx = (std::numeric_limits<uint32_t>::max)();
+		bool locked = false;
+	};
 
-		uint32_t idx = uint32_t(_thread_data.size());
-		_thread_data.emplace_back();
-		assert(idx < _thread_data.size());
+	using map_alloctor_type = fea::rebind_alloc_t<Alloc,
+			std::pair<const std_thread_id_t, thread_info>>;
+	using lock_allocator_type = fea::rebind_alloc_t<Alloc, thread_info>;
 
-		auto ret = _thread_info.insert({ tid, thread_info{ false, idx } });
-		assert(_thread_info.size() == _thread_data.size());
-		return ret;
-	}
-
-	auto find_first_unlocked(thread_id_t tid) {
-		auto range = _thread_info.equal_range(tid);
-		if (range.first == _thread_info.end()) {
-			return range.first;
-		}
-
-		auto it = std::find_if(range.first, range.second,
-				[](const std::pair<const thread_id_t, thread_info>& tinfo) {
-					return !tinfo.second.locked;
-				});
-
-		if (it == range.second) {
-			return _thread_info.end();
-		}
-		return it;
-	}
+	template <class FuncT>
+	thread_info* find_if(thread_info* first, size_type count, FuncT&&);
 
 	// Used only in exclusive mode currently.
 	mutable std::shared_mutex _mutex{};
 
-	// Stores the lock state of a given thread data, and its index in the
-	// stable container.
-	std::unordered_multimap<thread_id_t, thread_info, std::hash<thread_id_t>,
-			std::equal_to<thread_id_t>, map_alloctor_type>
-			_thread_info{};
-
 	// The thread's values, stored in a stable container to prevent
 	// invalidating references.
-	std::deque<T, allocator_type> _thread_data{};
+	std::deque<T, allocator_type> _datas{};
+
+	// Stores the lock state of a given thread data, and its index in the
+	// stable container.
+	// The same thread_id can recursively lock data, so there may be more than 1
+	// thread_info for a tid in this container.
+	std::deque<thread_info, lock_allocator_type> _locks{};
+
+	// Since the deque only garauntees stable pointers, but NOT iterators,
+	// we implement our own linked list. This is the first thread_info.
+	// Traversal we be relatively fast, since our data is mostly linear.
+	// Note : Iterating on the list, we must stop at _valid_locks_size,
+	// not next == nullptr.
+	thread_info* _first_lock = nullptr;
+
+	//// Since the deque may invalidate iterators (but not pointers), we
+	/// implement / a forward list on top of the deque. This guarantees
+	/// reasonable linear / travesal speed, all the while being stable and
+	/// thread safe.
+	// std::forward_list<thread_info*> _locks_traversal;
+
+	// Only updated once everything is initialized for a new thread.
+	size_type _valid_locks_size = 0u;
 };
+
 } // namespace fea
+
+#include "imp/tls.imp.hpp"
