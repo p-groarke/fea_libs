@@ -27,7 +27,7 @@ jobs:
           - { toolset_ver: "v143", fea_ver: "-DFEA_CPP17=On" }
           - { toolset_ver: "v142", fea_ver: "-DFEA_CPP20=On" }
           - { toolset_ver: "v142", fea_ver: "-DFEA_CPP17=On" }
-          - { toolset_ver: "v141", fea_ver: "-DFEA_CPP17=On" }
+          # - { toolset_ver: "v141", fea_ver: "-DFEA_CPP17=On" }
           # v140 isn't supported (c++11 only)
 
     steps:

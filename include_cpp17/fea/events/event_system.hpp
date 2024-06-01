@@ -54,7 +54,8 @@ enum class no_enum { count };
 }
 
 // An opaque id for a notifier.
-// A notifier is the most specific way to subscribe to events.
+// A notifier is the most specific way to trigger events.
+// The alternative is an event "channel".
 struct notifier_id;
 
 // Either a notifier callback id or channel callback id.
