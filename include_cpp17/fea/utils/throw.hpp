@@ -63,35 +63,21 @@ namespace fea {
 // Prints error message.
 // Provide __FUNCTION__, __LINE__, "your message".
 inline void print_error_message(
-		const char* func_name, size_t line, const std::string& message) {
-	fprintf(stderr, "%s(%zu) : %s\n", func_name, line, message.c_str());
-}
+		const char* func_name, size_t line, const std::string& message);
 
 // Prints message and exits with error code.
 // Use this when you absolutely can't throw (from destructors for example).
 // Provide __FUNCTION__, __LINE__, "your message".
 inline void error_exit(
-		const char* func_name, size_t line, const std::string& message) {
-	fea::print_error_message(func_name, line, message);
-	assert(false);
-	std::exit(EXIT_FAILURE);
-}
+		const char* func_name, size_t line, const std::string& message);
 
 // Prints error message.
 // Throws if FEA_NOTHROW is not defined, else exits with error code.
 // Provide __FUNCTION__, __LINE__, "your message".
 template <class Ex = std::runtime_error>
-inline void maybe_throw(
-		const char* func_name, size_t line, const std::string& message) {
-	fea::print_error_message(func_name, line, message);
-	assert(false);
-
-#if !FEA_NOTHROW
-	throw Ex{ std::string{ func_name } + "(" + std::to_string(line) + ")"
-		+ " : " + message };
-#else
-	std::exit(EXIT_FAILURE);
-#endif
-}
+void maybe_throw(
+		const char* func_name, size_t line, const std::string& message);
 
 } // namespace fea
+
+#include "imp/throw.imp.hpp"

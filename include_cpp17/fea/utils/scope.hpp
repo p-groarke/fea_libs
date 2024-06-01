@@ -37,24 +37,23 @@
 namespace fea {
 template <class Func>
 struct on_exit {
-	on_exit(const Func& func)
-			: _func(func) {
-	}
-	on_exit(Func&& func)
-			: _func(std::move(func)) {
-	}
+	// Create an object that will call your callback on destruction.
+	on_exit(const Func& func);
 
-	~on_exit() {
-		_func();
-	}
+	// Create an object that will call your callback on destruction.
+	on_exit(Func&& func);
+
+	// Calls your callback.
+	~on_exit();
 
 private:
 	Func _func;
 };
 
+// Create an object that will call your callback on destruction.
+// For c++14.
 template <class Func>
-auto make_on_exit(Func&& func) {
-	return on_exit<Func>{ std::forward<Func>(func) };
-}
-
+auto make_on_exit(Func&& func);
 } // namespace fea
+
+#include "imp/scope.imp.hpp"

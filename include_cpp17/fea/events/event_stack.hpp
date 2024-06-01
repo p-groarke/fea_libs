@@ -79,41 +79,14 @@ And you can trigger events with the appropriate function parameters.
 */
 
 namespace fea {
-// A callback Id.
-// Used to access or unsubscribe a callback.
+// An opaque callback Id.
+// Used to access or unsubscribe to a callback.
 template <class EventEnum, EventEnum e>
-struct event_id {
-	event_id() = default;
-
-private:
-	template <class, class...>
-	friend struct event_stack;
-
-	event_id(size_t id)
-			: _id(id) {
-	}
-
-	size_t _id = (std::numeric_limits<size_t>::max)();
-};
-
+struct event_id;
 
 // A container to associate callbacks with event triggers.
 template <class EventEnum, class... FuncTypes>
 struct event_stack {
-
-	// EventEnum must be enum.
-	static_assert(std::is_enum_v<EventEnum>,
-			"event_stack : template parameter EventEnum must be enum");
-
-	// EventEnum must contain member 'count' and must not be 0.
-	static_assert(size_t(EventEnum::count) != 0,
-			"event_stack : enum must declare count and count must not be 0");
-
-	// Must provide 'count' number of event signature.
-	static_assert(sizeof...(FuncTypes) == size_t(EventEnum::count),
-			"event_stack : must provide a function signature for every event");
-
-private:
 	// Stores the callbacks.
 	using event_tuple_t
 			= std::tuple<fea::id_slotmap<size_t, std::function<FuncTypes>>...>;
@@ -122,15 +95,18 @@ private:
 	using id_gen_tuple_t = decltype(fea::make_tuple_from_count<size_t,
 			sizeof...(FuncTypes)>());
 
-	// Event tuple must be size 'count'.
+	static_assert(std::is_enum_v<EventEnum>,
+			"event_stack : template parameter EventEnum must be enum");
+	static_assert(size_t(EventEnum::count) != 0,
+			"event_stack : enum must declare count and count must not be 0");
+	static_assert(sizeof...(FuncTypes) == size_t(EventEnum::count),
+			"event_stack : must provide a function signature for every event");
 	static_assert(std::tuple_size_v<event_tuple_t> == size_t(EventEnum::count),
 			"event_stack : tuple size must be equal to count");
-
-	// Id generator tuple must be size 'count'.
 	static_assert(std::tuple_size_v<id_gen_tuple_t> == size_t(EventEnum::count),
 			"event_stack : tuple size must be equal to count");
 
-public:
+	// Ctors
 	event_stack() = default;
 	~event_stack() = default;
 	event_stack(const event_stack&) = default;
@@ -138,175 +114,101 @@ public:
 	event_stack& operator=(const event_stack&) = default;
 	event_stack& operator=(event_stack&&) = default;
 
-
 	// Element access / lookup
 
 	// Does the event contain subscriber?
 	template <EventEnum e>
-	bool contains(event_id<EventEnum, e> id) {
-		return std::get<size_t(e)>(_stacks).contains(id._id);
-	}
+	[[nodiscard]]
+	bool contains(event_id<EventEnum, e> id);
 
 	// Access callback.
 	template <EventEnum e>
-	const auto& at(event_id<EventEnum, e> id) const {
-		return std::get<size_t(e)>(_stacks).at(id._id);
-	}
+	[[nodiscard]]
+	const auto& at(event_id<EventEnum, e> id) const;
+
 	// Access callback.
 	template <EventEnum e>
-	auto& at(event_id<EventEnum, e> id) {
-		return std::get<size_t(e)>(_stacks).at(id._id);
-	}
+	[[nodiscard]]
+	auto& at(event_id<EventEnum, e> id);
 
 	// Access callback without id checks.
 	template <EventEnum e>
-	const auto& at_unchecked(event_id<EventEnum, e> id) const {
-		assert(contains<e>(id));
-		return std::get<size_t(e)>(_stacks).at_unchecked(id._id);
-	}
+	[[nodiscard]]
+	const auto& at_unchecked(event_id<EventEnum, e> id) const;
+
 	// Access callback without id checks.
 	template <EventEnum e>
-	auto& at_unchecked(event_id<EventEnum, e> id) {
-		assert(contains<e>(id));
-		return std::get<size_t(e)>(_stacks).at_unchecked(id._id);
-	}
-
+	[[nodiscard]]
+	auto& at_unchecked(event_id<EventEnum, e> id);
 
 	// Capacity
 
 	// Checks if the event_stack is empty.
-	bool empty() const noexcept {
-		bool ret = true;
-		tuple_for_each([&](const auto& map) { ret &= map.empty(); }, _stacks);
-		return ret;
-	}
+	[[nodiscard]]
+	bool empty() const noexcept;
 
 	// Checks whether the event has subscribers.
 	template <EventEnum e>
-	bool empty() const noexcept {
-		return std::get<size_t(e)>(_stacks).empty();
-	}
+	[[nodiscard]]
+	bool empty() const noexcept;
 
 	// Returns total size of subscribers.
-	size_t size() const noexcept {
-		size_t ret = 0;
-		tuple_for_each([&](const auto& map) { ret += map.size(); }, _stacks);
-		return ret;
-	}
+	[[nodiscard]]
+	size_t size() const noexcept;
 
 	// Returns the number of subscribers to event.
 	template <EventEnum e>
-	size_t size() const noexcept {
-		return std::get<size_t(e)>(_stacks).size();
-	}
+	[[nodiscard]]
+	size_t size() const noexcept;
 
 	// Reserve same storage for all event subscribers.
-	void reserve(size_t new_cap) {
-		tuple_for_each([&](auto& map) { map.reserve(new_cap); }, _stacks);
-	}
+	void reserve(size_t new_cap);
 
 	// Reserve storage for event subscribers.
 	template <EventEnum e>
-	void reserve(size_t new_cap) {
-		std::get<size_t(e)>(_stacks).reserve(new_cap);
-	}
+	void reserve(size_t new_cap);
 
 	// How many subscribers can be held in allocated storage.
 	template <EventEnum e>
-	size_t capacity() const noexcept {
-		return std::get<size_t(e)>(_stacks).capacity();
-	}
-
+	[[nodiscard]]
+	size_t capacity() const noexcept;
 
 	// Modifiers
 
 	// Clear all event subscribers.
-	void clear() {
-		tuple_for_each([](auto& map) { map.clear(); }, _stacks);
-	}
+	void clear();
 
 	// Clear event subscribers.
 	template <EventEnum e>
-	void clear() {
-		std::get<size_t(e)>(_stacks).clear();
-	}
+	void clear();
 
 	// Subscribe a callback to an event.
 	// Returns the subscriber id.
 	template <EventEnum e, class Func>
-	event_id<EventEnum, e> subscribe(Func&& callback) {
-		size_t& id_generator = std::get<size_t(e)>(_id_generators);
-		assert(id_generator != (std::numeric_limits<size_t>::max)());
-
-		// 0 is never used, reserved for future.
-		++id_generator;
-
-		// Insert callback.
-		std::get<size_t(e)>(_stacks).insert(
-				{ id_generator, std::forward<Func>(callback) });
-
-		// Return id.
-		return { id_generator };
-	}
+	event_id<EventEnum, e> subscribe(Func&& callback);
 
 	// Unsubscribe callback.
 	template <EventEnum e>
-	void unsubscribe(event_id<EventEnum, e> id) {
-		std::get<size_t(e)>(_stacks).erase(id._id);
-	}
+	void unsubscribe(event_id<EventEnum, e> id);
 
 	// Execution
 
 	// Trigger event e with arguments func_args.
 	template <EventEnum e, class... FuncArgs>
-	void trigger(FuncArgs&&... func_args) const {
-		for (const auto& func_pair : std::get<size_t(e)>(_stacks)) {
-			// std::invoke is not compile time, plus it makes debugging
-			// difficult.
-			func_pair.second(std::forward<FuncArgs>(func_args)...);
-		}
-	}
+	void trigger(FuncArgs&&... func_args) const;
+
 	// Trigger event e with arguments func_args.
 	template <EventEnum e, class... FuncArgs>
-	void trigger(FuncArgs&&... func_args) {
-		for (auto& func_pair : std::get<size_t(e)>(_stacks)) {
-			func_pair.second(std::forward<FuncArgs>(func_args)...);
-		}
-	}
+	void trigger(FuncArgs&&... func_args);
 
 #if FEA_WITH_TBB
+	//  Trigger event e callbacks in parallel with arguments func_args.
+	template <EventEnum e, class... FuncArgs>
+	void trigger_mt(FuncArgs&&... func_args) const;
+
 	// Trigger event e callbacks in parallel with arguments func_args.
 	template <EventEnum e, class... FuncArgs>
-	void trigger_mt(FuncArgs&&... func_args) const {
-		const auto& map = std::get<size_t(e)>(_stacks);
-		auto eval = [&, this](const tbb::blocked_range<size_t>& range) {
-			for (size_t i = range.begin(); i < range.end(); ++i) {
-				map.data()[i].second(std::forward<FuncArgs>(func_args)...);
-			}
-		};
-		tbb::blocked_range<size_t> range{
-			0,
-			map.size(),
-			fea::default_grainsize_small_v<true>,
-		};
-		tbb::parallel_for(range, eval, fea::default_partitioner_t<true>{});
-	}
-	// Trigger event e callbacks in parallel with arguments func_args.
-	template <EventEnum e, class... FuncArgs>
-	void trigger_mt(FuncArgs&&... func_args) {
-		auto& map = std::get<size_t(e)>(_stacks);
-		auto eval = [&](const tbb::blocked_range<size_t>& range) {
-			for (size_t i = range.begin(); i < range.end(); ++i) {
-				map.data()[i].second(std::forward<FuncArgs>(func_args)...);
-			}
-		};
-		tbb::blocked_range<size_t> range{
-			0,
-			map.size(),
-			fea::default_grainsize_small_v<true>,
-		};
-		tbb::parallel_for(range, eval, fea::default_partitioner_t<true>{});
-	}
+	void trigger_mt(FuncArgs&&... func_args);
 #endif
 
 private:
@@ -314,5 +216,6 @@ private:
 	id_gen_tuple_t _id_generators{};
 };
 
-
 } // namespace fea
+
+#include "imp/event_stack.imp.hpp"
