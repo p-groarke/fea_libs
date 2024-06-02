@@ -31,6 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
+#include <cstddef>
 
 /*
 A non-owning pointer which enforces updating a "back pointer" to the
