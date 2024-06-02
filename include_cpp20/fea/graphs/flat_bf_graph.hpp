@@ -30,7 +30,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
-#include "fea/containers/id_flat_slotmap.hpp"
+#include "fea/containers/flat_id_slotmap.hpp"
 #include "fea/containers/id_slot_lookup.hpp"
 
 #include <algorithm>
@@ -231,9 +231,9 @@ struct flat_bf_graph_builder {
 			typename std::allocator_traits<allocator_type>::const_pointer;
 
 	using const_key_iterator = typename node_type::const_key_iterator;
-	using iterator = typename fea::id_flat_slotmap<key_type, node_type,
+	using iterator = typename fea::flat_id_slotmap<key_type, node_type,
 			node_allocator_type>::iterator;
-	using const_iterator = typename fea::id_flat_slotmap<key_type, node_type,
+	using const_iterator = typename fea::flat_id_slotmap<key_type, node_type,
 			node_allocator_type>::const_iterator;
 
 	// Invalid sentinel. Set as parent for roots.
@@ -513,7 +513,7 @@ private:
 	std::vector<key_type, key_allocator_type> _root_keys{};
 
 	// All our nodes.
-	fea::id_flat_slotmap<key_type, node_type, node_allocator_type> _nodes{};
+	fea::flat_id_slotmap<key_type, node_type, node_allocator_type> _nodes{};
 };
 
 

@@ -31,6 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
+#include "fea/containers/deque_list.hpp"
 #include "fea/meta/traits.hpp"
 #include "fea/utils/throw.hpp"
 
@@ -128,16 +129,13 @@ struct tls {
 	using pointer = typename std::allocator_traits<Alloc>::pointer;
 
 	// Ctors
-	tls();
+	tls() = default;
 	~tls();
 
 	tls(const tls&) = delete;
 	tls(tls&&) = delete;
 	tls& operator=(const tls&) = delete;
 	tls& operator=(tls&&) = delete;
-
-	// Used internally. Also called by clear.
-	void init();
 
 	// Lock this thread's storage for use.
 	// Returns a RAII type, which handles unlocking to enable safe operation.
@@ -173,19 +171,11 @@ struct tls {
 
 private:
 	struct thread_info {
-		thread_info* next = nullptr;
 		std_thread_id_t thread_id
 				= (std::numeric_limits<std_thread_id_t>::max)();
-		uint32_t data_idx = (std::numeric_limits<uint32_t>::max)();
+		uint32_t idx = (std::numeric_limits<uint32_t>::max)();
 		bool locked = false;
 	};
-
-	using map_alloctor_type = fea::rebind_alloc_t<Alloc,
-			std::pair<const std_thread_id_t, thread_info>>;
-	using lock_allocator_type = fea::rebind_alloc_t<Alloc, thread_info>;
-
-	template <class FuncT>
-	thread_info* find_if(thread_info* first, size_type count, FuncT&&);
 
 	// Used only in exclusive mode currently.
 	mutable std::shared_mutex _mutex{};
@@ -196,22 +186,14 @@ private:
 
 	// Stores the lock state of a given thread data, and its index in the
 	// stable container.
+	// Threads have pre-assigned indexes in our data deque.
+	// This allows us to search for free data quickly, without locking.
 	// The same thread_id can recursively lock data, so there may be more than 1
 	// thread_info for a tid in this container.
-	std::deque<thread_info, lock_allocator_type> _locks{};
+	using thread_info_allocator_type = fea::rebind_alloc_t<Alloc, thread_info>;
+	std::deque<thread_info, thread_info_allocator_type> _locks{};
 
-	// Since the deque only garauntees stable pointers, but NOT iterators,
-	// we implement our own linked list. This is the first thread_info.
-	// Traversal we be relatively fast, since our data is mostly linear.
-	// Note : Iterating on the list, we must stop at _valid_locks_size,
-	// not next == nullptr.
-	thread_info* _first_lock = nullptr;
-
-	//// Since the deque may invalidate iterators (but not pointers), we
-	/// implement / a forward list on top of the deque. This guarantees
-	/// reasonable linear / travesal speed, all the while being stable and
-	/// thread safe.
-	// std::forward_list<thread_info*> _locks_traversal;
+	// std::list<thread_info, thread_info_allocator_type> _locks{};
 
 	// Only updated once everything is initialized for a new thread.
 	size_type _valid_locks_size = 0u;

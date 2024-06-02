@@ -1,4 +1,132 @@
 namespace fea {
+template <class MySet>
+struct uss_const_iterator {
+	// Typedefs
+	using difference_type = typename MySet::difference_type;
+	using key_type = typename MySet::key_type;
+	using value_type = key_type;
+	using pointer = void;
+	using reference = key_type;
+	using iterator_category = std::bidirectional_iterator_tag;
+
+	// Internals.
+	using bool_const_iterator = typename MySet::bool_const_iterator;
+
+	// Ctors
+	constexpr uss_const_iterator() noexcept = default;
+	~uss_const_iterator() noexcept = default;
+	constexpr uss_const_iterator(const uss_const_iterator&) noexcept = default;
+	constexpr uss_const_iterator(uss_const_iterator&&) noexcept = default;
+	constexpr uss_const_iterator& operator=(const uss_const_iterator&) noexcept
+			= default;
+	constexpr uss_const_iterator& operator=(uss_const_iterator&&) noexcept
+			= default;
+
+	// Returns a constructed key.
+
+	[[nodiscard]]
+	constexpr key_type
+	operator*() const noexcept {
+		assert(*_current);
+		return key_type(std::distance(_first, _current));
+	}
+
+	// Unavailable, keys aren't actually stored in container.
+	[[nodiscard]]
+	constexpr key_type
+	operator->() const noexcept
+			= delete;
+
+	// Pre-fix ++operator.
+	constexpr uss_const_iterator& operator++() noexcept {
+		assert(_current != _last);
+		do {
+			++_current;
+		} while (_current != _last && !*_current);
+		return *this;
+	}
+
+	// Post-fix operator++.
+	constexpr uss_const_iterator& operator++(int) noexcept {
+		uss_const_iterator tmp = *this;
+		++*this;
+		return tmp;
+	}
+
+	// Pre-fix --operator.
+	constexpr uss_const_iterator& operator--() noexcept {
+		assert(_current != _first);
+		do {
+			--_current;
+		} while (!*_current && _current != _first);
+		return *this;
+	}
+
+	// Post-fix operator--.
+	constexpr uss_const_iterator& operator--(int) noexcept {
+		uss_const_iterator tmp = *this;
+		--*this;
+		return tmp;
+	}
+
+	// Comparison.
+	[[nodiscard]]
+	bool
+	operator==(const uss_const_iterator& rhs) const noexcept {
+		return _current == rhs._current;
+	}
+
+	// Comparison.
+	[[nodiscard]]
+	bool
+	operator!=(const uss_const_iterator& rhs) const noexcept {
+		return !(*this == rhs);
+	}
+
+	// Comparison.
+	[[nodiscard]]
+	bool
+	operator<(const uss_const_iterator& rhs) const noexcept {
+		return _current < rhs._current;
+	}
+
+	// Comparison.
+	[[nodiscard]]
+	bool
+	operator>(const uss_const_iterator& rhs) const noexcept {
+		return rhs < *this;
+	}
+
+	// Comparison.
+	[[nodiscard]]
+	bool
+	operator<=(const uss_const_iterator& rhs) const noexcept {
+		return !(rhs < *this);
+	}
+
+	// Comparison.
+	[[nodiscard]]
+	bool
+	operator>=(const uss_const_iterator& rhs) const noexcept {
+		return !(*this < rhs);
+	}
+
+protected:
+	friend MySet;
+
+	constexpr uss_const_iterator(bool_const_iterator first,
+			bool_const_iterator last, bool_const_iterator ptr) noexcept
+			: _first(first)
+			, _last(last)
+			, _current(ptr) {
+	}
+
+	bool_const_iterator _first = {};
+	bool_const_iterator _last = {};
+	bool_const_iterator _current = {};
+};
+
+
 template <class Key, class Alloc>
 template <class FwdIt>
 unsigned_slotset<Key, Alloc>::unsigned_slotset(FwdIt first, FwdIt last) {

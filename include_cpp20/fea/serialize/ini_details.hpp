@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
-#include "fea/containers/id_flat_slotmap.hpp"
+#include "fea/containers/flat_id_slotmap.hpp"
 #include "fea/string/conversions.hpp"
 #include "fea/string/string.hpp"
 #include "fea/utils/file.hpp"
@@ -165,7 +165,7 @@ struct section {
 	entry_id_t next_entry_id = entry_id_t(0);
 
 	// Our entries.
-	fea::id_flat_slotmap<entry_id_t, entry> entry_map{};
+	fea::flat_id_slotmap<entry_id_t, entry> entry_map{};
 
 	// Section id to section lookup of entry name to entry id.
 	std::unordered_map<std::string, entry_id_t, string_hash, std::equal_to<>>
@@ -177,7 +177,7 @@ struct section {
 
 struct ini_data {
 	// Our entries, sorted in order of appearance.
-	fea::id_flat_slotmap<section_id_t, section> section_map;
+	fea::flat_id_slotmap<section_id_t, section> section_map;
 
 	// Section name to section id.
 	std::unordered_map<std::string, section_id_t, string_hash, std::equal_to<>>
