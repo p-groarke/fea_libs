@@ -39,9 +39,9 @@
 #include <utility>
 
 /*
-fea::forward_deque is a deque with single linked list iterators.
-Forward iteration is linear on the std::deque memory buckets.
+fea::deque_list is a deque with linked list iterators.
 The buckets are connected together as a linked list.
+Forward iteration is linear on the std::deque memory buckets.
 
 This container is usefull in a multi-threaded contexts.
 It allows iterating on deque items while another thread inserts,
@@ -74,7 +74,7 @@ struct deque_list {
 		std::array<value_type, bucket_size> data;
 		size_type size = size_type(0);
 		std::unique_ptr<bucket> next = nullptr;
-		fea::back_ptr<bucket> prev;
+		fea::back_ptr<bucket> prev = nullptr;
 	};
 
 	// Ctors.
@@ -178,7 +178,7 @@ private:
 	size_type _size = size_type(0);
 
 	// Pointer to the last bucket. May be == first bucket.
-	fea::back_ptr<bucket> _last_bucket;
+	fea::back_ptr<bucket> _last_bucket = nullptr;
 };
 
 } // namespace fea

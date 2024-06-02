@@ -5,6 +5,11 @@ back_ptr<T>::back_ptr(T* ptr) noexcept
 }
 
 template <class T>
+back_ptr<T>::back_ptr(std::nullptr_t) noexcept
+		: _ptr(nullptr) {
+}
+
+template <class T>
 back_ptr<T>::back_ptr(const back_ptr&) noexcept
 		: _ptr(nullptr) {
 }

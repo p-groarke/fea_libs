@@ -33,7 +33,7 @@
 #pragma once
 
 /*
-A non-owning pointer which enforces updating a "back pointer" into the
+A non-owning pointer which enforces updating a "back pointer" to the
 current structure or children structures.
 
 Clears the pointer for all constructors.
@@ -46,7 +46,10 @@ struct back_ptr {
 	back_ptr() noexcept = default;
 
 	// Assigns pointer.
-	back_ptr(T* ptr) noexcept;
+	explicit back_ptr(T* ptr) noexcept;
+
+	// Assigns nullptr.
+	back_ptr(std::nullptr_t) noexcept;
 
 	// Resets back pointer.
 	back_ptr(const back_ptr&) noexcept;
