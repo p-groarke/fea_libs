@@ -1,4 +1,148 @@
 namespace fea {
+template <class MySet>
+struct ucss_const_iter {
+	// Typedefs
+	using difference_type = typename MySet::difference_type;
+	using size_type = typename MySet::size_type;
+	using key_type = typename MySet::key_type;
+	using value_type = key_type;
+	using pointer = void;
+	using reference = key_type;
+	using iterator_category = std::bidirectional_iterator_tag;
+
+	// Internals.
+	using bool_const_iterator = typename MySet::bool_const_iterator;
+	static constexpr size_type bitset_size = MySet::bitset_size;
+
+	// Ctors
+	constexpr ucss_const_iter() noexcept = default;
+	~ucss_const_iter() noexcept = default;
+	constexpr ucss_const_iter(const ucss_const_iter&) noexcept = default;
+	constexpr ucss_const_iter(ucss_const_iter&&) noexcept = default;
+	constexpr ucss_const_iter& operator=(const ucss_const_iter&) noexcept
+			= default;
+	constexpr ucss_const_iter& operator=(ucss_const_iter&&) noexcept = default;
+
+	// Returns a constructed key.
+	[[nodiscard]]
+	constexpr key_type
+	operator*() const noexcept {
+		assert((*_current)[_local_idx]);
+		size_type dist
+				= size_type(std::distance(_first, _current)) * bitset_size;
+		return key_type(dist + _local_idx);
+	}
+
+	// Unavailable, keys aren't actually stored in container.
+	[[nodiscard]]
+	constexpr key_type
+	operator->() const noexcept
+			= delete;
+
+	// Pre-fix ++operator.
+	constexpr ucss_const_iter& operator++() noexcept {
+		assert(_current != _last);
+		do {
+			++_local_idx;
+			if (_local_idx == bitset_size) {
+				_local_idx = size_type(0);
+				++_current;
+			}
+		} while (_current != _last && !(*_current)[_local_idx]);
+		return *this;
+	}
+
+	// Post-fix operator++.
+	constexpr ucss_const_iter& operator++(int) noexcept {
+		ucss_const_iter tmp = *this;
+		++*this;
+		return tmp;
+	}
+
+	// Pre-fix --operator.
+	constexpr ucss_const_iter& operator--() noexcept {
+		assert(!(_current == _first && _local_idx == 0));
+		do {
+			if (_local_idx == 0) {
+				_local_idx = bitset_size - size_type(1);
+				--_current;
+			} else {
+				--_local_idx;
+			}
+		} while (!(*_current)[_local_idx]);
+		return *this;
+	}
+
+	// Post-fix operator--.
+	constexpr ucss_const_iter& operator--(int) noexcept {
+		ucss_const_iter tmp = *this;
+		--*this;
+		return tmp;
+	}
+
+	// Comparison.
+	[[nodiscard]]
+	bool
+	operator==(const ucss_const_iter& rhs) const noexcept {
+		return _current == rhs._current && _local_idx == rhs._local_idx;
+	}
+
+	// Comparison.
+	[[nodiscard]]
+	bool
+	operator!=(const ucss_const_iter& rhs) const noexcept {
+		return !(*this == rhs);
+	}
+
+	// Comparison.
+	[[nodiscard]]
+	bool
+	operator<(const ucss_const_iter& rhs) const noexcept {
+		return (_current == rhs._current && _local_idx < rhs._local_idx)
+			|| _current < rhs._current;
+	}
+
+	// Comparison.
+	[[nodiscard]]
+	bool
+	operator>(const ucss_const_iter& rhs) const noexcept {
+		return rhs < *this;
+	}
+
+	// Comparison.
+	[[nodiscard]]
+	bool
+	operator<=(const ucss_const_iter& rhs) const noexcept {
+		return !(rhs < *this);
+	}
+
+	// Comparison.
+	[[nodiscard]]
+	bool
+	operator>=(const ucss_const_iter& rhs) const noexcept {
+		return !(*this < rhs);
+	}
+
+protected:
+	friend MySet;
+
+	constexpr ucss_const_iter(bool_const_iterator first,
+			bool_const_iterator last, bool_const_iterator ptr,
+			size_type sub_idx) noexcept
+			: _first(first)
+			, _last(last)
+			, _current(ptr)
+			, _local_idx(sub_idx) {
+	}
+
+
+	bool_const_iterator _first = {};
+	bool_const_iterator _last = {};
+	bool_const_iterator _current = {};
+	size_type _local_idx = 0;
+};
+
+
 template <class Key, class Alloc>
 template <class FwdIt>
 unsigned_compact_slotset<Key, Alloc>::unsigned_compact_slotset(

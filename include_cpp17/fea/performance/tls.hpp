@@ -192,11 +192,6 @@ private:
 	// The same thread_id can recursively lock data, so there may be more than 1
 	// thread_info for a tid in this container.
 	fea::deque_list<thread_info, 128> _locks{};
-
-	// std::list<thread_info, thread_info_allocator_type> _locks{};
-
-	// Only updated once everything is initialized for a new thread.
-	// size_type _valid_locks_size = 0u;
 };
 
 } // namespace fea

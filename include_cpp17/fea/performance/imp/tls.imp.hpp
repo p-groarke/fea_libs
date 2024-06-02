@@ -55,32 +55,6 @@ T& tls_lock<T, Alloc>::local() & {
 	return _value;
 }
 
-
-// template <class T, class Alloc>
-// tls<T, Alloc>::tls() {
-// }
-
-// template <class T, class Alloc>
-// void tls<T, Alloc>::init() {
-//	std_thread_id_t tid = std::this_thread::get_id();
-//
-//	// We MUST initialize the locks deque to guarantee the begin
-//	// iterator is always valid.
-//	std::lock_guard<std::shared_mutex> g{ _mutex };
-//	assert(_locks.size() == _valid_locks_size);
-//	assert(_datas.size() == _valid_locks_size);
-//
-//	// Create new lock + data slot.
-//	_datas.emplace_back();
-//	_locks.push_back(thread_info{ tid, 0u, false });
-//	_first_lock = &_locks.front();
-//	_valid_locks_size = 1u;
-//
-//	assert(_locks.size() == _valid_locks_size);
-//	assert(_datas.size() == _valid_locks_size);
-//	assert(_first_lock != nullptr);
-// }
-
 template <class T, class Alloc>
 tls<T, Alloc>::~tls() {
 	std::lock_guard<std::shared_mutex> g{ _mutex };

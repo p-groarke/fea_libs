@@ -15,6 +15,13 @@ struct fd_const_iter {
 
 	// Ctors
 	constexpr fd_const_iter() noexcept = default;
+	constexpr fd_const_iter(const bucket_type* bucket, size_type idx,
+			const bucket_type* last_bucket) noexcept
+			: _bucket(bucket)
+			, _last_bucket(last_bucket)
+			, _idx(idx) {
+	}
+
 	~fd_const_iter() noexcept = default;
 	constexpr fd_const_iter(const fd_const_iter&) noexcept = default;
 	constexpr fd_const_iter(fd_const_iter&&) noexcept = default;
@@ -120,15 +127,6 @@ struct fd_const_iter {
 	// operator>=(const fd_const_iter& rhs) const noexcept {
 	//	return !(*this < rhs);
 	//}
-
-protected:
-	friend MyList;
-	constexpr fd_const_iter(const bucket_type* bucket, size_type idx,
-			const bucket_type* last_bucket) noexcept
-			: _bucket(bucket)
-			, _last_bucket(last_bucket)
-			, _idx(idx) {
-	}
 
 	const bucket_type* _bucket = nullptr;
 	const bucket_type* _last_bucket = nullptr;
