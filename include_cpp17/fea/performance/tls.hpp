@@ -81,6 +81,8 @@ struct tls;
 // Construct by providing the tls storage.
 template <class T, class Alloc = std::allocator<T>>
 struct tls_lock {
+	using size_type = typename tls<T, Alloc>::size_type;
+
 	// Create a lock for tls storage.
 	// std::lock_guard symmetry.
 	explicit tls_lock(tls<T, Alloc>& storage);
@@ -110,11 +112,11 @@ private:
 	friend struct tls;
 
 	// Creates a lock, used internally.
-	tls_lock(std_thread_id_t tid, uint32_t data_idx, T& value,
+	tls_lock(std_thread_id_t tid, size_type data_idx, T& value,
 			tls<T, Alloc>& storage) noexcept;
 
 	std_thread_id_t _tid = (std::numeric_limits<std_thread_id_t>::max)();
-	uint32_t _data_idx = (std::numeric_limits<uint32_t>::max)();
+	size_type _idx = (std::numeric_limits<size_type>::max)();
 	T& _value;
 	tls<T, Alloc>& _storage;
 };
@@ -143,7 +145,7 @@ struct tls {
 	tls_lock<T, Alloc> lock();
 
 	// Unlocks the thread.
-	void unlock(std_thread_id_t tid, uint32_t data_idx);
+	void unlock(std_thread_id_t tid, size_type data_idx);
 
 	// Do we contain any thread data?
 	[[nodiscard]]
@@ -173,7 +175,6 @@ private:
 	struct thread_info {
 		std_thread_id_t thread_id
 				= (std::numeric_limits<std_thread_id_t>::max)();
-		uint32_t idx = (std::numeric_limits<uint32_t>::max)();
 		bool locked = false;
 	};
 
@@ -182,7 +183,7 @@ private:
 
 	// The thread's values, stored in a stable container to prevent
 	// invalidating references.
-	std::deque<T, allocator_type> _datas{};
+	fea::deque_list<T, 128> _datas{};
 
 	// Stores the lock state of a given thread data, and its index in the
 	// stable container.
@@ -190,13 +191,12 @@ private:
 	// This allows us to search for free data quickly, without locking.
 	// The same thread_id can recursively lock data, so there may be more than 1
 	// thread_info for a tid in this container.
-	using thread_info_allocator_type = fea::rebind_alloc_t<Alloc, thread_info>;
-	std::deque<thread_info, thread_info_allocator_type> _locks{};
+	fea::deque_list<thread_info, 128> _locks{};
 
 	// std::list<thread_info, thread_info_allocator_type> _locks{};
 
 	// Only updated once everything is initialized for a new thread.
-	size_type _valid_locks_size = 0u;
+	// size_type _valid_locks_size = 0u;
 };
 
 } // namespace fea

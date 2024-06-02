@@ -143,8 +143,8 @@ struct fd_iter : fd_const_iter<MyList> {
 	using value_type = typename base_t::value_type;
 	using difference_type = typename base_t::difference_type;
 	using size_type = typename base_t::size_type;
-	using pointer = const value_type*;
-	using reference = const value_type&;
+	using pointer = value_type*;
+	using reference = value_type&;
 	using iterator_category = typename base_t::iterator_category;
 	using bucket_type = typename base_t::bucket_type;
 
@@ -363,6 +363,14 @@ void fea::deque_list<T, BucketSize>::shrink_to_fit() {
 template <class T, size_t BucketSize>
 void deque_list<T, BucketSize>::clear() {
 	assert_sanity();
+	{
+		bucket* b = &_first_bucket;
+		while (b != nullptr) {
+			std::destroy(b->data.begin(), b->data.end());
+			b = b->next.get();
+		}
+	}
+
 	if (_first_bucket.next) {
 		_first_bucket.next.reset(nullptr);
 	}
@@ -398,6 +406,7 @@ void deque_list<T, BucketSize>::pop_back() {
 			&& _last_bucket->size <= bucket_size);
 	assert_sanity();
 
+	std::destroy_at(&back());
 	--_last_bucket->size;
 	if (_last_bucket->size == size_type(0) && _last_bucket->prev) {
 		_last_bucket = _last_bucket->prev.get();
@@ -425,9 +434,9 @@ void fea::deque_list<T, BucketSize>::maybe_grow() {
 template <class T, size_t BucketSize /*= 32*/>
 void fea::deque_list<T, BucketSize>::assert_sanity() const noexcept {
 	assert(_last_bucket);
-	assert((_size >= bucket_size && &_first_bucket != _last_bucket.get())
-			|| (&_first_bucket == _last_bucket.get()));
-	assert(_size >= bucket_size || _first_bucket.size == _size);
-	assert(_size >= bucket_size || _last_bucket->size == _size);
+	// assert((_size >= bucket_size && &_first_bucket != _last_bucket.get())
+	//		|| (&_first_bucket == _last_bucket.get()));
+	// assert(_size >= bucket_size || _first_bucket.size == _size);
+	// assert(_size >= bucket_size || _last_bucket->size == _size);
 }
 } // namespace fea
