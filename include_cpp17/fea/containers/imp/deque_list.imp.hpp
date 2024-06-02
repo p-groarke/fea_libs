@@ -225,9 +225,7 @@ auto deque_list<T, BucketSize>::operator=(const deque_list& other)
 			my_b->size = other_b->size;
 
 			if (other_b->next && other_b->next->size > size_type(0)) {
-				my_b->next = std::make_unique<bucket>(
-						std::array<value_type, bucket_size>{}, size_type(0),
-						nullptr, nullptr);
+				my_b->next = std::make_unique<bucket>();
 				my_b->next->prev = my_b;
 			}
 
@@ -257,9 +255,7 @@ auto deque_list<T, BucketSize>::operator=(deque_list&& other) -> deque_list& {
 			my_b->size = other_b->size;
 
 			if (other_b->next && other_b->next->size > size_type(0)) {
-				my_b->next = std::make_unique<bucket>(
-						std::array<value_type, bucket_size>{}, size_type(0),
-						nullptr, nullptr);
+				my_b->next = std::make_unique<bucket>();
 				my_b->next->prev = my_b;
 			}
 
@@ -421,9 +417,8 @@ void fea::deque_list<T, BucketSize>::maybe_grow() {
 	assert_sanity();
 	if (_last_bucket->size == bucket_size) {
 		if (_last_bucket->next == nullptr) {
-			_last_bucket->next = std::make_unique<bucket>(
-					std::array<value_type, bucket_size>{}, size_type(0),
-					nullptr, _last_bucket.get());
+			_last_bucket->next = std::make_unique<bucket>();
+			_last_bucket->next->prev = _last_bucket.get();
 		}
 
 		_last_bucket = _last_bucket->next.get();

@@ -55,6 +55,9 @@ guaranteed problematic behaviors. Furthermore, the storage creation is
 recursive. A single thread can create more than 1 stored type if it
 already has a lock on the storage, it is not an error condition.
 
+If the underlying thread local storage has already been initialized for a
+thread, locking and unlocking doesn't actually lock.
+
 General Usage
 - Types are constructed as threads require them.
 - Type T must be default constructible.
@@ -66,9 +69,6 @@ Unique Behavior
 - fea::tls does NOT destroy objects on thread destruction.
 - fea::tls is recursive, allowing storage to be used in
 	nested tbb calls.
-
-Warning : The lock call is SLOW and meant to be called once.
-No effort has gone into making the lock faster.
 */
 
 namespace fea {
