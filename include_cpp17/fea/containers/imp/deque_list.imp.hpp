@@ -362,7 +362,7 @@ void deque_list<T, BucketSize>::clear() {
 	{
 		bucket* b = &_first_bucket;
 		while (b != nullptr) {
-			std::destroy(b->data.begin(), b->data.end());
+			std::destroy(b->data.begin(), b->data.begin() + b->size);
 			b = b->next.get();
 		}
 	}
