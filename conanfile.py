@@ -25,8 +25,10 @@ class FeaLibsConan(ConanFile):
         "date/*:use_system_tz_db" : True,
         "tbb/*:tbbmalloc" : False,
         "tbb/*:tbbproxy" : False,
+        "tbb/*:shared" : True,
         "onetbb/*:tbbmalloc" : False,
         "onetbb/*:tbbproxy" : False,
+        # "onetbb/*:shared" : True,
     }
     exports_sources = ["*", "!build/*", "!build_reports/*", "!Output/*", "!bin/*"]
 
@@ -42,11 +44,6 @@ class FeaLibsConan(ConanFile):
         if self.settings.os == "Windows":
             del self.options.fPIC
 
-    def imports(self):
-       self.copy("*.dl*", src="bin", dst="bin")
-       self.copy("*.pdb", src="bin", dst="bin")
-       self.copy("*.pdb", src="bin", dst="lib")
-
     # def layout(self):
     #     cmake_layout(self)
 
@@ -56,12 +53,13 @@ class FeaLibsConan(ConanFile):
         tc = CMakeDeps(self)
         tc.generate()
 
-        # # imports
-        # for dep in self.dependencies.values():
-        #     copy(self, "*.dl*", dep.cpp_info.bindirs[0], os.path.join("..", self.cpp.build.bindirs[0]))
-        #     copy(self, "*.dylib", dep.cpp_info.bindirs[0], os.path.join("..", self.cpp.build.bindirs[0]))
-        #     copy(self, "*.so", dep.cpp_info.bindirs[0], os.path.join("..", self.cpp.build.bindirs[0]))
-        #     copy(self, "*.pdb", dep.cpp_info.bindirs[0], os.path.join("..", self.cpp.build.bindirs[0]))
+        # imports
+        for dep in self.dependencies.values():
+            copy(self, "*.dl*", src=dep.cpp_info.bindirs[0], dst=os.path.join(self.build_folder, "bin"))
+            copy(self, "*.dylib*", src=dep.cpp_info.bindirs[0], dst=os.path.join(self.build_folder, "bin")) # libdir?
+            copy(self, "*.so*", src=dep.cpp_info.bindirs[0], dst=os.path.join(self.build_folder, "bin")) # libdir?
+            copy(self, "*.pdb", src=dep.cpp_info.bindirs[0], dst=os.path.join(self.build_folder, "bin"))
+            # copy(self, "*.pdb", src=dep.cpp_info.bindirs[0], dst=os.path.join(self.build_folder, "lib"))
 
     def build(self):
         cmake = CMake(self)
@@ -79,7 +77,7 @@ class FeaLibsConan(ConanFile):
         cmake.install()
 
         # Copy pdbs
-        self.copy("*.pdb", src="bin", dst="bin")
+        copy(self, "*.pdb", src=os.path.join(self.build_folder, "bin"), dst=os.path.join(self.package_folder, "bin"))
 
     def package_info(self):
         self.cpp_info.libs = collect_libs(self)

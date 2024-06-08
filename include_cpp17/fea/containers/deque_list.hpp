@@ -164,11 +164,7 @@ struct deque_list {
 	void pop_back();
 
 private:
-	// const bucket* find_bucket(size_type idx) const noexcept;
-	// bucket* find_bucket(size_type idx) noexcept;
-
 	void maybe_grow();
-
 	void assert_sanity() const noexcept;
 
 	// Our first bucket, allocated in place.

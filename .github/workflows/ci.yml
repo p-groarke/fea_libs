@@ -25,8 +25,8 @@ jobs:
         config:
           - { toolset_ver: "v143", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_ONETBB=On" }
           - { toolset_ver: "v143", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_ONETBB=On" }
-          - { toolset_ver: "v143", fea_ver: "-DFEA_CPP20=On", fea_tbb: "" }
-          - { toolset_ver: "v143", fea_ver: "-DFEA_CPP17=On", fea_tbb: "" }
+          - { toolset_ver: "v143", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
+          - { toolset_ver: "v143", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
           - { toolset_ver: "v142", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_TBB=On" }
           - { toolset_ver: "v142", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
           # - { toolset_ver: "v141", fea_ver: "-DFEA_CPP17=On" }
