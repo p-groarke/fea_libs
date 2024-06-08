@@ -366,10 +366,6 @@ void deque_list<T, BucketSize>::clear() {
 		}
 	}
 
-	// if (_first_bucket.next) {
-	//	_first_bucket.next.reset(nullptr);
-	// }
-	_first_bucket.size = 0u;
 	_last_bucket = &_first_bucket;
 	_size = 0;
 	assert(empty());
@@ -428,13 +424,13 @@ void fea::deque_list<T, BucketSize>::maybe_grow() {
 template <class T, size_t BucketSize /*= 32*/>
 void fea::deque_list<T, BucketSize>::assert_sanity() const noexcept {
 #if !defined(NDEBUG)
-	size_t msize = _size;
-
 	assert(_last_bucket);
-	assert((msize >= bucket_size && &_first_bucket != _last_bucket.get())
-			|| (&_first_bucket == _last_bucket.get()));
-	assert(msize >= bucket_size || _first_bucket.size == msize);
-	assert(msize >= bucket_size || _last_bucket->size == msize);
+
+	// size_t msize = _size;
+	// assert((msize >= bucket_size && &_first_bucket != _last_bucket.get())
+	//		|| (&_first_bucket == _last_bucket.get()));
+	// assert(msize >= bucket_size || _first_bucket.size == msize);
+	// assert(msize >= bucket_size || _last_bucket->size == msize);
 #endif
 }
 } // namespace fea

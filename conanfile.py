@@ -35,8 +35,10 @@ class FeaLibsConan(ConanFile):
     def requirements(self):
         self.requires("gtest/1.11.0#7475482232fcd017fa110b0b8b0f936e", "private")
         self.requires("date/3.0.0#8fcb40f84e304971b86cae3c21d2ce99")
+
         if self.options.with_onetbb:
-            self.requires("onetbb/2021.10.0#159e2dde755615b9f4d43b6868cdd1d2")
+            # Prioritize onetbb.
+            self.requires("onetbb/2021.10.0")
         elif self.options.with_tbb:
             self.requires("onetbb/2020.3#47de209cf102270d266f4b20e4524d0b")
 
@@ -56,8 +58,8 @@ class FeaLibsConan(ConanFile):
         # imports
         for dep in self.dependencies.values():
             copy(self, "*.dl*", src=dep.cpp_info.bindirs[0], dst=os.path.join(self.build_folder, "bin"))
-            copy(self, "*.dylib*", src=dep.cpp_info.bindirs[0], dst=os.path.join(self.build_folder, "bin")) # libdir?
-            copy(self, "*.so*", src=dep.cpp_info.bindirs[0], dst=os.path.join(self.build_folder, "bin")) # libdir?
+            copy(self, "*.dylib*", src=dep.cpp_info.bindirs[0], dst=os.path.join(self.build_folder, "bin")) # libdirs?
+            copy(self, "*.so*", src=dep.cpp_info.bindirs[0], dst=os.path.join(self.build_folder, "bin")) # libdirs?
             copy(self, "*.pdb", src=dep.cpp_info.bindirs[0], dst=os.path.join(self.build_folder, "bin"))
             # copy(self, "*.pdb", src=dep.cpp_info.bindirs[0], dst=os.path.join(self.build_folder, "lib"))
 
@@ -68,6 +70,7 @@ class FeaLibsConan(ConanFile):
             "FEA_BENCHMARKS": False,
             "FEA_PULL_CONAN": False,
             "FEA_WITH_TBB": self.options.with_tbb,
+            "FEA_WITH_ONETBB": self.options.with_onetbb,
         }
         cmake.configure(variables=mdefinitions)
         cmake.build()
