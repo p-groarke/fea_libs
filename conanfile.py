@@ -38,7 +38,7 @@ class FeaLibsConan(ConanFile):
 
         if self.options.with_onetbb:
             # Prioritize onetbb.
-            self.requires("onetbb/2021.10.0")
+            self.requires("onetbb/2021.12.0")
         elif self.options.with_tbb:
             self.requires("onetbb/2020.3#47de209cf102270d266f4b20e4524d0b")
 
