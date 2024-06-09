@@ -1,7 +1,8 @@
 import os, platform
-from conan import ConanFile
+from conan import ConanFile, conan_version
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.files import collect_libs, copy
+from conan.tools.scm import Version
 
 class FeaLibsConan(ConanFile):
     name = "fea_libs"
@@ -10,7 +11,7 @@ class FeaLibsConan(ConanFile):
     url = "https://github.com/p-groarke/fea_libs"
     homepage = "https://github.com/p-groarke/fea_libs"
     license = "BSD-3"
-    generators = "CMakeDeps", "CMakeToolchain"
+    # generators = "CMakeDeps", "CMakeToolchain" # Which is better?
     settings = "os", "compiler", "build_type", "arch"
     options = {
         "fPIC": [True, False],
@@ -33,15 +34,18 @@ class FeaLibsConan(ConanFile):
     exports_sources = ["*", "!build/*", "!build_reports/*", "!Output/*", "!bin/*"]
 
     def requirements(self):
-        self.requires("gtest/1.11.0#7475482232fcd017fa110b0b8b0f936e", "private")
-        self.requires("date/3.0.0#8fcb40f84e304971b86cae3c21d2ce99")
-        # self.requires("pkgconf/2.2.0", override=True)
+        if Version(conan_version).major < "2":
+            self.requires("gtest/1.11.0", "private")
+        else:
+            self.requires("gtest/1.11.0")
+        
+        self.requires("date/3.0.0")
 
         if self.options.with_onetbb:
             # Prioritize onetbb.
             self.requires("onetbb/2021.12.0")
         elif self.options.with_tbb:
-            self.requires("onetbb/2020.3#47de209cf102270d266f4b20e4524d0b")
+            self.requires("onetbb/2020.3")
 
     def config_options(self):
         if self.settings.os == "Windows":

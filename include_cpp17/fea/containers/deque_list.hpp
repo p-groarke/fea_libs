@@ -38,6 +38,9 @@
 #include <memory>
 #include <utility>
 
+// TEMP
+#include <cstdio>
+
 /*
 fea::deque_list is a deque with linked list iterators.
 The buckets are connected together as a linked list.
@@ -71,6 +74,10 @@ struct deque_list {
 
 	static constexpr size_type bucket_size = BucketSize;
 	struct bucket {
+		~bucket() {
+			// TEMP
+			std::cout << "~bucket() : " << next.get() << std::endl;
+		}
 		std::array<value_type, bucket_size> data;
 		size_type size = size_type(0);
 		std::unique_ptr<bucket> next = nullptr;
