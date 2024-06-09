@@ -113,10 +113,7 @@ jobs:
       run: |
         python --version
         pip install -r ${{ github.workspace }}/requirements.txt --upgrade
-        conan user
         conan --version
-        conan profile new default --detect
-        conan config install ${{ github.workspace }}/.github/settings.yml
 
     - name: Configure
       run: |
@@ -186,10 +183,7 @@ jobs:
       run: |
         python --version
         pip install -r ${{ github.workspace }}/requirements.txt --upgrade
-        conan user
         conan --version
-        conan profile new default --detect
-        conan profile update settings.compiler.libcxx=libstdc++11 default
 
     - name: Configure
       env:
