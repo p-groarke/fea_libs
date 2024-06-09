@@ -37,7 +37,7 @@ class FeaLibsConan(ConanFile):
         if Version(conan_version).major < "2":
             self.requires("gtest/1.11.0", "private")
         else:
-            self.requires("gtest/1.11.0")
+            self.requires("gtest/1.11.0", test=True)
         
         self.requires("date/3.0.0")
 

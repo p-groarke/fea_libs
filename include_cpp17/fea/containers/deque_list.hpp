@@ -39,7 +39,7 @@
 #include <utility>
 
 // TEMP
-#include <cstdio>
+#include <iostream>
 
 /*
 fea::deque_list is a deque with linked list iterators.
@@ -74,6 +74,7 @@ struct deque_list {
 
 	static constexpr size_type bucket_size = BucketSize;
 	struct bucket {
+		bucket() = default;
 		~bucket() {
 			// TEMP
 			std::cout << "~bucket() : " << next.get() << std::endl;

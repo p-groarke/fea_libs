@@ -191,7 +191,7 @@ struct fd_iter : fd_const_iter<MyList> {
 
 template <class T, size_t BucketSize /*= 32*/>
 deque_list<T, BucketSize>::deque_list() noexcept
-		: _first_bucket({})
+		: _first_bucket()
 		, _size(0)
 		, _last_bucket(&_first_bucket) {
 }

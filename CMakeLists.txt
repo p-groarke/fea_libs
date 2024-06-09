@@ -126,7 +126,6 @@ if (FEA_WITH_TBB)
 	find_package(TBB CONFIG REQUIRED QUIET)
 	target_link_libraries(${PROJECT_NAME} INTERFACE TBB::tbb)
 else()
-	# default is on.
 	target_compile_definitions(${PROJECT_NAME} INTERFACE FEA_NO_TBB_DEF)
 endif()
 
