@@ -35,6 +35,7 @@ class FeaLibsConan(ConanFile):
     def requirements(self):
         self.requires("gtest/1.11.0#7475482232fcd017fa110b0b8b0f936e", "private")
         self.requires("date/3.0.0#8fcb40f84e304971b86cae3c21d2ce99")
+        # self.requires("pkgconf/2.2.0", override=True)
 
         if self.options.with_onetbb:
             # Prioritize onetbb.
