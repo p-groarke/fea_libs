@@ -110,12 +110,18 @@ jobs:
         architecture: 'x64' # optional, x86
 
     - name: Install Conan
+      env:
+        CC: clang
+        CXX: clang++
       run: |
         python --version
         pip install -r ${{ github.workspace }}/requirements.txt --upgrade
         conan --version
 
     - name: Configure
+      env:
+        CC: clang
+        CXX: clang++
       run: |
         export SDKROOT=$(xcodebuild -version -sdk macosx Path)
         export CPATH="$SDKROOT/usr/include"
