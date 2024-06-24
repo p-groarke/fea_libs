@@ -39,9 +39,6 @@
 #include <memory>
 #include <utility>
 
-// TEMP
-#include <iostream>
-
 /*
 fea::deque_list is a deque with linked list iterators.
 The buckets are connected together as a linked list.
