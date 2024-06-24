@@ -79,16 +79,6 @@ struct deque_list {
 
 	static constexpr size_type bucket_size = BucketSize;
 	using bucket = detail::dl_bucket<value_type, bucket_size>;
-	// struct bucket {
-	//	bucket() = default;
-	//	~bucket();
-
-	//	alignas(value_type) std::array<unsigned char,
-	//			bucket_size * sizeof(value_type)> uninitialized_data;
-	//	size_type size = size_type(0);
-	//	std::unique_ptr<bucket> next = nullptr;
-	//	fea::back_ptr<bucket> prev = nullptr;
-	//};
 
 	// Ctors.
 	deque_list() noexcept;
@@ -149,6 +139,7 @@ struct deque_list {
 	bool empty() const noexcept;
 
 	// Size of container.
+	[[nodiscard]]
 	size_type size() const noexcept;
 
 	//// Max storage capacity.

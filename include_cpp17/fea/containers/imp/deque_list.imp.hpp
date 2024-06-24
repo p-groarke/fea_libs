@@ -33,7 +33,6 @@ template <class MyList>
 struct dl_const_iter {
 	// Typedefs
 	using value_type = typename MyList::value_type;
-	// using node_type = typename MyList::node_type;
 	using difference_type = typename MyList::difference_type;
 	using size_type = typename MyList::size_type;
 	using pointer = const value_type*;
@@ -60,21 +59,17 @@ struct dl_const_iter {
 	constexpr dl_const_iter& operator=(dl_const_iter&&) noexcept = default;
 
 	[[nodiscard]]
-	constexpr reference
-	operator*() const noexcept {
-		assert(_bucket != nullptr);
-		assert(_idx < bucket_size);
-		const value_type* data = _bucket->begin();
-		return data[_idx];
-	}
-
-	[[nodiscard]]
 	constexpr pointer
 	operator->() const noexcept {
 		assert(_bucket != nullptr);
 		assert(_idx < bucket_size);
-		const value_type* data = _bucket->begin();
-		return &data[_idx];
+		return _bucket->begin() + _idx;
+	}
+
+	[[nodiscard]]
+	constexpr reference
+	operator*() const noexcept {
+		return *this->operator->();
 	}
 
 	// Pre-fix ++operator.
