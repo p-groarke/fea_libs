@@ -58,7 +58,7 @@ jobs:
         cd ${{ github.workspace }}
         mkdir build
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -T ${{ matrix.config.toolset_ver }} -A ${{ matrix.build_arch }} ${{ matrix.config.fea_ver }}  ${{ matrix.config.fea_tbb }}
+        cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -T ${{ matrix.config.toolset_ver }} -A ${{ matrix.build_arch }} ${{ matrix.config.fea_ver }} ${{ matrix.config.fea_tbb }}
 
     - name: Build
       run: |
@@ -87,6 +87,7 @@ jobs:
         build_type: [Release, Debug]
         config:
           - { os: macos-14, xcode_ver: "15.2", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_ONETBB=On" }
+          - { os: macos-14, xcode_ver: "15.2", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
           - { os: macos-13, xcode_ver: "15.0.1", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
           - { os: macos-13, xcode_ver: "14.3.1", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
           - { os: macos-12, xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
@@ -128,7 +129,7 @@ jobs:
         cd ${{ github.workspace }}
         mkdir build
         cd build
-        cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.config.fea_ver }}  ${{ matrix.config.fea_tbb }}
+        cmake .. -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ${{ matrix.config.fea_ver }} ${{ matrix.config.fea_tbb }}
 
     - name: Build
       run: |

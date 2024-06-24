@@ -352,4 +352,29 @@ TEST(deque_list, constructors) {
 		EXPECT_EQ(dl3.size(), 0u);
 	}
 }
+
+TEST(deque_list, destructors) {
+	struct test_dtor {
+		test_dtor() = default;
+		~test_dtor() {
+			--v;
+			EXPECT_GE(v, 0);
+		}
+
+		int v = 1;
+	};
+
+	fea::deque_list<test_dtor> dl;
+	dl.push_back({});
+	dl.push_back({});
+	dl.push_back({});
+	dl.push_back({});
+
+	dl.clear();
+	dl.clear();
+	dl.clear();
+	dl.shrink_to_fit();
+	dl.shrink_to_fit();
+	dl.shrink_to_fit();
+}
 } // namespace

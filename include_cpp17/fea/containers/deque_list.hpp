@@ -32,6 +32,7 @@
  **/
 #pragma once
 #include "fea/memory/back_ptr.hpp"
+#include "fea/meta/traits.hpp"
 
 #include <array>
 #include <cassert>
@@ -56,10 +57,14 @@ Iterators and pointers / references aren't invalidated on growth.
 */
 
 namespace fea {
+namespace detail {
+template <class, size_t>
+struct dl_bucket;
 template <class>
-struct fd_const_iter;
+struct dl_const_iter;
 template <class>
-struct fd_iter;
+struct dl_iter;
+} // namespace detail
 
 template <class T, size_t BucketSize = 32>
 struct deque_list {
@@ -69,21 +74,21 @@ struct deque_list {
 	// using allocator_type = Alloc;
 	using const_reference = const value_type&;
 	using reference = value_type&;
-	using const_iterator = fd_const_iter<deque_list>;
-	using iterator = fd_iter<deque_list>;
+	using const_iterator = detail::dl_const_iter<deque_list>;
+	using iterator = detail::dl_iter<deque_list>;
 
 	static constexpr size_type bucket_size = BucketSize;
-	struct bucket {
-		bucket() = default;
-		~bucket() {
-			// TEMP
-			std::cout << "~bucket() : " << next.get() << std::endl;
-		}
-		std::array<value_type, bucket_size> data;
-		size_type size = size_type(0);
-		std::unique_ptr<bucket> next = nullptr;
-		fea::back_ptr<bucket> prev = nullptr;
-	};
+	using bucket = detail::dl_bucket<value_type, bucket_size>;
+	// struct bucket {
+	//	bucket() = default;
+	//	~bucket();
+
+	//	alignas(value_type) std::array<unsigned char,
+	//			bucket_size * sizeof(value_type)> uninitialized_data;
+	//	size_type size = size_type(0);
+	//	std::unique_ptr<bucket> next = nullptr;
+	//	fea::back_ptr<bucket> prev = nullptr;
+	//};
 
 	// Ctors.
 	deque_list() noexcept;
@@ -173,7 +178,6 @@ struct deque_list {
 
 private:
 	void maybe_grow();
-	void assert_sanity() const noexcept;
 
 	// Our first bucket, allocated in place.
 	bucket _first_bucket{};
