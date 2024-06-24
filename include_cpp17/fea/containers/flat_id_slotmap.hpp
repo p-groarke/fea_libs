@@ -61,7 +61,7 @@ value of a key will always be smaller or equally sized to a reference.
 
 namespace fea {
 template <class Key, class T, class Alloc = std::allocator<T>>
-struct id_flat_slotmap {
+struct flat_id_slotmap {
 	// Typedefs
 	using key_type = Key;
 	using const_key_type = const key_type;
@@ -93,21 +93,21 @@ struct id_flat_slotmap {
 			typename std::vector<key_type, key_allocator_type>::const_iterator;
 
 	// Ctors
-	explicit id_flat_slotmap(size_type reserve_count);
-	explicit id_flat_slotmap(
+	explicit flat_id_slotmap(size_type reserve_count);
+	explicit flat_id_slotmap(
 			size_type key_reserve_count, size_type value_reserve_count);
 	template <class InputIt, class InputValIt>
-	id_flat_slotmap(InputIt first_key, InputIt last_key, InputValIt first_val,
+	flat_id_slotmap(InputIt first_key, InputIt last_key, InputValIt first_val,
 			InputValIt last_val);
-	explicit id_flat_slotmap(const std::initializer_list<key_type>& keys,
+	explicit flat_id_slotmap(const std::initializer_list<key_type>& keys,
 			const std::initializer_list<value_type>& values);
 
-	id_flat_slotmap() = default;
-	~id_flat_slotmap() = default;
-	id_flat_slotmap(const id_flat_slotmap&) = default;
-	id_flat_slotmap(id_flat_slotmap&&) noexcept = default;
-	id_flat_slotmap& operator=(const id_flat_slotmap&) = default;
-	id_flat_slotmap& operator=(id_flat_slotmap&&) noexcept = default;
+	flat_id_slotmap() = default;
+	~flat_id_slotmap() = default;
+	flat_id_slotmap(const flat_id_slotmap&) = default;
+	flat_id_slotmap(flat_id_slotmap&&) noexcept = default;
+	flat_id_slotmap& operator=(const flat_id_slotmap&) = default;
+	flat_id_slotmap& operator=(flat_id_slotmap&&) noexcept = default;
 
 
 	// Iterators
@@ -236,7 +236,7 @@ struct id_flat_slotmap {
 	size_type erase(const key_type& k);
 
 	// swaps the contents
-	void swap(id_flat_slotmap& other) noexcept;
+	void swap(flat_id_slotmap& other) noexcept;
 
 
 	// Lookup
@@ -318,13 +318,13 @@ struct id_flat_slotmap {
 
 	// Deep comparison.
 	template <class K, class U, class A>
-	friend bool operator==(const id_flat_slotmap<K, U, A>& lhs,
-			const id_flat_slotmap<K, U, A>& rhs);
+	friend bool operator==(const flat_id_slotmap<K, U, A>& lhs,
+			const flat_id_slotmap<K, U, A>& rhs);
 
 	// Deep comparison.
 	template <class K, class U, class A>
-	friend bool operator!=(const id_flat_slotmap<K, U, A>& lhs,
-			const id_flat_slotmap<K, U, A>& rhs);
+	friend bool operator!=(const flat_id_slotmap<K, U, A>& lhs,
+			const flat_id_slotmap<K, U, A>& rhs);
 
 private:
 	template <class M>
@@ -339,4 +339,4 @@ private:
 
 } // namespace fea
 
-#include "imp/id_flat_slotmap.imp.hpp"
+#include "imp/flat_id_slotmap.imp.hpp"

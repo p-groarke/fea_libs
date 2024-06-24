@@ -1,10 +1,14 @@
 #include <array>
 #include <cmath>
+#include <fea/language/language.hpp>
 #include <fea/macros/literals.hpp>
 #include <fea/math/statistics.hpp>
+#include <fea/string/string.hpp>
+#include <format>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <limits>
+#include <numbers>
 #include <numeric>
 #include <string>
 #include <string_view>
@@ -161,29 +165,133 @@ std::pair<float, float> linear_regression(std::string_view sv) {
 	return fea::simple_linear_regression(v.begin(), v.end());
 }
 
-TEST(similarity_map, experiments) {
-	using namespace std::string_view_literals;
-	std::vector<std::string_view> words{
-		"kitten"sv,
-		"kittens"sv,
-		"sitten"sv,
-		"sitting"sv,
-		"It"sv,
-		"it"sv,
-		"its"sv,
-		"it's"sv,
-		"there"sv,
-		"their"sv,
-		"potato"sv,
-		"potatos"sv,
-		"tomato"sv,
-		"tomatos"sv,
-		"tomatoss"sv,
+std::vector<double> dct2(std::string_view sv) {
+	auto rectify = [](char c) {
+		c = fea::to_lower_ascii(c);
+		c -= 'a';
+		constexpr double n = double('z' - 'a') * 0.5;
+		return (double(c) - n) / n;
 	};
 
-	for (std::string_view sv : words) {
-		auto [a, b] = linear_regression(sv);
-		std::cout << sv << ": a = " << a << ", b = " << b << std::endl;
+	std::vector<double> ret(sv.size());
+	double N = double(sv.size());
+
+	for (size_t k = 0; k < sv.size(); ++k) {
+		double sum = 0.0;
+		for (size_t n = 0; n < sv.size(); ++n) {
+			double xn = rectify(sv[n]);
+			double c = (std::numbers::pi / N) * (double(n) + 0.5) * double(k);
+			sum += xn * std::cos(c);
+		}
+		ret[k] = sum;
+	}
+
+	// Do ortho?
+	if constexpr (true) {
+		double x0_mul = 1.0 / std::sqrt(N);
+		ret[0] *= x0_mul;
+
+		double xn_mul = std::sqrt(2.0 / N);
+		for (size_t i = 1; i < ret.size(); ++i) {
+			ret[i] *= xn_mul;
+		}
+	}
+	return ret;
+}
+
+
+TEST(similarity_map, experiments) {
+	using namespace std::string_view_literals;
+	// Print out the "most likely" english word, navigating bigrams
+	// probabilities.
+	{
+		std::string result;
+
+		// auto pop_front
+		//		= [](std::vector<std::string_view>& s) -> std::string_view {
+		//	if (s.size() == 1) {
+		//		s = {};
+		//	}
+		//	s = { s.data() + 1u, s.size() - 1u };
+		// };
+
+
+		std::vector<std::string_view> bigrams(
+				fea::en::bigrams().begin(), fea::en::bigrams().end());
+
+		std::string_view current = bigrams.front();
+		result += current;
+		bigrams.erase(bigrams.begin());
+
+		while (!bigrams.empty()) {
+			// Find the first bigram that starts with last letter of current.
+			// Bigrams are ordered by frequency, so that should be the most
+			// likely.
+			// if (fea::en::bigram_frequency(current) == 0.0) {
+			//	break;
+			//}
+
+			auto it = std::find_if(
+					bigrams.begin(), bigrams.end(), [&](std::string_view b) {
+						return fea::en::bigram_frequency(b) != 0.0
+							&& current.back() == b.front();
+					});
+
+			if (it != bigrams.end()) {
+				current = *it;
+				result += current.back();
+				bigrams.erase(it);
+			} else {
+				// Get first.
+				current = bigrams.front();
+				result += " ";
+				result += current;
+				bigrams.erase(bigrams.begin());
+			}
+		}
+
+		std::cout << std::format("Most likely word :\n  {}\n", result);
+	}
+
+
+	{
+		std::vector<std::string_view> words{
+			"zzz"sv,
+			"kitten"sv,
+			"kittens"sv,
+			"sitten"sv,
+			"sitting"sv,
+			"It"sv,
+			"it"sv,
+			"its"sv,
+			"it's"sv,
+			"there"sv,
+			"their"sv,
+			"potato"sv,
+			"potatos"sv,
+			"tomato"sv,
+			"tomatos"sv,
+			"tomatoss"sv,
+		};
+
+		std::cout << "\nLinear Regression\n";
+		for (std::string_view word : words) {
+			auto [a, b] = linear_regression(word);
+			std::cout << std::format("{} : a = {}, b = {}\n", word, a, b);
+		}
+
+		std::cout << "\nDHT\n";
+		for (std::string_view word : words) {
+			std::vector<double> dht = dct2(word);
+			std::cout << word << " : ";
+			double tot = 0.0;
+			for (double d : dht) {
+				std::cout << std::format("{:.6f},", d);
+				tot += d;
+			}
+			std::cout << std::format("\n  total : {:.6f}\n", tot);
+			// std::cout << sv << ": a = " << a << ", b = " << b << std::endl;
+		}
 	}
 }
 

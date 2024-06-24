@@ -1,4 +1,4 @@
-﻿/**
+/**
  * BSD 3-Clause License
  *
  * Copyright (c) 2024, Philippe Groarke
@@ -30,30 +30,62 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  **/
-
 #pragma once
-#include <utility>
+#include <cstddef>
+
+/*
+A non-owning pointer which enforces updating a "back pointer" to the
+current structure or children structures.
+
+Clears the pointer for all constructors.
+*/
 
 namespace fea {
-template <class Func>
-struct on_exit {
-	// Create an object that will call your callback on destruction.
-	on_exit(const Func& func);
+template <class T>
+struct back_ptr {
+	// Initialized to null.
+	back_ptr() noexcept = default;
 
-	// Create an object that will call your callback on destruction.
-	on_exit(Func&& func);
+	// Assigns pointer.
+	explicit back_ptr(T* ptr) noexcept;
 
-	// Calls your callback.
-	~on_exit();
+	// Assigns nullptr.
+	back_ptr(std::nullptr_t) noexcept;
+
+	// Resets back pointer.
+	back_ptr(const back_ptr&) noexcept;
+
+	// Resets back pointer and other's back pointer.
+	back_ptr(back_ptr&&) noexcept;
+
+	// Resets back pointer.
+	back_ptr& operator=(const back_ptr&) noexcept;
+
+	// Resets back pointer and other's back pointer.
+	back_ptr& operator=(back_ptr&&) noexcept;
+
+	// Assigns pointer.
+	back_ptr& operator=(T* ptr) noexcept;
+
+	// Access pointer.
+	T& operator*() const noexcept;
+
+	// Access pointer.
+	T* operator->() const noexcept;
+
+	// Access pointer.
+	T* get() const noexcept;
+
+	// Replaces pointer.
+	void reset(T* ptr = nullptr) noexcept;
+
+	// Bool conversion.
+	explicit operator bool() const noexcept;
 
 private:
-	Func _func;
+	T* _ptr = nullptr;
 };
 
-// Create an object that will call your callback on destruction.
-// For c++14.
-template <class Func>
-auto make_on_exit(Func&& func);
 } // namespace fea
 
-#include "imp/scope.imp.hpp"
+#include "imp/back_ptr.imp.hpp"

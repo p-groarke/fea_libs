@@ -30,7 +30,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
-#include "fea/containers/imp/unsigned_compact_slotset.iterators.hpp"
 #include "fea/meta/traits.hpp"
 #include "fea/utils/platform.hpp"
 
@@ -54,6 +53,9 @@ less cpu cost and is thread-safe.
 */
 
 namespace fea {
+template <class>
+struct ucss_const_iter;
+
 template <class Key, class Alloc = std::allocator<Key>>
 struct unsigned_compact_slotset {
 	// Sanity checks.
@@ -71,7 +73,7 @@ struct unsigned_compact_slotset {
 	using const_reference = const value_type&;
 	using pointer = typename std::allocator_traits<Alloc>::pointer;
 	using const_pointer = typename std::allocator_traits<Alloc>::const_pointer;
-	using const_iterator = ucss_const_iterator<unsigned_compact_slotset>;
+	using const_iterator = ucss_const_iter<unsigned_compact_slotset>;
 	// using iterator = ucss_iterator<unsigned_compact_slotset>;
 
 	// Internals

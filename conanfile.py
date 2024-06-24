@@ -1,7 +1,8 @@
 import os, platform
-from conan import ConanFile
+from conan import ConanFile, conan_version
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.files import collect_libs, copy
+from conan.tools.scm import Version
 
 class FeaLibsConan(ConanFile):
     name = "fea_libs"
@@ -10,7 +11,7 @@ class FeaLibsConan(ConanFile):
     url = "https://github.com/p-groarke/fea_libs"
     homepage = "https://github.com/p-groarke/fea_libs"
     license = "BSD-3"
-    generators = "CMakeDeps", "CMakeToolchain"
+    # generators = "CMakeDeps", "CMakeToolchain" # Which is better?
     settings = "os", "compiler", "build_type", "arch"
     options = {
         "fPIC": [True, False],
@@ -25,27 +26,30 @@ class FeaLibsConan(ConanFile):
         "date/*:use_system_tz_db" : True,
         "tbb/*:tbbmalloc" : False,
         "tbb/*:tbbproxy" : False,
+        "tbb/*:shared" : True,
         "onetbb/*:tbbmalloc" : False,
         "onetbb/*:tbbproxy" : False,
+        # "onetbb/*:shared" : True,
     }
     exports_sources = ["*", "!build/*", "!build_reports/*", "!Output/*", "!bin/*"]
 
     def requirements(self):
-        self.requires("gtest/1.11.0#7475482232fcd017fa110b0b8b0f936e", "private")
-        self.requires("date/3.0.0#8fcb40f84e304971b86cae3c21d2ce99")
+        if Version(conan_version).major < "2":
+            self.requires("gtest/1.11.0", "private")
+        else:
+            self.requires("gtest/1.11.0", test=True)
+        
+        self.requires("date/3.0.0")
+
         if self.options.with_onetbb:
-            self.requires("onetbb/2021.10.0#159e2dde755615b9f4d43b6868cdd1d2")
+            # Prioritize onetbb.
+            self.requires("onetbb/2021.12.0")
         elif self.options.with_tbb:
-            self.requires("onetbb/2020.3#47de209cf102270d266f4b20e4524d0b")
+            self.requires("onetbb/2020.3")
 
     def config_options(self):
         if self.settings.os == "Windows":
             del self.options.fPIC
-
-    def imports(self):
-       self.copy("*.dl*", src="bin", dst="bin")
-       self.copy("*.pdb", src="bin", dst="bin")
-       self.copy("*.pdb", src="bin", dst="lib")
 
     # def layout(self):
     #     cmake_layout(self)
@@ -56,12 +60,13 @@ class FeaLibsConan(ConanFile):
         tc = CMakeDeps(self)
         tc.generate()
 
-        # # imports
-        # for dep in self.dependencies.values():
-        #     copy(self, "*.dl*", dep.cpp_info.bindirs[0], os.path.join("..", self.cpp.build.bindirs[0]))
-        #     copy(self, "*.dylib", dep.cpp_info.bindirs[0], os.path.join("..", self.cpp.build.bindirs[0]))
-        #     copy(self, "*.so", dep.cpp_info.bindirs[0], os.path.join("..", self.cpp.build.bindirs[0]))
-        #     copy(self, "*.pdb", dep.cpp_info.bindirs[0], os.path.join("..", self.cpp.build.bindirs[0]))
+        # imports
+        for dep in self.dependencies.values():
+            copy(self, "*.dl*", src=dep.cpp_info.bindirs[0], dst=os.path.join(self.build_folder, "bin"))
+            copy(self, "*.dylib*", src=dep.cpp_info.bindirs[0], dst=os.path.join(self.build_folder, "bin")) # libdirs?
+            copy(self, "*.so*", src=dep.cpp_info.bindirs[0], dst=os.path.join(self.build_folder, "bin")) # libdirs?
+            copy(self, "*.pdb", src=dep.cpp_info.bindirs[0], dst=os.path.join(self.build_folder, "bin"))
+            # copy(self, "*.pdb", src=dep.cpp_info.bindirs[0], dst=os.path.join(self.build_folder, "lib"))
 
     def build(self):
         cmake = CMake(self)
@@ -70,6 +75,7 @@ class FeaLibsConan(ConanFile):
             "FEA_BENCHMARKS": False,
             "FEA_PULL_CONAN": False,
             "FEA_WITH_TBB": self.options.with_tbb,
+            "FEA_WITH_ONETBB": self.options.with_onetbb,
         }
         cmake.configure(variables=mdefinitions)
         cmake.build()
@@ -79,7 +85,7 @@ class FeaLibsConan(ConanFile):
         cmake.install()
 
         # Copy pdbs
-        self.copy("*.pdb", src="bin", dst="bin")
+        copy(self, "*.pdb", src=os.path.join(self.build_folder, "bin"), dst=os.path.join(self.package_folder, "bin"))
 
     def package_info(self):
         self.cpp_info.libs = collect_libs(self)

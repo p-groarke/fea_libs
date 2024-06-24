@@ -1,4 +1,4 @@
-﻿#include <fea/containers/id_flat_slotmap.hpp>
+﻿#include <fea/containers/flat_id_slotmap.hpp>
 #include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 #include <memory>
@@ -31,7 +31,7 @@ bool operator!=(const test& lhs, const test& rhs) {
 TEST(flat_unsigned_map, basics) {
 	constexpr size_t small_num = 10;
 
-	fea::id_flat_slotmap<size_t, test> map1(small_num);
+	fea::flat_id_slotmap<size_t, test> map1(small_num);
 
 	using map1_t = std::decay_t<decltype(map1)>;
 	static_assert(
@@ -69,9 +69,9 @@ TEST(flat_unsigned_map, basics) {
 		EXPECT_EQ(*ret_pair.first, t);
 	}
 
-	fea::id_flat_slotmap<size_t, test> map2{ map1 };
-	fea::id_flat_slotmap<size_t, test> map_ded{ map1 };
-	fea::id_flat_slotmap<size_t, test> map3{ std::move(map_ded) };
+	fea::flat_id_slotmap<size_t, test> map2{ map1 };
+	fea::flat_id_slotmap<size_t, test> map_ded{ map1 };
+	fea::flat_id_slotmap<size_t, test> map3{ std::move(map_ded) };
 
 	EXPECT_EQ(map1, map2);
 	EXPECT_EQ(map1, map3);
@@ -255,11 +255,11 @@ TEST(flat_unsigned_map, basics) {
 	map1 = map2;
 	map3 = map2;
 
-	map1 = fea::id_flat_slotmap<size_t, test>(
+	map1 = fea::flat_id_slotmap<size_t, test>(
 			{ 0, 1, 2 }, { { 0 }, { 1 }, { 2 } });
-	map2 = fea::id_flat_slotmap<size_t, test>(
+	map2 = fea::flat_id_slotmap<size_t, test>(
 			{ 3, 4, 5 }, { { 3 }, { 4 }, { 5 } });
-	map3 = fea::id_flat_slotmap<size_t, test>(
+	map3 = fea::flat_id_slotmap<size_t, test>(
 			{ 6, 7, 8 }, { { 6 }, { 7 }, { 8 } });
 
 	EXPECT_EQ(map1.size(), 3u);
@@ -289,9 +289,9 @@ TEST(flat_unsigned_map, basics) {
 	EXPECT_EQ(*map3.find(8), test{ 8 });
 
 	{
-		fea::id_flat_slotmap<size_t, test> map1_back = map1;
-		fea::id_flat_slotmap<size_t, test> map2_back{ map2 };
-		fea::id_flat_slotmap<size_t, test> map3_back{ map3 };
+		fea::flat_id_slotmap<size_t, test> map1_back = map1;
+		fea::flat_id_slotmap<size_t, test> map2_back{ map2 };
+		fea::flat_id_slotmap<size_t, test> map3_back{ map3 };
 
 		map1.swap(map2);
 		EXPECT_EQ(map1, map2_back);
@@ -326,7 +326,7 @@ TEST(flat_unsigned_map, basics) {
 	EXPECT_EQ(map1[4], test{ 4 });
 	EXPECT_EQ(*map1.find(5), test{ 5 });
 
-	map2 = fea::id_flat_slotmap<size_t, test>(
+	map2 = fea::flat_id_slotmap<size_t, test>(
 			map1.key_begin(), map1.key_end(), map1.begin(), map1.end());
 	EXPECT_EQ(map1.size(), map2.size());
 	EXPECT_EQ(map1, map2);
@@ -343,7 +343,7 @@ TEST(flat_unsigned_map, random) {
 }
 
 TEST(flat_unsigned_map, uniqueptr) {
-	fea::id_flat_slotmap<size_t, std::unique_ptr<unsigned>> map;
+	fea::flat_id_slotmap<size_t, std::unique_ptr<unsigned>> map;
 
 	{
 		std::unique_ptr<unsigned> test = std::make_unique<unsigned>(0);
@@ -407,7 +407,7 @@ namespace {
 TEST(flat_unsigned_map, ids) {
 	constexpr size_t small_num = 10;
 
-	fea::id_flat_slotmap<my_id, int> map(small_num);
+	fea::flat_id_slotmap<my_id, int> map(small_num);
 
 	using map_t = std::decay_t<decltype(map)>;
 	static_assert(
@@ -445,9 +445,9 @@ TEST(flat_unsigned_map, ids) {
 		EXPECT_EQ(*ret_pair.first, t);
 	}
 
-	fea::id_flat_slotmap<my_id, int> map2{ map };
-	fea::id_flat_slotmap<my_id, int> map_ded{ map };
-	fea::id_flat_slotmap<my_id, int> map3{ std::move(map_ded) };
+	fea::flat_id_slotmap<my_id, int> map2{ map };
+	fea::flat_id_slotmap<my_id, int> map_ded{ map };
+	fea::flat_id_slotmap<my_id, int> map3{ std::move(map_ded) };
 
 	EXPECT_EQ(map, map2);
 	EXPECT_EQ(map, map3);
@@ -631,11 +631,11 @@ TEST(flat_unsigned_map, ids) {
 	map = map2;
 	map3 = map2;
 
-	map = fea::id_flat_slotmap<my_id, int>(
+	map = fea::flat_id_slotmap<my_id, int>(
 			{ my_id(0), my_id(1), my_id(2) }, { 0, 1, 2 });
-	map2 = fea::id_flat_slotmap<my_id, int>(
+	map2 = fea::flat_id_slotmap<my_id, int>(
 			{ my_id(3), my_id(4), my_id(5) }, { 3, 4, 5 });
-	map3 = fea::id_flat_slotmap<my_id, int>(
+	map3 = fea::flat_id_slotmap<my_id, int>(
 			{ my_id(6), my_id(7), my_id(8) }, { 6, 7, 8 });
 
 	EXPECT_EQ(map.size(), 3u);
@@ -665,9 +665,9 @@ TEST(flat_unsigned_map, ids) {
 	EXPECT_EQ(*map3.find(8), 8);
 
 	{
-		fea::id_flat_slotmap<my_id, int> map1_back = map;
-		fea::id_flat_slotmap<my_id, int> map2_back{ map2 };
-		fea::id_flat_slotmap<my_id, int> map3_back{ map3 };
+		fea::flat_id_slotmap<my_id, int> map1_back = map;
+		fea::flat_id_slotmap<my_id, int> map2_back{ map2 };
+		fea::flat_id_slotmap<my_id, int> map3_back{ map3 };
 
 		map.swap(map2);
 		EXPECT_EQ(map, map2_back);
@@ -702,7 +702,7 @@ TEST(flat_unsigned_map, ids) {
 	EXPECT_EQ(map[4], 4);
 	EXPECT_EQ(*map.find(5), 5);
 
-	map2 = fea::id_flat_slotmap<my_id, int>(
+	map2 = fea::flat_id_slotmap<my_id, int>(
 			map.key_begin(), map.key_end(), map.begin(), map.end());
 	EXPECT_EQ(map.size(), map2.size());
 	EXPECT_EQ(map, map2);

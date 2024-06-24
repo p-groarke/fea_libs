@@ -45,93 +45,52 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace fea {
 // Cross-platform helper to get last OS error.
 // GetLastError on Windows, errno on anything else.
-inline std::error_code last_os_error() {
-#if FEA_WINDOWS
-	return std::error_code{ int(GetLastError()), std::system_category() };
-#else
-	return std::error_code{ errno, std::system_category() };
-#endif
-}
+[[nodiscard]]
+inline std::error_code last_os_error();
 
 // Some windows function report in errno. Use this to force errno on windows.
-inline std::error_code last_errno_error() {
-	return std::error_code{ errno, std::system_category() };
-}
+[[nodiscard]]
+inline std::error_code last_errno_error();
 
 // Prints error message.
 inline void print_error_message(
-		const char* func_name, size_t line, const std::error_code& ec) {
-	std::string msg
-			= "Error Code " + std::to_string(ec.value()) + ". " + ec.message();
-	fea::print_error_message(func_name, line, msg);
-}
+		const char* func_name, size_t line, const std::error_code& ec);
 
 // Throws if FEA_NOTHROW is not defined, else exits with error code.
 // Provide __FUNCTION__, __LINE__, std::error_code.
 inline void maybe_throw(
-		const char* func_name, size_t line, const std::error_code& ec) {
-	if (!ec) {
-		return;
-	}
-
-	fea::print_error_message(func_name, line, ec);
-	assert(false);
-
-#if !FEA_NOTHROW
-	std::string msg
-			= "Error Code " + std::to_string(ec.value()) + ". " + ec.message();
-	throw std::system_error{ ec,
-		std::string{ func_name } + "(" + std::to_string(line) + ")" + " : "
-				+ msg };
-#else
-	std::exit(EXIT_FAILURE);
-#endif
-}
+		const char* func_name, size_t line, const std::error_code& ec);
 
 // If there is a system error, throws if FEA_NOTHROW is not defined, else exits
 // with error code. Prints last error message.
 // Provide __FUNCTION__, __LINE__.
 // Uses GetLastError on windows, errno on posix.
-inline void maybe_throw_on_os_error(const char* func_name, size_t line) {
-	maybe_throw(func_name, line, fea::last_os_error());
-}
+inline void maybe_throw_on_os_error(const char* func_name, size_t line);
 
 // If there is a system error, throws if FEA_NOTHROW is not defined, else exits
 // with error code. Prints last error message.
 // Provide __FUNCTION__, __LINE__.
 // Uses errno on all platforms.
-inline void maybe_throw_on_errno(const char* func_name, size_t line) {
-	maybe_throw(func_name, line, fea::last_errno_error());
-}
+inline void maybe_throw_on_errno(const char* func_name, size_t line);
 
 // Prints message and exits with error code.
 // Use this when you absolutely can't throw (from destructors for example).
 // Provide __FUNCTION__, __LINE__, "your message".
 inline void error_exit(
-		const char* func_name, size_t line, const std::error_code& ec) {
-	if (!ec) {
-		return;
-	}
-
-	fea::print_error_message(func_name, line, ec);
-	assert(false);
-	std::exit(EXIT_FAILURE);
-}
+		const char* func_name, size_t line, const std::error_code& ec);
 
 // Prints message and exits with error code.
 // Use this when you absolutely can't throw (from destructors for example).
 // Provide __FUNCTION__, __LINE__.
 // Uses GetLastError on windows, errno on posix.
-inline void error_exit_on_os_error(const char* func_name, size_t line) {
-	error_exit(func_name, line, fea::last_os_error());
-}
+inline void error_exit_on_os_error(const char* func_name, size_t line);
 
 // Prints message and exits with error code.
 // Use this when you absolutely can't throw (from destructors for example).
 // Provide __FUNCTION__, __LINE__.
 // Uses errno on all platforms.
-inline void error_exit_on_errno(const char* func_name, size_t line) {
-	error_exit(func_name, line, fea::last_errno_error());
-}
+inline void error_exit_on_errno(const char* func_name, size_t line);
 
 } // namespace fea
+
+#include "imp/error.imp.hpp"

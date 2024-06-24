@@ -30,7 +30,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
-#include "fea/containers/imp/unsigned_slotset.iterators.hpp"
 #include "fea/meta/traits.hpp"
 
 #include <algorithm>
@@ -59,6 +58,9 @@ modulo = index start -> std::find -> index start + collisions
 */
 
 namespace fea {
+template <class>
+struct uss_const_iterator;
+
 template <class Key, class Alloc = std::allocator<Key>>
 struct unsigned_slotset {
 	// Sanity checks.
