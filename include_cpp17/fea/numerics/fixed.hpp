@@ -59,14 +59,11 @@ digital signal processing tasks.
 
 namespace fea {
 
-template <size_t NumBits>
-struct bits {};
-
 namespace detail {
 // Returns true if integer value is a power of 2.
 // https://graphics.stanford.edu/~seander/bithacks.html#DetermineIfPowerOf2
 //
-// TODO : Put where? Unit test.
+// TODO : Put where? Add unit tests.
 template <class T>
 constexpr bool is_pow2(T v) noexcept {
 	static_assert(std::is_integral_v<T>, "fea::is_pow2 : T must be integer.");
@@ -74,7 +71,7 @@ constexpr bool is_pow2(T v) noexcept {
 }
 
 template <class T>
-constexpr T msqrt(T v) noexcept {
+constexpr T msqrt_base2(T v) noexcept {
 	T mask = T(1);
 	for (size_t i = 0; i < sizeof(T) * 8; ++i) {
 		if (v & (mask << i)) {
@@ -97,7 +94,7 @@ struct fixed {
 	// Enable some bit-shifting optimizations if scaling is 2^n.
 	static constexpr bool scaling_is_pow2_v = fea::detail::is_pow2(scaling_v);
 	static constexpr value_t scaling_sqrt_v
-			= scaling_is_pow2_v ? msqrt(scaling_v) : value_t(0);
+			= scaling_is_pow2_v ? msqrt_base2(scaling_v) : value_t(0);
 
 private:
 	static constexpr float _float_to_int_v = float(scaling_v);
@@ -113,97 +110,55 @@ public:
 	constexpr fixed& operator=(const fixed&) noexcept = default;
 	constexpr fixed& operator=(fixed&&) noexcept = default;
 
-	constexpr fixed() noexcept
-			: value(value_t{}) {
-	}
-
-	constexpr fixed(float f) noexcept
-			// Keep it simple and fast for now.
-			// Could do modf for more fractional precision.
-			: value(value_t(f * _float_to_int_v)) {
-	}
-
-	constexpr fixed(double d) noexcept
-			: value(value_t(d * _double_to_int_v)) {
-	}
-
-	constexpr explicit fixed(value_t v) noexcept {
-		if constexpr (scaling_is_pow2_v) {
-			value = v << scaling_sqrt_v;
-		} else {
-			value = v * scaling_v;
-		}
-	}
-
-	// constexpr fixed& operator=(float f) noexcept {
-	//	_num = value_t(f * _float_to_int_v);
-	//	return *this;
-	// }
-	// constexpr fixed& operator=(double d) noexcept {
-	//	_num = value_t(d * _double_to_int_v);
-	//	return *this;
-	// }
-	// constexpr fixed& operator=(value_t v) noexcept {
-	//	_num = v;
-	//	return *this;
-	// }
+	constexpr fixed() noexcept;
+	constexpr fixed(float f) noexcept;
+	constexpr fixed(double d) noexcept;
+	explicit constexpr fixed(value_t v) noexcept;
 
 	// Conversions
-	constexpr explicit operator float() const noexcept {
-		return float(value) * _int_to_float_v;
-	}
-
-	constexpr explicit operator double() const noexcept {
-		return double(value) * _int_to_double_v;
-	}
-
-	constexpr explicit operator value_t() const noexcept {
-		if constexpr (scaling_is_pow2_v) {
-			return value >> scaling_sqrt_v;
-		} else {
-			return value / scaling_v;
-		}
-	}
+	explicit constexpr operator float() const noexcept;
+	explicit constexpr operator double() const noexcept;
+	explicit constexpr operator value_t() const noexcept;
 
 	// Comparison Operators
-	constexpr friend bool operator==(fixed lhs, fixed rhs) noexcept {
+	friend constexpr bool operator==(fixed lhs, fixed rhs) noexcept {
 		return lhs.value == rhs.value;
 	}
 
-	constexpr friend bool operator!=(fixed lhs, fixed rhs) noexcept {
+	friend constexpr bool operator!=(fixed lhs, fixed rhs) noexcept {
 		return !(lhs == rhs);
 	}
 
-	constexpr friend bool operator<(fixed lhs, fixed rhs) noexcept {
+	friend constexpr bool operator<(fixed lhs, fixed rhs) noexcept {
 		return lhs.value < rhs.value;
 	}
 
-	constexpr friend bool operator>(fixed lhs, fixed rhs) noexcept {
+	friend constexpr bool operator>(fixed lhs, fixed rhs) noexcept {
 		return rhs < lhs;
 	}
 
-	constexpr friend bool operator<=(fixed lhs, fixed rhs) noexcept {
+	friend constexpr bool operator<=(fixed lhs, fixed rhs) noexcept {
 		return !(rhs < lhs);
 	}
 
-	constexpr friend bool operator>=(fixed lhs, fixed rhs) noexcept {
+	friend constexpr bool operator>=(fixed lhs, fixed rhs) noexcept {
 		return !(lhs < rhs);
 	}
 
 	// Arithmetic Operators
-	constexpr friend fixed operator+(fixed lhs, fixed rhs) noexcept {
+	friend constexpr fixed operator+(fixed lhs, fixed rhs) noexcept {
 		fixed ret;
 		ret.value = lhs.value + rhs.value;
 		return ret;
 	}
 
-	constexpr friend fixed operator-(fixed lhs, fixed rhs) noexcept {
+	friend constexpr fixed operator-(fixed lhs, fixed rhs) noexcept {
 		fixed ret;
 		ret.value = lhs.value - rhs.value;
 		return ret;
 	}
 
-	constexpr friend fixed operator*(fixed lhs, fixed rhs) noexcept {
+	friend constexpr fixed operator*(fixed lhs, fixed rhs) noexcept {
 		// (int * int) * (1 / scaling * 1 / scaling)
 		// Both our scaling are the same, so simply rectify.
 
@@ -216,7 +171,7 @@ public:
 		return ret;
 	}
 
-	constexpr friend fixed operator/(fixed lhs, fixed rhs) noexcept {
+	friend constexpr fixed operator/(fixed lhs, fixed rhs) noexcept {
 		fixed ret;
 		if constexpr (scaling_is_pow2_v) {
 			ret.value = (lhs.value << scaling_sqrt_v) / rhs.value;
@@ -226,7 +181,7 @@ public:
 		return ret;
 	}
 
-	constexpr friend fixed operator%(fixed lhs, fixed rhs) noexcept {
+	friend constexpr fixed operator%(fixed lhs, fixed rhs) noexcept {
 		fixed ret;
 		ret.value = lhs.value % rhs.value;
 		return ret;

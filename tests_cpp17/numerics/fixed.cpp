@@ -339,54 +339,161 @@ TEST(fixed, basics) {
 		using mfixed3 = fea::detail::fixed<3, int64_t>;
 		using mfixed4 = fea::detail::fixed<2, int>;
 		using mfixed5 = fea::detail::fixed<4, int>;
-		using mfixed6 = fea::detail::fixed<(size_t(1) << 62), int64_t>;
 
 		static_assert(mfixed1::scaling_is_pow2_v, FAIL_MSG);
 		static_assert(!mfixed2::scaling_is_pow2_v, FAIL_MSG);
 		static_assert(!mfixed3::scaling_is_pow2_v, FAIL_MSG);
 		static_assert(mfixed4::scaling_is_pow2_v, FAIL_MSG);
 		static_assert(mfixed5::scaling_is_pow2_v, FAIL_MSG);
-		static_assert(mfixed6::scaling_is_pow2_v, FAIL_MSG);
 
 		static_assert(mfixed1::scaling_sqrt_v == 23, FAIL_MSG);
 		static_assert(mfixed2::scaling_sqrt_v == 0, FAIL_MSG);
 		static_assert(mfixed3::scaling_sqrt_v == 0, FAIL_MSG);
 		static_assert(mfixed4::scaling_sqrt_v == 1, FAIL_MSG);
 		static_assert(mfixed5::scaling_sqrt_v == 2, FAIL_MSG);
+
+#if FEA_ARCH >= 64
+		using mfixed6 = fea::detail::fixed<(size_t(1) << 62), int64_t>;
+		static_assert(mfixed6::scaling_is_pow2_v, FAIL_MSG);
 		static_assert(mfixed6::scaling_sqrt_v == 62, FAIL_MSG);
+#endif
 	}
 
 	// numeric_limits specialization.
 	{
+#if FEA_ARCH >= 64
+		// Q : min and lowest behave like int or float?
 		constexpr fea::fixed mmin = (std::numeric_limits<fea::fixed>::min)();
 		constexpr fea::fixed mlowest
 				= std::numeric_limits<fea::fixed>::lowest();
-		constexpr fea::fixed mmax = (std::numeric_limits<fea::fixed>::max)();
+
+		constexpr std::intmax_t mmax
+				= std::intmax_t((std::numeric_limits<fea::fixed>::max)());
+		constexpr std::intmax_t mmax_expected
+				= (std::intmax_t(1) << (64 - 23 - 1)) - 1;
+		static_assert(mmax == mmax_expected, FAIL_MSG);
+
+		// At 23 bits of fractional digits, we should have the same epsilon
+		// precision as a float32.
 		constexpr fea::fixed mepsilon
 				= std::numeric_limits<fea::fixed>::epsilon();
+		static_assert(
+				mepsilon == std::numeric_limits<float>::epsilon(), FAIL_MSG);
+#else
+		constexpr std::intmax_t mmax
+				= std::intmax_t((std::numeric_limits<fea::fixed>::max)());
+		constexpr std::intmax_t mmax_expected
+				= (std::intmax_t(1) << (32 - 15 - 1)) - 1;
+		static_assert(mmax == mmax_expected, FAIL_MSG);
+#endif
+
 		constexpr fea::fixed mround_err
 				= std::numeric_limits<fea::fixed>::round_error();
+		static_assert(mround_err == 0.5, FAIL_MSG);
+
 		constexpr fea::fixed minfinity
 				= std::numeric_limits<fea::fixed>::infinity();
+		static_assert(minfinity == 0.0, FAIL_MSG);
+
 		constexpr fea::fixed mquiet_nan
 				= std::numeric_limits<fea::fixed>::quiet_NaN();
+		static_assert(mquiet_nan == 0.0, FAIL_MSG);
+
 		constexpr fea::fixed msignaling_nan
 				= std::numeric_limits<fea::fixed>::signaling_NaN();
+		static_assert(msignaling_nan == 0.0, FAIL_MSG);
+
 		constexpr fea::fixed mdenorm_min
 				= std::numeric_limits<fea::fixed>::denorm_min();
+		static_assert(mdenorm_min == 0.0, FAIL_MSG);
+	}
+}
+
+TEST(fixed, precision) {
+	{
+		constexpr fea::fixed eps = std::numeric_limits<fea::fixed>::epsilon();
+		constexpr fea::fixed f1 = eps + eps;
+		constexpr fea::fixed f2 = eps * 2.0;
+		static_assert(f1 == f2, FAIL_MSG);
+
+		constexpr fea::fixed f22 = 2.0 * eps;
+		static_assert(f2 == f22, FAIL_MSG);
+
+		constexpr fea::fixed f3 = eps - eps;
+		static_assert(f3 == 0.0, FAIL_MSG);
+
+		constexpr fea::fixed f4 = eps / eps;
+		static_assert(f4 == 1.0, FAIL_MSG);
 	}
 
-	// At 23 bits of fractional digits, we should have the same epsilon
-	// precision as a float32.
 	{
-		static_assert(sizeof(float) == 4, "Float isn't 32bits :o");
-		constexpr float float_eps = std::numeric_limits<float>::epsilon();
+		fea::fixed eps = std::numeric_limits<fea::fixed>::epsilon();
+		fea::fixed f1 = eps + eps;
+		fea::fixed f2 = eps * 2.0;
+		EXPECT_EQ(f1, f2);
 
-		using mfixed = fea::detail::fixed<(size_t(1) << 23), int64_t>;
-		constexpr float fixed_eps
-				= float(std::numeric_limits<mfixed>::epsilon());
+		fea::fixed f22 = 2.0 * eps;
+		EXPECT_EQ(f2, f22);
 
-		static_assert(float_eps == fixed_eps, FAIL_MSG);
+		fea::fixed f3 = eps - eps;
+		EXPECT_EQ(f3, 0.0);
+
+		fea::fixed f4 = eps / eps;
+		EXPECT_EQ(f4, 1.0);
+	}
+
+	{
+		constexpr fea::fixed eps = std::numeric_limits<fea::fixed>::epsilon();
+		constexpr fea::fixed f1 = 1.0 + eps;
+		static_assert(f1 != 1.0, FAIL_MSG);
+
+		constexpr fea::fixed f12 = eps + 1.0;
+		static_assert(f12 != 1.0, FAIL_MSG);
+
+		constexpr fea::fixed f2 = 1.0 * eps;
+		static_assert(f2 != 1.0, FAIL_MSG);
+
+		constexpr fea::fixed f22 = eps * 1.0;
+		static_assert(f22 != 1.0, FAIL_MSG);
+
+		constexpr fea::fixed f3 = 1.0 - eps;
+		static_assert(f3 != 1.0, FAIL_MSG);
+
+		constexpr fea::fixed f32 = eps - 1.0;
+		static_assert(f32 != 1.0, FAIL_MSG);
+
+		constexpr fea::fixed f4 = 1.0 / eps;
+		static_assert(f4 != 1.0, FAIL_MSG);
+
+		constexpr fea::fixed f42 = eps / 1.0;
+		static_assert(f42 != 1.0, FAIL_MSG);
+	}
+
+	{
+		fea::fixed eps = std::numeric_limits<fea::fixed>::epsilon();
+		fea::fixed f1 = 1.0 + eps;
+		EXPECT_NE(f1, 1.0);
+
+		fea::fixed f12 = eps + 1.0;
+		EXPECT_NE(f12, 1.0);
+
+		fea::fixed f2 = 1.0 * eps;
+		EXPECT_NE(f2, 1.0);
+
+		fea::fixed f22 = eps * 1.0;
+		EXPECT_NE(f22, 1.0);
+
+		fea::fixed f3 = 1.0 - eps;
+		EXPECT_NE(f3, 1.0);
+
+		fea::fixed f32 = eps - 1.0;
+		EXPECT_NE(f32, 1.0);
+
+		fea::fixed f4 = 1.0 / eps;
+		EXPECT_NE(f4, 1.0);
+
+		fea::fixed f42 = eps / 1.0;
+		EXPECT_NE(f42, 1.0);
 	}
 }
 } // namespace
