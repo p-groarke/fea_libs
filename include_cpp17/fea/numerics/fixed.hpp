@@ -44,14 +44,13 @@ A fixed precision Real number type.
 Minimizes precision issues and accelerates performance by using integer
 instructions.
 
-The default fea::fixed type uses 23 decimal bits, which gives the same float 32
-epsilon.
+The default fea::fixed type uses 23 decimal bits, which has the same precision
+(epsilon) as float32.
 
 You may provide 2^n bits Scaling values, or more appropriate scaling values. For
 example, use a scaling of 100 when processing currency (2 decimal places).
 
-Tip!
-https://en.wikipedia.org/wiki/Fixed-point_arithmetic
+Tip : https://en.wikipedia.org/wiki/Fixed-point_arithmetic
 Fixed-point formats with scaling factors of the form 2n-1 (namely 1, 3, 7, 15,
 31, etc.) have been said to be appropriate for image processing and other
 digital signal processing tasks.
@@ -160,7 +159,6 @@ public:
 
 	friend constexpr fixed operator*(fixed lhs, fixed rhs) noexcept {
 		// (int * int) * (1 / scaling * 1 / scaling)
-		// Both our scaling are the same, so simply rectify.
 
 		fixed ret;
 		if constexpr (scaling_is_pow2_v) {

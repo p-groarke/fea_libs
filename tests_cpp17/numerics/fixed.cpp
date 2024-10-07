@@ -15,8 +15,8 @@ TEST(fixed, basics) {
 		t = 1.0;
 		EXPECT_EQ(double(t), 1.0);
 
-		t = fea::fixed(int64_t(1));
-		EXPECT_EQ(int64_t(t), 1);
+		t = fea::fixed(std::intmax_t(1));
+		EXPECT_EQ(std::intmax_t(t), 1);
 
 		t = 1.f;
 		EXPECT_EQ(float(t), 1.f);
@@ -24,23 +24,23 @@ TEST(fixed, basics) {
 		fea::fixed cpy = t;
 		EXPECT_EQ(float(t), 1.f);
 		EXPECT_EQ(double(t), 1.0);
-		EXPECT_EQ(int64_t(t), 1);
+		EXPECT_EQ(std::intmax_t(t), 1);
 
 		cpy = std::move(t);
 		EXPECT_EQ(float(t), 1.f);
 		EXPECT_EQ(double(t), 1.0);
-		EXPECT_EQ(int64_t(t), 1);
+		EXPECT_EQ(std::intmax_t(t), 1);
 		t = cpy;
 
 		cpy = fea::fixed(t);
 		EXPECT_EQ(float(t), 1.f);
 		EXPECT_EQ(double(t), 1.0);
-		EXPECT_EQ(int64_t(t), 1);
+		EXPECT_EQ(std::intmax_t(t), 1);
 
 		cpy = fea::fixed(std::move(t));
 		EXPECT_EQ(float(t), 1.f);
 		EXPECT_EQ(double(t), 1.0);
-		EXPECT_EQ(int64_t(t), 1);
+		EXPECT_EQ(std::intmax_t(t), 1);
 		t = cpy;
 	}
 
@@ -297,39 +297,39 @@ TEST(fixed, basics) {
 	}
 
 	{
-		fea::fixed f1(int64_t(2));
-		fea::fixed f2(int64_t(2));
+		fea::fixed f1(std::intmax_t(2));
+		fea::fixed f2(std::intmax_t(2));
 		fea::fixed ans = f1 + f2;
-		EXPECT_EQ(int64_t(ans), 4);
+		EXPECT_EQ(std::intmax_t(ans), 4);
 
 		ans = f1 - f2;
-		EXPECT_EQ(int64_t(ans), 0);
+		EXPECT_EQ(std::intmax_t(ans), 0);
 
 		ans = f1 * f2;
-		EXPECT_EQ(int64_t(ans), 4);
+		EXPECT_EQ(std::intmax_t(ans), 4);
 
 		ans = f1 / f2;
-		EXPECT_EQ(int64_t(ans), 1);
+		EXPECT_EQ(std::intmax_t(ans), 1);
 
 		ans = f1 % f2;
-		EXPECT_EQ(int64_t(ans), 0);
+		EXPECT_EQ(std::intmax_t(ans), 0);
 
 		f1 = 8.0;
 		f2 = 2.0;
 		ans = f1 + f2;
-		EXPECT_EQ(int64_t(ans), 10);
+		EXPECT_EQ(std::intmax_t(ans), 10);
 
 		ans = f1 - f2;
-		EXPECT_EQ(int64_t(ans), 6);
+		EXPECT_EQ(std::intmax_t(ans), 6);
 
 		ans = f1 * f2;
-		EXPECT_EQ(int64_t(ans), 16);
+		EXPECT_EQ(std::intmax_t(ans), 16);
 
 		ans = f1 / f2;
-		EXPECT_EQ(int64_t(ans), 4);
+		EXPECT_EQ(std::intmax_t(ans), 4);
 
 		ans = f1 % f2;
-		EXPECT_EQ(int64_t(ans), 0);
+		EXPECT_EQ(std::intmax_t(ans), 0);
 	}
 
 	// Sanity checks.
