@@ -103,13 +103,13 @@ private:
 
 public:
 	// Ctors
+	constexpr fixed() noexcept = default;
 	~fixed() noexcept = default;
 	constexpr fixed(const fixed&) noexcept = default;
 	constexpr fixed(fixed&&) noexcept = default;
 	constexpr fixed& operator=(const fixed&) noexcept = default;
 	constexpr fixed& operator=(fixed&&) noexcept = default;
 
-	constexpr fixed() noexcept;
 	constexpr fixed(float f) noexcept;
 	constexpr fixed(double d) noexcept;
 	explicit constexpr fixed(value_t v) noexcept;
@@ -186,7 +186,7 @@ public:
 	}
 
 	// Public for serialization purposes.
-	value_t value;
+	value_t value = value_t(0);
 };
 } // namespace detail
 

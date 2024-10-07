@@ -1,10 +1,9 @@
 ﻿namespace fea {
 namespace detail {
-
-template <size_t S, class I>
-constexpr fixed<S, I>::fixed() noexcept
-		: value(value_t{}) {
-}
+// template <size_t S, class I>
+// constexpr fixed<S, I>::fixed() noexcept
+//		: value(value_t{}) {
+// }
 
 template <size_t S, class I>
 constexpr fixed<S, I>::fixed(float f) noexcept
