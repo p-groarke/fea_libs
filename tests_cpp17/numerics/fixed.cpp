@@ -334,11 +334,11 @@ TEST(fixed, basics) {
 
 	// Sanity checks.
 	{
-		using mfixed1 = fea::detail::fixed<(size_t(1) << 23), int64_t>;
-		using mfixed2 = fea::detail::fixed<100, int64_t>;
-		using mfixed3 = fea::detail::fixed<3, int64_t>;
-		using mfixed4 = fea::detail::fixed<2, int>;
-		using mfixed5 = fea::detail::fixed<4, int>;
+		using mfixed1 = fea::basic_fixed<(size_t(1) << 23), int64_t>;
+		using mfixed2 = fea::basic_fixed<100, int64_t>;
+		using mfixed3 = fea::basic_fixed<3, int64_t>;
+		using mfixed4 = fea::basic_fixed<2, int>;
+		using mfixed5 = fea::basic_fixed<4, int>;
 
 		static_assert(mfixed1::scaling_is_pow2_v, FAIL_MSG);
 		static_assert(!mfixed2::scaling_is_pow2_v, FAIL_MSG);
@@ -353,11 +353,18 @@ TEST(fixed, basics) {
 		static_assert(mfixed5::scaling_sqrt_v == 2, FAIL_MSG);
 
 #if FEA_ARCH >= 64
-		using mfixed6 = fea::detail::fixed<(size_t(1) << 62), int64_t>;
+		using mfixed6 = fea::basic_fixed<(size_t(1) << 62), int64_t>;
 		static_assert(mfixed6::scaling_is_pow2_v, FAIL_MSG);
 		static_assert(mfixed6::scaling_sqrt_v == 62, FAIL_MSG);
 #endif
 	}
+
+	//{
+	//	using mfixed = fea::basic_fixed<(size_t(1) << 15), int>;
+	//	constexpr int mmax = int((std::numeric_limits<mfixed>::max)());
+	//	constexpr int mmax_expected = (int(1) << (32 - 15 - 1)) - 1;
+	//	static_assert(mmax == mmax_expected, FAIL_MSG);
+	//}
 
 	// numeric_limits specialization.
 	{
@@ -380,10 +387,8 @@ TEST(fixed, basics) {
 		static_assert(
 				mepsilon == std::numeric_limits<float>::epsilon(), FAIL_MSG);
 #else
-		constexpr std::intmax_t mmax
-				= std::intmax_t((std::numeric_limits<fea::fixed>::max)());
-		constexpr std::intmax_t mmax_expected
-				= (std::intmax_t(1) << (32 - 15 - 1)) - 1;
+		constexpr int mmax = int((std::numeric_limits<fea::fixed>::max)());
+		constexpr int mmax_expected = (int(1) << (32 - 15 - 1)) - 1;
 		static_assert(mmax == mmax_expected, FAIL_MSG);
 #endif
 

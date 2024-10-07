@@ -1,24 +1,35 @@
 ﻿namespace fea {
-namespace detail {
 // template <size_t S, class I>
-// constexpr fixed<S, I>::fixed() noexcept
+// constexpr basic_fixed<S, I>::basic_fixed() noexcept
 //		: value(value_t{}) {
 // }
 
 template <size_t S, class I>
-constexpr fixed<S, I>::fixed(float f) noexcept
+constexpr basic_fixed<S, I>::basic_fixed(float f) noexcept
 		: value(value_t(f * _float_to_int_v)) {
 	// Keep it simple and fast for now.
 	// Could do modf for more fractional precision.
 }
 
 template <size_t S, class I>
-constexpr fixed<S, I>::fixed(double d) noexcept
+constexpr basic_fixed<S, I>::basic_fixed(double d) noexcept
 		: value(value_t(d * _double_to_int_v)) {
 }
 
+template <bool B, class TrueT, class FalseT>
+constexpr auto mcexpr_if(TrueT lhs, FalseT rhs) {
+	if constexpr (B) {
+		return lhs;
+	} else {
+		return rhs;
+	}
+}
+
 template <size_t S, class I>
-constexpr fixed<S, I>::fixed(value_t v) noexcept {
+constexpr basic_fixed<S, I>::basic_fixed(value_t v) noexcept
+//: value(mcexpr_if<scaling_is_pow2_v>(
+//		v << scaling_sqrt_v, v * scaling_v)) {
+{
 	if constexpr (scaling_is_pow2_v) {
 		value = v << scaling_sqrt_v;
 	} else {
@@ -27,30 +38,29 @@ constexpr fixed<S, I>::fixed(value_t v) noexcept {
 }
 
 template <size_t S, class I>
-constexpr fixed<S, I>::operator float() const noexcept {
+constexpr basic_fixed<S, I>::operator float() const noexcept {
 	return float(value) * _int_to_float_v;
 }
 
 template <size_t S, class I>
-constexpr fixed<S, I>::operator double() const noexcept {
+constexpr basic_fixed<S, I>::operator double() const noexcept {
 	return double(value) * _int_to_double_v;
 }
 
 template <size_t S, class I>
-constexpr fixed<S, I>::operator value_t() const noexcept {
+constexpr basic_fixed<S, I>::operator value_t() const noexcept {
 	if constexpr (scaling_is_pow2_v) {
 		return value >> scaling_sqrt_v;
 	} else {
 		return value / scaling_v;
 	}
 }
-} // namespace detail
 } // namespace fea
 
 namespace std {
 template <size_t Scaling, class IntT>
-class numeric_limits<fea::detail::fixed<Scaling, IntT>> {
-	using value_t = fea::detail::fixed<Scaling, IntT>;
+class numeric_limits<fea::basic_fixed<Scaling, IntT>> {
+	using value_t = fea::basic_fixed<Scaling, IntT>;
 
 public:
 	// Member constants

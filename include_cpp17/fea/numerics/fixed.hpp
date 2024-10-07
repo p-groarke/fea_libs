@@ -39,13 +39,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <type_traits>
 
 /*
-A fixed precision Real number type.
+A basic_fixed precision Real number type.
 
 Minimizes precision issues and accelerates performance by using integer
 instructions.
 
-The default fea::fixed type uses 23 decimal bits, which has the same precision
-(epsilon) as float32.
+The default fea::basic_fixed type uses 23 decimal bits, which has the same
+precision (epsilon) as float32.
 
 You may provide 2^n bits Scaling values, or more appropriate scaling values. For
 example, use a scaling of 100 when processing currency (2 decimal places).
@@ -57,14 +57,13 @@ digital signal processing tasks.
 */
 
 namespace fea {
-
 namespace detail {
 // Returns true if integer value is a power of 2.
 // https://graphics.stanford.edu/~seander/bithacks.html#DetermineIfPowerOf2
 //
 // TODO : Put where? Add unit tests.
 template <class T>
-constexpr bool is_pow2(T v) noexcept {
+constexpr bool mis_pow2(T v) noexcept {
 	static_assert(std::is_integral_v<T>, "fea::is_pow2 : T must be integer.");
 	return v && !(v & (v - 1));
 }
@@ -79,21 +78,22 @@ constexpr T msqrt_base2(T v) noexcept {
 	}
 	return T(0);
 }
+} // namespace detail
 
 template <size_t Scaling, class IntT>
-struct fixed {
+struct basic_fixed {
 	static_assert(std::is_integral_v<IntT>,
-			"fea::fixed : IntT must be integral type.");
+			"fea::basic_fixed : IntT must be integral type.");
 	// static_assert(std::is_signed_v<IntT>,
-	//		"fea::fixed : IntT must be signed integral type.");
+	//		"fea::basic_fixed : IntT must be signed integral type.");
 
 	using value_t = IntT;
 	static constexpr value_t scaling_v = value_t(Scaling);
 
 	// Enable some bit-shifting optimizations if scaling is 2^n.
-	static constexpr bool scaling_is_pow2_v = fea::detail::is_pow2(scaling_v);
+	static constexpr bool scaling_is_pow2_v = detail::mis_pow2(scaling_v);
 	static constexpr value_t scaling_sqrt_v
-			= scaling_is_pow2_v ? msqrt_base2(scaling_v) : value_t(0);
+			= scaling_is_pow2_v ? detail::msqrt_base2(scaling_v) : value_t(0);
 
 private:
 	static constexpr float _float_to_int_v = float(scaling_v);
@@ -103,16 +103,16 @@ private:
 
 public:
 	// Ctors
-	constexpr fixed() noexcept = default;
-	~fixed() noexcept = default;
-	constexpr fixed(const fixed&) noexcept = default;
-	constexpr fixed(fixed&&) noexcept = default;
-	constexpr fixed& operator=(const fixed&) noexcept = default;
-	constexpr fixed& operator=(fixed&&) noexcept = default;
+	constexpr basic_fixed() noexcept = default;
+	~basic_fixed() noexcept = default;
+	constexpr basic_fixed(const basic_fixed&) noexcept = default;
+	constexpr basic_fixed(basic_fixed&&) noexcept = default;
+	constexpr basic_fixed& operator=(const basic_fixed&) noexcept = default;
+	constexpr basic_fixed& operator=(basic_fixed&&) noexcept = default;
 
-	constexpr fixed(float f) noexcept;
-	constexpr fixed(double d) noexcept;
-	explicit constexpr fixed(value_t v) noexcept;
+	constexpr basic_fixed(float f) noexcept;
+	constexpr basic_fixed(double d) noexcept;
+	explicit constexpr basic_fixed(value_t v) noexcept;
 
 	// Conversions
 	explicit constexpr operator float() const noexcept;
@@ -120,47 +120,54 @@ public:
 	explicit constexpr operator value_t() const noexcept;
 
 	// Comparison Operators
-	friend constexpr bool operator==(fixed lhs, fixed rhs) noexcept {
+	friend constexpr bool operator==(
+			basic_fixed lhs, basic_fixed rhs) noexcept {
 		return lhs.value == rhs.value;
 	}
 
-	friend constexpr bool operator!=(fixed lhs, fixed rhs) noexcept {
+	friend constexpr bool operator!=(
+			basic_fixed lhs, basic_fixed rhs) noexcept {
 		return !(lhs == rhs);
 	}
 
-	friend constexpr bool operator<(fixed lhs, fixed rhs) noexcept {
+	friend constexpr bool operator<(basic_fixed lhs, basic_fixed rhs) noexcept {
 		return lhs.value < rhs.value;
 	}
 
-	friend constexpr bool operator>(fixed lhs, fixed rhs) noexcept {
+	friend constexpr bool operator>(basic_fixed lhs, basic_fixed rhs) noexcept {
 		return rhs < lhs;
 	}
 
-	friend constexpr bool operator<=(fixed lhs, fixed rhs) noexcept {
+	friend constexpr bool operator<=(
+			basic_fixed lhs, basic_fixed rhs) noexcept {
 		return !(rhs < lhs);
 	}
 
-	friend constexpr bool operator>=(fixed lhs, fixed rhs) noexcept {
+	friend constexpr bool operator>=(
+			basic_fixed lhs, basic_fixed rhs) noexcept {
 		return !(lhs < rhs);
 	}
 
 	// Arithmetic Operators
-	friend constexpr fixed operator+(fixed lhs, fixed rhs) noexcept {
-		fixed ret;
+	friend constexpr basic_fixed operator+(
+			basic_fixed lhs, basic_fixed rhs) noexcept {
+		basic_fixed ret;
 		ret.value = lhs.value + rhs.value;
 		return ret;
 	}
 
-	friend constexpr fixed operator-(fixed lhs, fixed rhs) noexcept {
-		fixed ret;
+	friend constexpr basic_fixed operator-(
+			basic_fixed lhs, basic_fixed rhs) noexcept {
+		basic_fixed ret;
 		ret.value = lhs.value - rhs.value;
 		return ret;
 	}
 
-	friend constexpr fixed operator*(fixed lhs, fixed rhs) noexcept {
+	friend constexpr basic_fixed operator*(
+			basic_fixed lhs, basic_fixed rhs) noexcept {
 		// (int * int) * (1 / scaling * 1 / scaling)
 
-		fixed ret;
+		basic_fixed ret;
 		if constexpr (scaling_is_pow2_v) {
 			ret.value = (lhs.value * rhs.value) >> scaling_sqrt_v;
 		} else {
@@ -169,8 +176,9 @@ public:
 		return ret;
 	}
 
-	friend constexpr fixed operator/(fixed lhs, fixed rhs) noexcept {
-		fixed ret;
+	friend constexpr basic_fixed operator/(
+			basic_fixed lhs, basic_fixed rhs) noexcept {
+		basic_fixed ret;
 		if constexpr (scaling_is_pow2_v) {
 			ret.value = (lhs.value << scaling_sqrt_v) / rhs.value;
 		} else {
@@ -179,8 +187,9 @@ public:
 		return ret;
 	}
 
-	friend constexpr fixed operator%(fixed lhs, fixed rhs) noexcept {
-		fixed ret;
+	friend constexpr basic_fixed operator%(
+			basic_fixed lhs, basic_fixed rhs) noexcept {
+		basic_fixed ret;
 		ret.value = lhs.value % rhs.value;
 		return ret;
 	}
@@ -188,18 +197,17 @@ public:
 	// Public for serialization purposes.
 	value_t value = value_t(0);
 };
-} // namespace detail
 
 
 #if FEA_ARCH >= 64
 // float32 decimal precision.
-using fixed = detail::fixed<(size_t(1) << 23), std::intmax_t>;
+using fixed = fea::basic_fixed<(size_t(1) << 23), std::intmax_t>;
 #else
 // Likely a bad idea, provided for completeness.
-using fixed = detail::fixed<(size_t(1) << 15), std::intmax_t>;
+using fixed = fea::basic_fixed<(size_t(1) << 15), int>;
 #endif
 
-using currency = detail::fixed<100, std::intmax_t>;
+using currency = fea::basic_fixed<100, std::intmax_t>;
 
 } // namespace fea
 
