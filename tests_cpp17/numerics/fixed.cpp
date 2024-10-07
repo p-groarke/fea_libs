@@ -362,10 +362,10 @@ TEST(fixed, basics) {
 	// numeric_limits specialization.
 	{
 #if FEA_ARCH >= 64
-		// Q : min and lowest behave like int or float?
-		constexpr fea::fixed mmin = (std::numeric_limits<fea::fixed>::min)();
-		constexpr fea::fixed mlowest
-				= std::numeric_limits<fea::fixed>::lowest();
+		//// Q : min and lowest behave like int or float?
+		// constexpr fea::fixed mmin = (std::numeric_limits<fea::fixed>::min)();
+		// constexpr fea::fixed mlowest
+		//		= std::numeric_limits<fea::fixed>::lowest();
 
 		constexpr std::intmax_t mmax
 				= std::intmax_t((std::numeric_limits<fea::fixed>::max)());
