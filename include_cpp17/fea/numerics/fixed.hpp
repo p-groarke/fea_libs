@@ -64,12 +64,15 @@ namespace detail {
 // TODO : Put where? Add unit tests.
 template <class T>
 constexpr bool mis_pow2(T v) noexcept {
-	static_assert(std::is_integral_v<T>, "fea::is_pow2 : T must be integer.");
+	static_assert(std::is_integral_v<T>, "fea::mis_pow2 : T must be integer.");
 	return v && !(v & (v - 1));
 }
 
 template <class T>
 constexpr T msqrt_base2(T v) noexcept {
+	static_assert(
+			std::is_integral_v<T>, "fea::msqrt_base2 : T must be integer.");
+
 	T mask = T(1);
 	for (size_t i = 0; i < sizeof(T) * 8; ++i) {
 		if (v & (mask << i)) {
@@ -80,12 +83,10 @@ constexpr T msqrt_base2(T v) noexcept {
 }
 } // namespace detail
 
-template <size_t Scaling, class IntT>
+template <class IntT, size_t Scaling>
 struct basic_fixed {
 	static_assert(std::is_integral_v<IntT>,
 			"fea::basic_fixed : IntT must be integral type.");
-	// static_assert(std::is_signed_v<IntT>,
-	//		"fea::basic_fixed : IntT must be signed integral type.");
 
 	using value_t = IntT;
 	static constexpr value_t scaling_v = value_t(Scaling);
@@ -165,8 +166,6 @@ public:
 
 	friend constexpr basic_fixed operator*(
 			basic_fixed lhs, basic_fixed rhs) noexcept {
-		// (int * int) * (1 / scaling * 1 / scaling)
-
 		basic_fixed ret;
 		if constexpr (scaling_is_pow2_v) {
 			ret.value = (lhs.value * rhs.value) >> scaling_sqrt_v;
@@ -199,15 +198,18 @@ public:
 };
 
 
-#if FEA_ARCH >= 64
+#if FEA_ARCH == 64
 // float32 decimal precision.
-using fixed = fea::basic_fixed<(size_t(1) << 23), std::intmax_t>;
+using fixed = fea::basic_fixed<int64_t, (size_t(1) << 23)>;
+#elif FEA_ARCH == 32
+// A bad idea, provided for completeness.
+using fixed = fea::basic_fixed<int32_t, (size_t(1) << 11)>;
 #else
-// Likely a bad idea, provided for completeness.
-using fixed = fea::basic_fixed<(size_t(1) << 15), int>;
+static_assert(false, "fea::fixed : Missing architecture.");
 #endif
 
-using currency = fea::basic_fixed<100, std::intmax_t>;
+// std::intmax_t == 8 bytes on win32...
+using currency = fea::basic_fixed<std::intptr_t, 100>;
 
 } // namespace fea
 

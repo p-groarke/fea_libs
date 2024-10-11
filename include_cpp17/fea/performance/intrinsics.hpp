@@ -117,6 +117,7 @@ constexpr auto to_unsigned(T t) noexcept {
 		return uint64_t(t);
 	} else {
 		// someday...
+		assert(false);
 		return uint64_t(t);
 	}
 }

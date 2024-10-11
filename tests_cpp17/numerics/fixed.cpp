@@ -4,6 +4,8 @@
 namespace {
 #define FAIL_MSG "fixed.cpp : failed test"
 
+using mint_t = typename fea::fixed::value_t;
+
 TEST(fixed, basics) {
 	// ctors and simple conversions
 	{
@@ -15,8 +17,8 @@ TEST(fixed, basics) {
 		t = 1.0;
 		EXPECT_EQ(double(t), 1.0);
 
-		t = fea::fixed(std::intmax_t(1));
-		EXPECT_EQ(std::intmax_t(t), 1);
+		t = fea::fixed(mint_t(1));
+		EXPECT_EQ(mint_t(t), 1);
 
 		t = 1.f;
 		EXPECT_EQ(float(t), 1.f);
@@ -24,23 +26,23 @@ TEST(fixed, basics) {
 		fea::fixed cpy = t;
 		EXPECT_EQ(float(t), 1.f);
 		EXPECT_EQ(double(t), 1.0);
-		EXPECT_EQ(std::intmax_t(t), 1);
+		EXPECT_EQ(mint_t(t), 1);
 
 		cpy = std::move(t);
 		EXPECT_EQ(float(t), 1.f);
 		EXPECT_EQ(double(t), 1.0);
-		EXPECT_EQ(std::intmax_t(t), 1);
+		EXPECT_EQ(mint_t(t), 1);
 		t = cpy;
 
 		cpy = fea::fixed(t);
 		EXPECT_EQ(float(t), 1.f);
 		EXPECT_EQ(double(t), 1.0);
-		EXPECT_EQ(std::intmax_t(t), 1);
+		EXPECT_EQ(mint_t(t), 1);
 
 		cpy = fea::fixed(std::move(t));
 		EXPECT_EQ(float(t), 1.f);
 		EXPECT_EQ(double(t), 1.0);
-		EXPECT_EQ(std::intmax_t(t), 1);
+		EXPECT_EQ(mint_t(t), 1);
 		t = cpy;
 	}
 
@@ -297,48 +299,48 @@ TEST(fixed, basics) {
 	}
 
 	{
-		fea::fixed f1(std::intmax_t(2));
-		fea::fixed f2(std::intmax_t(2));
+		fea::fixed f1(mint_t(2));
+		fea::fixed f2(mint_t(2));
 		fea::fixed ans = f1 + f2;
-		EXPECT_EQ(std::intmax_t(ans), 4);
+		EXPECT_EQ(mint_t(ans), 4);
 
 		ans = f1 - f2;
-		EXPECT_EQ(std::intmax_t(ans), 0);
+		EXPECT_EQ(mint_t(ans), 0);
 
 		ans = f1 * f2;
-		EXPECT_EQ(std::intmax_t(ans), 4);
+		EXPECT_EQ(mint_t(ans), 4);
 
 		ans = f1 / f2;
-		EXPECT_EQ(std::intmax_t(ans), 1);
+		EXPECT_EQ(mint_t(ans), 1);
 
 		ans = f1 % f2;
-		EXPECT_EQ(std::intmax_t(ans), 0);
+		EXPECT_EQ(mint_t(ans), 0);
 
 		f1 = 8.0;
 		f2 = 2.0;
 		ans = f1 + f2;
-		EXPECT_EQ(std::intmax_t(ans), 10);
+		EXPECT_EQ(mint_t(ans), 10);
 
 		ans = f1 - f2;
-		EXPECT_EQ(std::intmax_t(ans), 6);
+		EXPECT_EQ(mint_t(ans), 6);
 
 		ans = f1 * f2;
-		EXPECT_EQ(std::intmax_t(ans), 16);
+		EXPECT_EQ(mint_t(ans), 16);
 
 		ans = f1 / f2;
-		EXPECT_EQ(std::intmax_t(ans), 4);
+		EXPECT_EQ(mint_t(ans), 4);
 
 		ans = f1 % f2;
-		EXPECT_EQ(std::intmax_t(ans), 0);
+		EXPECT_EQ(mint_t(ans), 0);
 	}
 
 	// Sanity checks.
 	{
-		using mfixed1 = fea::basic_fixed<(size_t(1) << 23), int64_t>;
-		using mfixed2 = fea::basic_fixed<100, int64_t>;
-		using mfixed3 = fea::basic_fixed<3, int64_t>;
-		using mfixed4 = fea::basic_fixed<2, int>;
-		using mfixed5 = fea::basic_fixed<4, int>;
+		using mfixed1 = fea::basic_fixed<int64_t, (size_t(1) << 23)>;
+		using mfixed2 = fea::basic_fixed<int64_t, 100>;
+		using mfixed3 = fea::basic_fixed<int64_t, 3>;
+		using mfixed4 = fea::basic_fixed<int, 2>;
+		using mfixed5 = fea::basic_fixed<int, 4>;
 
 		static_assert(mfixed1::scaling_is_pow2_v, FAIL_MSG);
 		static_assert(!mfixed2::scaling_is_pow2_v, FAIL_MSG);
@@ -359,37 +361,78 @@ TEST(fixed, basics) {
 #endif
 	}
 
-	//{
-	//	using mfixed = fea::basic_fixed<(size_t(1) << 15), int>;
-	//	constexpr int mmax = int((std::numeric_limits<mfixed>::max)());
-	//	constexpr int mmax_expected = (int(1) << (32 - 15 - 1)) - 1;
-	//	static_assert(mmax == mmax_expected, FAIL_MSG);
-	//}
-
 	// numeric_limits specialization.
 	{
-#if FEA_ARCH >= 64
-		//// Q : min and lowest behave like int or float?
-		// constexpr fea::fixed mmin = (std::numeric_limits<fea::fixed>::min)();
-		// constexpr fea::fixed mlowest
-		//		= std::numeric_limits<fea::fixed>::lowest();
+		// We just check that all these are implemented and working.
+		static_assert(std::numeric_limits<fea::fixed>::is_specialized == true);
+		static_assert(std::numeric_limits<fea::fixed>::is_signed
+					  == std::is_signed_v<mint_t>);
+		static_assert(std::numeric_limits<fea::fixed>::is_integer == false);
+		static_assert(std::numeric_limits<fea::fixed>::is_exact == true);
+		static_assert(std::numeric_limits<fea::fixed>::has_infinity == false);
+		static_assert(std::numeric_limits<fea::fixed>::has_quiet_NaN == false);
+		static_assert(
+				std::numeric_limits<fea::fixed>::has_signaling_NaN == false);
+		static_assert(std::numeric_limits<fea::fixed>::has_denorm
+					  == std::denorm_absent);
+		static_assert(
+				std::numeric_limits<fea::fixed>::has_denorm_loss == false);
+		static_assert(std::numeric_limits<fea::fixed>::round_style
+					  == std::round_toward_zero);
+		static_assert(std::numeric_limits<fea::fixed>::is_iec559 == false);
+		static_assert(std::numeric_limits<fea::fixed>::is_bounded == true);
+		static_assert(std::numeric_limits<fea::fixed>::is_modulo
+					  == std::numeric_limits<mint_t>::is_modulo);
+		static_assert(std::numeric_limits<fea::fixed>::digits
+					  == std::numeric_limits<mint_t>::digits);
+		static_assert(std::numeric_limits<fea::fixed>::digits10
+					  == std::numeric_limits<mint_t>::digits10);
+		static_assert(std::numeric_limits<fea::fixed>::max_digits10
+					  == std::numeric_limits<mint_t>::max_digits10);
+		static_assert(std::numeric_limits<fea::fixed>::radix == 2);
+		static_assert(std::numeric_limits<fea::fixed>::min_exponent == 0);
+		static_assert(std::numeric_limits<fea::fixed>::min_exponent10 == 0);
+		static_assert(std::numeric_limits<fea::fixed>::max_exponent == 0);
+		static_assert(std::numeric_limits<fea::fixed>::max_exponent10 == 0);
+		static_assert(std::numeric_limits<fea::fixed>::traps
+					  == std::numeric_limits<mint_t>::traps);
+		static_assert(
+				std::numeric_limits<fea::fixed>::tinyness_before == false);
 
-		constexpr std::intmax_t mmax
-				= std::intmax_t((std::numeric_limits<fea::fixed>::max)());
-		constexpr std::intmax_t mmax_expected
-				= (std::intmax_t(1) << (64 - 23 - 1)) - 1;
-		static_assert(mmax == mmax_expected, FAIL_MSG);
+		// We behave like floats, to be interchangeable.
+		// min() closest to zero, lowest() lowest negative value.
+		constexpr fea::fixed mmin = (std::numeric_limits<fea::fixed>::min)();
+		static_assert(mmin == 0.0, FAIL_MSG);
+		static_assert(mint_t(mmin) == mint_t(0), FAIL_MSG);
+
+		constexpr fea::fixed mlowest
+				= std::numeric_limits<fea::fixed>::lowest();
+		static_assert(mlowest < 0.0, FAIL_MSG);
+		static_assert(mint_t(mlowest) < mint_t(0), FAIL_MSG);
+#if FEA_ARCH == 64
+		constexpr mint_t mlowest_expected = -(mint_t(1) << (64 - 23 - 1));
+#else
+		constexpr mint_t mlowest_expected = -(mint_t(1) << (32 - 11 - 1));
+#endif
+		static_assert(mint_t(mlowest) == mlowest_expected, FAIL_MSG);
+
+		constexpr fea::fixed mmax = (std::numeric_limits<fea::fixed>::max)();
+#if FEA_ARCH == 64
+		constexpr mint_t mmax_expected = (mint_t(1) << (64 - 23 - 1)) - 1;
+#else
+		constexpr mint_t mmax_expected = (mint_t(1) << (32 - 11 - 1)) - 1;
+#endif
+		static_assert(mint_t(mmax) == mmax_expected, FAIL_MSG);
+
+#if FEA_ARCH == 64
+		constexpr fea::fixed mepsilon
+				= std::numeric_limits<fea::fixed>::epsilon();
 
 		// At 23 bits of fractional digits, we should have the same epsilon
 		// precision as a float32.
-		constexpr fea::fixed mepsilon
-				= std::numeric_limits<fea::fixed>::epsilon();
+		// Only applicable to 64bits.
 		static_assert(
 				mepsilon == std::numeric_limits<float>::epsilon(), FAIL_MSG);
-#else
-		constexpr int mmax = int((std::numeric_limits<fea::fixed>::max)());
-		constexpr int mmax_expected = (int(1) << (32 - 15 - 1)) - 1;
-		static_assert(mmax == mmax_expected, FAIL_MSG);
 #endif
 
 		constexpr fea::fixed mround_err
