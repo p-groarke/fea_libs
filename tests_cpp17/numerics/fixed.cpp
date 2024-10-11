@@ -355,7 +355,7 @@ TEST(fixed, basics) {
 		static_assert(mfixed5::scaling_sqrt_v == 2, FAIL_MSG);
 
 #if FEA_ARCH >= 64
-		using mfixed6 = fea::basic_fixed<(size_t(1) << 62), int64_t>;
+		using mfixed6 = fea::basic_fixed<int64_t, (size_t(1) << 62)>;
 		static_assert(mfixed6::scaling_is_pow2_v, FAIL_MSG);
 		static_assert(mfixed6::scaling_sqrt_v == 62, FAIL_MSG);
 #endif
