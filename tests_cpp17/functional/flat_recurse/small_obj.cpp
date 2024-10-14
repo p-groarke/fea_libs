@@ -2,7 +2,6 @@
 #include "global.hpp"
 #include "iterators.hpp"
 
-#include <fea/flat_recurse/flat_recurse.hpp>
 #include <gtest/gtest.h>
 
 namespace fea {

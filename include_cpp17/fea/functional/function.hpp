@@ -37,6 +37,8 @@
 #include <cstdint>
 #include <functional>
 
+// TODO : Merge with func_ptr!
+
 /*
 fea::callback is helper to accept templated invocables, all the while specifying
 the arguments and return type. It makes APIs more readable and documented and
@@ -60,13 +62,6 @@ By default, it returns a std::function type. Pass true as a second template
 argument to use raw function pointers.
 */
 
-#if FEA_LINUX
-// GCC flags partly out of bounds on member function deref.
-// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105523
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Warray-bounds"
-#endif
-
 namespace fea {
 namespace detail {
 template <bool, class>
@@ -78,45 +73,28 @@ struct function_cl;
 template <class FuncRet, class... FuncArgs>
 struct function_cl<false, FuncRet(FuncArgs...)> {
 	using plain_t = FuncRet (*)(FuncArgs...);
+	constexpr function_cl() noexcept = default;
 
-	// Can be default constructed.
-	constexpr function_cl() = default;
-
-	// Accept raw function pointers and captureless lambdas.
-	constexpr function_cl(plain_t func)
-			: _plain_func(func) {
-	}
-
-	// Delete this constructor.
+	// Delete these constructors.
 	// Remember the first argument of a member signature must be a pointer to
 	// the class.
 	template <class T, class... Args>
 	constexpr function_cl(FuncRet (T::*)(Args...)) = delete;
-
-	// Delete this constructor.
-	// Remember the first argument of a member signature must be a pointer to
-	// the class.
 	template <class T, class... Args>
 	constexpr function_cl(FuncRet (T::*)(Args...) const) = delete;
 
+	// Accept raw function pointers and captureless lambdas.
+	constexpr function_cl(plain_t func) noexcept;
+
 	// Accept captureless lambdas.
 	template <class L>
-	constexpr function_cl(L&& l) noexcept
-			: _plain_func(plain_t(std::forward<L>(l))) {
+	constexpr function_cl(L&& l) noexcept;
 
-		static_assert(std::is_convertible_v<L, plain_t>,
-				"fea::function_cl : Cannot convert from L to function pointer. "
-				"Did you pass in a lambda with a capture?");
-	}
+	// Invoke function with provided arguemnts.
+	constexpr FuncRet operator()(FuncArgs... func_args) const;
 
-	constexpr FuncRet operator()(FuncArgs... func_args) const {
-		return _plain_func(std::forward<FuncArgs>(func_args)...);
-	}
-
-	explicit operator bool() const noexcept {
-		return _plain_func != nullptr;
-	}
-
+	// Does function currently hold a pointer?
+	explicit constexpr operator bool() const noexcept;
 
 private:
 	plain_t _plain_func{ nullptr };
@@ -133,88 +111,30 @@ struct function_cl<true, FuncRet(T*, FuncArgs...)> {
 	constexpr function_cl() = default;
 
 	// Accept raw function pointers and captureless lambdas.
-	constexpr function_cl(plain_t func) noexcept
-			: _func_union(func)
-			, _held_func(held_func::plain) {
-	}
+	constexpr function_cl(plain_t func) noexcept;
 
 	// Accept member pointers.
-	constexpr function_cl(member_t func) noexcept
-			: _func_union(func)
-			, _held_func(held_func::member) {
-	}
+	constexpr function_cl(member_t func) noexcept;
 
 	// Accept const member pointers.
-	constexpr function_cl(const_member_t func) noexcept
-			: _func_union(func)
-			, _held_func(held_func::const_member) {
-	}
+	constexpr function_cl(const_member_t func) noexcept;
 
 	// Accept captureless lambdas.
 	template <class L>
-	constexpr function_cl(L&& l) noexcept
-			: _func_union(plain_t(std::forward<L>(l)))
-			, _held_func(held_func::plain) {
+	constexpr function_cl(L&& l) noexcept;
 
-		static_assert(std::is_convertible_v<L, plain_t>,
-				"fea::function_cl : Cannot convert from L to function pointer. "
-				"Did you pass in a lambda with a capture?");
-	}
+	// Invoke function with provided args.
+	constexpr FuncRet operator()(T* obj, FuncArgs... func_args) const;
 
-	constexpr FuncRet operator()(T* obj, FuncArgs... func_args) const {
-		switch (_held_func) {
-		case held_func::plain: {
-			return _func_union.plain_func(
-					obj, std::forward<FuncArgs>(func_args)...);
-		} break;
-		case held_func::member: {
-			return (obj->*_func_union.mem_func)(
-					std::forward<FuncArgs>(func_args)...);
-		} break;
-		case held_func::const_member: {
-			return (obj->*_func_union.const_mem_func)(
-					std::forward<FuncArgs>(func_args)...);
-		} break;
-		default: {
-			assert(false);
-			// Prevent compile error. This should never be executed.
-			return _func_union.plain_func(
-					obj, std::forward<FuncArgs>(func_args)...);
-		} break;
-		}
-	}
-
-	explicit operator bool() const noexcept {
-		switch (_held_func) {
-		case held_func::plain: {
-			return _func_union.plain_func != nullptr;
-		} break;
-		case held_func::member: {
-			return _func_union.mem_func != nullptr;
-		} break;
-		case held_func::const_member: {
-			return _func_union.const_mem_func != nullptr;
-		} break;
-		default: {
-			return false;
-		} break;
-		}
-	}
+	// Stores valid function pointer?
+	explicit constexpr operator bool() const noexcept;
 
 private:
 	union func_u {
-		constexpr func_u() noexcept
-				: plain_func(nullptr) {
-		}
-		constexpr explicit func_u(plain_t f) noexcept
-				: plain_func(f) {
-		}
-		constexpr explicit func_u(member_t f) noexcept
-				: mem_func(f) {
-		}
-		constexpr explicit func_u(const_member_t f) noexcept
-				: const_mem_func(f) {
-		}
+		constexpr func_u() noexcept;
+		explicit constexpr func_u(plain_t f) noexcept;
+		explicit constexpr func_u(member_t f) noexcept;
+		explicit constexpr func_u(const_member_t f) noexcept;
 
 		plain_t plain_func;
 		member_t mem_func;
@@ -235,19 +155,7 @@ private:
 // pointer to a class.
 template <class>
 struct function_cl_selector;
-
-template <class Ret, class... Args>
-struct function_cl_selector<Ret(Args...)> {
-	using type = detail::function_cl<false, Ret(Args...)>;
-};
-
-template <class Ret, class T, class... Args>
-struct function_cl_selector<Ret(T*, Args...)> {
-	using type = detail::function_cl<std::is_class_v<T>, Ret(T*, Args...)>;
-};
-
 } // namespace detail
-
 
 // A wrapper on function pointers.
 // Doesn't support state (captures).
@@ -255,33 +163,6 @@ struct function_cl_selector<Ret(T*, Args...)> {
 template <class... Args>
 using function_cl = typename detail::function_cl_selector<Args...>::type;
 
-// template <class... Args>
-// using function_cl = function_cl<Args...>;
-
-
-namespace detail {
-template <class, bool = false>
-struct function;
-
-template <class Func>
-struct function<Func, false> {
-	using type = std::function<Func>;
-};
-
-template <class Func>
-struct function<Func, true> {
-	using type = fea::function_cl<Func>;
-};
-} // namespace detail
-
-// Selects either std::function or fea::function_cl with the bool.
-// fea::function_cl is a stateless and capture light-weight wrapper than can
-// store function pointers and member function pointers.
-template <class Func, bool UsePtr = false>
-using function = typename detail::function<Func, UsePtr>::type;
-
 } // namespace fea
 
-#if FEA_LINUX
-#pragma GCC diagnostic pop
-#endif
+#include "imp/function.imp.hpp"

@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include <fea/flat_recurse/flat_recurse.hpp>
+#include <fea/functional/flat_recurse.hpp>
 #include <gtest/gtest.h>
 #include <iterator>
 #include <memory>

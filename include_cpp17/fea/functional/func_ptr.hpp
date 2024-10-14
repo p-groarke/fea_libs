@@ -46,85 +46,66 @@ constexpr fea::func_ptr<void(obj*, int)> = &c_func; // ok
 constexpr fea::func_ptr<void(obj*, int)> = &obj::func; // also ok
 */
 
-
 namespace fea {
 template <class>
 struct func_ptr;
 
-// Specialization for no arg function.
-// Cannot be member function, since first argument would
-// need to be object pointer.
-template <class Ret>
-struct func_ptr<Ret()> {
-	using c_sig_t = Ret (*)();
+// Specialization for version where first argument isn't a pointer.
+// We impose this cannot be member function. We treat references as a plain
+// argument.
+template <class Ret, class... Args>
+struct func_ptr<Ret(Args...)> {
+	using c_sig_t = Ret (*)(Args...);
 
-	constexpr func_ptr() = default;
-	constexpr func_ptr(c_sig_t ptr)
-			: _c_ptr(ptr) {
-	}
+	constexpr func_ptr() noexcept = default;
+	constexpr func_ptr(c_sig_t ptr) noexcept;
 
-	std::function<Ret()> to_function() const {
-		return { _c_ptr };
-	}
+	// Does this func_ptr store a pointer?
+	explicit constexpr operator bool() const noexcept;
+
+	// Invoke the function using provided args.
+	constexpr Ret operator()(Args... args) const;
+
+	// Converts to a callable std::function.
+	std::function<Ret(Args...)> to_function() const;
 
 	// public for non-type parameters
 	c_sig_t _c_ptr = nullptr;
 };
 
-
+// Specialization where first argument is a pointer.
+// This COULD be a member function callback, but it may not be.
+// We figure it out.
 template <class Ret, class FrontT, class... Args>
-struct func_ptr<Ret(FrontT, Args...)> {
-	using c_sig_t = Ret (*)(FrontT, Args...);
+struct func_ptr<Ret(FrontT*, Args...)> {
+	using c_sig_t = Ret (*)(FrontT*, Args...);
 
 	// This is the switcharoo to convert a signature in the form
 	// 'void(const obj*, ...)' to 'void(obj*, ...) const'.
 	// This is how std::function wants it, and how the reference will be
 	// captured when using '&obj::func'.
-	using nonconst_mem_sig_t = Ret (std::remove_pointer_t<FrontT>::*)(Args...);
-	using const_mem_sig_t
-			= Ret (std::remove_const_t<std::remove_pointer_t<FrontT>>::*)(
-					Args...) const;
-	using mem_sig_t
-			= std::conditional_t<std::is_const_v<std::remove_pointer_t<FrontT>>,
-					const_mem_sig_t, nonconst_mem_sig_t>;
+	using nonconst_mem_sig_t = Ret (FrontT::*)(Args...);
+	using const_mem_sig_t = Ret (std::remove_const_t<FrontT>::*)(Args...) const;
+	using mem_sig_t = std::conditional_t<std::is_const_v<FrontT>,
+			const_mem_sig_t, nonconst_mem_sig_t>;
 
-	constexpr func_ptr() = default;
-	constexpr func_ptr(c_sig_t ptr)
-			: _c_ptr(ptr) {
-	}
-	constexpr func_ptr(mem_sig_t ptr)
-			: _mem_ptr(ptr) {
-	}
+	constexpr func_ptr() noexcept = default;
+	constexpr func_ptr(c_sig_t ptr) noexcept;
+	constexpr func_ptr(mem_sig_t ptr) noexcept;
 
 	// Does this func_ptr store a pointer?
-	constexpr explicit operator bool() const noexcept {
-		return _c_ptr != nullptr || _mem_ptr != nullptr;
-	}
+	explicit constexpr operator bool() const noexcept;
 
-	// Invoke the function, passing its arguments.
-	constexpr Ret invoke(FrontT arg1, Args... args) const {
-		if (_c_ptr != nullptr) {
-			return std::invoke(_c_ptr, std::forward<FrontT>(arg1),
-					std::forward<Args>(args)...);
-		}
-		return std::invoke(_mem_ptr, std::forward<FrontT>(arg1),
-				std::forward<Args>(args)...);
-	}
-	constexpr Ret operator()(FrontT arg1, Args... args) const {
-		return invoke(std::forward<FrontT>(arg1), std::forward<Args>(args)...);
-	}
+	// Invoke the function using provided args.
+	constexpr Ret operator()(FrontT* arg1, Args... args) const;
 
 	// Converts to a callable std::function.
-	std::function<Ret(FrontT, Args...)> to_function() const {
-		if (_c_ptr != nullptr) {
-			return { _c_ptr };
-		}
-		return { _mem_ptr };
-	}
+	std::function<Ret(FrontT*, Args...)> to_function() const;
 
 	// public for non-type parameters
 	c_sig_t _c_ptr = nullptr;
 	mem_sig_t _mem_ptr = nullptr;
 };
-
 } // namespace fea
+
+#include "imp/func_ptr.imp.hpp"
