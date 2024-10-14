@@ -57,14 +57,11 @@ template <class Ret, class... Args>
 struct func_ptr<Ret(Args...)> {
 	using c_sig_t = Ret (*)(Args...);
 
-	constexpr func_ptr() = default;
-	constexpr func_ptr(c_sig_t ptr);
+	constexpr func_ptr() noexcept = default;
+	constexpr func_ptr(c_sig_t ptr) noexcept;
 
 	// Does this func_ptr store a pointer?
 	explicit constexpr operator bool() const noexcept;
-
-	// Invoke the function using provided args.
-	constexpr Ret invoke(Args... args) const;
 
 	// Invoke the function using provided args.
 	constexpr Ret operator()(Args... args) const;
@@ -77,7 +74,7 @@ struct func_ptr<Ret(Args...)> {
 };
 
 // Specialization where first argument is a pointer.
-// This COULD be a member function call, but it may not.
+// This COULD be a member function callback, but it may not be.
 // We figure it out.
 template <class Ret, class FrontT, class... Args>
 struct func_ptr<Ret(FrontT*, Args...)> {
@@ -92,15 +89,12 @@ struct func_ptr<Ret(FrontT*, Args...)> {
 	using mem_sig_t = std::conditional_t<std::is_const_v<FrontT>,
 			const_mem_sig_t, nonconst_mem_sig_t>;
 
-	constexpr func_ptr() = default;
-	constexpr func_ptr(c_sig_t ptr);
-	constexpr func_ptr(mem_sig_t ptr);
+	constexpr func_ptr() noexcept = default;
+	constexpr func_ptr(c_sig_t ptr) noexcept;
+	constexpr func_ptr(mem_sig_t ptr) noexcept;
 
 	// Does this func_ptr store a pointer?
 	explicit constexpr operator bool() const noexcept;
-
-	// Invoke the function using provided args.
-	constexpr Ret invoke(FrontT* arg1, Args... args) const;
 
 	// Invoke the function using provided args.
 	constexpr Ret operator()(FrontT* arg1, Args... args) const;

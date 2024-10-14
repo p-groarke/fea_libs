@@ -2,7 +2,7 @@ namespace fea {
 // Non-member implementation.
 
 template <class R, class... A>
-constexpr func_ptr<R(A...)>::func_ptr(c_sig_t ptr)
+constexpr func_ptr<R(A...)>::func_ptr(c_sig_t ptr) noexcept
 		: _c_ptr(ptr) {
 }
 
@@ -12,13 +12,8 @@ constexpr func_ptr<R(A...)>::operator bool() const noexcept {
 }
 
 template <class R, class... A>
-constexpr R func_ptr<R(A...)>::invoke(A... args) const {
-	return (*_c_ptr)(std::forward<A>(args)...);
-}
-
-template <class R, class... A>
 constexpr R func_ptr<R(A...)>::operator()(A... args) const {
-	return invoke(std::forward<A>(args)...);
+	return std::invoke(_c_ptr, std::forward<A>(args)...);
 }
 
 template <class R, class... A>
@@ -30,12 +25,12 @@ std::function<R(A...)> func_ptr<R(A...)>::to_function() const {
 // Member implementation.
 
 template <class R, class F, class... A>
-constexpr func_ptr<R(F*, A...)>::func_ptr(c_sig_t ptr)
+constexpr func_ptr<R(F*, A...)>::func_ptr(c_sig_t ptr) noexcept
 		: _c_ptr(ptr) {
 }
 
 template <class R, class F, class... A>
-constexpr func_ptr<R(F*, A...)>::func_ptr(mem_sig_t ptr)
+constexpr func_ptr<R(F*, A...)>::func_ptr(mem_sig_t ptr) noexcept
 		: _mem_ptr(ptr) {
 }
 
@@ -45,18 +40,13 @@ constexpr func_ptr<R(F*, A...)>::operator bool() const noexcept {
 }
 
 template <class R, class F, class... A>
-constexpr R func_ptr<R(F*, A...)>::invoke(F* arg1, A... args) const {
+constexpr R func_ptr<R(F*, A...)>::operator()(F* arg1, A... args) const {
 	if (_c_ptr != nullptr) {
 		return std::invoke(
 				_c_ptr, std::forward<F*>(arg1), std::forward<A>(args)...);
 	}
 	return std::invoke(
 			_mem_ptr, std::forward<F*>(arg1), std::forward<A>(args)...);
-}
-
-template <class R, class F, class... A>
-constexpr R func_ptr<R(F*, A...)>::operator()(F* arg1, A... args) const {
-	return invoke(std::forward<F*>(arg1), std::forward<A>(args)...);
 }
 
 template <class R, class F, class... A>

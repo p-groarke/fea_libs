@@ -27,7 +27,6 @@ TEST(func_ptr, c_basics) {
 		EXPECT_TRUE(f);
 
 		EXPECT_EQ(f(), -1);
-		EXPECT_EQ(f.invoke(), -1);
 		EXPECT_EQ(f.to_function()(), -1);
 	}
 
@@ -40,12 +39,9 @@ TEST(func_ptr, c_basics) {
 		int v = f(-42);
 		EXPECT_EQ(v, -42);
 
-		v = f.invoke(42);
-		EXPECT_EQ(v, 42);
-
 		std::function<int(int)> stdf = f.to_function();
-		v = stdf(-42);
-		EXPECT_EQ(v, -42);
+		v = stdf(42);
+		EXPECT_EQ(v, 42);
 	}
 
 	{
@@ -62,14 +58,6 @@ TEST(func_ptr, c_basics) {
 #endif
 
 		int i = 42;
-		EXPECT_EQ(f1.invoke(i), 42);
-		i = -42;
-		EXPECT_EQ(f2.invoke(i), -42);
-		EXPECT_EQ(f3.invoke(i), 2);
-		EXPECT_EQ(i, 2);
-		EXPECT_EQ(f4.invoke(), -1);
-
-		i = 42;
 		EXPECT_EQ(f1(i), 42);
 		i = -42;
 		EXPECT_EQ(f2(i), -42);
@@ -136,7 +124,7 @@ TEST(func_ptr, member_basics) {
 
 #if FEA_CPP20
 		// Should be callable at compile time.
-		static_assert(f2.invoke(&o, i) == -42, FAIL_MSG);
+		static_assert(f2(&o, i) == -42, FAIL_MSG);
 #endif
 
 		// Const overloads should have been resolved appropriately.
@@ -144,11 +132,6 @@ TEST(func_ptr, member_basics) {
 		EXPECT_EQ(f2(&o, i), -42);
 		EXPECT_EQ(f3(&o, i), 0);
 		EXPECT_EQ(f4(&o, i), 1);
-
-		EXPECT_EQ(f1.invoke(&o, i), 42);
-		EXPECT_EQ(f2.invoke(&o, i), -42);
-		EXPECT_EQ(f3.invoke(&o, i), 0);
-		EXPECT_EQ(f4.invoke(&o, i), 1);
 
 		EXPECT_EQ(f1.to_function()(&o, i), 42);
 		EXPECT_EQ(f2.to_function()(&o, i), -42);
@@ -165,16 +148,16 @@ TEST(func_ptr, member_basics) {
 		obj o{};
 		int i = 0;
 
-		f1.invoke(&o, i);
+		f1(&o, i);
 		EXPECT_EQ(i, 2);
 		i = 0;
-		f2.invoke(&o, i);
+		f2(&o, i);
 		EXPECT_EQ(i, 3);
 		i = 0;
-		f3.invoke(&o, i);
+		f3(&o, i);
 		EXPECT_EQ(i, 4);
 		i = 0;
-		f4.invoke(&o, i);
+		f4(&o, i);
 		EXPECT_EQ(i, 5);
 
 		i = 0;
