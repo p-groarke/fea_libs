@@ -3,6 +3,91 @@
 #include <gtest/gtest.h>
 
 namespace {
+#define FAIL_MSG "func_ptr.cpp : Failed test."
+
+constexpr int cfunc() {
+	return -1;
+}
+constexpr int cfunc(int in) {
+	return in;
+}
+int cfunc(const int& in) {
+	return in;
+}
+int cfunc(int& out) {
+	out = 2;
+	return 2;
+}
+
+TEST(func_ptr, c_basics) {
+	{
+		fea::func_ptr<int()> f;
+		EXPECT_FALSE(f);
+		f = &cfunc;
+		EXPECT_TRUE(f);
+
+		EXPECT_EQ(f(), -1);
+		EXPECT_EQ(f.invoke(), -1);
+		EXPECT_EQ(f.to_function()(), -1);
+	}
+
+	{
+		fea::func_ptr<int(int)> f;
+		EXPECT_FALSE(f);
+		f = &cfunc;
+		EXPECT_TRUE(f);
+
+		int v = f(-42);
+		EXPECT_EQ(v, -42);
+
+		v = f.invoke(42);
+		EXPECT_EQ(v, 42);
+
+		std::function<int(int)> stdf = f.to_function();
+		v = stdf(-42);
+		EXPECT_EQ(v, -42);
+	}
+
+	{
+		// These should compile.
+		constexpr fea::func_ptr<int(int)> f1 = &cfunc;
+		constexpr fea::func_ptr<int(const int&)> f2 = &cfunc;
+		constexpr fea::func_ptr<int(int&)> f3 = &cfunc;
+		constexpr fea::func_ptr<int()> f4 = &cfunc;
+
+		// Should be callable at compile time.
+#if FEA_CPP20
+		static_assert(f1(101) == 101, FAIL_MSG);
+		static_assert(f4() == -1, FAIL_MSG);
+#endif
+
+		int i = 42;
+		EXPECT_EQ(f1.invoke(i), 42);
+		i = -42;
+		EXPECT_EQ(f2.invoke(i), -42);
+		EXPECT_EQ(f3.invoke(i), 2);
+		EXPECT_EQ(i, 2);
+		EXPECT_EQ(f4.invoke(), -1);
+
+		i = 42;
+		EXPECT_EQ(f1(i), 42);
+		i = -42;
+		EXPECT_EQ(f2(i), -42);
+		EXPECT_EQ(f3(i), 2);
+		EXPECT_EQ(i, 2);
+		EXPECT_EQ(f4(), -1);
+
+		i = 42;
+		EXPECT_EQ(f1.to_function()(i), 42);
+		i = -42;
+		EXPECT_EQ(f2.to_function()(i), -42);
+		EXPECT_EQ(f3.to_function()(i), 2);
+		EXPECT_EQ(i, 2);
+		EXPECT_EQ(f4.to_function()(), -1);
+	}
+}
+
+
 struct obj {
 	int func(int) {
 		return 42;
@@ -31,7 +116,7 @@ void func(const obj*, int& out) {
 	out = 5;
 }
 
-TEST(func_ptr, basics) {
+TEST(func_ptr, member_basics) {
 	{
 		fea::func_ptr<int(obj*, int)> f;
 		EXPECT_FALSE(f);
@@ -51,10 +136,15 @@ TEST(func_ptr, basics) {
 
 #if FEA_CPP20
 		// Should be callable at compile time.
-		static_assert(f2.invoke(&o, i) == -42, "func_ptr.cpp : Test failed.");
+		static_assert(f2.invoke(&o, i) == -42, FAIL_MSG);
 #endif
 
 		// Const overloads should have been resolved appropriately.
+		EXPECT_EQ(f1(&o, i), 42);
+		EXPECT_EQ(f2(&o, i), -42);
+		EXPECT_EQ(f3(&o, i), 0);
+		EXPECT_EQ(f4(&o, i), 1);
+
 		EXPECT_EQ(f1.invoke(&o, i), 42);
 		EXPECT_EQ(f2.invoke(&o, i), -42);
 		EXPECT_EQ(f3.invoke(&o, i), 0);
@@ -101,4 +191,5 @@ TEST(func_ptr, basics) {
 		EXPECT_EQ(i, 5);
 	}
 }
+
 } // namespace

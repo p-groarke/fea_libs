@@ -56,12 +56,7 @@ T simple_moving_average<T, N>::operator()(const T& in) {
 		// cumulative
 		_circle_buf[_size++] = mfloat_t(in);
 		_last = fea::mean(_circle_buf.begin(), _circle_buf.begin() + _size);
-
-		if constexpr (is_int_v) {
-			return T(std::round(_last));
-		} else {
-			return T(_last);
-		}
+		return get();
 	}
 
 	// 1/k * (pn+1 - p1)
@@ -85,11 +80,7 @@ template <class T>
 T exponential_moving_average<T>::operator()(const T& in) {
 	mfloat_t in_f = mfloat_t(in);
 	_last = (in_f * _alpha) + _last * _alpha_inv;
-	if constexpr (is_int_v) {
-		return T(std::round(_last));
-	} else {
-		return T(_last);
-	}
+	return get();
 }
 
 template <class T, size_t N>
@@ -104,13 +95,9 @@ T weighted_moving_average<T, N>::operator()(const T& in) {
 		for (msize_t i = _size - 1; i >= 0; --i) {
 			_last += _circle_buf[i] * mfloat_t(i + 1);
 		}
+		assert(denom != mfloat_t(0));
 		_last /= denom;
-
-		if constexpr (is_int_v) {
-			return T(std::round(_last));
-		} else {
-			return T(_last);
-		}
+		return get();
 	}
 
 	_circle_buf[_playhead] = mfloat_t(in);
@@ -124,8 +111,8 @@ T weighted_moving_average<T, N>::operator()(const T& in) {
 	for (size_t i = 0; i < _playhead; ++i) {
 		_last += _circle_buf[i] * w++;
 	}
+	assert(_denom != mfloat_t(0));
 	_last /= _denom;
-
 	return get();
 }
 
@@ -145,11 +132,7 @@ T moving_median<T, N>::operator()(const T& in) {
 			_last = _sorted[(_size - 1) / 2];
 		}
 
-		if constexpr (is_int_v) {
-			return T(std::round(_last));
-		} else {
-			return T(_last);
-		}
+		return get();
 	}
 
 	_circle_buf[_playhead] = mfloat_t(in);

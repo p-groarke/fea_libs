@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <array>
-#include <fea/flat_recurse/flat_recurse.hpp>
 #include <gtest/gtest.h>
 #include <numeric>
 #include <vector>
