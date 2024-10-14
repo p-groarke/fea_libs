@@ -3,6 +3,7 @@ from conan import ConanFile, conan_version
 from conan.tools.cmake import CMake, CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.files import collect_libs, copy
 from conan.tools.scm import Version
+from conan.tools.env import VirtualBuildEnv
 
 class FeaLibsConan(ConanFile):
     name = "fea_libs"
@@ -45,7 +46,7 @@ class FeaLibsConan(ConanFile):
             # Prioritize onetbb.
             self.requires("onetbb/2021.12.0")
         elif self.options.with_tbb:
-            self.requires("onetbb/2020.3")
+            self.requires("onetbb/2020.3.3")
 
     def config_options(self):
         if self.settings.os == "Windows":
@@ -55,8 +56,17 @@ class FeaLibsConan(ConanFile):
     #     cmake_layout(self)
 
     def generate(self):
-        tc = CMakeToolchain(self)
+        tc = VirtualBuildEnv(self)
         tc.generate()
+
+        tc = CMakeToolchain(self)
+        tc.cache_variables["FEA_PULL_CONAN"] = False
+        tc.cache_variables["FEA_TESTS"] = False
+        tc.cache_variables["FEA_BENCHMARKS"] = False
+        tc.cache_variables["FEA_WITH_TBB"] = self.options.with_tbb
+        tc.cache_variables["FEA_WITH_ONETBB"] = self.options.with_onetbb
+        tc.generate()
+
         tc = CMakeDeps(self)
         tc.generate()
 
@@ -70,14 +80,7 @@ class FeaLibsConan(ConanFile):
 
     def build(self):
         cmake = CMake(self)
-        mdefinitions = {
-            "FEA_TESTS": False,
-            "FEA_BENCHMARKS": False,
-            "FEA_PULL_CONAN": False,
-            "FEA_WITH_TBB": self.options.with_tbb,
-            "FEA_WITH_ONETBB": self.options.with_onetbb,
-        }
-        cmake.configure(variables=mdefinitions)
+        cmake.configure()
         cmake.build()
 
     def package(self):
