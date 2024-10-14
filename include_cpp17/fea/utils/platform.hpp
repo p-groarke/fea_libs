@@ -88,24 +88,58 @@ namespace fea {
  */
 // Are we building in 32 bits or 64 bits?
 #undef FEA_ARCH
+#undef FEA_8BIT
+#undef FEA_16BIT
 #undef FEA_32BIT
 #undef FEA_64BIT
+#undef FEA_128BIT
+#undef FEA_256BIT
 #define FEA_ARCH 0
+#define FEA_8BIT 0
+#define FEA_16BIT 0
 #define FEA_32BIT 0
 #define FEA_64BIT 0
+#define FEA_128BIT 0
+#define FEA_256BIT 0
 
-#if INTPTR_MAX == INT32_MAX
+#if INTPTR_MAX == INT8_MAX
+#undef FEA_ARCH
+#undef FEA_8BIT
+#define FEA_ARCH 8
+#define FEA_8BIT 1
+inline constexpr size_t arch = 8u;
+#elif INTPTR_MAX == INT16_MAX
+#undef FEA_ARCH
+#undef FEA_16BIT
+#define FEA_ARCH 16
+#define FEA_16BIT 1
+inline constexpr size_t arch = 16u;
+#elif INTPTR_MAX == INT32_MAX
 #undef FEA_ARCH
 #undef FEA_32BIT
 #define FEA_ARCH 32
 #define FEA_32BIT 1
 inline constexpr size_t arch = 32u;
-#else
+#elif INTPTR_MAX == INT64_MAX
 #undef FEA_ARCH
 #undef FEA_64BIT
 #define FEA_ARCH 64
 #define FEA_64BIT 1
 inline constexpr size_t arch = 64u;
+// #elif INTPTR_MAX == INT128_MAX
+// #undef FEA_ARCH
+// #undef FEA_128BIT
+// #define FEA_ARCH 128
+// #define FEA_128BIT 1
+// inline constexpr size_t arch = 128u;
+// #elif INTPTR_MAX == INT256_MAX
+// #undef FEA_ARCH
+// #undef FEA_256BIT
+// #define FEA_ARCH 256
+// #define FEA_256BIT 1
+// inline constexpr size_t arch = 256u;
+#else
+static_assert(false, "fea::arch : Missing architecture.");
 #endif
 
 // Disables exceptions in classes that support it.
