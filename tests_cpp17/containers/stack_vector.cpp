@@ -1,8 +1,44 @@
 ﻿#include <fea/containers/stack_vector.hpp>
 #include <gtest/gtest.h>
 #include <numeric>
+#include <vector>
 
-namespace fea {
+namespace {
+
+TEST(stack_vector, dtors) {
+	static int num_dtors = 0;
+
+	struct test_dtor {
+		test_dtor() = default;
+		~test_dtor() {
+			++num_dtors;
+			--v;
+			EXPECT_GE(v, 0);
+		}
+
+		int v = 1;
+	};
+
+	fea::stack_vector<test_dtor, 10> sv;
+	sv.push_back({});
+	sv.push_back({});
+	sv.push_back({});
+	sv.push_back({});
+
+	num_dtors = 0;
+	sv.clear();
+	EXPECT_EQ(num_dtors, 4);
+	sv.clear();
+	EXPECT_EQ(num_dtors, 4);
+	sv.clear();
+	EXPECT_EQ(num_dtors, 4);
+
+	sv.shrink_to_fit();
+	sv.shrink_to_fit();
+	sv.shrink_to_fit();
+	EXPECT_EQ(num_dtors, 4);
+}
+
 TEST(stack_vector, basics) {
 	fea::stack_vector<size_t, 128> v{ std::array<size_t, 3>{ 0u, 1u, 2u } };
 	EXPECT_EQ(v.size(), 3u);
@@ -421,4 +457,4 @@ TEST(stack_vector, erase) {
 				arr.begin(), arr.end(), answer.begin(), answer.end()));
 	}
 }
-} // namespace fea
+} // namespace

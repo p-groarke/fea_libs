@@ -32,6 +32,7 @@
  **/
 #pragma once
 #include "fea/memory/back_ptr.hpp"
+#include "fea/memory/memory.hpp"
 #include "fea/meta/traits.hpp"
 
 #include <array>

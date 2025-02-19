@@ -354,9 +354,12 @@ TEST(deque_list, constructors) {
 }
 
 TEST(deque_list, destructors) {
+	static int num_dtors = 0;
+
 	struct test_dtor {
 		test_dtor() = default;
 		~test_dtor() {
+			++num_dtors;
 			--v;
 			EXPECT_GE(v, 0);
 		}
@@ -370,11 +373,17 @@ TEST(deque_list, destructors) {
 	dl.push_back({});
 	dl.push_back({});
 
+	num_dtors = 0;
 	dl.clear();
+	EXPECT_EQ(num_dtors, 4);
 	dl.clear();
+	EXPECT_EQ(num_dtors, 4);
 	dl.clear();
+	EXPECT_EQ(num_dtors, 4);
+
 	dl.shrink_to_fit();
 	dl.shrink_to_fit();
 	dl.shrink_to_fit();
+	EXPECT_EQ(num_dtors, 4);
 }
 } // namespace

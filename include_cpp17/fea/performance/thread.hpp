@@ -35,6 +35,7 @@
 #include "fea/memory/memory.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <functional>
 #include <mutex>
 #include <shared_mutex>
@@ -45,7 +46,8 @@
 
 // If you don't feel like linking to tbb.
 namespace fea {
-[[nodiscard]] inline size_t num_threads() {
+[[nodiscard]]
+inline size_t num_threads() {
 	size_t concurrency = std::thread::hardware_concurrency();
 	return concurrency <= 0 ? 1 : concurrency;
 }

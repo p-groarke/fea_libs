@@ -90,12 +90,12 @@ TEST(id_lookup, basics) {
 		EXPECT_TRUE(ul.contains(k));
 
 		ul.invalidate(k);
-#if !defined(NDEBUG)
-		size_t v;
-		fea::unused(v);
-		EXPECT_DEATH(v = ul.at_unchecked(k), "");
-		EXPECT_DEATH(ul.update(k, k), "");
-#endif
+		if constexpr (fea::debug_build) {
+			size_t v;
+			fea::unused(v);
+			EXPECT_DEATH(v = ul.at_unchecked(k), "");
+			EXPECT_DEATH(ul.update(k, k), "");
+		}
 		EXPECT_EQ(ul.find(k, 1u), 1u);
 		EXPECT_FALSE(ul.contains(k));
 
