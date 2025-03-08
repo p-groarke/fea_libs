@@ -426,6 +426,7 @@ TEST(memory, maybe_nothrow_move) {
 			}
 			obj2& operator=(obj2&&) {
 				++num_mv;
+				return *this;
 			}
 		};
 
@@ -714,6 +715,7 @@ TEST(memory, maybe_nothrow_move_backward) {
 			}
 			obj2& operator=(obj2&&) {
 				++num_mv;
+				return *this;
 			}
 		};
 

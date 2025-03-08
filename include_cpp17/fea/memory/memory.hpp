@@ -218,10 +218,10 @@ constexpr auto maybe_make_nothrow_move_iterator(Iter it) noexcept {
 	}
 }
 
-#if FEA_LINUX
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wclass-memaccess"
-#endif
+// #if FEA_LINUX
+// #pragma GCC diagnostic push
+// #pragma GCC diagnostic ignored "-Wclass-memaccess"
+// #endif
 template <class T>
 constexpr void destroy_at([[maybe_unused]] T* p) noexcept {
 	if constexpr (!std::is_trivially_destructible_v<T>) {
@@ -257,9 +257,9 @@ constexpr void destroy(
 		}
 	}
 }
-#if FEA_LINUX
-#pragma GCC diagnostic pop
-#endif
+// #if FEA_LINUX
+// #pragma GCC diagnostic pop
+// #endif
 
 // inline size_t page_size()
 //{
