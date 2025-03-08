@@ -99,13 +99,12 @@ constexpr auto maybe_make_nothrow_move_iterator(Iter it) noexcept;
 // Calls std::destroy_at if T is not trivially destructible.
 // In debug, zeros memory.
 template <class T>
-constexpr void destroy_at(T* p) noexcept(noexcept(p->~T()));
+constexpr void destroy_at(T* p) noexcept;
 
 // Calls std::destroy if T is not trivially destructible.
 // In debug, zeros memory.
 template <class FwdIt>
-constexpr void destroy(FwdIt first, FwdIt last) noexcept(
-		noexcept(fea::destroy_at(&(*first))));
+constexpr void destroy(FwdIt first, FwdIt last) noexcept;
 
 } // namespace fea
 
@@ -219,8 +218,12 @@ constexpr auto maybe_make_nothrow_move_iterator(Iter it) noexcept {
 	}
 }
 
+#if FEA_LINUX
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
 template <class T>
-constexpr void destroy_at(T* p) noexcept(noexcept(p->~T())) {
+constexpr void destroy_at(T* p) noexcept {
 	if constexpr (!std::is_trivially_destructible_v<T>) {
 		std::destroy_at(p);
 	}
@@ -231,8 +234,7 @@ constexpr void destroy_at(T* p) noexcept(noexcept(p->~T())) {
 }
 
 template <class FwdIt>
-constexpr void destroy(FwdIt first, FwdIt last) noexcept(
-		noexcept(fea::destroy_at(&(*first)))) {
+constexpr void destroy(FwdIt first, FwdIt last) noexcept {
 	using val_t = typename std::iterator_traits<FwdIt>::value_type;
 	if constexpr (!std::is_trivially_destructible_v<val_t>) {
 		std::destroy(first, last);
@@ -244,6 +246,9 @@ constexpr void destroy(FwdIt first, FwdIt last) noexcept(
 		}
 	}
 }
+#if FEA_LINUX
+#pragma GCC diagnostic pop
+#endif
 
 // inline size_t page_size()
 //{
