@@ -18,11 +18,13 @@ class FeaLibsConan(ConanFile):
         "fPIC": [True, False],
         "with_tbb": [True, False],
         "with_onetbb": [True, False],
+        "with_date": [True, False],
     }
     default_options = {
         "fPIC": True,
         "with_tbb": True,
         "with_onetbb": False,
+        "with_date": True,
         "gtest/*:build_gmock" : False,
         "date/*:use_system_tz_db" : True,
         "tbb/*:tbbmalloc" : False,
@@ -40,7 +42,8 @@ class FeaLibsConan(ConanFile):
         else:
             self.requires("gtest/1.11.0", test=True)
         
-        self.requires("date/3.0.0")
+        if self.options.with_date:
+            self.requires("date/3.0.0")
 
         if self.options.with_onetbb:
             # Prioritize onetbb.
@@ -65,6 +68,7 @@ class FeaLibsConan(ConanFile):
         tc.cache_variables["FEA_BENCHMARKS"] = False
         tc.cache_variables["FEA_WITH_TBB"] = self.options.with_tbb
         tc.cache_variables["FEA_WITH_ONETBB"] = self.options.with_onetbb
+        tc.cache_variables["FEA_WITH_DATE"] = self.options.with_date
         tc.generate()
 
         tc = CMakeDeps(self)

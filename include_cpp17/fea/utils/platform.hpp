@@ -55,6 +55,22 @@
 #endif
 
 namespace fea {
+// Build customization (with / without libraries).
+#undef FEA_WITH_TBB
+#undef FEA_WITH_DATE
+#define FEA_WITH_TBB 0
+#define FEA_WITH_DATE 0
+
+#if defined(FEA_WITH_TBB_DEF)
+#undef FEA_WITH_TBB
+#define FEA_WITH_TBB 1
+#endif
+
+#if defined(FEA_WITH_DATE_DEF)
+#undef FEA_WITH_DATE
+#define FEA_WITH_DATE 1
+#endif
+
 // Reset everything and force #if FEA_BLA to prevent missing include.
 #undef FEA_CPP23
 #undef FEA_CPP20
@@ -202,15 +218,6 @@ inline constexpr bool debug_build = true;
 #if defined(FEA_SERIALIZE_SIZE_T_DEF)
 #undef FEA_SERIALIZE_SIZE_T
 #define FEA_SERIALIZE_SIZE_T FEA_SERIALIZE_SIZE_T_DEF
-#endif
-
-// Used throughout to enable or disable tbb functionality.
-#undef FEA_WITH_TBB
-#define FEA_WITH_TBB 1
-
-#if defined(FEA_NO_TBB_DEF)
-#undef FEA_WITH_TBB
-#define FEA_WITH_TBB 0
 #endif
 
 /**

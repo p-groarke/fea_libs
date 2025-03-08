@@ -29,6 +29,8 @@ jobs:
           - { toolset_ver: "v143", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
           - { toolset_ver: "v143", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
           - { toolset_ver: "v143", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
+          - { toolset_ver: "v143", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_DATE=Off" }
+          - { toolset_ver: "v143", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_DATE=Off" }
           - { toolset_ver: "v142", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_TBB=On" }
           - { toolset_ver: "v142", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
           # - { toolset_ver: "v141", fea_ver: "-DFEA_CPP17=On" }
@@ -88,6 +90,7 @@ jobs:
         config:
           - { os: macos-14, xcode_ver: "15.2", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_ONETBB=On" }
           - { os: macos-14, xcode_ver: "15.2", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
+          - { os: macos-14, xcode_ver: "15.2", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_DATE=Off" }
           - { os: macos-13, xcode_ver: "15.0.1", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
           - { os: macos-13, xcode_ver: "14.3.1", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
           - { os: macos-12, xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
@@ -160,6 +163,8 @@ jobs:
           - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_ONETBB=On" }
           - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
           - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
+          - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_DATE=Off" }
+          - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_DATE=Off" }
           - { os: ubuntu-22.04, gcc_ver: "12", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
           - { os: ubuntu-20.04, gcc_ver: "10", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
           - { os: ubuntu-20.04, gcc_ver: "9", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }

@@ -1,8 +1,10 @@
-﻿#include <chrono>
+﻿#include <fea/time/time.hpp>
+#include <fea/utils/platform.hpp>
+
+#if FEA_WITH_DATE
+#include <chrono>
 #include <cstdio>
 #include <fea/time/high_range_duration.hpp>
-#include <fea/time/time.hpp>
-#include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 #include <limits>
 
@@ -377,3 +379,4 @@ TEST(time, year_month_days) {
 	EXPECT_EQ(fea::next_year_days(t).count(), 365);
 }
 } // namespace
+#endif

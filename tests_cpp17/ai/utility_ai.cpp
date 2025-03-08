@@ -1,9 +1,12 @@
-﻿#include <fea/ai/utility_ai.hpp>
-#include <fea/time/delta_time.hpp>
-#include <fea/time/time.hpp>
+﻿#include <chrono>
+#include <fea/ai/utility_ai.hpp>
+#include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 
 namespace {
+using mdseconds = std::chrono::duration<double>;
+using mdhours = std::chrono::duration<double, std::chrono::hours::period>;
+
 // TODO : Needs way more tests. Needs an answer for negative predicates (do they
 // invalidate the function or we average as usual).
 TEST(utility_ai, basics) {
@@ -132,7 +135,7 @@ struct cat {
 		}
 	}
 
-	void update(fea::dseconds dt) {
+	void update(mdseconds dt) {
 		awake_hours += dt * 60.f * 60.f;
 
 		// print();
@@ -140,7 +143,7 @@ struct cat {
 		ai.trigger(this, this);
 	}
 
-	void update_mt(fea::dseconds dt) {
+	void update_mt(mdseconds dt) {
 		awake_hours += dt * 60.f * 60.f;
 
 		// print();
@@ -159,12 +162,12 @@ struct cat {
 
 	// The utility_ai functions can be member functions if you want.
 	float wants_sleep() const {
-		const fea::dhours average_awake_hours{ 15.f };
-		const fea::dhours sleepy_delta{ 6.f };
+		const mdhours average_awake_hours{ 15.f };
+		const mdhours sleepy_delta{ 6.f };
 
-		fea::dhours target_awake_hours = average_awake_hours;
+		mdhours target_awake_hours = average_awake_hours;
 		if (sleepy_head != 0.f) {
-			fea::dhours cat_delta = sleepy_head * sleepy_delta;
+			mdhours cat_delta = sleepy_head * sleepy_delta;
 			target_awake_hours -= cat_delta;
 		}
 
@@ -189,7 +192,7 @@ struct cat {
 	float sleepy_head = 0.f; // personality
 
 	bool sleeping = false; // state
-	fea::dhours awake_hours = fea::dhours{ 0.f };
+	mdhours awake_hours = mdhours{ 0.f };
 
 	static size_t cat_id_counter;
 	size_t id = cat_id_counter++;
@@ -201,8 +204,6 @@ struct cat {
 size_t cat::cat_id_counter = 0;
 
 TEST(utility_ai, meow) {
-	fea::delta_time dtc;
-
 	// single-thread
 	{
 		std::vector<cat> cats{
@@ -212,21 +213,21 @@ TEST(utility_ai, meow) {
 		};
 
 		for (cat& c : cats) {
-			c.update(fea::dseconds{ 9.f });
+			c.update(mdseconds{ 9.f });
 		}
 		EXPECT_FALSE(cats[0].sleeping);
 		EXPECT_FALSE(cats[1].sleeping);
 		EXPECT_TRUE(cats[2].sleeping);
 
 		for (cat& c : cats) {
-			c.update(fea::dseconds{ 3.f });
+			c.update(mdseconds{ 3.f });
 		}
 		EXPECT_FALSE(cats[0].sleeping);
 		EXPECT_TRUE(cats[1].sleeping);
 		EXPECT_TRUE(cats[2].sleeping);
 
 		for (cat& c : cats) {
-			c.update(fea::dseconds{ 3.f });
+			c.update(mdseconds{ 3.f });
 		}
 		EXPECT_TRUE(cats[0].sleeping);
 		EXPECT_TRUE(cats[1].sleeping);
@@ -242,21 +243,21 @@ TEST(utility_ai, meow) {
 		};
 
 		for (cat& c : cats) {
-			c.update_mt(fea::dseconds{ 9.f });
+			c.update_mt(mdseconds{ 9.f });
 		}
 		EXPECT_FALSE(cats[0].sleeping);
 		EXPECT_FALSE(cats[1].sleeping);
 		EXPECT_TRUE(cats[2].sleeping);
 
 		for (cat& c : cats) {
-			c.update_mt(fea::dseconds{ 3.f });
+			c.update_mt(mdseconds{ 3.f });
 		}
 		EXPECT_FALSE(cats[0].sleeping);
 		EXPECT_TRUE(cats[1].sleeping);
 		EXPECT_TRUE(cats[2].sleeping);
 
 		for (cat& c : cats) {
-			c.update_mt(fea::dseconds{ 3.f });
+			c.update_mt(mdseconds{ 3.f });
 		}
 		EXPECT_TRUE(cats[0].sleeping);
 		EXPECT_TRUE(cats[1].sleeping);

@@ -1,8 +1,10 @@
-﻿#include <chrono>
-#include <cstdio>
-#include <fea/time/high_range_duration.hpp>
+﻿#include <fea/time/high_range_duration.hpp>
 #include <fea/time/time.hpp>
 #include <fea/utils/platform.hpp>
+
+#if FEA_WITH_DATE
+#include <chrono>
+#include <cstdio>
 #include <gtest/gtest.h>
 #include <limits>
 
@@ -168,3 +170,4 @@ TEST(time_high_range_duration, ctors) {
 	}
 }
 } // namespace
+#endif
