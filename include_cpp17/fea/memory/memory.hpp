@@ -223,18 +223,29 @@ constexpr auto maybe_make_nothrow_move_iterator(Iter it) noexcept {
 #pragma GCC diagnostic ignored "-Wclass-memaccess"
 #endif
 template <class T>
-constexpr void destroy_at(T* p) noexcept {
+constexpr void destroy_at([[maybe_unused]] T* p) noexcept {
 	if constexpr (!std::is_trivially_destructible_v<T>) {
-		std::destroy_at(p);
+		if constexpr (!std::is_array_v<T>) {
+			std::destroy_at(p);
+		} else {
+			std::destroy(std::begin(*p), std::end(*p));
+		}
 	}
 
 	if constexpr (fea::debug_build) {
-		std::memset(p, 0, sizeof(T));
+		if constexpr (!std::is_array_v<T>) {
+			std::memset(p, 0, sizeof(T));
+		} else {
+			for (auto it = std::begin(*p); it != std::end(*p); ++it) {
+				std::memset(std::addressof(*it), 0, sizeof(T));
+			}
+		}
 	}
 }
 
 template <class FwdIt>
-constexpr void destroy(FwdIt first, FwdIt last) noexcept {
+constexpr void destroy(
+		[[maybe_unused]] FwdIt first, [[maybe_unused]] FwdIt last) noexcept {
 	using val_t = typename std::iterator_traits<FwdIt>::value_type;
 	if constexpr (!std::is_trivially_destructible_v<val_t>) {
 		std::destroy(first, last);
@@ -242,7 +253,7 @@ constexpr void destroy(FwdIt first, FwdIt last) noexcept {
 
 	if constexpr (fea::debug_build) {
 		for (; first != last; ++first) {
-			std::memset(&(*first), 0, sizeof(val_t));
+			std::memset(std::addressof(*first), 0, sizeof(val_t));
 		}
 	}
 }
