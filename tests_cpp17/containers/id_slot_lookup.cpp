@@ -1,4 +1,5 @@
 #include <fea/containers/id_slot_lookup.hpp>
+#include <fea/utils/platform.hpp>
 #include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
 #include <unordered_map>
@@ -90,12 +91,12 @@ TEST(id_lookup, basics) {
 		EXPECT_TRUE(ul.contains(k));
 
 		ul.invalidate(k);
-		if constexpr (fea::debug_build) {
-			size_t v;
-			fea::unused(v);
-			EXPECT_DEATH(v = ul.at_unchecked(k), "");
-			EXPECT_DEATH(ul.update(k, k), "");
-		}
+#if FEA_DEBUG
+		size_t v;
+		fea::unused(v);
+		EXPECT_DEATH(v = ul.at_unchecked(k), "");
+		EXPECT_DEATH(ul.update(k, k), "");
+#endif
 		EXPECT_EQ(ul.find(k, 1u), 1u);
 		EXPECT_FALSE(ul.contains(k));
 
