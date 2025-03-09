@@ -120,4 +120,5 @@ TEST(utf8, utf8_io) {
 	SetConsoleOutputCP(CP_UTF8);
 #endif
 }
+
 } // namespace
