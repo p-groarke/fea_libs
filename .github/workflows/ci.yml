@@ -75,7 +75,7 @@ jobs:
         bin\fea_libs_tests
         bin\fea_libs_nothrow_tests
 
-    - name: Test
+    - name: TestPipes
       # working-directory: ${{ github.workspace }}/build
       shell: cmd
       run: |

@@ -96,8 +96,8 @@ struct node {
 	}
 
 	void add_child(Id child_id) {
-		add_child(child_id, std::conditional_t<MaxChildren == 0, std::true_type,
-									std::false_type>{});
+		add_child(child_id, std::conditional_t < MaxChildren == 0,
+				std::true_type, std::false_type > {});
 	}
 
 	void remove_child(Id child_id) {
@@ -124,12 +124,13 @@ struct node {
 	}
 
 	void add_parent(Id parent_id) {
-		add_parent(parent_id, std::conditional_t<MaxParents == 0,
-									  std::true_type, std::false_type>{});
+		add_parent(parent_id, std::conditional_t < MaxParents == 0,
+				std::true_type, std::false_type > {});
 	}
 
 	void remove_parent(Id parent_id) {
 		auto it = std::find(_parents.begin(), _parents.end(), parent_id);
+		assert(it != _parents.end());
 		_parents.erase(it);
 		_dirty_evaluation_graph = true;
 	}

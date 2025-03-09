@@ -325,22 +325,17 @@ template <class T, size_t StackSize>
 constexpr stack_vector<T, StackSize>::stack_vector(
 		std::initializer_list<value_type>&& init)
 		: _size(init.size()) {
-	assert(init.size() <= StackSize);
 	// done
-	if constexpr (std::is_nothrow_move_constructible_v<value_type>
-				  || !std::is_copy_constructible_v<value_type>) {
-		std::uninitialized_move(init.begin(), init.end(), begin());
-	} else {
-		std::uninitialized_copy(init.begin(), init.end(), begin());
-	}
+	assert(init.size() <= StackSize);
+	fea::uninitialized_move_if_moveable(init.begin(), init.end(), begin());
 }
 
 template <class T, size_t StackSize>
 template <class InputIt, class>
 constexpr stack_vector<T, StackSize>::stack_vector(InputIt first, InputIt last)
 		: _size(std::distance(first, last)) {
-	assert(size_t(std::distance(first, last)) <= StackSize);
 	// done
+	assert(size_t(std::distance(first, last)) <= StackSize);
 	// TODO : Check if move iterators.
 	std::uninitialized_copy(first, last, begin());
 }
@@ -555,9 +550,15 @@ constexpr auto stack_vector<T, StackSize>::erase(const_iterator pos)
 
 	// Convert to non-const iter.
 	iterator it = begin() + std::distance(cbegin(), pos);
+
+	// Move surviving range -1 position.
 	fea::move_if_moveable(it + 1, end(), it);
-	fea::destroy_at(end());
+
+	assert(_size > 0);
 	--_size;
+
+	// Destroy previously last item.
+	fea::destroy_at(end());
 	return it;
 }
 
@@ -565,6 +566,7 @@ template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::erase(
 		const_iterator first, const_iterator last) -> iterator {
 	// done
+	assert(first <= last);
 	if (first == last) {
 		return begin() + std::distance(cbegin(), first);
 	}
@@ -646,6 +648,7 @@ template <class InputIt, class>
 constexpr auto stack_vector<T, StackSize>::insert(
 		const_iterator pos, InputIt first, InputIt last) -> iterator {
 	// done
+	// TODO : move iterators
 	assert(pos <= end());
 
 	ptrdiff_t count = std::distance(first, last);
