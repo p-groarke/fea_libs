@@ -18,6 +18,9 @@ namespace {
 
 TEST(utf8, utf8_io) {
 #if FEA_WINDOWS
+	unsigned backup_in_cp = GetConsoleCP();
+	unsigned backup_out_cp = GetConsoleOutputCP();
+
 	SetConsoleCP(28591);
 	SetConsoleOutputCP(28591);
 
@@ -99,25 +102,27 @@ TEST(utf8, utf8_io) {
 #endif
 	}
 
-	// Should have been reset.
-	fea::translation_resetter tr3
-			= fea::translate_io(fea::translation_mode::binary);
-	fea::unused(tr3);
+	{
+		// Should have been reset.
+		fea::translation_resetter tr3
+				= fea::translate_io(fea::translation_mode::binary);
+		fea::unused(tr3);
 
 #if FEA_WINDOWS
-	EXPECT_EQ(GetConsoleCP(), prev_in_cp);
-	EXPECT_EQ(GetConsoleOutputCP(), prev_out_cp);
+		EXPECT_EQ(GetConsoleCP(), prev_in_cp);
+		EXPECT_EQ(GetConsoleOutputCP(), prev_out_cp);
 
-	// Windows actually sets wtext instead of u16text...
-	EXPECT_EQ(tr3.previous_stdin_mode(), fea::translation_mode::text);
-	EXPECT_EQ(tr3.previous_stdout_mode(), fea::translation_mode::text);
-	EXPECT_EQ(tr3.previous_stderr_mode(), fea::translation_mode::text);
+		// Windows actually sets wtext instead of u16text...
+		EXPECT_EQ(tr3.previous_stdin_mode(), fea::translation_mode::text);
+		EXPECT_EQ(tr3.previous_stdout_mode(), fea::translation_mode::text);
+		EXPECT_EQ(tr3.previous_stderr_mode(), fea::translation_mode::text);
 #endif
+	}
 
 	// Reset
 #if FEA_WINDOWS
-	SetConsoleCP(CP_UTF8);
-	SetConsoleOutputCP(CP_UTF8);
+	SetConsoleCP(backup_in_cp);
+	SetConsoleOutputCP(backup_out_cp);
 #endif
 }
 

@@ -98,7 +98,6 @@ jobs:
           - { os: macos-14, xcode_ver: "15.2", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_DATE=Off" }
           - { os: macos-13, xcode_ver: "15.0.1", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
           - { os: macos-13, xcode_ver: "14.3.1", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
-          - { os: macos-12, xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
 
     steps:
     - name: Git Line Endings
