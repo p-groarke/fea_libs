@@ -41,7 +41,7 @@ jobs:
       run: |
         git config --global core.autocrlf false
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Install Python
       uses: actions/setup-python@v2
@@ -69,17 +69,22 @@ jobs:
 
     - name: Test
       # working-directory: ${{ github.workspace }}/build
-      shell: cmd
+      # shell: cmd # broken, doesn't report errors
       run: |
         cd ${{ github.workspace }}/build
         bin\fea_libs_tests
         bin\fea_libs_nothrow_tests
+
+    - name: Test
+      # working-directory: ${{ github.workspace }}/build
+      shell: cmd
+      run: |
+        cd ${{ github.workspace }}/build
         cat bin\tests_data\pipe.txt | bin\fea_libs_pipe_tests 0
         cat bin\tests_data\pipe.txt | bin\fea_libs_pipe_tests 1
         bin\fea_libs_pipe_tests 0 < "bin\tests_data\pipe.txt"
         bin\fea_libs_pipe_tests 1 < "bin\tests_data\pipe.txt"
         bin\fea_libs_pipe_tests 2
-
 
   Clang:
     runs-on: ${{ matrix.config.os }}
@@ -100,7 +105,7 @@ jobs:
       run: |
         git config --global core.autocrlf false
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Install XCode ${{ matrix.config.xcode_ver }}
       uses: maxim-lobanov/setup-xcode@v1
@@ -174,7 +179,7 @@ jobs:
       run: |
         git config --global core.autocrlf false
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Install Gcc
       uses: egor-tensin/setup-gcc@v1

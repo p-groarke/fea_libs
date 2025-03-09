@@ -553,9 +553,8 @@ constexpr auto stack_vector<T, StackSize>::erase(const_iterator pos)
 		return end();
 	}
 
-	size_type dist = size_type(std::distance(cbegin(), pos));
-	assert(dist < size());
-	auto it = begin() + dist;
+	// Convert to non-const iter.
+	iterator it = begin() + std::distance(cbegin(), pos);
 	fea::maybe_move(it + 1, end(), it);
 	fea::destroy_at(end());
 	--_size;
@@ -567,7 +566,7 @@ constexpr typename stack_vector<T, StackSize>::iterator stack_vector<T,
 		StackSize>::erase(const_iterator first, const_iterator last) {
 	// done
 	if (first == last) {
-		return begin() + std::distance(cbegin(), last);
+		return begin() + std::distance(cbegin(), first);
 	}
 
 	size_type begin_idx = size_type(std::distance(cbegin(), first));
@@ -592,10 +591,13 @@ constexpr typename stack_vector<T, StackSize>::iterator stack_vector<T,
 	assert(false);
 
 	assert(_size < _data.size());
-	size_type dist = size_type(std::distance(cbegin(), pos));
-	auto start_it = begin() + dist;
-	fea::maybe_move_backward(start_it, end(), end() + 1);
-	*start_it = value;
+	assert(pos <= end());
+
+	// Convert to non-const iter.
+	iterator it = begin() + std::distance(cbegin(), pos);
+	// Uninitialize move end -> end + 1.
+	fea::maybe_move_backward(it, end(), end() + 1);
+	*it = value;
 	++_size;
 	return start_it;
 }

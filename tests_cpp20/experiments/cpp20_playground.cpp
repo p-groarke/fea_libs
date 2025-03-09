@@ -138,18 +138,20 @@ auto my_func() {
 // A "maybe throwing" function.
 // The caller chooses which behavior they prefer by
 // capturing a std::error_code or not.
-auto my_func2() {
-	return return_overload{
-		[]() noexcept -> std::tuple<std::error_code, int> {
-			// noexcept implementation...
-			std::cout << "noexcept imp" << std::endl;
-		},
-		[]() -> int {
-			// throwing implementation...
-			std::cout << "throwing imp" << std::endl;
-		},
-	};
-}
+// auto my_func2() {
+//	return return_overload{
+//		[]() noexcept -> std::tuple<std::error_code, int> {
+//			// noexcept implementation...
+//			std::cout << "noexcept imp" << std::endl;
+//			return {};
+//		},
+//		[]() -> int {
+//			// throwing implementation...
+//			std::cout << "throwing imp" << std::endl;
+//			return {};
+//		},
+//	};
+//}
 
 TEST(playground, cpp20) {
 	int test_int = my_func();
