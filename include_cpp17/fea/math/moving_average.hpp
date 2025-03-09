@@ -50,9 +50,10 @@ https://www.incrediblecharts.com/indicators/linear_regression.php
 
 namespace fea {
 namespace detail {
+// TODO : use fea::fixed
 template <class T>
 struct moving_avg_base;
-}
+} // namespace detail
 
 
 // Computes the cumulative average (rolling / running average).

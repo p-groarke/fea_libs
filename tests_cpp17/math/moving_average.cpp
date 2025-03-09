@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <fea/math/moving_average.hpp>
+#include <fea/numerics/fixed.hpp>
 #include <gtest/gtest.h>
 
 namespace fea {
@@ -179,7 +180,8 @@ TEST(moving_average, sma) {
 	}
 
 	{
-		fea::simple_moving_average<double, 5> sma;
+		// eps used for 32bit imprecision.
+		fea::simple_moving_average<fea::fixed, 5> sma;
 		EXPECT_EQ(sma.get(), 0.0);
 		EXPECT_EQ(sma(1.0), 1.0);
 		EXPECT_EQ(sma(0.5), 0.75);

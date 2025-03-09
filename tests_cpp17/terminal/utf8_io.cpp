@@ -9,15 +9,11 @@
 namespace {
 #define MEXPECT_EQ(u, v) \
 	if (u != v) \
-		throw std::runtime_error { \
-			__LINE__ + " : Expected u == v" \
-		}
+	throw std::runtime_error{ __LINE__ + " : Expected u == v" }
 
 #define MEXPECT_NE(u, v) \
 	if (u == v) \
-		throw std::runtime_error { \
-			__LINE__ + " : Expected u != v" \
-		}
+	throw std::runtime_error{ __LINE__ + " : Expected u != v" }
 
 
 TEST(utf8, utf8_io) {
@@ -91,7 +87,7 @@ TEST(utf8, utf8_io) {
 
 		// ~Windows actually sets wtext instead of u16text...~
 		// Windows actually does whatever the fuck it wants.
-#if FEA_VS_EQ(2017)
+#if FEA_VS_EQ(2017) || FEA_VS_EQ(2019)
 		EXPECT_EQ(tr3.previous_stdin_mode(), fea::translation_mode::text);
 		EXPECT_EQ(tr3.previous_stdout_mode(), fea::translation_mode::text);
 		EXPECT_EQ(tr3.previous_stderr_mode(), fea::translation_mode::text);

@@ -341,7 +341,7 @@ constexpr void destroy_at([[maybe_unused]] T* p) noexcept {
 			std::memset(*p, 0, sizeof(T));
 			// for (auto it = std::begin(*p); it != std::end(*p); ++it) {
 			//	std::memset(std::addressof(*it), 0,
-			//sizeof(std::remove_all_extents_t<T>));
+			// sizeof(std::remove_all_extents_t<T>));
 			// }
 		}
 	}
