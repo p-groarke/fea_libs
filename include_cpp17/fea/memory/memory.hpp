@@ -45,7 +45,7 @@ template <class T>
 std::conditional_t<!std::is_move_constructible_v<T>
 						   && std::is_copy_constructible_v<T>,
 		const T&, T&&>
-maybe_move(T& t) noexcept;
+move_if_moveable(T& t) noexcept;
 
 // Returns rvalue if T has a nothrow move constructor or isn't copy
 // constructible.
@@ -53,21 +53,21 @@ template <class T>
 std::conditional_t<!std::is_nothrow_move_constructible_v<T>
 						   && std::is_copy_constructible_v<T>,
 		const T&, T&&>
-maybe_nothrow_move(T& t) noexcept;
+move_if_noexcept_moveable(T& t) noexcept;
 
 // Copies or moves the range to dest.
 // If the range is trivially copyable, prefers copy.
 // If the range is moveable, moves it.
 // Fallbacks on copy.
 template <class InputIt, class OutputIt>
-constexpr OutputIt maybe_move(InputIt first, InputIt last, OutputIt dest);
+constexpr OutputIt move_if_moveable(InputIt first, InputIt last, OutputIt dest);
 
 // Copies or moves the range to dest.
 // If the range is trivially copyable, prefers copy.
 // If the range is nothrow moveable, moves it.
 // Fallbacks on copy.
 template <class InputIt, class OutputIt>
-constexpr OutputIt maybe_nothrow_move(
+constexpr OutputIt move_if_noexcept_moveable(
 		InputIt first, InputIt last, OutputIt dest);
 
 // Backward copies or moves the range to dest.
@@ -75,7 +75,7 @@ constexpr OutputIt maybe_nothrow_move(
 // If the range is moveable, moves it.
 // Fallbacks on copy.
 template <class InputIt, class OutputIt>
-constexpr OutputIt maybe_move_backward(
+constexpr OutputIt move_backward_if_moveable(
 		InputIt first, InputIt last, OutputIt dest_last);
 
 // Backward copies or moves the range to dest.
@@ -83,18 +83,51 @@ constexpr OutputIt maybe_move_backward(
 // If the range is nothrow moveable, moves it.
 // Fallbacks on copy.
 template <class InputIt, class OutputIt>
-constexpr OutputIt maybe_nothrow_move_backward(
+constexpr OutputIt move_backward_if_noexcept_moveable(
 		InputIt first, InputIt last, OutputIt dest_last);
+
+// Copies or moves the range to dest.
+// If the range is trivially copyable, prefers copy.
+// If the range is moveable, moves it.
+// Fallbacks on copy.
+template <class InputIt, class OutputIt>
+constexpr OutputIt uninitialized_move_if_moveable(
+		InputIt first, InputIt last, OutputIt dest);
+
+// Copies or moves the range to dest.
+// If the range is trivially copyable, prefers copy.
+// If the range is nothrow moveable, moves it.
+// Fallbacks on copy.
+template <class InputIt, class OutputIt>
+constexpr OutputIt uninitialized_move_if_noexcept_moveable(
+		InputIt first, InputIt last, OutputIt dest);
+
+// TODO
+//// Backward copies or moves the range to dest.
+//// If the range is trivially copyable, prefers copy.
+//// If the range is moveable, moves it.
+//// Fallbacks on copy.
+// template <class InputIt, class OutputIt>
+// constexpr OutputIt uninitialized_move_backward_if_moveable(
+//		InputIt first, InputIt last, OutputIt dest_last);
+//
+//// Backward copies or moves the range to dest.
+//// If the range is trivially copyable, prefers copy.
+//// If the range is nothrow moveable, moves it.
+//// Fallbacks on copy.
+// template <class InputIt, class OutputIt>
+// constexpr OutputIt uninitialized_move_backward_if_noexcept_moveable(
+//		InputIt first, InputIt last, OutputIt dest_last);
 
 // Creates move iterator if the underlying value has a move constructor
 // or isn't copy constructible.
 template <class Iter>
-constexpr auto maybe_make_move_iterator(Iter it) noexcept;
+constexpr auto make_move_iterator_if_moveable(Iter it) noexcept;
 
 // Creates move iterator if the underlying value has a nothrow move constructor
 // or isn't copy constructible.
 template <class Iter>
-constexpr auto maybe_make_nothrow_move_iterator(Iter it) noexcept;
+constexpr auto make_move_iterator_if_noexcept_moveable(Iter it) noexcept;
 
 // Calls std::destroy_at if T is not trivially destructible.
 // In debug, zeros memory.
@@ -117,7 +150,7 @@ template <class T>
 std::conditional_t<!std::is_move_constructible_v<T>
 						   && std::is_copy_constructible_v<T>,
 		const T&, T&&>
-maybe_move(T& t) noexcept {
+move_if_moveable(T& t) noexcept {
 	return std::move(t);
 }
 
@@ -125,12 +158,13 @@ template <class T>
 std::conditional_t<!std::is_nothrow_move_constructible_v<T>
 						   && std::is_copy_constructible_v<T>,
 		const T&, T&&>
-maybe_nothrow_move(T& t) noexcept {
+move_if_noexcept_moveable(T& t) noexcept {
 	return std::move(t);
 }
 
 template <class InputIt, class OutputIt>
-constexpr OutputIt maybe_move(InputIt first, InputIt last, OutputIt dest) {
+constexpr OutputIt move_if_moveable(
+		InputIt first, InputIt last, OutputIt dest) {
 	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
 	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
 	static_assert(std::is_same_v<in_val_t, out_val_t>,
@@ -146,7 +180,7 @@ constexpr OutputIt maybe_move(InputIt first, InputIt last, OutputIt dest) {
 }
 
 template <class InputIt, class OutputIt>
-constexpr OutputIt maybe_nothrow_move(
+constexpr OutputIt move_if_noexcept_moveable(
 		InputIt first, InputIt last, OutputIt dest) {
 	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
 	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
@@ -163,7 +197,7 @@ constexpr OutputIt maybe_nothrow_move(
 }
 
 template <class InputIt, class OutputIt>
-constexpr OutputIt maybe_move_backward(
+constexpr OutputIt move_backward_if_moveable(
 		InputIt first, InputIt last, OutputIt dest) {
 	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
 	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
@@ -180,7 +214,7 @@ constexpr OutputIt maybe_move_backward(
 }
 
 template <class InputIt, class OutputIt>
-constexpr OutputIt maybe_nothrow_move_backward(
+constexpr OutputIt move_backward_if_noexcept_moveable(
 		InputIt first, InputIt last, OutputIt dest) {
 	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
 	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
@@ -195,9 +229,77 @@ constexpr OutputIt maybe_nothrow_move_backward(
 		return std::move_backward(first, last, dest);
 	}
 }
+
+template <class InputIt, class OutputIt>
+constexpr OutputIt uninitialized_move_if_moveable(
+		InputIt first, InputIt last, OutputIt dest) {
+	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
+	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
+	static_assert(std::is_same_v<in_val_t, out_val_t>,
+			"fea::copy_or_move only works with identical input and destination "
+			"types");
+
+	if constexpr (std::is_trivially_copyable_v<in_val_t>
+				  || !std::is_move_constructible_v<in_val_t>) {
+		return std::uninitialized_copy(first, last, dest);
+	} else {
+		return std::uninitialized_move(first, last, dest);
+	}
+}
+
+template <class InputIt, class OutputIt>
+constexpr OutputIt uninitialized_move_if_noexcept_moveable(
+		InputIt first, InputIt last, OutputIt dest) {
+	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
+	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
+	static_assert(std::is_same_v<in_val_t, out_val_t>,
+			"fea::copy_or_move only works with identical input and destination "
+			"types");
+
+	if constexpr (std::is_trivially_copyable_v<in_val_t>
+				  || !std::is_nothrow_move_constructible_v<in_val_t>) {
+		return std::uninitialized_copy(first, last, dest);
+	} else {
+		return std::uninitialized_move(first, last, dest);
+	}
+}
+
+// template <class InputIt, class OutputIt>
+// constexpr OutputIt uninitialized_move_backward_if_moveable(
+//		InputIt first, InputIt last, OutputIt dest) {
+//	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
+//	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
+//	static_assert(std::is_same_v<in_val_t, out_val_t>,
+//			"fea::copy_or_move only works with identical input and destination "
+//			"types");
+//
+//	if constexpr (std::is_trivially_copyable_v<in_val_t>
+//				  || !std::is_move_constructible_v<in_val_t>) {
+//		return std::uninitialized_copy_backward(first, last, dest);
+//	} else {
+//		return std::move_backward(first, last, dest);
+//	}
+// }
+//
+// template <class InputIt, class OutputIt>
+// constexpr OutputIt uninitialized_move_backward_if_noexcept_moveable(
+//		InputIt first, InputIt last, OutputIt dest) {
+//	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
+//	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
+//	static_assert(std::is_same_v<in_val_t, out_val_t>,
+//			"fea::copy_or_move only works with identical input and destination "
+//			"types");
+//
+//	if constexpr (std::is_trivially_copyable_v<in_val_t>
+//				  || !std::is_nothrow_move_constructible_v<in_val_t>) {
+//		return std::copy_backward(first, last, dest);
+//	} else {
+//		return std::move_backward(first, last, dest);
+//	}
+// }
 
 template <class Iter>
-constexpr auto maybe_make_move_iterator(Iter it) noexcept {
+constexpr auto make_move_iterator_if_moveable(Iter it) noexcept {
 	using val_t = typename std::iterator_traits<Iter>::value_type;
 	if constexpr (std::is_move_constructible_v<val_t>
 				  || !std::is_copy_constructible_v<val_t>) {
@@ -208,7 +310,7 @@ constexpr auto maybe_make_move_iterator(Iter it) noexcept {
 }
 
 template <class Iter>
-constexpr auto maybe_make_nothrow_move_iterator(Iter it) noexcept {
+constexpr auto make_move_iterator_if_noexcept_moveable(Iter it) noexcept {
 	using val_t = typename std::iterator_traits<Iter>::value_type;
 	if constexpr (std::is_nothrow_move_constructible_v<val_t>
 				  || !std::is_copy_constructible_v<val_t>) {

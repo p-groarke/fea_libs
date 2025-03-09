@@ -87,10 +87,12 @@ template <class T, class... Args>
 void serialize(const std::queue<T, Args...>&, fea::serializer&);
 
 template <class T>
-[[nodiscard]] bool deserialize(fea::deserializer&, T&);
+[[nodiscard]]
+bool deserialize(fea::deserializer&, T&);
 
 template <class T, class... Args>
-[[nodiscard]] bool deserialize(fea::deserializer&, std::queue<T, Args...>&);
+[[nodiscard]]
+bool deserialize(fea::deserializer&, std::queue<T, Args...>&);
 
 namespace detail {
 
@@ -134,8 +136,8 @@ auto get_pair_type() {
 }
 
 template <class T>
-[[nodiscard]] bool deserialize(
-		fea::deserializer& is, T& t, std::input_iterator_tag) {
+[[nodiscard]]
+bool deserialize(fea::deserializer& is, T& t, std::input_iterator_tag) {
 
 	using Iter = typename T::iterator;
 	using traits_t = std::iterator_traits<Iter>;
@@ -160,7 +162,7 @@ template <class T>
 		if (!deserialize(is, v)) {
 			return false;
 		}
-		std::inserter(t, std::end(t)) = fea::maybe_move(v);
+		std::inserter(t, std::end(t)) = fea::move_if_moveable(v);
 	}
 
 	msize_t size2 = 0;
@@ -201,8 +203,8 @@ void serialize(
 }
 
 template <class T>
-[[nodiscard]] bool deserialize(
-		fea::deserializer& is, T& t, contiguous_iterator_tag) {
+[[nodiscard]]
+bool deserialize(fea::deserializer& is, T& t, contiguous_iterator_tag) {
 
 	using Iter = typename T::iterator;
 	using traits_t = std::iterator_traits<Iter>;
@@ -262,7 +264,8 @@ void serialize_tup(const Tup<Args...>& t, fea::serializer& os) {
 }
 
 template <class... Args, template <class...> class Tup>
-[[nodiscard]] bool deserialize_tup(fea::deserializer& is, Tup<Args...>& t) {
+[[nodiscard]]
+bool deserialize_tup(fea::deserializer& is, Tup<Args...>& t) {
 	bool ok = true;
 	fea::tuple_for_each(
 			[&](auto& v) {
@@ -283,7 +286,8 @@ void serialize(const T*, fea::serializer&);
 
 // Not implemented, fea::deserialize doesn't support serializing pointers.
 template <class T>
-[[nodiscard]] bool deserialize(fea::deserializer&, T*);
+[[nodiscard]]
+bool deserialize(fea::deserializer&, T*);
 
 // Serialize object t.
 // Recurses appropriately.
@@ -315,7 +319,8 @@ void serialize(const T& t, fea::serializer& os) {
 }
 
 template <class T>
-[[nodiscard]] bool deserialize(fea::deserializer& is, T& t) {
+[[nodiscard]]
+bool deserialize(fea::deserializer& is, T& t) {
 	if constexpr (fea::is_container_v<T>) {
 		// Is container, call iterator overload.
 		using it_t = decltype(std::begin(t));
@@ -356,8 +361,8 @@ void serialize(const std::queue<T, Args...>& t, fea::serializer& os) {
 }
 
 template <class T, class... Args>
-[[nodiscard]] bool deserialize(
-		fea::deserializer& is, std::queue<T, Args...>& t) {
+[[nodiscard]]
+bool deserialize(fea::deserializer& is, std::queue<T, Args...>& t) {
 	using msize_t = FEA_SERIALIZE_SIZE_T;
 	using fea::deserialize;
 
@@ -370,7 +375,7 @@ template <class T, class... Args>
 		if (!deserialize(is, v)) {
 			return false;
 		}
-		t.push(fea::maybe_move(v));
+		t.push(fea::move_if_moveable(v));
 	}
 
 	msize_t size2 = 0;

@@ -32,71 +32,69 @@ struct throw_mv {
 TEST(memory, basics) {
 	{
 		cpy c1;
-		static_assert(std::is_lvalue_reference_v<decltype(fea::maybe_move(c1))>,
+		static_assert(
+				std::is_lvalue_reference_v<decltype(fea::move_if_moveable(c1))>,
 				FAIL_MSG);
 		static_assert(
-				!std::is_rvalue_reference_v<decltype(fea::maybe_move(c1))>,
-				FAIL_MSG);
-		static_assert(
-				std::is_lvalue_reference_v<decltype(fea::maybe_nothrow_move(
+				!std::is_rvalue_reference_v<decltype(fea::move_if_moveable(
 						c1))>,
 				FAIL_MSG);
-		static_assert(
-				!std::is_rvalue_reference_v<decltype(fea::maybe_nothrow_move(
-						c1))>,
+		static_assert(std::is_lvalue_reference_v<
+							  decltype(fea::move_if_noexcept_moveable(c1))>,
+				FAIL_MSG);
+		static_assert(!std::is_rvalue_reference_v<
+							  decltype(fea::move_if_noexcept_moveable(c1))>,
 				FAIL_MSG);
 	}
 
 	{
 		no_cpy nc1;
 		static_assert(
-				!std::is_lvalue_reference_v<decltype(fea::maybe_move(nc1))>,
-				FAIL_MSG);
-		static_assert(
-				std::is_rvalue_reference_v<decltype(fea::maybe_move(nc1))>,
-				FAIL_MSG);
-		static_assert(
-				!std::is_lvalue_reference_v<decltype(fea::maybe_nothrow_move(
+				!std::is_lvalue_reference_v<decltype(fea::move_if_moveable(
 						nc1))>,
 				FAIL_MSG);
-		static_assert(
-				std::is_rvalue_reference_v<decltype(fea::maybe_nothrow_move(
-						nc1))>,
+		static_assert(std::is_rvalue_reference_v<decltype(fea::move_if_moveable(
+							  nc1))>,
+				FAIL_MSG);
+		static_assert(!std::is_lvalue_reference_v<
+							  decltype(fea::move_if_noexcept_moveable(nc1))>,
+				FAIL_MSG);
+		static_assert(std::is_rvalue_reference_v<
+							  decltype(fea::move_if_noexcept_moveable(nc1))>,
 				FAIL_MSG);
 	}
 
 	{
 		mv m1;
 		static_assert(
-				!std::is_lvalue_reference_v<decltype(fea::maybe_move(m1))>,
-				FAIL_MSG);
-		static_assert(std::is_rvalue_reference_v<decltype(fea::maybe_move(m1))>,
-				FAIL_MSG);
-		static_assert(
-				!std::is_lvalue_reference_v<decltype(fea::maybe_nothrow_move(
+				!std::is_lvalue_reference_v<decltype(fea::move_if_moveable(
 						m1))>,
 				FAIL_MSG);
 		static_assert(
-				std::is_rvalue_reference_v<decltype(fea::maybe_nothrow_move(
-						m1))>,
+				std::is_rvalue_reference_v<decltype(fea::move_if_moveable(m1))>,
+				FAIL_MSG);
+		static_assert(!std::is_lvalue_reference_v<
+							  decltype(fea::move_if_noexcept_moveable(m1))>,
+				FAIL_MSG);
+		static_assert(std::is_rvalue_reference_v<
+							  decltype(fea::move_if_noexcept_moveable(m1))>,
 				FAIL_MSG);
 	}
 
 	{
 		throw_mv tm1;
 		static_assert(
-				!std::is_lvalue_reference_v<decltype(fea::maybe_move(tm1))>,
-				FAIL_MSG);
-		static_assert(
-				std::is_rvalue_reference_v<decltype(fea::maybe_move(tm1))>,
-				FAIL_MSG);
-		static_assert(
-				std::is_lvalue_reference_v<decltype(fea::maybe_nothrow_move(
+				!std::is_lvalue_reference_v<decltype(fea::move_if_moveable(
 						tm1))>,
 				FAIL_MSG);
-		static_assert(
-				!std::is_rvalue_reference_v<decltype(fea::maybe_nothrow_move(
-						tm1))>,
+		static_assert(std::is_rvalue_reference_v<decltype(fea::move_if_moveable(
+							  tm1))>,
+				FAIL_MSG);
+		static_assert(std::is_lvalue_reference_v<
+							  decltype(fea::move_if_noexcept_moveable(tm1))>,
+				FAIL_MSG);
+		static_assert(!std::is_rvalue_reference_v<
+							  decltype(fea::move_if_noexcept_moveable(tm1))>,
 				FAIL_MSG);
 	}
 
@@ -105,11 +103,12 @@ TEST(memory, basics) {
 		using cpy_it_t = decltype(vec.begin());
 		using mv_it_t = decltype(std::make_move_iterator(vec.begin()));
 
-		auto it = fea::maybe_make_move_iterator(vec.begin());
+		auto it = fea::make_move_iterator_if_moveable(vec.begin());
 		static_assert(std::is_same_v<decltype(it), cpy_it_t>, FAIL_MSG);
 		static_assert(!std::is_same_v<decltype(it), mv_it_t>, FAIL_MSG);
 
-		auto nothrow_it = fea::maybe_make_nothrow_move_iterator(vec.begin());
+		auto nothrow_it
+				= fea::make_move_iterator_if_noexcept_moveable(vec.begin());
 		static_assert(std::is_same_v<decltype(nothrow_it), cpy_it_t>, FAIL_MSG);
 		static_assert(!std::is_same_v<decltype(nothrow_it), mv_it_t>, FAIL_MSG);
 	}
@@ -119,11 +118,12 @@ TEST(memory, basics) {
 		using cpy_it_t = decltype(vec.begin());
 		using mv_it_t = decltype(std::make_move_iterator(vec.begin()));
 
-		auto it = fea::maybe_make_move_iterator(vec.begin());
+		auto it = fea::make_move_iterator_if_moveable(vec.begin());
 		static_assert(!std::is_same_v<decltype(it), cpy_it_t>, FAIL_MSG);
 		static_assert(std::is_same_v<decltype(it), mv_it_t>, FAIL_MSG);
 
-		auto nothrow_it = fea::maybe_make_nothrow_move_iterator(vec.begin());
+		auto nothrow_it
+				= fea::make_move_iterator_if_noexcept_moveable(vec.begin());
 		static_assert(
 				!std::is_same_v<decltype(nothrow_it), cpy_it_t>, FAIL_MSG);
 		static_assert(std::is_same_v<decltype(nothrow_it), mv_it_t>, FAIL_MSG);
@@ -134,11 +134,12 @@ TEST(memory, basics) {
 		using cpy_it_t = decltype(vec.begin());
 		using mv_it_t = decltype(std::make_move_iterator(vec.begin()));
 
-		auto it = fea::maybe_make_move_iterator(vec.begin());
+		auto it = fea::make_move_iterator_if_moveable(vec.begin());
 		static_assert(!std::is_same_v<decltype(it), cpy_it_t>, FAIL_MSG);
 		static_assert(std::is_same_v<decltype(it), mv_it_t>, FAIL_MSG);
 
-		auto nothrow_it = fea::maybe_make_nothrow_move_iterator(vec.begin());
+		auto nothrow_it
+				= fea::make_move_iterator_if_noexcept_moveable(vec.begin());
 		static_assert(
 				!std::is_same_v<decltype(nothrow_it), cpy_it_t>, FAIL_MSG);
 		static_assert(std::is_same_v<decltype(nothrow_it), mv_it_t>, FAIL_MSG);
@@ -149,11 +150,12 @@ TEST(memory, basics) {
 		using cpy_it_t = decltype(vec.begin());
 		using mv_it_t = decltype(std::make_move_iterator(vec.begin()));
 
-		auto it = fea::maybe_make_move_iterator(vec.begin());
+		auto it = fea::make_move_iterator_if_moveable(vec.begin());
 		static_assert(!std::is_same_v<decltype(it), cpy_it_t>, FAIL_MSG);
 		static_assert(std::is_same_v<decltype(it), mv_it_t>, FAIL_MSG);
 
-		auto nothrow_it = fea::maybe_make_nothrow_move_iterator(vec.begin());
+		auto nothrow_it
+				= fea::make_move_iterator_if_noexcept_moveable(vec.begin());
 		static_assert(std::is_same_v<decltype(nothrow_it), cpy_it_t>, FAIL_MSG);
 		static_assert(!std::is_same_v<decltype(nothrow_it), mv_it_t>, FAIL_MSG);
 	}
@@ -196,12 +198,12 @@ TEST(memory, destroy) {
 	}
 }
 
-TEST(memory, maybe_move) {
+TEST(memory, move_if_moveable) {
 	// Check it compiles.
 	{
 		int i = 42;
 		int o = 0;
-		fea::maybe_move(&i, &i + 1, &o);
+		fea::move_if_moveable(&i, &i + 1, &o);
 		EXPECT_EQ(o, 42);
 	}
 
@@ -249,7 +251,7 @@ TEST(memory, maybe_move) {
 		EXPECT_EQ(num_cpy, 0);
 		EXPECT_EQ(num_mv, 0);
 
-		fea::maybe_move(vec.begin(), vec.end(), vec2.begin());
+		fea::move_if_moveable(vec.begin(), vec.end(), vec2.begin());
 		EXPECT_EQ(num_ctors, 8);
 		EXPECT_EQ(num_dtors, 0);
 		EXPECT_EQ(num_cpy, 0);
@@ -295,7 +297,7 @@ TEST(memory, maybe_move) {
 		EXPECT_EQ(num_cpy, 0);
 		EXPECT_EQ(num_mv, 0);
 
-		fea::maybe_move(vec.begin(), vec.end(), vec2.begin());
+		fea::move_if_moveable(vec.begin(), vec.end(), vec2.begin());
 		EXPECT_EQ(num_ctors, 8);
 		EXPECT_EQ(num_dtors, 0);
 		EXPECT_EQ(num_cpy, 4);
@@ -330,7 +332,7 @@ TEST(memory, maybe_move) {
 		EXPECT_EQ(num_cpy, 0);
 		EXPECT_EQ(num_mv, 0);
 
-		fea::maybe_move(vec.begin(), vec.end(), vec2.begin());
+		fea::move_if_moveable(vec.begin(), vec.end(), vec2.begin());
 		EXPECT_EQ(num_ctors, 8);
 		EXPECT_EQ(num_dtors, 0);
 		EXPECT_EQ(num_cpy, 0);
@@ -338,12 +340,12 @@ TEST(memory, maybe_move) {
 	}
 }
 
-TEST(memory, maybe_nothrow_move) {
+TEST(memory, move_if_noexcept_moveable) {
 	// Check it compiles.
 	{
 		int i = 42;
 		int o = 0;
-		fea::maybe_nothrow_move(&i, &i + 1, &o);
+		fea::move_if_noexcept_moveable(&i, &i + 1, &o);
 		EXPECT_EQ(o, 42);
 	}
 
@@ -391,7 +393,7 @@ TEST(memory, maybe_nothrow_move) {
 		EXPECT_EQ(num_cpy, 0);
 		EXPECT_EQ(num_mv, 0);
 
-		fea::maybe_nothrow_move(vec.begin(), vec.end(), vec2.begin());
+		fea::move_if_noexcept_moveable(vec.begin(), vec.end(), vec2.begin());
 		EXPECT_EQ(num_ctors, 8);
 		EXPECT_EQ(num_dtors, 0);
 		EXPECT_EQ(num_cpy, 0);
@@ -442,7 +444,7 @@ TEST(memory, maybe_nothrow_move) {
 		EXPECT_EQ(num_cpy, 0);
 		EXPECT_EQ(num_mv, 0);
 
-		fea::maybe_nothrow_move(vec.begin(), vec.end(), vec2.begin());
+		fea::move_if_noexcept_moveable(vec.begin(), vec.end(), vec2.begin());
 		EXPECT_EQ(num_ctors, 8);
 		EXPECT_EQ(num_dtors, 0);
 		EXPECT_EQ(num_cpy, 4);
@@ -477,7 +479,7 @@ TEST(memory, maybe_nothrow_move) {
 		EXPECT_EQ(num_cpy, 0);
 		EXPECT_EQ(num_mv, 0);
 
-		fea::maybe_nothrow_move(vec.begin(), vec.end(), vec2.begin());
+		fea::move_if_noexcept_moveable(vec.begin(), vec.end(), vec2.begin());
 		EXPECT_EQ(num_ctors, 8);
 		EXPECT_EQ(num_dtors, 0);
 		EXPECT_EQ(num_cpy, 0);
@@ -485,12 +487,12 @@ TEST(memory, maybe_nothrow_move) {
 	}
 }
 
-TEST(memory, maybe_move_backward) {
+TEST(memory, move_backward_if_moveable) {
 	// Check it compiles.
 	{
 		int i = 42;
 		int o = 0;
-		fea::maybe_move_backward(&i, &i + 1, &o + 1);
+		fea::move_backward_if_moveable(&i, &i + 1, &o + 1);
 		EXPECT_EQ(o, 42);
 	}
 
@@ -538,7 +540,7 @@ TEST(memory, maybe_move_backward) {
 		EXPECT_EQ(num_cpy, 0);
 		EXPECT_EQ(num_mv, 0);
 
-		fea::maybe_move_backward(vec.begin(), vec.end(), vec2.end());
+		fea::move_backward_if_moveable(vec.begin(), vec.end(), vec2.end());
 		EXPECT_EQ(num_ctors, 8);
 		EXPECT_EQ(num_dtors, 0);
 		EXPECT_EQ(num_cpy, 0);
@@ -584,7 +586,7 @@ TEST(memory, maybe_move_backward) {
 		EXPECT_EQ(num_cpy, 0);
 		EXPECT_EQ(num_mv, 0);
 
-		fea::maybe_move_backward(vec.begin(), vec.end(), vec2.end());
+		fea::move_backward_if_moveable(vec.begin(), vec.end(), vec2.end());
 		EXPECT_EQ(num_ctors, 8);
 		EXPECT_EQ(num_dtors, 0);
 		EXPECT_EQ(num_cpy, 4);
@@ -619,7 +621,7 @@ TEST(memory, maybe_move_backward) {
 		EXPECT_EQ(num_cpy, 0);
 		EXPECT_EQ(num_mv, 0);
 
-		fea::maybe_move_backward(vec.begin(), vec.end(), vec2.end());
+		fea::move_backward_if_moveable(vec.begin(), vec.end(), vec2.end());
 		EXPECT_EQ(num_ctors, 8);
 		EXPECT_EQ(num_dtors, 0);
 		EXPECT_EQ(num_cpy, 0);
@@ -627,12 +629,12 @@ TEST(memory, maybe_move_backward) {
 	}
 }
 
-TEST(memory, maybe_nothrow_move_backward) {
+TEST(memory, move_backward_if_noexcept_moveable) {
 	// Check it compiles.
 	{
 		int i = 42;
 		int o = 0;
-		fea::maybe_nothrow_move_backward(&i, &i + 1, &o + 1);
+		fea::move_backward_if_noexcept_moveable(&i, &i + 1, &o + 1);
 		EXPECT_EQ(o, 42);
 	}
 
@@ -680,7 +682,8 @@ TEST(memory, maybe_nothrow_move_backward) {
 		EXPECT_EQ(num_cpy, 0);
 		EXPECT_EQ(num_mv, 0);
 
-		fea::maybe_nothrow_move_backward(vec.begin(), vec.end(), vec2.end());
+		fea::move_backward_if_noexcept_moveable(
+				vec.begin(), vec.end(), vec2.end());
 		EXPECT_EQ(num_ctors, 8);
 		EXPECT_EQ(num_dtors, 0);
 		EXPECT_EQ(num_cpy, 0);
@@ -731,7 +734,8 @@ TEST(memory, maybe_nothrow_move_backward) {
 		EXPECT_EQ(num_cpy, 0);
 		EXPECT_EQ(num_mv, 0);
 
-		fea::maybe_nothrow_move_backward(vec.begin(), vec.end(), vec2.end());
+		fea::move_backward_if_noexcept_moveable(
+				vec.begin(), vec.end(), vec2.end());
 		EXPECT_EQ(num_ctors, 8);
 		EXPECT_EQ(num_dtors, 0);
 		EXPECT_EQ(num_cpy, 4);
@@ -766,7 +770,8 @@ TEST(memory, maybe_nothrow_move_backward) {
 		EXPECT_EQ(num_cpy, 0);
 		EXPECT_EQ(num_mv, 0);
 
-		fea::maybe_nothrow_move_backward(vec.begin(), vec.end(), vec2.end());
+		fea::move_backward_if_noexcept_moveable(
+				vec.begin(), vec.end(), vec2.end());
 		EXPECT_EQ(num_ctors, 8);
 		EXPECT_EQ(num_dtors, 0);
 		EXPECT_EQ(num_cpy, 0);

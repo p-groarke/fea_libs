@@ -555,15 +555,15 @@ constexpr auto stack_vector<T, StackSize>::erase(const_iterator pos)
 
 	// Convert to non-const iter.
 	iterator it = begin() + std::distance(cbegin(), pos);
-	fea::maybe_move(it + 1, end(), it);
+	fea::move_if_moveable(it + 1, end(), it);
 	fea::destroy_at(end());
 	--_size;
 	return it;
 }
 
 template <class T, size_t StackSize>
-constexpr typename stack_vector<T, StackSize>::iterator stack_vector<T,
-		StackSize>::erase(const_iterator first, const_iterator last) {
+constexpr auto stack_vector<T, StackSize>::erase(
+		const_iterator first, const_iterator last) -> iterator {
 	// done
 	if (first == last) {
 		return begin() + std::distance(cbegin(), first);
@@ -576,7 +576,7 @@ constexpr typename stack_vector<T, StackSize>::iterator stack_vector<T,
 
 	auto beg_it = begin() + begin_idx;
 	auto end_it = begin() + end_idx;
-	fea::maybe_move(end_it, end(), beg_it);
+	fea::move_if_moveable(end_it, end(), beg_it);
 	size_type range_size = size_type(std::distance(first, last));
 	_size -= range_size;
 
@@ -585,87 +585,92 @@ constexpr typename stack_vector<T, StackSize>::iterator stack_vector<T,
 }
 
 template <class T, size_t StackSize>
-constexpr typename stack_vector<T, StackSize>::iterator stack_vector<T,
-		StackSize>::insert(const_iterator pos, const_reference value) {
-	// TODO : uninitialized
-	assert(false);
-
-	assert(_size < _data.size());
+constexpr auto stack_vector<T, StackSize>::insert(
+		const_iterator pos, const_reference value) -> iterator {
+	// done
 	assert(pos <= end());
+	assert(_size < _data.size());
 
 	// Convert to non-const iter.
 	iterator it = begin() + std::distance(cbegin(), pos);
-	// Uninitialize move end -> end + 1.
-	fea::maybe_move_backward(it, end(), end() + 1);
+
+	// Ininitalize the last item memory.
+	std::uninitialized_default_construct(end(), end() + 1);
+
+	// Then move / copy the rest.
+	fea::move_backward_if_moveable(it, end(), end() + 1);
+
 	*it = value;
 	++_size;
-	return start_it;
+	return it;
 }
 
 template <class T, size_t StackSize>
-constexpr typename stack_vector<T, StackSize>::iterator stack_vector<T,
-		StackSize>::insert(const_iterator pos, value_type&& value) {
-	// TODO : uninitialized
-	assert(false);
-
+constexpr auto stack_vector<T, StackSize>::insert(
+		const_iterator pos, value_type&& value) -> iterator {
+	// done
+	assert(pos <= end());
 	assert(_size < _data.size());
-	size_type dist = size_type(std::distance(cbegin(), pos));
-	auto start_it = begin() + dist;
-	fea::maybe_move_backward(start_it, end(), end() + 1);
-	*start_it = std::move(value);
+
+	iterator it = begin() + std::distance(cbegin(), pos);
+	std::uninitialized_default_construct(end(), end() + 1);
+	fea::move_backward_if_moveable(it, end(), end() + 1);
+
+	*it = std::move(value);
 	++_size;
-	return start_it;
+	return it;
 }
 
 template <class T, size_t StackSize>
-constexpr typename stack_vector<T, StackSize>::iterator stack_vector<T,
-		StackSize>::insert(const_iterator pos, size_type count,
-		const_reference value) {
-	// TODO : uninitialized
-	assert(false);
-
+constexpr auto stack_vector<T, StackSize>::insert(const_iterator pos,
+		size_type count, const_reference value) -> iterator {
+	// done
+	assert(pos <= end());
 	assert(_size <= _data.size() - count);
-	size_type dist = size_type(std::distance(cbegin(), pos));
+
+	ptrdiff_t dist = std::distance(cbegin(), pos);
 	if (count == 0) {
 		return begin() + dist;
 	}
 
-	auto start_it = begin() + dist;
-	fea::maybe_move_backward(start_it, end(), end() + count);
-	std::fill_n(start_it, count, value);
+	iterator it = begin() + dist;
+	std::uninitialized_default_construct_n(end(), count);
+	fea::move_backward_if_moveable(it, end(), end() + count);
+	std::fill_n(it, count, value);
 	_size += count;
-	return start_it;
+	return it;
 }
 
 template <class T, size_t StackSize>
 template <class InputIt, class>
-constexpr typename stack_vector<T, StackSize>::iterator stack_vector<T,
-		StackSize>::insert(const_iterator pos, InputIt first, InputIt last) {
-	// TODO : uninitialized
-	assert(false);
+constexpr auto stack_vector<T, StackSize>::insert(
+		const_iterator pos, InputIt first, InputIt last) -> iterator {
+	// done
+	assert(pos <= end());
 
-	size_type count = size_type(std::distance(first, last));
-	size_type dist = size_type(std::distance(cbegin(), pos));
+	ptrdiff_t count = std::distance(first, last);
+	assert(_size <= _data.size() - count);
+
+	ptrdiff_t dist = std::distance(cbegin(), pos);
 	if (count == 0) {
 		return begin() + dist;
 	}
 
-	assert(_size <= _data.size() - count);
-	auto start_it = begin() + dist;
-	fea::maybe_move_backward(start_it, end(), end() + count);
-	fea::maybe_move(first, last, start_it);
+	iterator it = begin() + dist;
+	std::uninitialized_default_construct_n(end(), count);
+	fea::move_backward_if_moveable(it, end(), end() + count);
+	fea::move_if_moveable(first, last, it);
 	_size += count;
-	return start_it;
+	return it;
 }
 
 template <class T, size_t StackSize>
 constexpr typename stack_vector<T, StackSize>::iterator stack_vector<T,
 		StackSize>::insert(const_iterator pos,
 		std::initializer_list<value_type>&& ilist) {
-	// TODO : uninitialized
-	assert(false);
-
-	return insert(pos, ilist.begin(), ilist.end());
+	// done
+	return insert(pos, fea::make_move_iterator_if_moveable(ilist.begin()),
+			fea::make_move_iterator_if_moveable(ilist.end()));
 }
 
 template <class T, size_t StackSize>

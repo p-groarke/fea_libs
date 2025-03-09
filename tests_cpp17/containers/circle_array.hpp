@@ -50,12 +50,12 @@ struct circle_array {
 	template <class FwdIt>
 	circle_array(FwdIt first, FwdIt last) {
 		assert(std::distance(first, last) <= _arr.size());
-		fea::maybe_move(first, last, _arr.begin());
+		fea::move_if_moveable(first, last, _arr.begin());
 	}
 
 	circle_array(std::initializer_list<T>&& list) {
 		assert(list.size() <= _arr.size());
-		fea::maybe_move(list.begin(), list.end(), _arr.begin());
+		fea::move_if_moveable(list.begin(), list.end(), _arr.begin());
 	}
 
 	// Pushes a new value at the write playhead.

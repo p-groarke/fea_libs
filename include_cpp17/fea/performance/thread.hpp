@@ -147,7 +147,7 @@ struct mtx_safe {
 	template <class... CtorArgs>
 	T extract(CtorArgs&&... replacement_ctor_args) {
 		std::unique_lock l{ _mutex };
-		T ret{ fea::maybe_move(_obj) };
+		T ret{ fea::move_if_moveable(_obj) };
 		_obj = T{ std::forward<CtorArgs>(replacement_ctor_args)... };
 		return ret;
 	}
