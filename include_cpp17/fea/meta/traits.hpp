@@ -402,15 +402,15 @@ using iterator_value_t = typename std::iterator_traits<Iter>::value_type;
 
 
 // Get aligned raw storage for a type.
-template <size_t Len, size_t Align>
+template <size_t Bytes, size_t Align>
 struct aligned_storage {
 	struct type {
-		alignas(Align) unsigned char data[Len];
+		alignas(Align) unsigned char data[Bytes];
 	};
 };
 
 // Helper alias.
-template <size_t Len, size_t Align>
-using aligned_storage_t = typename aligned_storage<Len, Align>::type;
+template <size_t Bytes, size_t Align>
+using aligned_storage_t = typename aligned_storage<Bytes, Align>::type;
 
 } // namespace fea

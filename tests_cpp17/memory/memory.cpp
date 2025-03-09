@@ -173,8 +173,15 @@ TEST(memory, destroy) {
 	{
 		int i = 42;
 		fea::destroy_at(&i);
-		int arr[4] = { 0, 0, 0, 0 };
+	}
+
+	{
+		int arr[4] = { 0, 1, 2, 3 };
 		fea::destroy_at(&arr);
+	}
+
+	{
+		int arr[4] = { 0, 1, 2, 3 };
 		fea::destroy(std::begin(arr), std::end(arr));
 	}
 
