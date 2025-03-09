@@ -193,38 +193,40 @@ public:
 		return ret;
 	}
 
-	constexpr basic_fixed& operator+=(basic_fixed rhs) noexcept {
-		value += rhs.value;
-		return *this;
-	}
+	// TODO : tests
+	// constexpr basic_fixed& operator+=(basic_fixed rhs) noexcept {
+	//	value += rhs.value;
+	//	return *this;
+	//}
 
-	constexpr basic_fixed& operator-=(basic_fixed rhs) noexcept {
-		value -= rhs.value;
-		return *this;
-	}
+	// constexpr basic_fixed& operator-=(basic_fixed rhs) noexcept {
+	//	value -= rhs.value;
+	//	return *this;
+	// }
 
-	constexpr basic_fixed& operator*=(basic_fixed rhs) noexcept {
-		if constexpr (scaling_is_pow2_v) {
-			value = (value * rhs.value) >> scaling_sqrt_v;
-		} else {
-			value = (value * rhs.value) / scaling_v;
-		}
-		return *this;
-	}
+	// constexpr basic_fixed& operator*=(basic_fixed rhs) noexcept {
+	//	if constexpr (scaling_is_pow2_v) {
+	//		value = (value * rhs.value) >> scaling_sqrt_v;
+	//	} else {
+	//		value = (value * rhs.value) / scaling_v;
+	//	}
+	//	return *this;
+	// }
 
-	constexpr basic_fixed& operator/=(basic_fixed rhs) noexcept {
-		if constexpr (scaling_is_pow2_v) {
-			value = (value << scaling_sqrt_v) / rhs.value;
-		} else {
-			value = (value * scaling_v) / rhs.value;
-		}
-		return *this;
-	}
+	// constexpr basic_fixed& operator/=(basic_fixed rhs) noexcept {
+	//	if constexpr (scaling_is_pow2_v) {
+	//		value = (value << scaling_sqrt_v) / rhs.value;
+	//	} else {
+	//		value = (value * scaling_v) / rhs.value;
+	//	}
+	//	return *this;
+	// }
 
-	constexpr basic_fixed& operator%=(basic_fixed rhs) noexcept {
-		value %= rhs.value;
-		return *this;
-	}
+	// constexpr basic_fixed& operator%=(basic_fixed rhs) noexcept {
+	//	value %= rhs.value;
+	//	return *this;
+	// }
+
 	// Public for serialization purposes.
 	value_t value = value_t(0);
 };
