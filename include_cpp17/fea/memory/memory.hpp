@@ -198,7 +198,7 @@ constexpr OutputIt move_if_noexcept_moveable(
 
 template <class InputIt, class OutputIt>
 constexpr OutputIt move_backward_if_moveable(
-		InputIt first, InputIt last, OutputIt dest) {
+		InputIt first, InputIt last, OutputIt dest_last) {
 	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
 	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
 	static_assert(std::is_same_v<in_val_t, out_val_t>,
@@ -207,15 +207,15 @@ constexpr OutputIt move_backward_if_moveable(
 
 	if constexpr (std::is_trivially_copyable_v<in_val_t>
 				  || !std::is_move_constructible_v<in_val_t>) {
-		return std::copy_backward(first, last, dest);
+		return std::copy_backward(first, last, dest_last);
 	} else {
-		return std::move_backward(first, last, dest);
+		return std::move_backward(first, last, dest_last);
 	}
 }
 
 template <class InputIt, class OutputIt>
 constexpr OutputIt move_backward_if_noexcept_moveable(
-		InputIt first, InputIt last, OutputIt dest) {
+		InputIt first, InputIt last, OutputIt dest_last) {
 	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
 	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
 	static_assert(std::is_same_v<in_val_t, out_val_t>,
@@ -224,9 +224,9 @@ constexpr OutputIt move_backward_if_noexcept_moveable(
 
 	if constexpr (std::is_trivially_copyable_v<in_val_t>
 				  || !std::is_nothrow_move_constructible_v<in_val_t>) {
-		return std::copy_backward(first, last, dest);
+		return std::copy_backward(first, last, dest_last);
 	} else {
-		return std::move_backward(first, last, dest);
+		return std::move_backward(first, last, dest_last);
 	}
 }
 

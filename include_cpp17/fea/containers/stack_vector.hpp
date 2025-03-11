@@ -593,16 +593,22 @@ constexpr auto stack_vector<T, StackSize>::insert(
 	assert(pos <= end());
 	assert(_size < _data.size());
 
+	// TODO ?
+	// if (pos == cend()) {
+	//	push_back(value);
+	//}
+
 	// Convert to non-const iter.
 	iterator it = begin() + std::distance(cbegin(), pos);
 
-	// Ininitalize the last item memory.
-	fea::uninitialized_move_if_moveable(end(), end() + 1, end() + 1);
 
+	// Ininitalize the last item memory.
 	// std::uninitialized_default_construct(end(), end() + 1);
+	fea::uninitialized_move_if_moveable(end() - 1, end(), end());
 
 	// Then move / copy the rest.
-	fea::move_backward_if_moveable(it, end() - 1, end() + 1);
+	// fea::move_backward_if_moveable(it, end(), end() + 1);
+	fea::move_backward_if_moveable(it, end() - 1, end());
 
 	// TODO : Check if input value was inside moved range.
 
@@ -619,8 +625,10 @@ constexpr auto stack_vector<T, StackSize>::insert(
 	assert(_size < _data.size());
 
 	iterator it = begin() + std::distance(cbegin(), pos);
-	std::uninitialized_default_construct(end(), end() + 1);
-	fea::move_backward_if_moveable(it, end(), end() + 1);
+	// std::uninitialized_default_construct(end(), end() + 1);
+	// fea::move_backward_if_moveable(it, end(), end() + 1);
+	fea::uninitialized_move_if_moveable(end() - 1, end(), end());
+	fea::move_backward_if_moveable(it, end() - 1, end());
 
 	*it = std::move(value);
 	++_size;
