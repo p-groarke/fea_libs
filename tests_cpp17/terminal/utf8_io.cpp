@@ -91,14 +91,14 @@ TEST(utf8, utf8_io) {
 		// ~Windows actually sets wtext instead of u16text...~
 		// Windows actually does whatever the fuck it wants.
 #if FEA_VS_EQ(2017)
-		std::cout << "2017\n";
+		std::wcout << L"2017\n";
 		EXPECT_EQ(tr3.previous_stdin_mode(), fea::translation_mode::text);
 		EXPECT_EQ(tr3.previous_stdout_mode(), fea::translation_mode::text);
 		EXPECT_EQ(tr3.previous_stderr_mode(), fea::translation_mode::text);
 #elif FEA_VS_EQ(2019)
-		std::cout << "2019\n";
+		std::wcout << L"2019\n";
 #else
-		std::cout << "2022\n";
+		std::wcout << L"2022\n";
 		EXPECT_EQ(tr3.previous_stdin_mode(), fea::translation_mode::wtext);
 		EXPECT_EQ(tr3.previous_stdout_mode(), fea::translation_mode::wtext);
 		EXPECT_EQ(tr3.previous_stderr_mode(), fea::translation_mode::wtext);
@@ -107,7 +107,7 @@ TEST(utf8, utf8_io) {
 	}
 
 
-	std::cout << "1\n";
+	std::wcout << L"1\n";
 
 	{
 		// Should have been reset.
@@ -126,7 +126,7 @@ TEST(utf8, utf8_io) {
 #endif
 	}
 
-	std::cout << "2\n";
+	std::wcout << L"2\n";
 
 	// Reset
 #if FEA_WINDOWS
