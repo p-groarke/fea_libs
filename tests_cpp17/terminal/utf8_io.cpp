@@ -102,6 +102,7 @@ TEST(utf8, utf8_io) {
 #endif
 	}
 
+
 	std::cout << "1\n";
 
 	{
