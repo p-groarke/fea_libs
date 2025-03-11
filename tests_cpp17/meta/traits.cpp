@@ -182,4 +182,23 @@ TEST(traits, reversed_index_sequence) {
 		static_assert(std::is_same_v<got_t, expected_t>, FAIL_MSG);
 	}
 }
+
+TEST(traits, rebind_alloc) {
+	static_assert(
+			std::is_same_v<fea::rebind_alloc_t<std::allocator<float>, int>,
+					std::allocator<int>>,
+			FAIL_MSG);
+}
+
+TEST(traits, iterator_valut) {
+	using iter_t = std::vector<int>::iterator;
+	static_assert(std::is_same_v<fea::iterator_value_t<iter_t>, int>, FAIL_MSG);
+}
+
+TEST(traits, aligned_storage) {
+	using align_t = fea::aligned_storage_t<8, 4>;
+	static_assert(alignof(align_t) == 4, FAIL_MSG);
+	static_assert(sizeof(align_t) == 8, FAIL_MSG);
+}
+
 } // namespace

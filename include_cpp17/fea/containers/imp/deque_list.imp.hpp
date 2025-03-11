@@ -59,16 +59,14 @@ struct dl_const_iter {
 	constexpr dl_const_iter& operator=(dl_const_iter&&) noexcept = default;
 
 	[[nodiscard]]
-	constexpr pointer
-	operator->() const noexcept {
+	constexpr pointer operator->() const noexcept {
 		assert(_bucket != nullptr);
 		assert(_idx < bucket_size);
 		return _bucket->begin() + _idx;
 	}
 
 	[[nodiscard]]
-	constexpr reference
-	operator*() const noexcept {
+	constexpr reference operator*() const noexcept {
 		return *this->operator->();
 	}
 
@@ -111,15 +109,13 @@ struct dl_const_iter {
 
 	// Comparison.
 	[[nodiscard]]
-	bool
-	operator==(const dl_const_iter& rhs) const noexcept {
+	bool operator==(const dl_const_iter& rhs) const noexcept {
 		return _bucket == rhs._bucket && _idx == rhs._idx;
 	}
 
 	// Comparison.
 	[[nodiscard]]
-	bool
-	operator!=(const dl_const_iter& rhs) const noexcept {
+	bool operator!=(const dl_const_iter& rhs) const noexcept {
 		return !(*this == rhs);
 	}
 
@@ -177,14 +173,12 @@ struct dl_iter : dl_const_iter<MyList> {
 	using base_t::base_t;
 
 	[[nodiscard]]
-	constexpr reference
-	operator*() const noexcept {
+	constexpr reference operator*() const noexcept {
 		return const_cast<reference>(base_t::operator*());
 	}
 
 	[[nodiscard]]
-	constexpr pointer
-	operator->() const noexcept {
+	constexpr pointer operator->() const noexcept {
 		assert(base_t::_ptr != nullptr);
 		return &base_t::_ptr->value;
 	}
@@ -394,14 +388,7 @@ void deque_list<T, BucketSize>::clear() {
 	{
 		bucket* b = &_first_bucket;
 		while (b != nullptr) {
-			std::destroy(b->begin(), b->end());
-#if !defined(NDEBUG)
-			for (value_type* it = b->begin(); it != b->end(); ++it) {
-				std::fill_n(reinterpret_cast<unsigned char*>(it),
-						sizeof(value_type), 0u);
-			}
-#endif
-
+			fea::destroy(b->begin(), b->end());
 			b->size = size_type(0);
 			b = b->next.get();
 		}
@@ -439,11 +426,7 @@ void deque_list<T, BucketSize>::pop_back() {
 			&& _last_bucket->size <= bucket_size);
 
 	value_type* last_ptr = &back();
-	std::destroy_at(last_ptr);
-#if !defined(NDEBUG)
-	std::fill_n(
-			reinterpret_cast<unsigned char*>(last_ptr), sizeof(value_type), 0u);
-#endif
+	fea::destroy_at(last_ptr);
 
 	--_last_bucket->size;
 	if (_last_bucket->size == size_type(0) && _last_bucket->prev) {

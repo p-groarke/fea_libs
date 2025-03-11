@@ -36,7 +36,41 @@
 
 #include <cstdint>
 
+// Required for BSD check.
+#if defined(__unix__) && !defined(__linux__)
+#include <sys/param.h>
+#endif
+
+// Required for iphone check.
+#if defined(__APPLE__) && defined(__MACH__)
+#include <TargetConditionals.h>
+#endif
+
+// Required for posix check.
+#if !defined(_WIN32) \
+		&& (defined(__unix__) || defined(__unix) \
+				|| (defined(__APPLE__) && defined(__MACH__)) \
+				|| defined(__CYGWIN__))
+#include <unistd.h>
+#endif
+
 namespace fea {
+// Build customization (with / without libraries).
+#undef FEA_WITH_TBB
+#undef FEA_WITH_DATE
+#define FEA_WITH_TBB 0
+#define FEA_WITH_DATE 0
+
+#if defined(FEA_WITH_TBB_DEF)
+#undef FEA_WITH_TBB
+#define FEA_WITH_TBB 1
+#endif
+
+#if defined(FEA_WITH_DATE_DEF)
+#undef FEA_WITH_DATE
+#define FEA_WITH_DATE 1
+#endif
+
 // Reset everything and force #if FEA_BLA to prevent missing include.
 #undef FEA_CPP23
 #undef FEA_CPP20
@@ -186,15 +220,6 @@ inline constexpr bool debug_build = true;
 #define FEA_SERIALIZE_SIZE_T FEA_SERIALIZE_SIZE_T_DEF
 #endif
 
-// Used throughout to enable or disable tbb functionality.
-#undef FEA_WITH_TBB
-#define FEA_WITH_TBB 1
-
-#if defined(FEA_NO_TBB_DEF)
-#undef FEA_WITH_TBB
-#define FEA_WITH_TBB 0
-#endif
-
 /**
  * OS Detection
  */
@@ -210,6 +235,7 @@ enum class platform_t : unsigned {
 	macos,
 	solaris,
 	windows,
+	emscripten,
 	count,
 };
 
@@ -230,6 +256,7 @@ namespace fea {
 #undef FEA_MACOS
 #undef FEA_SOLARIS
 #undef FEA_WINDOWS
+#undef FEA_EMSCRIPTEN
 #undef FEA_POSIX
 #undef FEA_UNIX
 #define FEA_AIX 0
@@ -240,6 +267,7 @@ namespace fea {
 #define FEA_MACOS 0
 #define FEA_SOLARIS 0
 #define FEA_WINDOWS 0
+#define FEA_EMSCRIPTEN 0
 #define FEA_POSIX 0
 #define FEA_UNIX 0
 
@@ -248,16 +276,10 @@ namespace fea {
 #define FEA_AIX 1
 inline constexpr platform_t platform = platform_t::aix;
 
-#elif defined(__unix__) && !defined(__linux__)
-} // namespace fea
-#include <sys/param.h>
-namespace fea {
-
-#if defined(BSD)
+#elif defined(BSD) || defined(__FreeBSD__)
 #undef FEA_BSD
 #define FEA_BSD 1
 inline constexpr platform_t platform = platform_t::bsd;
-#endif
 
 #elif defined(__hpux)
 #undef FEA_HPUX
@@ -269,21 +291,15 @@ inline constexpr platform_t platform = platform_t::hpux;
 #define FEA_LINUX 1
 inline constexpr platform_t platform = platform_t::linuxx;
 
-#elif defined(__APPLE__) && defined(__MACH__)
-} // namespace fea
-#include <TargetConditionals.h>
-namespace fea {
-
-#if TARGET_OS_IPHONE == 1
+#elif defined(__APPLE__) && defined(__MACH__) && TARGET_OS_IPHONE == 1
 #undef FEA_IOS
 #define FEA_IOS 1
 inline constexpr platform_t platform = platform_t::ios;
 
-#elif TARGET_OS_MAC == 1
+#elif defined(__APPLE__) && defined(__MACH__) && TARGET_OS_MAC == 1
 #undef FEA_MACOS
 #define FEA_MACOS 1
 inline constexpr platform_t platform = platform_t::macos;
-#endif
 
 #elif defined(__sun) && defined(__SVR4)
 #undef FEA_SOLARIS
@@ -294,6 +310,12 @@ inline constexpr platform_t platform = platform_t::solaris;
 #undef FEA_WINDOWS
 #define FEA_WINDOWS 1
 inline constexpr platform_t platform = platform_t::windows;
+
+#elif defined(__EMSCRIPTEN__)
+#undef FEA_EMSCRIPTEN
+#define FEA_EMSCRIPTEN 1
+inline constexpr platform_t platform = platform_t::emscripten;
+
 #else
 // We are on an unknown platform :scream:
 inline constexpr platform_t platform = platform_t::count;
@@ -301,14 +323,6 @@ inline constexpr platform_t platform = platform_t::count;
 
 
 // Check for posix.
-#if !defined(_WIN32) \
-		&& (defined(__unix__) || defined(__unix) \
-				|| (defined(__APPLE__) && defined(__MACH__)) \
-				|| defined(__CYGWIN__))
-} // namespace fea
-#include <unistd.h>
-namespace fea {
-
 #if defined(_POSIX_VERSION)
 #undef FEA_POSIX
 #define FEA_POSIX 1
@@ -317,11 +331,13 @@ namespace fea {
 inline constexpr platform_group_t platform_group
 		= platform_group_t::posix | platform_group_t::unixx;
 
-#else
+#elif !defined(_WIN32) \
+		&& (defined(__unix__) || defined(__unix) \
+				|| (defined(__APPLE__) && defined(__MACH__)) \
+				|| defined(__CYGWIN__))
 #undef FEA_UNIX
 #define FEA_UNIX 1
 inline constexpr platform_group_t platform_group = platform_group_t::unixx;
-#endif
 
 #else
 inline constexpr platform_group_t platform_group = platform_group_t::count;

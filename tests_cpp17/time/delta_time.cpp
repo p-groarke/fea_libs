@@ -1,6 +1,8 @@
-﻿#include <chrono>
+﻿#include <fea/time/delta_time.hpp>
+
+#if FEA_WITH_DATE
+#include <chrono>
 #include <cstdio>
-#include <fea/time/delta_time.hpp>
 #include <gtest/gtest.h>
 
 namespace {
@@ -20,3 +22,4 @@ TEST(delta_time, basics) {
 	EXPECT_LE(dt_gen.ns_dt(), clock_dt);
 }
 } // namespace
+#endif // FEA_WITH_DATE

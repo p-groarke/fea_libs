@@ -290,13 +290,13 @@ kv_nt<Key, Value> make_kv_nt(Value&& v) {
 template <class... Keys, class... Values>
 constexpr auto make_type_map(kv_t<Keys, Values>&&... kvs) {
 	return type_map<pack<Keys...>, Values...>(
-			std::make_tuple(fea::maybe_move(kvs.v)...));
+			std::make_tuple(fea::move_if_moveable(kvs.v)...));
 }
 
 template <auto... Keys, class... Values>
 constexpr auto make_type_map(kv_nt<Keys, Values>&&... kvs) {
 	return type_map<pack_nt<Keys...>, Values...>(
-			std::make_tuple(fea::maybe_move(kvs.v)...));
+			std::make_tuple(fea::move_if_moveable(kvs.v)...));
 }
 
 

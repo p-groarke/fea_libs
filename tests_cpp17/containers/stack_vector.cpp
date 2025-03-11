@@ -1,8 +1,10 @@
 ﻿#include <fea/containers/stack_vector.hpp>
 #include <gtest/gtest.h>
 #include <numeric>
+#include <vector>
 
-namespace fea {
+namespace {
+
 TEST(stack_vector, basics) {
 	fea::stack_vector<size_t, 128> v{ std::array<size_t, 3>{ 0u, 1u, 2u } };
 	EXPECT_EQ(v.size(), 3u);
@@ -345,17 +347,17 @@ TEST(stack_vector, erase) {
 	arr = { 0, 1, 2, 3, 4 };
 	EXPECT_EQ(arr.size(), 5u);
 	EXPECT_EQ(num_ctors, 5);
-	EXPECT_EQ(num_dtors, 10);
+	EXPECT_EQ(num_dtors, 5);
 	EXPECT_EQ(num_cpy, 5); // init-list is const static storage
-	EXPECT_EQ(num_mv, 5);
+	EXPECT_EQ(num_mv, 0);
 
 	{
 		auto it = arr.erase(arr.begin(), arr.begin());
 		EXPECT_EQ(arr.size(), 5u);
 		EXPECT_EQ(num_ctors, 5);
-		EXPECT_EQ(num_dtors, 10);
+		EXPECT_EQ(num_dtors, 5);
 		EXPECT_EQ(num_cpy, 5);
-		EXPECT_EQ(num_mv, 5);
+		EXPECT_EQ(num_mv, 0);
 		EXPECT_EQ(it, arr.begin());
 		EXPECT_EQ(*it, 0);
 
@@ -368,9 +370,9 @@ TEST(stack_vector, erase) {
 		auto it = arr.erase(arr.begin(), arr.begin() + 2);
 		EXPECT_EQ(arr.size(), 3u);
 		EXPECT_EQ(num_ctors, 5);
-		EXPECT_EQ(num_dtors, 12);
+		EXPECT_EQ(num_dtors, 7);
 		EXPECT_EQ(num_cpy, 5);
-		EXPECT_EQ(num_mv, 8);
+		EXPECT_EQ(num_mv, 3);
 		EXPECT_EQ(it, arr.begin());
 		EXPECT_EQ(*it, 2);
 
@@ -383,9 +385,9 @@ TEST(stack_vector, erase) {
 		auto it = arr.erase(arr.begin() + 1, arr.end());
 		EXPECT_EQ(arr.size(), 1u);
 		EXPECT_EQ(num_ctors, 5);
-		EXPECT_EQ(num_dtors, 14);
+		EXPECT_EQ(num_dtors, 9);
 		EXPECT_EQ(num_cpy, 5);
-		EXPECT_EQ(num_mv, 8);
+		EXPECT_EQ(num_mv, 3);
 		EXPECT_EQ(it, arr.end());
 
 		const fea::stack_vector<int, 5> answer{ 2 };
@@ -397,9 +399,9 @@ TEST(stack_vector, erase) {
 		auto it = arr.erase(arr.begin(), arr.end());
 		EXPECT_EQ(arr.size(), 0u);
 		EXPECT_EQ(num_ctors, 5);
-		EXPECT_EQ(num_dtors, 15);
+		EXPECT_EQ(num_dtors, 10);
 		EXPECT_EQ(num_cpy, 5);
-		EXPECT_EQ(num_mv, 8);
+		EXPECT_EQ(num_mv, 3);
 		EXPECT_EQ(it, arr.end());
 
 		const fea::stack_vector<int, 5> answer{};
@@ -411,9 +413,9 @@ TEST(stack_vector, erase) {
 		auto it = arr.erase(arr.end(), arr.end());
 		EXPECT_EQ(arr.size(), 0u);
 		EXPECT_EQ(num_ctors, 5);
-		EXPECT_EQ(num_dtors, 15);
+		EXPECT_EQ(num_dtors, 10);
 		EXPECT_EQ(num_cpy, 5);
-		EXPECT_EQ(num_mv, 8);
+		EXPECT_EQ(num_mv, 3);
 		EXPECT_EQ(it, arr.end());
 
 		const fea::stack_vector<int, 5> answer{};
@@ -421,4 +423,57 @@ TEST(stack_vector, erase) {
 				arr.begin(), arr.end(), answer.begin(), answer.end()));
 	}
 }
-} // namespace fea
+
+TEST(stack_vector, dtors) {
+	static int num_dtors = 0;
+
+	struct test_dtor {
+		test_dtor() = default;
+		~test_dtor() {
+			++num_dtors;
+			--v;
+			EXPECT_GE(v, 0);
+		}
+
+		int v = 1;
+	};
+
+	fea::stack_vector<test_dtor, 10> sv;
+	sv.push_back({});
+	sv.push_back({});
+	sv.push_back({});
+	sv.push_back({});
+
+	num_dtors = 0;
+	sv.clear();
+	EXPECT_EQ(num_dtors, 4);
+	sv.clear();
+	EXPECT_EQ(num_dtors, 4);
+	sv.clear();
+	EXPECT_EQ(num_dtors, 4);
+
+	sv.shrink_to_fit();
+	sv.shrink_to_fit();
+	sv.shrink_to_fit();
+	EXPECT_EQ(num_dtors, 4);
+}
+
+TEST(stack_vector, erase_last_regression) {
+	fea::stack_vector<int, 4> sv(4);
+	std::iota(sv.begin(), sv.end(), 0);
+
+	while (!sv.empty()) {
+		int last_val = sv.back();
+		auto it = std::find(sv.begin(), sv.end(), last_val);
+		ASSERT_NE(it, sv.end());
+		EXPECT_GT(sv.size(), 0u);
+
+		// Erase last item, was previously resetting size to zero t
+		// then underflowing.
+		sv.erase(it);
+		EXPECT_NE(sv.size(), (std::numeric_limits<size_t>::max)());
+	}
+	EXPECT_EQ(sv.size(), 0u);
+	EXPECT_NE(sv.size(), (std::numeric_limits<size_t>::max)());
+}
+} // namespace

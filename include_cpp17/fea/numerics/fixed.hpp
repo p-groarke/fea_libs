@@ -193,16 +193,52 @@ public:
 		return ret;
 	}
 
+	// TODO : tests
+	// constexpr basic_fixed& operator+=(basic_fixed rhs) noexcept {
+	//	value += rhs.value;
+	//	return *this;
+	//}
+
+	// constexpr basic_fixed& operator-=(basic_fixed rhs) noexcept {
+	//	value -= rhs.value;
+	//	return *this;
+	// }
+
+	// constexpr basic_fixed& operator*=(basic_fixed rhs) noexcept {
+	//	if constexpr (scaling_is_pow2_v) {
+	//		value = (value * rhs.value) >> scaling_sqrt_v;
+	//	} else {
+	//		value = (value * rhs.value) / scaling_v;
+	//	}
+	//	return *this;
+	// }
+
+	// constexpr basic_fixed& operator/=(basic_fixed rhs) noexcept {
+	//	if constexpr (scaling_is_pow2_v) {
+	//		value = (value << scaling_sqrt_v) / rhs.value;
+	//	} else {
+	//		value = (value * scaling_v) / rhs.value;
+	//	}
+	//	return *this;
+	// }
+
+	// constexpr basic_fixed& operator%=(basic_fixed rhs) noexcept {
+	//	value %= rhs.value;
+	//	return *this;
+	// }
+
 	// Public for serialization purposes.
 	value_t value = value_t(0);
 };
 
 
 #if FEA_ARCH == 64
+// The architecture "native" type.
 // float32 decimal precision.
 using fixed = fea::basic_fixed<int64_t, (size_t(1) << 23)>;
 #elif FEA_ARCH == 32
-// A bad idea, provided for completeness.
+// The architecture "native" type.
+// Mostly a bad idea in 32 bits, provided for completeness.
 using fixed = fea::basic_fixed<int32_t, (size_t(1) << 11)>;
 #else
 static_assert(false, "fea::fixed : Missing architecture.");
@@ -210,7 +246,10 @@ static_assert(false, "fea::fixed : Missing architecture.");
 
 // std::intmax_t == 8 bytes on win32...
 using currency = fea::basic_fixed<std::intptr_t, 100>;
-
+using fixed32_t = fea::basic_fixed<int32_t, (size_t(1) << 11)>;
+#if FEA_ARCH == 64
+using fixed64_t = fea::basic_fixed<int64_t, (size_t(1) << 23)>;
+#endif
 } // namespace fea
 
 #include "imp/fixed.imp.hpp"

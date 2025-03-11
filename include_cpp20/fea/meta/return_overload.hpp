@@ -92,7 +92,7 @@ struct return_overload : detail::ro_base<Ts>... {
 			Ts>::overload_t...;
 };
 
-// Not necessary in c++20.
+// Deduction guides necessary.
 template <class... Ts>
 return_overload(Ts...) -> return_overload<Ts...>;
 } // namespace fea

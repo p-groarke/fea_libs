@@ -19,6 +19,7 @@
 
 namespace {
 
+#if 0
 // Some classes to deserialize.
 struct vec3 {
 	vec3(const std::tuple<float, float, float>& input)
@@ -76,10 +77,93 @@ struct VectorPotatoDescription {
 
 // Later on...
 [[maybe_unused]] potato<VectorPotatoDescription> p;
+#endif
+
+
+// We use this concept to choose our base class.
+// One has a const conversion operator, the other doesn't.
+template <class T>
+concept has_const_paren = requires(const std::decay_t<T> t) { t.operator()(); };
+
+template <class>
+struct conversion_op;
+
+template <class T>
+	requires(has_const_paren<T>)
+struct conversion_op<T> : T {
+	using ret_t = decltype(std::declval<T>()());
+
+	// Also handle noexcept lambdas, which allows us to customize
+	// noexcept according to the return value.
+	// More on this later.
+	operator ret_t() const noexcept(noexcept(std::declval<T>()())) {
+		return T::operator()();
+	}
+};
+
+template <class T>
+	requires(!has_const_paren<T>)
+struct conversion_op<T> : T {
+	using ret_t = decltype(std::declval<T>()());
+
+	// Also handle noexcept.
+	operator ret_t() noexcept(noexcept(std::declval<T>()())) {
+		return T::operator()();
+	}
+};
+
+// Inherits base classes which transform the lambdas' operator() into
+// conversion operators instead.
+template <class... Ts>
+struct return_overload : conversion_op<Ts>... {
+
+	// We expose the conversion operators of our base classes.
+	// As long as they are not ambiguous, this is OK.
+	using conversion_op<Ts>::operator typename conversion_op<Ts>::ret_t...;
+};
+
+// Deduction guides.
+template <class... Ts>
+return_overload(Ts...) -> return_overload<Ts...>;
+
+
+auto my_func() {
+	return return_overload{
+		[]() -> int { return 42; },
+		[]() -> float { return 0.f; },
+		[]() -> std::string { return "string"; },
+	};
+}
+
+// A "maybe throwing" function.
+// The caller chooses which behavior they prefer by
+// capturing a std::error_code or not.
+// auto my_func2() {
+//	return return_overload{
+//		[]() noexcept -> std::tuple<std::error_code, int> {
+//			// noexcept implementation...
+//			std::cout << "noexcept imp" << std::endl;
+//			return {};
+//		},
+//		[]() -> int {
+//			// throwing implementation...
+//			std::cout << "throwing imp" << std::endl;
+//			return {};
+//		},
+//	};
+//}
 
 TEST(playground, cpp20) {
-	// deserializer<std::vector, vec3, float, float, float> vec3_deserializer;
-	// deserializer<std::vector, ivec3, int, int, int> ivec3_deserializer;
+	int test_int = my_func();
+	float test_float = my_func();
+	std::string test_str = my_func();
+
+	std::cout << test_int << std::endl;
+	std::cout << test_float << std::endl;
+	std::cout << test_str << std::endl;
+
+	// auto [ec, val] = my_func();
+	// auto val2 = my_func();
 }
 
 

@@ -35,6 +35,7 @@
 #include "fea/memory/memory.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <functional>
 #include <mutex>
 #include <shared_mutex>
@@ -45,7 +46,8 @@
 
 // If you don't feel like linking to tbb.
 namespace fea {
-[[nodiscard]] inline size_t num_threads() {
+[[nodiscard]]
+inline size_t num_threads() {
 	size_t concurrency = std::thread::hardware_concurrency();
 	return concurrency <= 0 ? 1 : concurrency;
 }
@@ -145,7 +147,7 @@ struct mtx_safe {
 	template <class... CtorArgs>
 	T extract(CtorArgs&&... replacement_ctor_args) {
 		std::unique_lock l{ _mutex };
-		T ret{ fea::maybe_move(_obj) };
+		T ret{ fea::move_if_moveable(_obj) };
 		_obj = T{ std::forward<CtorArgs>(replacement_ctor_args)... };
 		return ret;
 	}

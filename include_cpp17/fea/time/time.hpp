@@ -32,17 +32,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 #include "fea/utils/platform.hpp"
 
+#if FEA_WITH_DATE
 #include <array>
 #include <chrono>
 #include <cmath>
 #include <ctime>
-#include <date/date.h>
-#include <date/tz.h>
 #include <filesystem>
 #include <iomanip>
 #include <sstream>
 #include <string>
 #include <string_view>
+
+#include <date/date.h>
+#include <date/tz.h>
 
 #if FEA_CPP20
 #include "fea/macros/literals.hpp"
@@ -493,3 +495,5 @@ inline auto suffixed_day(date::sys_days tp) {
 }
 #endif
 } // namespace fea
+
+#endif // FEA_WITH_DATE

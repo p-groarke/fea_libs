@@ -1,5 +1,7 @@
-﻿#include <chrono>
-#include <fea/time/timer.hpp>
+﻿#include <fea/time/timer.hpp>
+
+#if FEA_WITH_DATE
+#include <chrono>
 #include <gtest/gtest.h>
 #include <thread>
 
@@ -281,3 +283,4 @@ TEST(timer, three_years) {
 }
 
 } // namespace
+#endif

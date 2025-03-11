@@ -30,6 +30,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/utils/platform.hpp"
+
+#if FEA_WITH_DATE
 #include "fea/time/time.hpp"
 
 namespace fea {
@@ -61,3 +64,4 @@ private:
 };
 
 } // namespace fea
+#endif // FEA_WITH_DATE

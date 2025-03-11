@@ -30,220 +30,340 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  **/
-
 #pragma once
+#include "fea/utils/platform.hpp"
+
 #include <algorithm>
+#include <cstring>
 #include <iterator>
 #include <memory>
 #include <type_traits>
 
 namespace fea {
-// Returns rvalue if T has a move constructor.
+// Returns rvalue if T has a move constructor or isn't copy constructible.
 template <class T>
 std::conditional_t<!std::is_move_constructible_v<T>
 						   && std::is_copy_constructible_v<T>,
 		const T&, T&&>
-maybe_move(T& t) noexcept;
+move_if_moveable(T& t) noexcept;
 
-// Creates move iterator if the underlying value has a move constructor.
-template <class Iter>
-constexpr auto maybe_make_move_iterator(Iter it) noexcept;
-
-// Destroys a range if destructors aren't trivial.
-template <class FwdIt>
-constexpr void destroy(FwdIt begin, FwdIt end);
-
-// Destroys an object if destructor isn't trivial.
+// Returns rvalue if T has a nothrow move constructor or isn't copy
+// constructible.
 template <class T>
-constexpr void destroy_at(T* p);
-
-// Destroys a range if destructors aren't trivial.
-template <class FwdIt>
-constexpr void destroy(FwdIt begin, FwdIt end);
+std::conditional_t<!std::is_nothrow_move_constructible_v<T>
+						   && std::is_copy_constructible_v<T>,
+		const T&, T&&>
+move_if_noexcept_moveable(T& t) noexcept;
 
 // Copies or moves the range to dest.
 // If the range is trivially copyable, prefers copy.
 // If the range is moveable, moves it.
 // Fallbacks on copy.
 template <class InputIt, class OutputIt>
-constexpr OutputIt copy_or_move(InputIt first, InputIt last, OutputIt dest);
+constexpr OutputIt move_if_moveable(InputIt first, InputIt last, OutputIt dest);
+
+// Copies or moves the range to dest.
+// If the range is trivially copyable, prefers copy.
+// If the range is nothrow moveable, moves it.
+// Fallbacks on copy.
+template <class InputIt, class OutputIt>
+constexpr OutputIt move_if_noexcept_moveable(
+		InputIt first, InputIt last, OutputIt dest);
 
 // Backward copies or moves the range to dest.
 // If the range is trivially copyable, prefers copy.
 // If the range is moveable, moves it.
 // Fallbacks on copy.
 template <class InputIt, class OutputIt>
-constexpr OutputIt copy_or_move_backward(
+constexpr OutputIt move_backward_if_moveable(
 		InputIt first, InputIt last, OutputIt dest_last);
 
+// Backward copies or moves the range to dest.
+// If the range is trivially copyable, prefers copy.
+// If the range is nothrow moveable, moves it.
+// Fallbacks on copy.
+template <class InputIt, class OutputIt>
+constexpr OutputIt move_backward_if_noexcept_moveable(
+		InputIt first, InputIt last, OutputIt dest_last);
+
+// Copies or moves the range to dest.
+// If the range is trivially copyable, prefers copy.
+// If the range is moveable, moves it.
+// Fallbacks on copy.
+template <class InputIt, class OutputIt>
+constexpr OutputIt uninitialized_move_if_moveable(
+		InputIt first, InputIt last, OutputIt dest);
+
+// Copies or moves the range to dest.
+// If the range is trivially copyable, prefers copy.
+// If the range is nothrow moveable, moves it.
+// Fallbacks on copy.
+template <class InputIt, class OutputIt>
+constexpr OutputIt uninitialized_move_if_noexcept_moveable(
+		InputIt first, InputIt last, OutputIt dest);
+
+// TODO
+//// Backward copies or moves the range to dest.
+//// If the range is trivially copyable, prefers copy.
+//// If the range is moveable, moves it.
+//// Fallbacks on copy.
+// template <class InputIt, class OutputIt>
+// constexpr OutputIt uninitialized_move_backward_if_moveable(
+//		InputIt first, InputIt last, OutputIt dest_last);
+//
+//// Backward copies or moves the range to dest.
+//// If the range is trivially copyable, prefers copy.
+//// If the range is nothrow moveable, moves it.
+//// Fallbacks on copy.
+// template <class InputIt, class OutputIt>
+// constexpr OutputIt uninitialized_move_backward_if_noexcept_moveable(
+//		InputIt first, InputIt last, OutputIt dest_last);
+
+// Creates move iterator if the underlying value has a move constructor
+// or isn't copy constructible.
+template <class Iter>
+constexpr auto make_move_iterator_if_moveable(Iter it) noexcept;
+
+// Creates move iterator if the underlying value has a nothrow move constructor
+// or isn't copy constructible.
+template <class Iter>
+constexpr auto make_move_iterator_if_noexcept_moveable(Iter it) noexcept;
+
+// Calls std::destroy_at if T is not trivially destructible.
+// In debug, zeros memory.
+template <class T>
+constexpr void destroy_at(T* p) noexcept;
+
+// Calls std::destroy if T is not trivially destructible.
+// In debug, zeros memory.
+template <class FwdIt>
+constexpr void destroy(FwdIt first, FwdIt last) noexcept;
+
+} // namespace fea
+
+
 /**
- * Imp
+ * Implementation
  */
-namespace detail {
-template <class Iter>
-constexpr auto maybe_make_move_iterator(Iter it, std::true_type) noexcept {
-	return std::make_move_iterator(it);
-}
-template <class Iter>
-constexpr auto maybe_make_move_iterator(Iter it, std::false_type) noexcept {
-	return it;
-}
-
-
-// Non-trivially destructible, array.
-template <class T>
-constexpr void destroy_at_arr(T* p, std::true_type) {
-	destroy(std::begin(*p), std::end(*p));
-}
-
-// Non-trivially destructible, non-array.
-template <class T>
-constexpr void destroy_at_arr(T* p, std::false_type) {
-	p->~T();
-}
-
-// Trivially destructible.
-template <class T>
-constexpr void destroy_at(T*, std::true_type) {
-	// Nothing to do.
-}
-
-// Non-trivially destructible.
-template <class T>
-constexpr void destroy_at(T* p, std::false_type) {
-	destroy_at_arr(p, std::is_array<T>{});
-}
-
-
-// Trivially destructible.
-template <class FwdIt>
-constexpr void destroy(FwdIt, FwdIt, std::true_type) {
-	// Nothing to do.
-}
-
-// Non-trivially destructible.
-template <class FwdIt>
-constexpr void destroy(FwdIt begin, FwdIt end, std::false_type) {
-	for (; begin != end; ++begin) {
-		fea::destroy_at(std::addressof(*begin));
-	}
-}
-
-
-// Moveable
-template <class InputIt, class OutputIt>
-constexpr OutputIt copy_or_move_moveable(
-		InputIt first, InputIt last, OutputIt dest, std::true_type) {
-	return std::move(first, last, dest);
-}
-
-// Non-moveable
-template <class InputIt, class OutputIt>
-constexpr OutputIt copy_or_move_moveable(
-		InputIt first, InputIt last, OutputIt dest, std::false_type) {
-	return std::copy(first, last, dest);
-}
-
-// Trivially copyable.
-template <class InputIt, class OutputIt>
-constexpr OutputIt copy_or_move(
-		InputIt first, InputIt last, OutputIt dest, std::true_type) {
-	return std::copy(first, last, dest);
-}
-
-// Non-Trivially copyable.
-template <class InputIt, class OutputIt>
-constexpr OutputIt copy_or_move(
-		InputIt first, InputIt last, OutputIt dest, std::false_type) {
-	using val_t = typename std::iterator_traits<InputIt>::value_type;
-	return copy_or_move_moveable(
-			first, last, dest, std::is_move_constructible<val_t>{});
-}
-
-
-// Moveable
-template <class InputIt, class OutputIt>
-constexpr OutputIt copy_or_move_backward_moveable(
-		InputIt first, InputIt last, OutputIt dest_last, std::true_type) {
-	return std::move_backward(first, last, dest_last);
-}
-
-// Non-moveable
-template <class InputIt, class OutputIt>
-constexpr OutputIt copy_or_move_backward_moveable(
-		InputIt first, InputIt last, OutputIt dest_last, std::false_type) {
-	return std::copy_backward(first, last, dest_last);
-}
-
-// Trivially copyable.
-template <class InputIt, class OutputIt>
-constexpr OutputIt copy_or_move_backward(
-		InputIt first, InputIt last, OutputIt dest_last, std::true_type) {
-	return std::copy_backward(first, last, dest_last);
-}
-
-// Non-Trivially copyable.
-template <class InputIt, class OutputIt>
-constexpr OutputIt copy_or_move_backward(
-		InputIt first, InputIt last, OutputIt dest_last, std::false_type) {
-	using val_t = typename std::iterator_traits<InputIt>::value_type;
-	return copy_or_move_backward_moveable(
-			first, last, dest_last, std::is_move_constructible<val_t>{});
-}
-} // namespace detail
-
+namespace fea {
 template <class T>
 std::conditional_t<!std::is_move_constructible_v<T>
 						   && std::is_copy_constructible_v<T>,
 		const T&, T&&>
-maybe_move(T& t) noexcept {
+move_if_moveable(T& t) noexcept {
 	return std::move(t);
 }
 
-template <class Iter>
-constexpr auto maybe_make_move_iterator(Iter it) noexcept {
-	using val_t = typename std::iterator_traits<Iter>::value_type;
-	return detail::maybe_make_move_iterator(
-			it, std::is_move_constructible<val_t>{});
-}
-
 template <class T>
-constexpr void destroy_at(T* p) {
-	detail::destroy_at(p, std::is_trivially_destructible<T>{});
-}
-
-template <class FwdIt>
-constexpr void destroy(FwdIt begin, FwdIt end) {
-	using val_t = typename std::iterator_traits<FwdIt>::value_type;
-	detail::destroy(begin, end, std::is_trivially_destructible<val_t>{});
+std::conditional_t<!std::is_nothrow_move_constructible_v<T>
+						   && std::is_copy_constructible_v<T>,
+		const T&, T&&>
+move_if_noexcept_moveable(T& t) noexcept {
+	return std::move(t);
 }
 
 template <class InputIt, class OutputIt>
-constexpr OutputIt copy_or_move(InputIt first, InputIt last, OutputIt dest) {
+constexpr OutputIt move_if_moveable(
+		InputIt first, InputIt last, OutputIt dest) {
 	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
 	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
-
 	static_assert(std::is_same_v<in_val_t, out_val_t>,
 			"fea::copy_or_move only works with identical input and destination "
 			"types");
 
-	return detail::copy_or_move(
-			first, last, dest, std::is_trivially_copyable<in_val_t>{});
+	if constexpr (std::is_trivially_copyable_v<in_val_t>
+				  || !std::is_move_constructible_v<in_val_t>) {
+		return std::copy(first, last, dest);
+	} else {
+		return std::move(first, last, dest);
+	}
 }
 
 template <class InputIt, class OutputIt>
-constexpr OutputIt copy_or_move_backward(
+constexpr OutputIt move_if_noexcept_moveable(
+		InputIt first, InputIt last, OutputIt dest) {
+	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
+	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
+	static_assert(std::is_same_v<in_val_t, out_val_t>,
+			"fea::copy_or_move only works with identical input and destination "
+			"types");
+
+	if constexpr (std::is_trivially_copyable_v<in_val_t>
+				  || !std::is_nothrow_move_constructible_v<in_val_t>) {
+		return std::copy(first, last, dest);
+	} else {
+		return std::move(first, last, dest);
+	}
+}
+
+template <class InputIt, class OutputIt>
+constexpr OutputIt move_backward_if_moveable(
 		InputIt first, InputIt last, OutputIt dest_last) {
 	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
 	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
-
 	static_assert(std::is_same_v<in_val_t, out_val_t>,
 			"fea::copy_or_move only works with identical input and destination "
 			"types");
 
-	return detail::copy_or_move_backward(
-			first, last, dest_last, std::is_trivially_copyable<in_val_t>{});
+	if constexpr (std::is_trivially_copyable_v<in_val_t>
+				  || !std::is_move_constructible_v<in_val_t>) {
+		return std::copy_backward(first, last, dest_last);
+	} else {
+		return std::move_backward(first, last, dest_last);
+	}
 }
+
+template <class InputIt, class OutputIt>
+constexpr OutputIt move_backward_if_noexcept_moveable(
+		InputIt first, InputIt last, OutputIt dest_last) {
+	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
+	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
+	static_assert(std::is_same_v<in_val_t, out_val_t>,
+			"fea::copy_or_move only works with identical input and destination "
+			"types");
+
+	if constexpr (std::is_trivially_copyable_v<in_val_t>
+				  || !std::is_nothrow_move_constructible_v<in_val_t>) {
+		return std::copy_backward(first, last, dest_last);
+	} else {
+		return std::move_backward(first, last, dest_last);
+	}
+}
+
+template <class InputIt, class OutputIt>
+constexpr OutputIt uninitialized_move_if_moveable(
+		InputIt first, InputIt last, OutputIt dest) {
+	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
+	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
+	static_assert(std::is_same_v<in_val_t, out_val_t>,
+			"fea::copy_or_move only works with identical input and destination "
+			"types");
+
+	if constexpr (std::is_trivially_copyable_v<in_val_t>
+				  || !std::is_move_constructible_v<in_val_t>) {
+		return std::uninitialized_copy(first, last, dest);
+	} else {
+		return std::uninitialized_move(first, last, dest);
+	}
+}
+
+template <class InputIt, class OutputIt>
+constexpr OutputIt uninitialized_move_if_noexcept_moveable(
+		InputIt first, InputIt last, OutputIt dest) {
+	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
+	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
+	static_assert(std::is_same_v<in_val_t, out_val_t>,
+			"fea::copy_or_move only works with identical input and destination "
+			"types");
+
+	if constexpr (std::is_trivially_copyable_v<in_val_t>
+				  || !std::is_nothrow_move_constructible_v<in_val_t>) {
+		return std::uninitialized_copy(first, last, dest);
+	} else {
+		return std::uninitialized_move(first, last, dest);
+	}
+}
+
+// template <class InputIt, class OutputIt>
+// constexpr OutputIt uninitialized_move_backward_if_moveable(
+//		InputIt first, InputIt last, OutputIt dest) {
+//	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
+//	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
+//	static_assert(std::is_same_v<in_val_t, out_val_t>,
+//			"fea::copy_or_move only works with identical input and destination "
+//			"types");
+//
+//	if constexpr (std::is_trivially_copyable_v<in_val_t>
+//				  || !std::is_move_constructible_v<in_val_t>) {
+//		return std::uninitialized_copy_backward(first, last, dest);
+//	} else {
+//		return std::move_backward(first, last, dest);
+//	}
+// }
+//
+// template <class InputIt, class OutputIt>
+// constexpr OutputIt uninitialized_move_backward_if_noexcept_moveable(
+//		InputIt first, InputIt last, OutputIt dest) {
+//	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
+//	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
+//	static_assert(std::is_same_v<in_val_t, out_val_t>,
+//			"fea::copy_or_move only works with identical input and destination "
+//			"types");
+//
+//	if constexpr (std::is_trivially_copyable_v<in_val_t>
+//				  || !std::is_nothrow_move_constructible_v<in_val_t>) {
+//		return std::copy_backward(first, last, dest);
+//	} else {
+//		return std::move_backward(first, last, dest);
+//	}
+// }
+
+template <class Iter>
+constexpr auto make_move_iterator_if_moveable(Iter it) noexcept {
+	using val_t = typename std::iterator_traits<Iter>::value_type;
+	if constexpr (std::is_move_constructible_v<val_t>
+				  || !std::is_copy_constructible_v<val_t>) {
+		return std::make_move_iterator(it);
+	} else {
+		return it;
+	}
+}
+
+template <class Iter>
+constexpr auto make_move_iterator_if_noexcept_moveable(Iter it) noexcept {
+	using val_t = typename std::iterator_traits<Iter>::value_type;
+	if constexpr (std::is_nothrow_move_constructible_v<val_t>
+				  || !std::is_copy_constructible_v<val_t>) {
+		return std::make_move_iterator(it);
+	} else {
+		return it;
+	}
+}
+
+#if FEA_LINUX
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
+#endif
+template <class T>
+constexpr void destroy_at([[maybe_unused]] T* p) noexcept {
+	if constexpr (!std::is_trivially_destructible_v<T>) {
+		if constexpr (!std::is_array_v<T>) {
+			std::destroy_at(p);
+		} else {
+			std::destroy(std::begin(*p), std::end(*p));
+		}
+	}
+
+	if constexpr (fea::debug_build /*&& !std::is_empty_v<T>*/) {
+		if constexpr (!std::is_array_v<T>) {
+			std::memset(p, 0, sizeof(T));
+		} else {
+			std::memset(*p, 0, sizeof(T));
+			// for (auto it = std::begin(*p); it != std::end(*p); ++it) {
+			//	std::memset(std::addressof(*it), 0,
+			// sizeof(std::remove_all_extents_t<T>));
+			// }
+		}
+	}
+}
+
+template <class FwdIt>
+constexpr void destroy(
+		[[maybe_unused]] FwdIt first, [[maybe_unused]] FwdIt last) noexcept {
+	using val_t = typename std::iterator_traits<FwdIt>::value_type;
+	if constexpr (!std::is_trivially_destructible_v<val_t>) {
+		std::destroy(first, last);
+	}
+
+	if constexpr (fea::debug_build /*&& !std::is_empty_v<val_t>*/) {
+		for (; first != last; ++first) {
+			std::memset(std::addressof(*first), 0, sizeof(val_t));
+		}
+	}
+}
+#if FEA_LINUX
+#pragma GCC diagnostic pop
+#endif
 
 // inline size_t page_size()
 //{

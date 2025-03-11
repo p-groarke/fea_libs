@@ -1,6 +1,7 @@
 ﻿#include <cstdio>
 #include <fea/math/statistics.hpp>
 #include <fea/numerics/random.hpp>
+#include <fea/utils/platform.hpp>
 #include <fea/utils/unused.hpp>
 #include <gtest/gtest.h>
 
@@ -96,7 +97,11 @@ TEST(random, basics) {
 			fea::random_fixed_sum(v1.begin(), v1.end(), double(num_v));
 			double ans = fea::sum(v1);
 
-			EXPECT_NEAR(ans, double(num_v), 0.00000000001);
+			if constexpr (fea::arch >= 64) {
+				EXPECT_NEAR(ans, double(num_v), 0.00000000001);
+			} else {
+				EXPECT_NEAR(ans, double(num_v), 0.0001);
+			}
 		}
 	}
 

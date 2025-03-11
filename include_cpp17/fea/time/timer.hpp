@@ -30,12 +30,14 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/utils/platform.hpp"
+
+#if FEA_WITH_DATE
 #include "fea/events/event_stack.hpp"
 #include "fea/performance/constants.hpp"
 #include "fea/state_machines/fsm.hpp"
 #include "fea/time/high_range_duration.hpp"
 #include "fea/time/time.hpp"
-#include "fea/utils/platform.hpp"
 #include "fea/utils/throw.hpp"
 
 #include <cassert>
@@ -455,7 +457,7 @@ private:
 
 		assert(unsigned(date::year_month_day(
 					   date::sys_days(_last_month_tick.days()))
-								.day())
+							   .day())
 				== 1u);
 
 		// years
@@ -477,11 +479,11 @@ private:
 
 		assert(unsigned(date::year_month_day(
 					   date::sys_days(_last_year_tick.days()))
-								.day())
+							   .day())
 				== 1u);
 		assert(unsigned(date::year_month_day(
 					   date::sys_days(_last_year_tick.days()))
-								.month())
+							   .month())
 				== 1u);
 
 		update_callbacks(event_args...);
@@ -615,3 +617,4 @@ template <class EventSignature>
 using steady_timer_mt = timer<EventSignature, std::chrono::steady_clock, true>;
 
 } // namespace fea
+#endif // FEA_WITH_DATE

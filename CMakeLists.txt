@@ -18,6 +18,7 @@ option(FEA_CMAKE_LOCAL "Use local fea_cmake repo. Searches for '../fea_cmake'" O
 # Options that affect which modules and functionality are available.
 option(FEA_WITH_TBB "Pull TBB (2020.3) and use it." Off)
 option(FEA_WITH_ONETBB "Pull oneTBB (2020.10.0) and use it." Off)
+option(FEA_WITH_DATE "Pull date and use it." On)
 
 if (FEA_WITH_ONETBB)
 	# We prioritize onetbb throughout, but use the same defines in codebase.
@@ -44,7 +45,7 @@ elseif (FEA_SANITIZE AND NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 
 # Pull fea_cmake helper library.
-if (${FEA_CMAKE_LOCAL})
+if (FEA_CMAKE_LOCAL)
 	set(FETCHCONTENT_SOURCE_DIR_FEA_CMAKE ${CMAKE_CURRENT_SOURCE_DIR}/../fea_cmake CACHE INTERNAL "")
 endif()
 FetchContent_Declare(fea_cmake
@@ -73,16 +74,18 @@ fea_set_output_dir(${CMAKE_BINARY_DIR}/bin)
 if (FEA_PULL_CONAN)
 	fea_bool_to_pybool(FEA_WITH_TBB _FEA_WITH_TBB_PYBOOL)
 	fea_bool_to_pybool(FEA_WITH_ONETBB _FEA_WITH_ONETBB_PYBOOL)
+	fea_bool_to_pybool(FEA_WITH_DATE _FEA_WITH_DATE_PYBOOL)
 
 	fea_pull_conan(CONAN_MSVC_TOOLSET "${CMAKE_VS_PLATFORM_TOOLSET}"
 		CONAN_ARGS "--profile default
 			-o fea_libs/*:with_tbb=${_FEA_WITH_TBB_PYBOOL}
 			-o fea_libs/*:with_onetbb=${_FEA_WITH_ONETBB_PYBOOL}
-			--build missing"
+			-o fea_libs/*:with_date=${_FEA_WITH_DATE_PYBOOL}
+			--build missing
+			--build cascade
+			--build outdated"
 	)
 endif()
-
-find_package(date CONFIG REQUIRED QUIET)
 
 # Main Project
 set(INCLUDE_NAME fea)
@@ -90,7 +93,6 @@ file(GLOB_RECURSE HEADER_FILES_CPP17 "include_cpp17/${INCLUDE_NAME}/*.hpp")
 file(GLOB_RECURSE HEADER_FILES_CPP20 "include_cpp20/${INCLUDE_NAME}/*.hpp")
 add_library(${PROJECT_NAME} INTERFACE)
 fea_set_compile_options(${PROJECT_NAME} INTERFACE)
-target_link_libraries(${PROJECT_NAME} INTERFACE date::date)
 
 if (FEA_SANITIZE)
 	fea_sanitize_address(${PROJECT_NAME} INTERFACE Debug)
@@ -100,9 +102,15 @@ endif()
 if (FEA_WITH_TBB)
 	find_package(TBB CONFIG REQUIRED QUIET)
 	target_link_libraries(${PROJECT_NAME} INTERFACE TBB::tbb)
-else()
-	target_compile_definitions(${PROJECT_NAME} INTERFACE FEA_NO_TBB_DEF)
+	target_compile_definitions(${PROJECT_NAME} INTERFACE FEA_WITH_TBB_DEF)
 endif()
+
+if (FEA_WITH_DATE)
+	find_package(date CONFIG REQUIRED QUIET)
+	target_link_libraries(${PROJECT_NAME} INTERFACE date::date)
+	target_compile_definitions(${PROJECT_NAME} INTERFACE FEA_WITH_DATE_DEF)
+endif()
+
 
 # To see files in IDE
 # target_sources(${PROJECT_NAME} INTERFACE
@@ -179,7 +187,6 @@ if (FEA_TESTS)
 
 	# Set NOTHROW and other global defines that could impact tests.
 	target_compile_definitions(${TEST_NAME_NOTHROW} PRIVATE
-		FEA_NO_TBB_DEF
 		FEA_NOTHROW_DEF
 		FEA_CODEPAGE_CONVERSIONS_DEF
 		FEA_SERIALIZE_SIZE_T_DEF=uint16_t

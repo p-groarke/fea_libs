@@ -30,6 +30,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/utils/platform.hpp"
+
+#if FEA_WITH_DATE
 #include "fea/time/time.hpp"
 
 /*
@@ -114,7 +117,7 @@ struct high_range_duration {
 	// Looses most precision in days.
 	constexpr dnanoseconds_t count_nanoseconds() const {
 		return dnanoseconds_t(_days) + dnanoseconds_t(_seconds)
-				+ dnanoseconds_t(_nanoseconds);
+			 + dnanoseconds_t(_nanoseconds);
 	}
 
 	// Return stored days.
@@ -227,7 +230,7 @@ struct high_range_duration {
 	friend bool operator==(
 			const high_range_duration& lhs, const high_range_duration& rhs) {
 		return lhs._days == rhs._days && lhs._seconds == rhs._seconds
-				&& lhs._nanoseconds == rhs._nanoseconds;
+			&& lhs._nanoseconds == rhs._nanoseconds;
 	}
 	friend bool operator!=(
 			const high_range_duration& lhs, const high_range_duration& rhs) {
@@ -322,3 +325,4 @@ constexpr high_range_duration floor(const high_range_duration& rhs) noexcept {
 	return ret;
 }
 } // namespace fea
+#endif

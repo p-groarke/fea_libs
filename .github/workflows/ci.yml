@@ -29,6 +29,8 @@ jobs:
           - { toolset_ver: "v143", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
           - { toolset_ver: "v143", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
           - { toolset_ver: "v143", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
+          - { toolset_ver: "v143", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_DATE=Off" }
+          - { toolset_ver: "v143", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_DATE=Off" }
           - { toolset_ver: "v142", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_TBB=On" }
           - { toolset_ver: "v142", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
           # - { toolset_ver: "v141", fea_ver: "-DFEA_CPP17=On" }
@@ -39,10 +41,10 @@ jobs:
       run: |
         git config --global core.autocrlf false
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Install Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
         architecture: 'x64' # optional, x86
@@ -67,17 +69,22 @@ jobs:
 
     - name: Test
       # working-directory: ${{ github.workspace }}/build
-      shell: cmd
+      # shell: cmd # broken, doesn't report errors
       run: |
         cd ${{ github.workspace }}/build
         bin\fea_libs_tests
         bin\fea_libs_nothrow_tests
+
+    - name: TestPipes
+      # working-directory: ${{ github.workspace }}/build
+      shell: cmd
+      run: |
+        cd ${{ github.workspace }}/build
         cat bin\tests_data\pipe.txt | bin\fea_libs_pipe_tests 0
         cat bin\tests_data\pipe.txt | bin\fea_libs_pipe_tests 1
         bin\fea_libs_pipe_tests 0 < "bin\tests_data\pipe.txt"
         bin\fea_libs_pipe_tests 1 < "bin\tests_data\pipe.txt"
         bin\fea_libs_pipe_tests 2
-
 
   Clang:
     runs-on: ${{ matrix.config.os }}
@@ -88,16 +95,16 @@ jobs:
         config:
           - { os: macos-14, xcode_ver: "15.2", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_ONETBB=On" }
           - { os: macos-14, xcode_ver: "15.2", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
+          - { os: macos-14, xcode_ver: "15.2", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_DATE=Off" }
           - { os: macos-13, xcode_ver: "15.0.1", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
           - { os: macos-13, xcode_ver: "14.3.1", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
-          - { os: macos-12, xcode_ver: "13.2.1", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
 
     steps:
     - name: Git Line Endings
       run: |
         git config --global core.autocrlf false
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Install XCode ${{ matrix.config.xcode_ver }}
       uses: maxim-lobanov/setup-xcode@v1
@@ -105,7 +112,7 @@ jobs:
         xcode-version: "${{ matrix.config.xcode_ver }}"
 
     - name: Install Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
         architecture: 'x64' # optional, x86
@@ -160,6 +167,8 @@ jobs:
           - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_ONETBB=On" }
           - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
           - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
+          - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_DATE=Off" }
+          - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_DATE=Off" }
           - { os: ubuntu-22.04, gcc_ver: "12", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
           - { os: ubuntu-20.04, gcc_ver: "10", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
           - { os: ubuntu-20.04, gcc_ver: "9", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
@@ -169,7 +178,7 @@ jobs:
       run: |
         git config --global core.autocrlf false
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Install Gcc
       uses: egor-tensin/setup-gcc@v1
@@ -178,7 +187,7 @@ jobs:
         platform: ${{ matrix.build_arch }}
 
     - name: Install Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
         architecture: 'x64' # optional, x86

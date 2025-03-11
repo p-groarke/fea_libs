@@ -319,21 +319,13 @@ constexpr void sigma_filter_imp(FwdIt begin, FwdIt end, SigmaT sigma,
 	// Mean and standard deviation.
 	cast_t avg{};
 	cast_t std_dev{};
-	if constexpr (!std::is_same_v<T, cast_t>) {
-		auto mv_pred = [&](const auto& v) { return cast_t(v_pred(v)); };
-		avg = fea::mean(begin, end, mv_pred);
-		if constexpr (Sample) {
-			std_dev = fea::sample_std_deviation(begin, end, mv_pred);
-		} else {
-			std_dev = fea::std_deviation(begin, end, mv_pred);
-		}
+
+	auto mv_pred = [&](const auto& v) { return cast_t(v_pred(v)); };
+	avg = fea::mean(begin, end, mv_pred);
+	if constexpr (Sample) {
+		std_dev = fea::sample_std_deviation(begin, end, mv_pred);
 	} else {
-		avg = fea::mean(begin, end, v_pred);
-		if constexpr (Sample) {
-			avg = fea::std_deviation(begin, end, v_pred);
-		} else {
-			avg = fea::sample_std_deviation(begin, end, v_pred);
-		}
+		std_dev = fea::std_deviation(begin, end, mv_pred);
 	}
 
 	cast_t msigma = cast_t(sigma);
@@ -341,16 +333,9 @@ constexpr void sigma_filter_imp(FwdIt begin, FwdIt end, SigmaT sigma,
 	cast_t low_benchmark = avg - msigma * std_dev;
 
 	for (auto it = begin; it != end; ++it) {
-		if constexpr (!std::is_same_v<T, cast_t>) {
-			cast_t val = cast_t(v_pred(*it));
-			if (low_benchmark < val && val < high_benchmark) {
-				func(*it);
-			}
-		} else {
-			decltype(v_pred(*it)) val = v_pred(*it);
-			if (low_benchmark < val && val < high_benchmark) {
-				func(*it);
-			}
+		cast_t val = cast_t(v_pred(*it));
+		if (low_benchmark < val && val < high_benchmark) {
+			func(*it);
 		}
 	}
 }
