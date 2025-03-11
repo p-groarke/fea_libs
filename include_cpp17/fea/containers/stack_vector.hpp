@@ -597,10 +597,14 @@ constexpr auto stack_vector<T, StackSize>::insert(
 	iterator it = begin() + std::distance(cbegin(), pos);
 
 	// Ininitalize the last item memory.
-	std::uninitialized_default_construct(end(), end() + 1);
+	fea::uninitialized_move_if_moveable(end(), end() + 1, end() + 1);
+
+	// std::uninitialized_default_construct(end(), end() + 1);
 
 	// Then move / copy the rest.
-	fea::move_backward_if_moveable(it, end(), end() + 1);
+	fea::move_backward_if_moveable(it, end() - 1, end() + 1);
+
+	// TODO : Check if input value was inside moved range.
 
 	*it = value;
 	++_size;
