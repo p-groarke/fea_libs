@@ -91,23 +91,19 @@ TEST(utf8, utf8_io) {
 		// ~Windows actually sets wtext instead of u16text...~
 		// Windows actually does whatever the fuck it wants.
 #if FEA_VS_EQ(2017)
-		std::wcout << L"2017\n";
 		EXPECT_EQ(tr3.previous_stdin_mode(), fea::translation_mode::text);
 		EXPECT_EQ(tr3.previous_stdout_mode(), fea::translation_mode::text);
 		EXPECT_EQ(tr3.previous_stderr_mode(), fea::translation_mode::text);
 #elif FEA_VS_EQ(2019)
-		std::wcout << L"2019\n";
+		std::wcout << "1 test disables. v142 crashes in 32bits for unknown "
+					  "reasons.\n";
 #else
-		std::wcout << L"2022\n";
 		EXPECT_EQ(tr3.previous_stdin_mode(), fea::translation_mode::wtext);
 		EXPECT_EQ(tr3.previous_stdout_mode(), fea::translation_mode::wtext);
 		EXPECT_EQ(tr3.previous_stderr_mode(), fea::translation_mode::wtext);
 #endif
 #endif
 	}
-
-
-	std::wcout << L"1\n";
 
 	{
 		// Should have been reset.
@@ -125,8 +121,6 @@ TEST(utf8, utf8_io) {
 		EXPECT_EQ(tr3.previous_stderr_mode(), fea::translation_mode::text);
 #endif
 	}
-
-	std::wcout << L"2\n";
 
 	// Reset
 #if FEA_WINDOWS
