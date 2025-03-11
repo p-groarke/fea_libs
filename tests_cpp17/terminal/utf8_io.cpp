@@ -102,6 +102,8 @@ TEST(utf8, utf8_io) {
 #endif
 	}
 
+	std::cout << "1\n";
+
 	{
 		// Should have been reset.
 		fea::translation_resetter tr3
@@ -118,6 +120,8 @@ TEST(utf8, utf8_io) {
 		EXPECT_EQ(tr3.previous_stderr_mode(), fea::translation_mode::text);
 #endif
 	}
+
+	std::cout << "2\n";
 
 	// Reset
 #if FEA_WINDOWS
