@@ -1,12 +1,9 @@
 ﻿#include "global.hpp"
 
+#include <fea/utils/platform.hpp>
 #include <gtest/gtest.h>
 #include <list>
 #include <unordered_map>
-
-#if (defined(__GNUC__) && !defined(__clang__))
-#define GCC_COMPILER
-#endif
 
 namespace {
 size_t disable_counter = 0;
@@ -61,7 +58,7 @@ struct list_node {
 
 // gcc unordered_map implementation doesn't work here.
 // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53339
-#if !defined(GCC_COMPILER)
+#if !FEA_GCC
 namespace {
 size_t id_counter = 0;
 struct umap_node {
@@ -169,7 +166,7 @@ TEST(flat_recurse, list_iters) {
 	}
 }
 
-#if !defined(GCC_COMPILER)
+#if !FEA_GCC
 TEST(flat_recurse, umap_iters) {
 	umap_node n{ nullptr };
 	std::unordered_map<size_t, umap_node> root_vec;

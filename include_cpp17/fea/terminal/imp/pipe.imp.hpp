@@ -2,10 +2,10 @@
 
 // The standard doesn't provide codecvt equivalents. Use the old
 // functionality until they do.
-#if FEA_WINDOWS
+#if FEA_MSVC
 #pragma warning(push)
 #pragma warning(disable : 4996)
-#elif FEA_MACOS
+#elif FEA_CLANG
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #endif
@@ -135,8 +135,8 @@ std::string read_pipe_text() {
 }
 } // namespace fea
 
-#if FEA_WINDOWS
+#if FEA_MSVC
 #pragma warning(pop)
-#elif FEA_MACOS
+#elif FEA_CLANG
 #pragma clang diagnostic pop
 #endif

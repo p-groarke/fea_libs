@@ -1054,7 +1054,7 @@ struct lazy_graph {
 
 			fea::span<const Id> children = n.children();
 
-#if FEA_LINUX
+#if FEA_GCC
 			// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=106199
 			for (const Id& mid : children) {
 				graph.push_back(mid);
