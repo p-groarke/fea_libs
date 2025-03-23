@@ -357,7 +357,7 @@ constexpr void destroy(
 		}
 	}
 }
-#if FEA_LINUX
+#if FEA_GCC
 #pragma GCC diagnostic pop
 #endif
 
