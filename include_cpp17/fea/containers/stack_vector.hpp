@@ -555,6 +555,12 @@ constexpr auto stack_vector<T, StackSize>::erase(
 	return beg_it;
 }
 
+#if FEA_GCC
+// As usual, gcc is stupid.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
+
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::insert(
 		const_iterator pos, const_reference value) -> iterator {
@@ -613,6 +619,10 @@ constexpr auto stack_vector<T, StackSize>::insert(
 	++_size;
 	return it;
 }
+
+#if FEA_GCC
+#pragma GCC diagnostic pop
+#endif
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::insert(const_iterator pos,

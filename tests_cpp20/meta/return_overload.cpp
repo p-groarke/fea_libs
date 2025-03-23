@@ -7,7 +7,7 @@
 
 using namespace fea::literals;
 
-#if FEA_LINUX
+#if FEA_GCC
 // GCC incorrectly flags returned references as dangling.
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdangling-reference"
@@ -482,6 +482,6 @@ TEST(return_overload, subtleties) {
 }
 } // namespace
 
-#if FEA_LINUX
+#if FEA_GCC
 #pragma GCC diagnostic pop
 #endif

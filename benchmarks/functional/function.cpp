@@ -8,7 +8,7 @@
 #include <random>
 #include <vector>
 
-#if FEA_LINUX
+#if FEA_GCC
 // GCC flags partly out of bounds on member function deref.
 // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105523
 #pragma GCC diagnostic push
@@ -389,6 +389,6 @@ TEST(function_cl, benchmarks) {
 }
 } // namespace
 
-#if FEA_LINUX
+#if FEA_GCC
 #pragma GCC diagnostic pop
 #endif

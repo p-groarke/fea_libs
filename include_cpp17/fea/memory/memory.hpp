@@ -320,7 +320,7 @@ constexpr auto make_move_iterator_if_noexcept_moveable(Iter it) noexcept {
 	}
 }
 
-#if FEA_LINUX
+#if FEA_GCC
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wclass-memaccess"
 #endif
