@@ -59,10 +59,10 @@ on linux.
 
 // The standard doesn't provide codecvt equivalents. Use the old
 // functionality until they do.
-#if FEA_WINDOWS
+#if FEA_MSVC
 #pragma warning(push)
 #pragma warning(disable : 4996)
-#elif FEA_MACOS
+#elif FEA_CLANG
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 #endif
@@ -466,8 +466,8 @@ inline std::string utf16_to_current_codepage(const std::wstring& str) {
 #endif
 } // namespace fea
 
-#if FEA_WINDOWS
+#if FEA_MSVC
 #pragma warning(pop)
-#elif FEA_MACOS
+#elif FEA_CLANG
 #pragma clang diagnostic pop
 #endif
