@@ -336,13 +336,9 @@ constexpr void destroy_at([[maybe_unused]] T* p) noexcept {
 
 	if constexpr (fea::debug_build /*&& !std::is_empty_v<T>*/) {
 		if constexpr (!std::is_array_v<T>) {
-			std::memset(p, 0, sizeof(T));
+			std::memset(p, 0xa, sizeof(T));
 		} else {
-			std::memset(*p, 0, sizeof(T));
-			// for (auto it = std::begin(*p); it != std::end(*p); ++it) {
-			//	std::memset(std::addressof(*it), 0,
-			// sizeof(std::remove_all_extents_t<T>));
-			// }
+			std::memset(*p, 0xa, sizeof(T));
 		}
 	}
 }
@@ -357,7 +353,7 @@ constexpr void destroy(
 
 	if constexpr (fea::debug_build /*&& !std::is_empty_v<val_t>*/) {
 		for (; first != last; ++first) {
-			std::memset(std::addressof(*first), 0, sizeof(val_t));
+			std::memset(std::addressof(*first), 0xa, sizeof(val_t));
 		}
 	}
 }

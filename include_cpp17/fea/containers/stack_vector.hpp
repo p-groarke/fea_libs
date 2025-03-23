@@ -293,7 +293,6 @@ constexpr stack_vector<T, StackSize>::stack_vector(
 		: _size(InSize) {
 	static_assert(InSize <= StackSize,
 			"stack_vector : initializing with too many values");
-	// done
 	std::uninitialized_copy(arr.begin(), arr.end(), begin());
 }
 
@@ -303,7 +302,6 @@ constexpr stack_vector<T, StackSize>::stack_vector(std::array<T, InSize>&& arr)
 		: _size(InSize) {
 	static_assert(InSize <= StackSize,
 			"stack_vector : initializing with too many values");
-	// done
 	std::uninitialized_move(arr.begin(), arr.end(), begin());
 }
 
@@ -312,7 +310,6 @@ constexpr stack_vector<T, StackSize>::stack_vector(
 		size_type count, const_reference value)
 		: _size(count) {
 	assert(_size <= StackSize);
-	// done
 	std::uninitialized_fill_n(begin(), _size, value);
 }
 
@@ -325,7 +322,6 @@ template <class T, size_t StackSize>
 constexpr stack_vector<T, StackSize>::stack_vector(
 		std::initializer_list<value_type>&& init)
 		: _size(init.size()) {
-	// done
 	assert(init.size() <= StackSize);
 	fea::uninitialized_move_if_moveable(init.begin(), init.end(), begin());
 }
@@ -334,7 +330,6 @@ template <class T, size_t StackSize>
 template <class InputIt, class>
 constexpr stack_vector<T, StackSize>::stack_vector(InputIt first, InputIt last)
 		: _size(std::distance(first, last)) {
-	// done
 	assert(size_t(std::distance(first, last)) <= StackSize);
 	// TODO : Check if move iterators.
 	std::uninitialized_copy(first, last, begin());
@@ -343,7 +338,6 @@ constexpr stack_vector<T, StackSize>::stack_vector(InputIt first, InputIt last)
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::at(size_type i) const
 		-> const_reference {
-	// done
 	if (i >= _size) {
 		fea::maybe_throw(
 				__FUNCTION__, __LINE__, "accessing out-of-range element");
@@ -353,14 +347,12 @@ constexpr auto stack_vector<T, StackSize>::at(size_type i) const
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::at(size_type i) -> reference {
-	// done
 	return const_cast<reference>(std::as_const(*this).at(i));
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::operator[](
 		size_type i) const noexcept -> const_reference {
-	// done
 	assert(i < _size);
 	return *reinterpret_cast<const_pointer>(&_data[i]);
 }
@@ -368,173 +360,147 @@ constexpr auto stack_vector<T, StackSize>::operator[](
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::operator[](size_type i) noexcept
 		-> reference {
-	// done
 	return const_cast<reference>(std::as_const(*this).at(i));
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::front() const noexcept
 		-> const_reference {
-	// done
 	assert(_size > 0);
 	return *reinterpret_cast<const_pointer>(&_data.front());
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::front() noexcept -> reference {
-	// done
 	return const_cast<reference>(std::as_const(*this).front());
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::back() const noexcept
 		-> const_reference {
-	// done
 	assert(_size > 0);
 	return *reinterpret_cast<const_pointer>(&_data[_size - 1]);
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::back() noexcept -> reference {
-	// done
 	return const_cast<reference>(std::as_const(*this).back());
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::data() const noexcept
 		-> const_pointer {
-	// done
 	return reinterpret_cast<const_pointer>(_data.data());
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::data() noexcept -> pointer {
-	// done
 	return const_cast<pointer>(std::as_const(*this).data());
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::begin() const noexcept
 		-> const_iterator {
-	// done
 	return reinterpret_cast<const_pointer>(_data.data());
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::begin() noexcept -> iterator {
-	// done
 	return const_cast<iterator>(std::as_const(*this).begin());
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::end() const noexcept
 		-> const_iterator {
-	// done
 	return reinterpret_cast<const_pointer>(_data.data() + _size);
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::end() noexcept -> iterator {
-	// done
 	return const_cast<iterator>(std::as_const(*this).end());
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::rbegin() const noexcept
 		-> const_reverse_iterator {
-	// done
 	return std::make_reverse_iterator(end());
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::rbegin() noexcept
 		-> reverse_iterator {
-	// done
 	return std::make_reverse_iterator(end());
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::rend() const noexcept
 		-> const_reverse_iterator {
-	// done
 	return std::make_reverse_iterator(begin());
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::rend() noexcept -> reverse_iterator {
-	// done
 	return std::make_reverse_iterator(begin());
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::cbegin() const noexcept
 		-> const_iterator {
-	// done
 	return begin();
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::cend() const noexcept
 		-> const_iterator {
-	// done
 	return end();
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::crbegin() const noexcept
 		-> const_reverse_iterator {
-	// done
 	return rbegin();
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::crend() const noexcept
 		-> const_reverse_iterator {
-	// done
 	return rend();
 }
 
 template <class T, size_t StackSize>
 constexpr bool stack_vector<T, StackSize>::empty() const noexcept {
-	// done
 	return _size == 0;
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::size() const noexcept -> size_type {
-	// done
 	return _size;
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::max_size() const noexcept
 		-> size_type {
-	// done
 	return StackSize;
 }
 
 template <class T, size_t StackSize>
 constexpr void stack_vector<T, StackSize>::reserve(size_type) noexcept {
-	// done
 	// Provided to match std::vector api.
 }
 
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::capacity() const noexcept
 		-> size_type {
-	// done
 	return StackSize;
 }
 
 template <class T, size_t StackSize>
 constexpr void stack_vector<T, StackSize>::shrink_to_fit() noexcept {
-	// done
 	// Intentionally blank, provided to match std::vector api.
 }
 
 template <class T, size_t StackSize>
 constexpr void stack_vector<T, StackSize>::clear() {
-	// done
 	fea::destroy(begin(), end());
 	_size = 0;
 }
@@ -542,9 +508,13 @@ constexpr void stack_vector<T, StackSize>::clear() {
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::erase(const_iterator pos)
 		-> iterator {
-	// done
 	assert(pos <= cend());
 	if (pos == cend()) {
+		return end();
+	}
+
+	if (pos == cend() - 1) {
+		pop_back();
 		return end();
 	}
 
@@ -565,19 +535,18 @@ constexpr auto stack_vector<T, StackSize>::erase(const_iterator pos)
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::erase(
 		const_iterator first, const_iterator last) -> iterator {
-	// done
 	assert(first <= last);
+	assert(last <= cend());
+
 	if (first == last) {
-		return begin() + std::distance(cbegin(), first);
+		return begin() + std::distance(cbegin(), last);
 	}
 
 	size_type begin_idx = size_type(std::distance(cbegin(), first));
 	size_type end_idx = size_type(std::distance(cbegin(), last));
-	assert(begin_idx <= size());
-	assert(end_idx <= size());
-
 	auto beg_it = begin() + begin_idx;
 	auto end_it = begin() + end_idx;
+
 	fea::move_if_moveable(end_it, end(), beg_it);
 	size_type range_size = size_type(std::distance(first, last));
 	_size -= range_size;
@@ -589,30 +558,29 @@ constexpr auto stack_vector<T, StackSize>::erase(
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::insert(
 		const_iterator pos, const_reference value) -> iterator {
-	// done
 	assert(pos <= end());
 	assert(_size < _data.size());
 
-	// TODO ?
-	// if (pos == cend()) {
-	//	push_back(value);
-	//}
+	if (pos == cend()) {
+		push_back(value);
+		assert(!empty());
+		return end() - 1;
+	}
 
 	// Convert to non-const iter.
 	iterator it = begin() + std::distance(cbegin(), pos);
 
-
-	// Ininitalize the last item memory.
-	// std::uninitialized_default_construct(end(), end() + 1);
+	// Uninit move the last + 1, then move all others + 1.
 	fea::uninitialized_move_if_moveable(end() - 1, end(), end());
-
-	// Then move / copy the rest.
-	// fea::move_backward_if_moveable(it, end(), end() + 1);
 	fea::move_backward_if_moveable(it, end() - 1, end());
 
-	// TODO : Check if input value was inside moved range.
+	// Check if input value was inside moved range.
+	const_pointer val_ptr = &value;
+	if (pos <= val_ptr && val_ptr < cend()) {
+		++val_ptr;
+	}
 
-	*it = value;
+	*it = *val_ptr;
 	++_size;
 	return it;
 }
@@ -620,17 +588,28 @@ constexpr auto stack_vector<T, StackSize>::insert(
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::insert(
 		const_iterator pos, value_type&& value) -> iterator {
-	// done
 	assert(pos <= end());
 	assert(_size < _data.size());
 
+	if (pos == cend()) {
+		push_back(std::move(value));
+		assert(!empty());
+		return end() - 1;
+	}
+
 	iterator it = begin() + std::distance(cbegin(), pos);
-	// std::uninitialized_default_construct(end(), end() + 1);
-	// fea::move_backward_if_moveable(it, end(), end() + 1);
+
+	// Uninit move the last + 1, then move all others + 1.
 	fea::uninitialized_move_if_moveable(end() - 1, end(), end());
 	fea::move_backward_if_moveable(it, end() - 1, end());
 
-	*it = std::move(value);
+	// Check if input value was inside moved range.
+	const_pointer val_ptr = &value;
+	if (pos <= val_ptr && val_ptr < cend()) {
+		++val_ptr;
+	}
+
+	*it = std::move(*val_ptr);
 	++_size;
 	return it;
 }
@@ -638,7 +617,6 @@ constexpr auto stack_vector<T, StackSize>::insert(
 template <class T, size_t StackSize>
 constexpr auto stack_vector<T, StackSize>::insert(const_iterator pos,
 		size_type count, const_reference value) -> iterator {
-	// done
 	assert(pos <= end());
 	assert(_size <= _data.size() - count);
 
@@ -659,7 +637,6 @@ template <class T, size_t StackSize>
 template <class InputIt, class>
 constexpr auto stack_vector<T, StackSize>::insert(
 		const_iterator pos, InputIt first, InputIt last) -> iterator {
-	// done
 	// TODO : move iterators
 	assert(pos <= end());
 
@@ -680,31 +657,26 @@ constexpr auto stack_vector<T, StackSize>::insert(
 }
 
 template <class T, size_t StackSize>
-constexpr typename stack_vector<T, StackSize>::iterator stack_vector<T,
-		StackSize>::insert(const_iterator pos,
-		std::initializer_list<value_type>&& ilist) {
-	// done
+constexpr auto stack_vector<T, StackSize>::insert(const_iterator pos,
+		std::initializer_list<value_type>&& ilist) -> iterator {
 	return insert(pos, fea::make_move_iterator_if_moveable(ilist.begin()),
 			fea::make_move_iterator_if_moveable(ilist.end()));
 }
 
 template <class T, size_t StackSize>
 constexpr void stack_vector<T, StackSize>::push_back(const T& value) {
-	// done
 	assert(_size < StackSize);
 	std::uninitialized_copy_n(&value, 1u, begin() + _size++);
 }
 
 template <class T, size_t StackSize>
 constexpr void stack_vector<T, StackSize>::push_back(T&& value) {
-	// done
 	assert(_size < StackSize);
 	std::uninitialized_move_n(&value, 1u, begin() + _size++);
 }
 
 template <class T, size_t StackSize>
 constexpr void stack_vector<T, StackSize>::pop_back() {
-	// done
 	assert(_size > 0);
 	--_size;
 	fea::destroy_at(end());
@@ -712,14 +684,12 @@ constexpr void stack_vector<T, StackSize>::pop_back() {
 
 template <class T, size_t StackSize>
 constexpr void stack_vector<T, StackSize>::resize(size_type new_size) {
-	// done
 	resize(new_size, T{});
 }
 
 template <class T, size_t StackSize>
 constexpr void stack_vector<T, StackSize>::resize(
 		size_type new_size, const_reference value) {
-	// done
 	assert(new_size <= StackSize);
 	if (new_size == _size) {
 		return;
@@ -735,7 +705,6 @@ constexpr void stack_vector<T, StackSize>::resize(
 
 template <class T, size_t StackSize>
 constexpr void stack_vector<T, StackSize>::swap(stack_vector& other) {
-	// done
 	using std::swap;
 	swap(_data, other._data);
 	swap(_size, other._size);
@@ -745,7 +714,6 @@ constexpr void stack_vector<T, StackSize>::swap(stack_vector& other) {
 template <class K, size_t S>
 constexpr bool operator==(
 		const stack_vector<K, S>& lhs, const stack_vector<K, S>& rhs) {
-	// done
 	if (lhs.size() != rhs.size()) {
 		return false;
 	}
@@ -755,7 +723,6 @@ constexpr bool operator==(
 template <class K, size_t S>
 constexpr bool operator!=(
 		const stack_vector<K, S>& lhs, const stack_vector<K, S>& rhs) {
-	// done
 	return !(rhs == lhs);
 }
 } // namespace fea

@@ -217,6 +217,27 @@ TEST(stack_vector, insert) {
 		const fea::stack_vector<int, 5> answer{ 0, 1, 2, 3, 4 };
 		EXPECT_EQ(v, answer);
 	}
+
+	v.pop_back();
+	v.insert(v.end(), 4);
+	{
+		const fea::stack_vector<int, 5> answer{ 0, 1, 2, 3, 4 };
+		EXPECT_EQ(v, answer);
+	}
+
+	v.erase(v.begin());
+	v.insert(v.begin(), v[1]);
+	{
+		const fea::stack_vector<int, 5> answer{ 2, 1, 2, 3, 4 };
+		EXPECT_EQ(v, answer);
+	}
+
+	v.erase(v.begin());
+	v.insert(v.begin(), std::move(v[3]));
+	{
+		const fea::stack_vector<int, 5> answer{ 4, 1, 2, 3, 4 };
+		EXPECT_EQ(v, answer);
+	}
 }
 
 TEST(stack_vector, erase) {
@@ -421,6 +442,17 @@ TEST(stack_vector, erase) {
 		const fea::stack_vector<int, 5> answer{};
 		EXPECT_TRUE(std::equal(
 				arr.begin(), arr.end(), answer.begin(), answer.end()));
+	}
+
+	arr = { 0, 1, 2, 3, 4 };
+	{
+		auto ait = arr.erase(arr.begin() + 1, arr.begin() + 3);
+
+		std::vector<int> v{ 0, 1, 2, 3, 4 };
+		auto vit = v.erase(v.begin() + 1, v.begin() + 3);
+		EXPECT_EQ(arr.size(), v.size());
+		EXPECT_EQ(
+				std::distance(arr.begin(), ait), std::distance(v.begin(), vit));
 	}
 }
 
