@@ -35,6 +35,7 @@
 #include "fea/utils/platform.hpp"
 
 #include <array> // for std::begin, std::end
+#include <cstdint>
 #include <memory>
 #include <tuple> // for std::get
 #include <type_traits>
@@ -125,18 +126,7 @@ More info : https://en.cppreference.com/w/cpp/experimental/is_detected
 
 See unit tests for more examples.
 */
-
-// Used in is_detected and to indicate a void type in container.
-template <class...>
-using void_t = void;
-
 namespace detail {
-struct nonesuch {
-	~nonesuch() = delete;
-	nonesuch(nonesuch const&) = delete;
-	void operator=(nonesuch const&) = delete;
-};
-
 template <class Default, class AlwaysVoid, template <class...> class Op,
 		class... Args>
 struct detector {
@@ -145,20 +135,16 @@ struct detector {
 };
 
 template <class Default, template <class...> class Op, class... Args>
-struct detector<Default, void_t<Op<Args...>>, Op, Args...> {
+struct detector<Default, std::void_t<Op<Args...>>, Op, Args...> {
 	using value_t = std::true_type;
 	using type = Op<Args...>;
 };
 
-// Old version
-// template <template <class...> class Op, class = void, class...>
-// struct is_detected : std::false_type {};
-// template <template <class...> class Op, class... Args>
-// struct is_detected<Op, void_t<Op<Args...>>, Args...> : std::true_type {};
-// template <template <class...> class Op, class... Args>
-// inline constexpr bool is_detected_v = is_detected<Op, void,
-// Args...>::value;
-
+struct nonesuch {
+	~nonesuch() = delete;
+	nonesuch(nonesuch const&) = delete;
+	void operator=(nonesuch const&) = delete;
+};
 } // namespace detail
 
 template <template <class...> class Op, class... Args>
@@ -166,7 +152,17 @@ using is_detected =
 		typename detail::detector<detail::nonesuch, void, Op, Args...>::value_t;
 
 template <template <class...> class Op, class... Args>
-inline constexpr bool is_detected_v = is_detected<Op, Args...>::value;
+using detected_t =
+		typename detail::detector<detail::nonesuch, void, Op, Args...>::type;
+
+template <class Default, template <class...> class Op, class... Args>
+using detected_or = detail::detector<Default, void, Op, Args...>;
+
+template <template <class...> class Op, class... Args>
+constexpr inline bool is_detected_v = is_detected<Op, Args...>::value;
+
+template <class Default, template <class...> class Op, class... Args>
+using detected_or_t = typename detected_or<Default, Op, Args...>::type;
 
 
 // Is the same non-type parameter.
@@ -250,7 +246,7 @@ struct is_iterator {
 	static constexpr bool value = false;
 };
 template <class T>
-struct is_iterator<T, void_t<iterator_category_t<T>>> {
+struct is_iterator<T, std::void_t<iterator_category_t<T>>> {
 	static constexpr bool value = true;
 };
 
@@ -276,6 +272,10 @@ template <class T>
 using has_data = decltype(std::data(std::declval<T>()));
 template <class T>
 using has_size = decltype(std::size(std::declval<T>()));
+
+template <class T>
+using has_value_type = typename T::value_type;
+
 
 // Checks if a type has std::begin and std::end.
 template <class T>
@@ -405,7 +405,7 @@ using iterator_value_t = typename std::iterator_traits<Iter>::value_type;
 template <size_t Bytes, size_t Align>
 struct aligned_storage {
 	struct type {
-		alignas(Align) unsigned char data[Bytes];
+		alignas(Align) uint8_t data[Bytes];
 	};
 };
 
@@ -413,4 +413,22 @@ struct aligned_storage {
 template <size_t Bytes, size_t Align>
 using aligned_storage_t = typename aligned_storage<Bytes, Align>::type;
 
+
+// Get the output iterator's container value_type.
+template <class>
+struct output_iterator_traits;
+
+template <template <class, class...> class OutputIt, class First, class... Args>
+struct output_iterator_traits<OutputIt<First, Args...>> {
+	using traits_t = std::iterator_traits<OutputIt<First, Args...>>;
+	static_assert(std::is_base_of_v<std::output_iterator_tag,
+						  typename traits_t::iterator_category>,
+			"output_iterator_traits : Invalid iterator, requires output "
+			"iterator.");
+
+	using value_type = detected_or_t<First, has_value_type, First>;
+};
+
+template <class T>
+using output_iterator_vt = typename output_iterator_traits<T>::value_type;
 } // namespace fea

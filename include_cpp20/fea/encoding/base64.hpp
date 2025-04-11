@@ -30,43 +30,44 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
-#include <array>
-#include <string>
-#include <string_view>
-#include <vector>
+#include "fea/memory/memory.hpp"
+#include "fea/meta/traits.hpp"
+#include "fea/utils/platform.hpp"
 
-// namespace fea {
-//// Encode data into a base64 string.
-// inline std::vector<uint8_t> encode_base64(const std::vector<uint8_t>& bytes);
-// inline std::vector<uint8_t> decode_base64(const std::vector<uint8_t>&
-// base64); } // namespace fea
+#include <array>
+#include <bit>
+#include <cassert>
+// #include <cstring>
+#include <iterator>
+#include <type_traits>
 
 namespace fea {
-namespace detail {
-// constexpr inline std::string_view base64_lut
-//		= "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+// Encodes the data pointed at by the input iterators into a base64 string.
+// Outputs chars to the output iterator.
+template <std::forward_iterator FwdIt, std::output_iterator<char> OutIt>
+void encode_base64(FwdIt first, FwdIt last, OutIt out) noexcept;
 
+// Decodes base64 and deserializes to whatever type the iterator points to.
+// Supports an output iterator, a single pointer, an iterator to types T, etc.
+template <std::forward_iterator FwdIt, class OutIt>
+void decode_base64(FwdIt first, FwdIt last, OutIt out);
+
+} // namespace fea
+
+
+/**
+ * Implementation
+ */
+namespace fea {
+namespace detail {
+// 6 bit part to char.
 constexpr inline std::array<char, 64> base64_lut{ 'A', 'B', 'C', 'D', 'E', 'F',
 	'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U',
 	'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
 	'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y',
 	'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/' };
 
-// constexpr inline std::array<uint8_t, 64> base64_lut{ uint8_t('A'),
-// uint8_t('B'), 	uint8_t('C'), uint8_t('D'), uint8_t('E'), uint8_t('F'),
-// uint8_t('G'), 	uint8_t('H'), uint8_t('I'), uint8_t('J'), uint8_t('K'),
-// uint8_t('L'), 	uint8_t('M'), uint8_t('N'), uint8_t('O'), uint8_t('P'),
-// uint8_t('Q'), 	uint8_t('R'), uint8_t('S'), uint8_t('T'), uint8_t('U'),
-// uint8_t('V'), 	uint8_t('W'), uint8_t('X'), uint8_t('Y'), uint8_t('Z'),
-// uint8_t('a'), 	uint8_t('b'), uint8_t('c'), uint8_t('d'), uint8_t('e'),
-// uint8_t('f'), 	uint8_t('g'), uint8_t('h'), uint8_t('i'), uint8_t('j'),
-// uint8_t('k'), 	uint8_t('l'), uint8_t('m'), uint8_t('n'), uint8_t('o'),
-// uint8_t('p'), 	uint8_t('q'), uint8_t('r'), uint8_t('s'), uint8_t('t'),
-// uint8_t('u'), 	uint8_t('v'), uint8_t('w'), uint8_t('x'), uint8_t('y'),
-// uint8_t('z'), 	uint8_t('0'), uint8_t('1'), uint8_t('2'), uint8_t('3'),
-// uint8_t('4'), 	uint8_t('5'), uint8_t('6'), uint8_t('7'), uint8_t('8'),
-// uint8_t('9'), 	uint8_t('+'), uint8_t('/') };
-
+// char to 6 bit part.
 constexpr inline std::array<uint8_t, 256> base64_rlut{ 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 62, 0, 0, 0, 63, 52, 53, 54, 55, 56, 57, 58,
@@ -79,96 +80,230 @@ constexpr inline std::array<uint8_t, 256> base64_rlut{ 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-
-// const std::vector<unsigned>& base64_inverse_lut() {
-//	static std::vector<unsigned> inverse_lut;
-//	if (inverse_lut.size() == 0) {
-//		inverse_lut.resize(256);
-//		unsigned i = 0;
-//		for (char c : base64_lut) {
-//			inverse_lut[c] = i++;
-//		}
-//	}
-//	return inverse_lut;
-// }
 } // namespace detail
 
+template <std::forward_iterator FwdIt, std::output_iterator<char> OutIt>
+void encode_base64(FwdIt first, FwdIt last, OutIt out) noexcept {
+	using value_t = typename std::iterator_traits<FwdIt>::value_type;
+	using storage_t = fea::aligned_storage_t<sizeof(value_t), alignof(value_t)>;
+	static_assert(std::is_trivially_copyable_v<value_t>,
+			"fea::encode_base64 : Input type must be trivially copyable "
+			"(it is reinterpreted as bytes).");
 
-// std::vector<uint8_t> encode_base64(const std::vector<uint8_t>& bytes) {
-//	std::vector<uint8_t> ret;
-//
-//	for (size_t i = 0; i < bytes.size(); i += 3) {
-//		uint8_t one = bytes[i];
-//		int shift_min = 0;
-//
-//		uint8_t two, three;
-//		if (i + 1 >= bytes.size()) {
-//			two = 0;
-//			three = 0;
-//			shift_min = 12;
-//		} else if (i + 2 >= bytes.size()) {
-//			two = bytes[i + 1];
-//			three = 0;
-//			shift_min = 6;
-//		} else {
-//			two = bytes[i + 1];
-//			three = bytes[i + 2];
-//		}
-//
-//		unsigned val24 = (one << 16) | (two << 8) | three;
-//		for (int shift = 18; shift >= 0; shift -= 6) {
-//			if (shift < shift_min) {
-//				ret.push_back('=');
-//			} else {
-//				unsigned ans = val24 >> shift;
-//				ans &= 0b0011'1111;
-//				ret.push_back(detail::base64_lut[ans]);
-//			}
-//		}
-//	}
-//	return ret;
-// }
-//
-// std::vector<uint8_t> decode_base64(const std::vector<uint8_t>& base64) {
-//	std::vector<uint8_t> data = base64;
-//	if (base64.size() % 4 != 0) {
-//		for (size_t i = 0; i < 4 - (base64.size() % 4); ++i) {
-//			data.push_back('=');
-//		}
-//	}
-//
-//	std::vector<uint8_t> ret;
-//	for (size_t i = 0; i < data.size(); i += 4) {
-//		unsigned one = detail::base64_rlut[data[i]] << 18;
-//		unsigned two = detail::base64_rlut[data[i + 1]] << 12;
-//		unsigned three = detail::base64_rlut[data[i + 2]] << 6;
-//		unsigned four = detail::base64_rlut[data[i + 3]];
-//
-//		if (data[i + 2] == '=') {
-//			three = 0;
-//		}
-//
-//		if (data[i + 3] == '=') {
-//			four = 0;
-//		}
-//
-//		unsigned val24 = one | two | three | four;
-//
-//		unsigned ans = val24 >> 16;
-//		ret.push_back(static_cast<uint8_t>(ans));
-//
-//		if (data[i + 2] != '=') {
-//			ans = val24 >> 8;
-//			ans &= 0b1111'1111;
-//			ret.push_back(static_cast<uint8_t>(ans));
-//		}
-//
-//		if (data[i + 3] != '=') {
-//			ans = val24;
-//			ans &= 0b1111'1111;
-//			ret.push_back(static_cast<uint8_t>(ans));
-//		}
-//	}
-//	return ret;
-// }
+	if (first == last) {
+		return;
+	}
+
+	// Stage the encoding in 4 bytes.
+	// When the staging is full, flush to output and clear.
+	constexpr int insert_idx_init = 2;
+	int insert_idx = insert_idx_init;
+	uint32_t staging = 0;
+
+	// Expects the output char at LSB in shifted_staging.
+	auto write_char = [](uint32_t shifted_staging, auto& out) {
+		uint32_t idx = shifted_staging & 0b0011'1111;
+		char c = detail::base64_lut[idx];
+		*out = c;
+		++out;
+	};
+
+	for (; first != last; ++first) {
+		// Convert pointed-to value to bytes.
+		storage_t bytes = std::bit_cast<storage_t>(*first);
+
+		// For each byte, add to staging. If the staging is full,
+		// output encoding (3 bytes into 4 bytes).
+		for (size_t i = 0; i < sizeof(value_t); ++i) {
+			assert(0 <= insert_idx && insert_idx <= insert_idx_init);
+			staging |= uint32_t(bytes.data[i]) << (insert_idx-- * 8);
+
+			if (insert_idx != -1) {
+				continue;
+			}
+
+			// We've filled our staging, flush to output iterator.
+			for (int j = 3; j >= 0; --j) {
+				write_char(staging >> (j * 6), out);
+			}
+
+			// Reset staging & insert index.
+			staging = 0;
+			insert_idx = insert_idx_init;
+		}
+	}
+	assert(0 <= insert_idx && insert_idx <= insert_idx_init);
+
+	if (insert_idx == insert_idx_init) {
+		// We are done, divisible by 3.
+		assert(staging == 0);
+		return;
+	}
+
+	if (insert_idx == 1) {
+		// We have 1 value stored.
+		write_char(staging >> 18, out);
+		write_char(staging >> 12, out);
+		*out = '=';
+		++out;
+		*out = '=';
+		++out;
+	}
+
+	if (insert_idx == 0) {
+		// We have 2 values stored.
+		write_char(staging >> 18, out);
+		write_char(staging >> 12, out);
+		write_char(staging >> 6, out);
+		*out = '=';
+		++out;
+	}
+}
+
+namespace detail {
+template <class T, std::forward_iterator FwdIt, std::output_iterator<T> OutIt>
+void decode_base64(FwdIt first, FwdIt last, OutIt out) noexcept {
+	using value_t = T;
+	using storage_t = fea::aligned_storage_t<sizeof(value_t), alignof(value_t)>;
+	static_assert(std::is_trivially_copyable_v<value_t>,
+			"fea::encode_base64 : Output type must be trivially copyable "
+			"(it is reinterpreted as bytes).");
+
+	if (first == last) {
+		return;
+	}
+
+	if constexpr (fea::debug_build) {
+		// A bit heavy, only check in debug.
+		// Check out count is multiple of 4 (atm we require output padding).
+		size_t count = std::distance(first, last);
+		assert(count % 4 == 0);
+
+		// Check that we can fit a perfect amount of Ts inside the base64
+		// encoding.
+		size_t byte_size = (count / 4) * 3;
+		FwdIt tmp_last = last - 1;
+		if (char(*tmp_last) == '=') {
+			--byte_size;
+
+			if (tmp_last != first && char(*--tmp_last) == '=') {
+				--byte_size;
+			}
+		}
+
+		assert(byte_size % sizeof(value_t) == 0);
+	}
+
+	// We store 4 "byte parts" (6bit portions) in a staging area.
+	// Once the staging is full, we flush the staging to a temporary data
+	// buffer.
+	constexpr int insert_idx_init = 3;
+	int insert_idx = insert_idx_init;
+	uint32_t staging = 0;
+
+	// It's not enough to have the input (decoding) staging. We can only cast
+	// the object once we have all bytes. The second staging area is an array
+	// getting filled with bytes, when it is full, we flush (bit_cast) to
+	// object.
+	// Unused if output is 1 byte.
+	size_t value_staging_idx = 0;
+	storage_t value_staging;
+
+	// Expects a shifted staging value.
+	auto write_obj = [](uint32_t shifted_staging,
+							 [[maybe_unused]] storage_t& obj_staging,
+							 [[maybe_unused]]
+							 size_t& obj_byte_idx,
+							 auto& out) {
+		uint8_t byte = uint8_t(shifted_staging & 0b1111'1111);
+		if constexpr (sizeof(value_t) == 1) {
+			// Single byte output, output as-is.
+			*out = value_t(byte);
+			++out;
+		} else {
+			// Store in temporary storage.
+			obj_staging.data[obj_byte_idx++] = byte;
+
+			assert(obj_byte_idx <= sizeof(value_t));
+			if (obj_byte_idx != sizeof(value_t)) {
+				return;
+			}
+
+			// We have a "full" object stored, flush it.
+			*out = std::bit_cast<value_t>(obj_staging);
+			++out;
+			obj_byte_idx = 0;
+		}
+	};
+
+
+	// For each input char, reverse lookup, pack in staging and flush
+	// to temp object.
+	// When the object is filled, output to iterator.
+	for (first; first != last; ++first) {
+		assert(0 <= insert_idx && insert_idx <= insert_idx_init);
+		assert(value_staging_idx < sizeof(value_t));
+
+		// Get input, convert to index and get reverse lut value.
+		size_t ridx = size_t(*first);
+		assert(ridx < detail::base64_rlut.size());
+
+		// We hit a padding character. Early exit and check everything is gucci.
+		if (ridx == size_t('=')) {
+			assert(0 <= insert_idx && insert_idx < insert_idx_init);
+			for (int j = 2; j > insert_idx; --j) {
+				write_obj((staging >> (j * 8)), value_staging,
+						value_staging_idx, out);
+			}
+			assert(value_staging_idx == 0);
+			break;
+		}
+
+		// Store in staging.
+		uint32_t part_bits = uint32_t(detail::base64_rlut[ridx]);
+		staging |= part_bits << (insert_idx-- * 6);
+
+		if (insert_idx != -1) {
+			continue;
+		}
+
+		// Flush to storage.
+		for (int j = 2; j >= 0; --j) {
+			write_obj((staging >> (j * 8)), value_staging, value_staging_idx,
+					out);
+		}
+
+		// Reset staging & index.
+		staging = 0;
+		insert_idx = insert_idx_init;
+	}
+}
+
+// Overload for real output iterators. Deduces the output value_type.
+template <std::forward_iterator FwdIt, template <class, class...> class OutIt,
+		class First, class... Args>
+void decode_base64(FwdIt first, FwdIt last, OutIt<First, Args...> out,
+		std::output_iterator_tag) {
+	using value_t = fea::output_iterator_vt<OutIt<First, Args...>>;
+	return decode_base64<value_t>(first, last, out);
+}
+
+// Overload for forward iterators. Simple. Used for example when amount is known
+// or with pointers.
+template <std::forward_iterator FwdIt, std::forward_iterator OutIt>
+void decode_base64(
+		FwdIt first, FwdIt last, OutIt out, std::forward_iterator_tag) {
+	using value_t = typename std::iterator_traits<OutIt>::value_type;
+	return decode_base64<value_t>(first, last, out);
+}
+} // namespace detail
+
+// Note : We need this dispatch overload to support both output and input
+// iterators. Output iterators don't have an easily accessible value_type, so we
+// need voodoo to deduce it.
+template <std::forward_iterator FwdIt, class OutIt>
+void decode_base64(FwdIt first, FwdIt last, OutIt out) {
+	using cat_t = typename std::iterator_traits<OutIt>::iterator_category;
+	return detail::decode_base64(first, last, out, cat_t{});
+}
 } // namespace fea
