@@ -100,6 +100,26 @@ struct user_option {
 
 	bool has_been_parsed = false;
 };
+
+inline int mprintf(const std::string&);
+inline int mwprintf(const std::wstring&);
+inline int u16printf(const std::u16string&);
+inline int u32printf(const std::u32string&);
+
+template <class CharT>
+constexpr auto get_print() {
+	if constexpr (std::is_same_v<CharT, char>) {
+		return mprintf;
+	} else if constexpr (std::is_same_v<CharT, wchar_t>) {
+		return mwprintf;
+	} else if constexpr (std::is_same_v<CharT, char16_t>) {
+		// By default, we convert char16_t to utf8, so it uses printf.
+		return u16printf;
+	} else if constexpr (std::is_same_v<CharT, char32_t>) {
+		// By default, we convert char32_t to utf8, so it uses printf.
+		return u32printf;
+	}
+}
 } // namespace detail
 
 // get_opt supports all char types.
@@ -300,21 +320,6 @@ inline int u16printf(const std::u16string& message) {
 inline int u32printf(const std::u32string& message) {
 	std::string out = utf32_to_utf8(message);
 	return printf("%s", out.c_str());
-}
-
-template <class CharT>
-constexpr auto get_print() {
-	if constexpr (std::is_same_v<CharT, char>) {
-		return mprintf;
-	} else if constexpr (std::is_same_v<CharT, wchar_t>) {
-		return mwprintf;
-	} else if constexpr (std::is_same_v<CharT, char16_t>) {
-		// By default, we convert char16_t to utf8, so it uses printf.
-		return u16printf;
-	} else if constexpr (std::is_same_v<CharT, char32_t>) {
-		// By default, we convert char32_t to utf8, so it uses printf.
-		return u32printf;
-	}
 }
 
 
