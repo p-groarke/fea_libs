@@ -60,7 +60,15 @@ Pretty help printing with nice layout.
 namespace fea {
 // Ignore this.
 namespace detail {
-enum class user_option_e : std::uint8_t;
+enum class user_option_e : std::uint8_t {
+	flag,
+	required_arg,
+	optional_arg,
+	default_arg,
+	multi_arg,
+	raw_arg,
+	count,
+};
 
 template <class CharT = char>
 struct user_option {
@@ -309,16 +317,6 @@ constexpr auto get_print() {
 	}
 }
 
-
-enum class user_option_e : std::uint8_t {
-	flag,
-	required_arg,
-	optional_arg,
-	default_arg,
-	multi_arg,
-	raw_arg,
-	count,
-};
 
 template <class CharT>
 user_option<CharT>::user_option(string_t&& longopt, CharT shortopt,
