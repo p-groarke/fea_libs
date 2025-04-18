@@ -57,7 +57,7 @@
 #endif
 
 /*
-fmap : A light-weight, cross-platform, memory-mapped file view.
+fea::fmap : A light-weight, cross-platform, memory-mapped file view.
 
 fmap maps whole files to virtual memory, either in read or write mode.
 */
@@ -70,6 +70,7 @@ enum class fmap_mode : uint8_t {
 	count,
 };
 
+// Helper struct for OS mapping data.
 struct fmap_os_data {
 	fmap_os_data() = default;
 	fmap_os_data(const fmap_os_data&) = default;
@@ -92,9 +93,11 @@ struct fmap_os_data {
 #endif
 };
 
+// Maps the file to memory, platform independent.
 inline fmap_os_data os_map(
 		const std::filesystem::path& filepath, fmap_mode mode);
 
+// Unmaps the file to memory, platform independent.
 inline void os_unmap(const fmap_os_data& os_data);
 } // namespace detail
 
@@ -227,7 +230,6 @@ struct basic_fmap_write : public basic_fmap_read {
 
 
 // Helpers
-
 // Get a span pointing to file mapped memory, casted to type U.
 template <class U>
 fea::span<const U> to_span(const basic_fmap_read& ifm);
