@@ -226,29 +226,32 @@ struct basic_fmap_write : public basic_fmap_read {
 };
 
 
-/**
- * Helpers
- */
+// Helpers
+
+// Get a span pointing to file mapped memory, casted to type U.
 template <class U>
 fea::span<const U> to_span(const basic_fmap_read& ifm);
 
+// Get a span pointing to file mapped memory, casted to type U.
 template <class U>
 void to_span(const basic_fmap_read& ifm, fea::span<const U>& out);
 
+// Get a span pointing to mutable file mapped memory, casted to type U.
 template <class U>
 fea::span<U> to_span(basic_fmap_write& ofm);
 
+// Get a span pointing to mutable file mapped memory, casted to type U.
 template <class U>
 void to_span(basic_fmap_write& ofm, fea::span<U>& out);
 
-std::string_view to_sv(const basic_fmap_read& ifm);
+// Get a string_view backed by file mapped memory.
+inline std::string_view to_sv(const basic_fmap_read& ifm);
 
-std::wstring_view to_wsv(const basic_fmap_read& ifm);
+// Get a wstring_view backed by file mapped memory.
+inline std::wstring_view to_wsv(const basic_fmap_read& ifm);
 
 
-/**
- * Aliases
- */
+// Aliases
 // A read-write file map.
 using fmap = basic_fmap_write;
 using ofmap = basic_fmap_write;
@@ -544,12 +547,12 @@ void to_span(basic_fmap_write& ofm, span<U>& out) {
 	out = to_span<U>(ofm);
 }
 
-std::string_view fea::to_sv(const basic_fmap_read& ifm) {
+std::string_view to_sv(const basic_fmap_read& ifm) {
 	return std::string_view{ reinterpret_cast<const char*>(ifm.data()),
 		ifm.size() };
 }
 
-std::wstring_view fea::to_wsv(const basic_fmap_read& ifm) {
+std::wstring_view to_wsv(const basic_fmap_read& ifm) {
 	if (ifm.size() % sizeof(wchar_t) != 0) {
 		fea::maybe_throw<std::invalid_argument>(__FUNCTION__, __LINE__,
 				"Cannot convert to std::wstring_view, total size not multiple "

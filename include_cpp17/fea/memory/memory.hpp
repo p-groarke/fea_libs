@@ -139,59 +139,10 @@ constexpr void destroy_at(T* p) noexcept;
 // In debug, zeros memory.
 template <class FwdIt>
 constexpr void destroy(FwdIt first, FwdIt last) noexcept;
-
-//// #if FEA_CPP20
-////  A bit_cast that sucks less than std::bit_cast
-////  Supports pointers (to byte arrays and such).
-// template <class To, class From>
-// To bit_cast(const From& src) noexcept {
-//	if constexpr (std::is_pointer_v<To>) {
-//		// We assume an array, nothing to check size-wise.
-//		To dst;
-//		std::memcpy(&dst, &src, sizeof(To));
-//		return dst;
-//	}
-//
-//	static_assert(sizeof(From) == sizeof(To),
-//			"fea::bit_cast : 'From' and 'To' size should be identical.");
-//	static_assert(alignof(From) == alignof(To),
-//			"fea::bit_cast : 'From' and 'To' alignement should be identical.");
-//
-//	static_assert(std::is_trivially_copyable_v<From>,
-//			"fea::bit_cast : 'From' type must be trivially copyable.");
-//	static_assert(std::is_trivially_copyable_v<To>,
-//			"fea::bit_cast : 'To' type must be trivially copyable.");
-//	static_assert(std::is_trivially_constructible_v<To>,
-//			"fea::bit_cast : 'To' type must be trivially constructible.");
-//
-//	To dst;
-//	std::memcpy(&dst, &src, sizeof(To));
-//	return dst;
-// }
-//// #endif
-
-//
-// template <class To, class From>
-// std::enable_if_t<sizeof(To) == sizeof(From)
-//						 && std::is_trivially_copyable_v<From>
-//						 && std::is_trivially_copyable_v<To>,
-//		To>
-// bit_cast(const From* src) noexcept {
-//	static_assert(std::is_trivially_constructible_v<To>,
-//			"This implementation additionally requires "
-//			"destination type to be trivially constructible");
-//
-//	To dst;
-//	std::memcpy(&dst, &src, sizeof(To));
-//	return dst;
-//}
-
 } // namespace fea
 
 
-/**
- * Implementation
- */
+// Implementation
 namespace fea {
 template <class T>
 std::conditional_t<!std::is_move_constructible_v<T>
