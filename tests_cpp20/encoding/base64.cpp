@@ -10,11 +10,11 @@ TEST(base64, basics) {
 	{
 		const std::string str = "Sun";
 		std::string enc;
-		fea::encode_base64(str.begin(), str.end(), std::back_inserter(enc));
+		fea::to_base64(str.begin(), str.end(), std::back_inserter(enc));
 		EXPECT_EQ(enc, "U3Vu");
 
 		std::string dec;
-		fea::decode_base64(enc.begin(), enc.end(), std::back_inserter(dec));
+		fea::from_base64(enc.begin(), enc.end(), std::back_inserter(dec));
 		EXPECT_EQ(dec, str);
 	}
 
@@ -22,11 +22,11 @@ TEST(base64, basics) {
 	{
 		const std::string str = "S";
 		std::string enc;
-		fea::encode_base64(str.begin(), str.end(), std::back_inserter(enc));
+		fea::to_base64(str.begin(), str.end(), std::back_inserter(enc));
 		EXPECT_EQ(enc, "Uw==");
 
 		std::string dec;
-		fea::decode_base64(enc.begin(), enc.end(), std::back_inserter(dec));
+		fea::from_base64(enc.begin(), enc.end(), std::back_inserter(dec));
 		EXPECT_EQ(dec, str);
 	}
 
@@ -34,11 +34,11 @@ TEST(base64, basics) {
 	{
 		const std::string str = "Su";
 		std::string enc;
-		fea::encode_base64(str.begin(), str.end(), std::back_inserter(enc));
+		fea::to_base64(str.begin(), str.end(), std::back_inserter(enc));
 		EXPECT_EQ(enc, "U3U=");
 
 		std::string dec;
-		fea::decode_base64(enc.begin(), enc.end(), std::back_inserter(dec));
+		fea::from_base64(enc.begin(), enc.end(), std::back_inserter(dec));
 		EXPECT_EQ(dec, str);
 	}
 
@@ -46,11 +46,11 @@ TEST(base64, basics) {
 	{
 		const std::string str = "Many hands make light work.";
 		std::string enc;
-		fea::encode_base64(str.begin(), str.end(), std::back_inserter(enc));
+		fea::to_base64(str.begin(), str.end(), std::back_inserter(enc));
 		EXPECT_EQ(enc, "TWFueSBoYW5kcyBtYWtlIGxpZ2h0IHdvcmsu");
 
 		std::string dec;
-		fea::decode_base64(enc.begin(), enc.end(), std::back_inserter(dec));
+		fea::from_base64(enc.begin(), enc.end(), std::back_inserter(dec));
 		EXPECT_EQ(dec, str);
 	}
 
@@ -58,11 +58,11 @@ TEST(base64, basics) {
 	{
 		const std::string str = "Sun";
 		std::string enc(4, '\0');
-		fea::encode_base64(str.begin(), str.end(), enc.begin());
+		fea::to_base64(str.begin(), str.end(), enc.begin());
 		EXPECT_EQ(enc, "U3Vu");
 
 		std::string dec(3, '\0');
-		fea::decode_base64(enc.begin(), enc.end(), dec.begin());
+		fea::from_base64(enc.begin(), enc.end(), dec.begin());
 		EXPECT_EQ(dec, str);
 	}
 
@@ -70,11 +70,11 @@ TEST(base64, basics) {
 	{
 		const std::string str = "S";
 		std::string enc(4, '\0');
-		fea::encode_base64(str.begin(), str.end(), enc.begin());
+		fea::to_base64(str.begin(), str.end(), enc.begin());
 		EXPECT_EQ(enc, "Uw==");
 
 		std::string dec(1, '\0');
-		fea::decode_base64(enc.begin(), enc.end(), dec.begin());
+		fea::from_base64(enc.begin(), enc.end(), dec.begin());
 		EXPECT_EQ(dec, str);
 	}
 
@@ -82,11 +82,11 @@ TEST(base64, basics) {
 	{
 		const std::string str = "Su";
 		std::string enc(4, '\0');
-		fea::encode_base64(str.begin(), str.end(), enc.begin());
+		fea::to_base64(str.begin(), str.end(), enc.begin());
 		EXPECT_EQ(enc, "U3U=");
 
 		std::string dec(2, '\0');
-		fea::decode_base64(enc.begin(), enc.end(), dec.begin());
+		fea::from_base64(enc.begin(), enc.end(), dec.begin());
 		EXPECT_EQ(dec, str);
 	}
 
@@ -94,12 +94,11 @@ TEST(base64, basics) {
 	{
 		const std::vector<char> str{ 'S' };
 		std::string enc;
-		fea::encode_base64(str.begin(), str.end(), std::back_inserter(enc));
+		fea::to_base64(str.begin(), str.end(), std::back_inserter(enc));
 		EXPECT_EQ(enc, "Uw==");
 
 		std::vector<char> dec;
-		fea::decode_base64(
-				enc.begin(), enc.end(), std::inserter(dec, dec.end()));
+		fea::from_base64(enc.begin(), enc.end(), std::inserter(dec, dec.end()));
 		EXPECT_EQ(dec, str);
 	}
 
@@ -107,11 +106,11 @@ TEST(base64, basics) {
 	{
 		const std::vector<uint8_t> str{ 'S', 'u' };
 		std::string enc;
-		fea::encode_base64(str.begin(), str.end(), std::back_inserter(enc));
+		fea::to_base64(str.begin(), str.end(), std::back_inserter(enc));
 		EXPECT_EQ(enc, "U3U=");
 
 		std::vector<uint8_t> dec;
-		fea::decode_base64(enc.begin(), enc.end(), std::back_inserter(dec));
+		fea::from_base64(enc.begin(), enc.end(), std::back_inserter(dec));
 		EXPECT_EQ(dec, str);
 	}
 
@@ -119,11 +118,11 @@ TEST(base64, basics) {
 	{
 		const std::string str = "Sun";
 		std::wstring enc;
-		fea::encode_base64(str.begin(), str.end(), std::back_inserter(enc));
+		fea::to_base64(str.begin(), str.end(), std::back_inserter(enc));
 		EXPECT_EQ(enc, L"U3Vu");
 
 		std::string dec;
-		fea::decode_base64(enc.begin(), enc.end(), std::back_inserter(dec));
+		fea::from_base64(enc.begin(), enc.end(), std::back_inserter(dec));
 		EXPECT_EQ(dec, "Sun");
 	}
 
@@ -131,11 +130,11 @@ TEST(base64, basics) {
 	{
 		const std::wstring str = L"Sun";
 		std::wstring enc;
-		fea::encode_base64(str.begin(), str.end(), std::back_inserter(enc));
+		fea::to_base64(str.begin(), str.end(), std::back_inserter(enc));
 		EXPECT_EQ(enc, L"UwB1AG4A"); // little-endian
 
 		std::wstring dec;
-		fea::decode_base64(enc.begin(), enc.end(), std::back_inserter(dec));
+		fea::from_base64(enc.begin(), enc.end(), std::back_inserter(dec));
 		EXPECT_EQ(dec, L"Sun");
 	}
 
@@ -143,12 +142,12 @@ TEST(base64, basics) {
 	{
 		const std::wstring str = L"Sun";
 		std::string enc;
-		fea::encode_base64(str.begin(), str.end(), std::back_inserter(enc));
+		fea::to_base64(str.begin(), str.end(), std::back_inserter(enc));
 		EXPECT_EQ(enc, "UwB1AG4A"); // little-endian
 
 		// Works since we can always convert to bytes, but incorrect output.
 		std::string dec;
-		fea::decode_base64(enc.begin(), enc.end(), std::back_inserter(dec));
+		fea::from_base64(enc.begin(), enc.end(), std::back_inserter(dec));
 		std::string expected = "S"; //\0u\0n\0 ";
 		{
 			expected.push_back('\0');
@@ -161,7 +160,7 @@ TEST(base64, basics) {
 
 		// Correct output, encode type should be the same as decode.
 		std::wstring dec2;
-		fea::decode_base64(enc.begin(), enc.end(), std::back_inserter(dec2));
+		fea::from_base64(enc.begin(), enc.end(), std::back_inserter(dec2));
 		EXPECT_EQ(dec2, L"Sun");
 	}
 
@@ -172,11 +171,11 @@ TEST(base64, basics) {
 		std::memcpy(data.data(), str.data(), sizeof(uint32_t));
 
 		std::string enc;
-		fea::encode_base64(data.begin(), data.end(), std::back_inserter(enc));
+		fea::to_base64(data.begin(), data.end(), std::back_inserter(enc));
 		EXPECT_EQ(enc, "U3VuAA==");
 
 		std::vector<uint32_t> dec;
-		fea::decode_base64(enc.begin(), enc.end(), std::back_inserter(dec));
+		fea::from_base64(enc.begin(), enc.end(), std::back_inserter(dec));
 		EXPECT_EQ(dec.front(), data.front());
 	}
 
@@ -197,12 +196,12 @@ TEST(base64, basics) {
 
 		std::vector<bmp> v(1);
 		std::string enc;
-		fea::encode_base64(v.begin(), v.end(), std::back_inserter(enc));
+		fea::to_base64(v.begin(), v.end(), std::back_inserter(enc));
 		EXPECT_EQ(enc, "Qk1GAAAAAAAAADYAAAAoAAAAAgAAAAIAAAABABgAAAAAABAAAAAAAAA"
 					   "AAAAAAAAAAAAAAAAAAP8A/wAAAAAAAAAAAP8AAA==");
 
 		std::vector<bmp> dec;
-		fea::decode_base64(enc.begin(), enc.end(), std::back_inserter(dec));
+		fea::from_base64(enc.begin(), enc.end(), std::back_inserter(dec));
 		EXPECT_EQ(dec.front(), v.front());
 	}
 
@@ -210,11 +209,11 @@ TEST(base64, basics) {
 	{
 		uint32_t data = 0x006e7553;
 		std::string enc;
-		fea::encode_base64(&data, &data + 1, std::back_inserter(enc));
+		fea::to_base64(&data, &data + 1, std::back_inserter(enc));
 		EXPECT_EQ(enc, "U3VuAA==");
 
 		uint32_t dec;
-		fea::decode_base64(enc.begin(), enc.end(), &dec);
+		fea::from_base64(enc.begin(), enc.end(), &dec);
 		EXPECT_EQ(dec, data);
 	}
 
@@ -235,12 +234,12 @@ TEST(base64, basics) {
 
 		bmp data;
 		std::string enc;
-		fea::encode_base64(&data, &data + 1, std::inserter(enc, enc.end()));
+		fea::to_base64(&data, &data + 1, std::inserter(enc, enc.end()));
 		EXPECT_EQ(enc, "Qk1GAAAAAAAAADYAAAAoAAAAAgAAAAIAAAABABgAAAAAABAAAAAAAAA"
 					   "AAAAAAAAAAAAAAAAAAP8A/wAAAAAAAAAAAP8AAA==");
 
 		bmp dec;
-		fea::decode_base64(enc.begin(), enc.end(), &dec);
+		fea::from_base64(enc.begin(), enc.end(), &dec);
 		EXPECT_EQ(dec, data);
 	}
 }
@@ -258,11 +257,11 @@ TEST(base64, rfc4648) {
 
 	for (const auto& [input, expected] : rfc_tests) {
 		std::string enc;
-		fea::encode_base64(input.begin(), input.end(), std::back_inserter(enc));
+		fea::to_base64(input.begin(), input.end(), std::back_inserter(enc));
 		EXPECT_EQ(enc, expected);
 
 		std::string dec;
-		fea::decode_base64(enc.begin(), enc.end(), std::back_inserter(dec));
+		fea::from_base64(enc.begin(), enc.end(), std::back_inserter(dec));
 		EXPECT_EQ(dec, input);
 	}
 }

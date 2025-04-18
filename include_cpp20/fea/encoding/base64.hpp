@@ -45,12 +45,12 @@ namespace fea {
 // Encodes the data pointed at by the input iterators into a base64 string.
 // Outputs chars to the output iterator.
 template <std::forward_iterator FwdIt, std::output_iterator<char> OutIt>
-void encode_base64(FwdIt first, FwdIt last, OutIt out) noexcept;
+void to_base64(FwdIt first, FwdIt last, OutIt out) noexcept;
 
 // Decodes base64 and deserializes to whatever type the iterator points to.
 // Supports an output iterator, a single pointer, an iterator to types T, etc.
 template <std::forward_iterator FwdIt, class OutIt>
-void decode_base64(FwdIt first, FwdIt last, OutIt out);
+void from_base64(FwdIt first, FwdIt last, OutIt out);
 
 } // namespace fea
 
@@ -83,7 +83,7 @@ constexpr inline std::array<uint8_t, 256> base64_rlut{ 0, 0, 0, 0, 0, 0, 0, 0,
 } // namespace detail
 
 template <std::forward_iterator FwdIt, std::output_iterator<char> OutIt>
-void encode_base64(FwdIt first, FwdIt last, OutIt out) noexcept {
+void to_base64(FwdIt first, FwdIt last, OutIt out) noexcept {
 	using value_t = typename std::iterator_traits<FwdIt>::value_type;
 	using storage_t = fea::aligned_storage_t<sizeof(value_t), alignof(value_t)>;
 	static_assert(std::is_trivially_copyable_v<value_t>,
@@ -302,7 +302,7 @@ void decode_base64(
 // iterators. Output iterators don't have an easily accessible value_type, so we
 // need voodoo to deduce it.
 template <std::forward_iterator FwdIt, class OutIt>
-void decode_base64(FwdIt first, FwdIt last, OutIt out) {
+void from_base64(FwdIt first, FwdIt last, OutIt out) {
 	using cat_t = typename std::iterator_traits<OutIt>::iterator_category;
 	return detail::decode_base64(first, last, out, cat_t{});
 }

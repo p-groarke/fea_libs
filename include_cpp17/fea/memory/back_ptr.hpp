@@ -85,13 +85,10 @@ struct back_ptr {
 private:
 	T* _ptr = nullptr;
 };
-
 } // namespace fea
 
 
-/**
- * Implementation
- */
+// Implementation
 namespace fea {
 template <class T>
 back_ptr<T>::back_ptr(T* ptr) noexcept
