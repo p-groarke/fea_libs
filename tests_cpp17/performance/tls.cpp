@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <chrono>
 #include <fea/performance/tls.hpp>
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
 
 #if FEA_WITH_TBB

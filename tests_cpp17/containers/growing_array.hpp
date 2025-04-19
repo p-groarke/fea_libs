@@ -33,7 +33,7 @@
 // **/
 //#pragma once
 //#include <fea/containers/stack_vector.hpp>
-//#include <fea/utils/throw.hpp>
+//#include <fea/utility/throw.hpp>
 //
 //#include <array>
 //#include <cassert>

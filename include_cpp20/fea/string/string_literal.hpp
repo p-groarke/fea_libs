@@ -33,7 +33,7 @@
 
 #pragma once
 #include "fea/meta/traits.hpp"
-#include "fea/utils/platform.hpp"
+#include "fea/utility/platform.hpp"
 
 #include <algorithm>
 #include <array>

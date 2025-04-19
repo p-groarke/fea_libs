@@ -1,4 +1,5 @@
 #include <fea/encoding/base64.hpp>
+#include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
 #include <string>
 #include <string_view>
@@ -131,7 +132,11 @@ TEST(base64, basics) {
 		const std::wstring str = L"Sun";
 		std::wstring enc;
 		fea::to_base64(str.begin(), str.end(), std::back_inserter(enc));
+#if FEA_WINDOWS
 		EXPECT_EQ(enc, L"UwB1AG4A"); // little-endian
+#else
+		EXPECT_EQ(enc, L"UwAAAHUAAABuAAAA"); // wstring 4 byte
+#endif
 
 		std::wstring dec;
 		fea::from_base64(enc.begin(), enc.end(), std::back_inserter(dec));
@@ -143,12 +148,17 @@ TEST(base64, basics) {
 		const std::wstring str = L"Sun";
 		std::string enc;
 		fea::to_base64(str.begin(), str.end(), std::back_inserter(enc));
+#if FEA_WINDOWS
 		EXPECT_EQ(enc, "UwB1AG4A"); // little-endian
+#else
+		EXPECT_EQ(enc, "UwAAAHUAAABuAAAA"); // wstring 4 byte
+#endif
 
 		// Works since we can always convert to bytes, but incorrect output.
 		std::string dec;
 		fea::from_base64(enc.begin(), enc.end(), std::back_inserter(dec));
 		std::string expected = "S"; //\0u\0n\0 ";
+#if FEA_WINDOWS
 		{
 			expected.push_back('\0');
 			expected.push_back('u');
@@ -156,6 +166,19 @@ TEST(base64, basics) {
 			expected.push_back('n');
 			expected.push_back('\0');
 		}
+#else
+		expected.push_back('\0');
+		expected.push_back('\0');
+		expected.push_back('\0');
+		expected.push_back('u');
+		expected.push_back('\0');
+		expected.push_back('\0');
+		expected.push_back('\0');
+		expected.push_back('n');
+		expected.push_back('\0');
+		expected.push_back('\0');
+		expected.push_back('\0');
+#endif
 		EXPECT_EQ(dec, expected);
 
 		// Correct output, encode type should be the same as decode.

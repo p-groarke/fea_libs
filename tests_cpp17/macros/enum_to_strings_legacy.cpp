@@ -1,5 +1,5 @@
-﻿#include <fea/enum/enum_to_strings_legacy.hpp>
-#include <fea/utils/unused.hpp>
+﻿#include <fea/macros/enum_to_strings_legacy.hpp>
+#include <fea/utility/unused.hpp>
 #include <gtest/gtest.h>
 
 namespace {

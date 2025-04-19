@@ -1,6 +1,6 @@
 ﻿#include <chrono>
 #include <fea/ai/utility_ai.hpp>
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
 
 namespace {

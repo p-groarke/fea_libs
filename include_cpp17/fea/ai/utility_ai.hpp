@@ -34,8 +34,8 @@
 #include "fea/functional/function.hpp"
 #include "fea/meta/static_for.hpp"
 #include "fea/performance/constants.hpp"
-#include "fea/utils/platform.hpp"
-#include "fea/utils/throw.hpp"
+#include "fea/utility/platform.hpp"
+#include "fea/utility/throw.hpp"
 
 #include <algorithm>
 #include <array>

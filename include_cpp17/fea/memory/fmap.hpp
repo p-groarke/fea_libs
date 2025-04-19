@@ -32,9 +32,9 @@
  **/
 #pragma once
 #include "fea/containers/span.hpp"
-#include "fea/utils/error.hpp"
-#include "fea/utils/platform.hpp"
-#include "fea/utils/throw.hpp"
+#include "fea/utility/error.hpp"
+#include "fea/utility/platform.hpp"
+#include "fea/utility/throw.hpp"
 
 #include <cstddef>
 #include <cstdint>

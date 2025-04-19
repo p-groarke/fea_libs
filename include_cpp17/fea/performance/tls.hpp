@@ -33,7 +33,7 @@
 #pragma once
 #include "fea/containers/deque_list.hpp"
 #include "fea/meta/traits.hpp"
-#include "fea/utils/throw.hpp"
+#include "fea/utility/throw.hpp"
 
 #include <cassert>
 #include <cstdint>

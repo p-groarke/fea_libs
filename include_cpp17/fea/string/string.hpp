@@ -37,7 +37,7 @@
 #include "fea/string/conversions.hpp"
 #include "fea/string/details.hpp"
 #include "fea/string/split.hpp"
-#include "fea/utils/platform.hpp"
+#include "fea/utility/platform.hpp"
 
 #include <algorithm>
 #include <cctype>

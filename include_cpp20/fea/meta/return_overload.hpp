@@ -32,7 +32,7 @@
  **/
 #pragma once
 #include "fea/meta/traits.hpp"
-#include "fea/utils/platform.hpp"
+#include "fea/utility/platform.hpp"
 
 #include <type_traits>
 #include <utility>

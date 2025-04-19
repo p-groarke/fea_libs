@@ -1,5 +1,5 @@
 #include <fea/memory/fmap.hpp>
-#include <fea/utils/file.hpp>
+#include <fea/utility/file.hpp>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <string>

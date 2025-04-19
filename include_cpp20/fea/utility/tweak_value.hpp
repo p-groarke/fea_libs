@@ -32,14 +32,14 @@
  **/
 
 #pragma once
-#include "fea/utils/platform.hpp"
+#include "fea/utility/platform.hpp"
 
 #if !FEA_MACOS // Missing std::from_chars float.
 #include "fea/containers/unsigned_hole_hashmap.hpp"
 #include "fea/string/string.hpp"
 #include "fea/string/string_literal.hpp"
-#include "fea/utils/file.hpp"
-#include "fea/utils/throw.hpp"
+#include "fea/utility/file.hpp"
+#include "fea/utility/throw.hpp"
 
 #include <cassert>
 #include <charconv>

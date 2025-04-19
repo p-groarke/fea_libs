@@ -32,8 +32,8 @@
  **/
 
 #pragma once
-#include "fea/utils/platform.hpp"
-#include "fea/utils/throw.hpp"
+#include "fea/utility/platform.hpp"
+#include "fea/utility/throw.hpp"
 
 #include <algorithm>
 #include <codecvt>

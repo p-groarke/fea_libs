@@ -33,8 +33,8 @@
 
 #pragma once
 #include "fea/meta/traits.hpp"
-#include "fea/utils/platform.hpp"
-#include "fea/utils/unused.hpp"
+#include "fea/utility/platform.hpp"
+#include "fea/utility/unused.hpp"
 
 #include <array>
 #include <cstddef>

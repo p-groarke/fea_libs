@@ -32,7 +32,7 @@
  **/
 #pragma once
 #include "fea/meta/function_traits.hpp"
-#include "fea/utils/platform.hpp"
+#include "fea/utility/platform.hpp"
 
 /*
 fea::callback enforces callback signatures on templated lambda callbacks.

@@ -1,9 +1,9 @@
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 #if !FEA_MACOS // TEMP : xcode doesn't have c++ 20
 
 #include <chrono>
-#include <fea/utils/scope.hpp>
-#include <fea/utils/tweak_value.hpp>
+#include <fea/utility/scope.hpp>
+#include <fea/utility/tweak_value.hpp>
 #include <gtest/gtest.h>
 #include <thread>
 

@@ -33,8 +33,8 @@
 #pragma once
 #include "fea/memory/memory.hpp"
 #include "fea/meta/traits.hpp"
-#include "fea/utils/platform.hpp"
-#include "fea/utils/throw.hpp"
+#include "fea/utility/platform.hpp"
+#include "fea/utility/throw.hpp"
 
 #include <algorithm>
 #include <array>

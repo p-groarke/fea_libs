@@ -30,7 +30,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
-#include "fea/utils/platform.hpp"
+#include "fea/utility/platform.hpp"
 
 #if FEA_WITH_DATE
 #include "fea/events/event_stack.hpp"
@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fea/state_machines/fsm.hpp"
 #include "fea/time/high_range_duration.hpp"
 #include "fea/time/time.hpp"
-#include "fea/utils/throw.hpp"
+#include "fea/utility/throw.hpp"
 
 #include <cassert>
 

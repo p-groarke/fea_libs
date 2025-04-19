@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 #include "fea/state_machines/fsm.hpp"
 #include "fea/string/string.hpp"
-#include "fea/utils/throw.hpp"
+#include "fea/utility/throw.hpp"
 
 #include <cassert>
 #include <cstdarg>

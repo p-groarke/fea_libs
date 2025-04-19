@@ -1,8 +1,8 @@
 #include <cassert>
 #include <cstdio>
 #include <fea/terminal/utf8_io.hpp>
-#include <fea/utils/platform.hpp>
-#include <fea/utils/unused.hpp>
+#include <fea/utility/platform.hpp>
+#include <fea/utility/unused.hpp>
 #include <gtest/gtest.h>
 #include <iostream>
 

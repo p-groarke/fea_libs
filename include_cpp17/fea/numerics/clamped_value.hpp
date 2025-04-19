@@ -33,7 +33,7 @@
 
 #pragma once
 #include "fea/numerics/numerics.hpp"
-#include "fea/utils/platform.hpp"
+#include "fea/utility/platform.hpp"
 
 #include <cassert>
 

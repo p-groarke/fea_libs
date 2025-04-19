@@ -1,14 +1,14 @@
-﻿#include "fea/utils/unused.hpp"
+﻿#include "fea/utility/unused.hpp"
 
 #include <fea/containers/span.hpp>
 #include <gtest/gtest.h>
 
 namespace {
-#define FAILMSG "span.cpp : Unit test failed."
+#define FAIL_MSG "span.cpp : Unit test failed."
 
 TEST(span, basics) {
 #if FEA_CPP20
-	static_assert(std::is_same_v<std::span<int>, fea::span<int>>, FAILMSG);
+	static_assert(std::is_same_v<std::span<int>, fea::span<int>>, FAIL_MSG);
 #endif
 
 	std::vector<size_t> vec{ 0u, 1u, 2u };

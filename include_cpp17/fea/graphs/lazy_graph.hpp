@@ -34,8 +34,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fea/containers/stack_vector.hpp"
 #include "fea/functional/callback.hpp"
 #include "fea/performance/constants.hpp"
-#include "fea/utils/platform.hpp"
-#include "fea/utils/throw.hpp"
+#include "fea/utility/platform.hpp"
+#include "fea/utility/throw.hpp"
 
 #include <algorithm>
 #include <cassert>

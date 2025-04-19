@@ -1,7 +1,7 @@
 ﻿#include <array>
 #include <fea/containers/type_map.hpp>
-#include <fea/utils/platform.hpp>
-#include <fea/utils/unused.hpp>
+#include <fea/utility/platform.hpp>
+#include <fea/utility/unused.hpp>
 #include <gtest/gtest.h>
 
 namespace {

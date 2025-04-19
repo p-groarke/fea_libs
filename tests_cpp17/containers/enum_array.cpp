@@ -1,5 +1,5 @@
 ﻿#include <algorithm>
-#include <fea/enum/enum_array.hpp>
+#include <fea/containers/enum_array.hpp>
 #include <gtest/gtest.h>
 
 namespace {

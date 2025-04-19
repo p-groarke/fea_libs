@@ -1,4 +1,4 @@
-﻿#include <fea/utils/platform.hpp>
+﻿#include <fea/utility/platform.hpp>
 
 #if FEA_WINDOWS && FEA_VS_GE(2019)
 // Demo of VS2019 hack.

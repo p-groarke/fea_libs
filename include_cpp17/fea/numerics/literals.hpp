@@ -32,7 +32,7 @@
  **/
 
 #pragma once
-#include "fea/utils/platform.hpp"
+#include "fea/utility/platform.hpp"
 
 #include <cstdint>
 #if FEA_CPP23

@@ -1,6 +1,6 @@
 #include <array>
 #include <fea/math/statistics.hpp>
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
 #include <vector>
 

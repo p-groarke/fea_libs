@@ -1,4 +1,4 @@
-﻿#include <fea/enum/safe_switch.hpp>
+﻿#include <fea/meta/safe_switch.hpp>
 #include <gtest/gtest.h>
 
 namespace {

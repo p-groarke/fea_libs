@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
-#include "fea/utils/platform.hpp"
+#include "fea/utility/platform.hpp"
 #if !FEA_ARM
 
 #if FEA_POSIX

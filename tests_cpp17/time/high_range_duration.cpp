@@ -1,6 +1,6 @@
 ﻿#include <fea/time/high_range_duration.hpp>
 #include <fea/time/time.hpp>
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 
 #if FEA_WITH_DATE
 #include <chrono>

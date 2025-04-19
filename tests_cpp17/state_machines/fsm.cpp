@@ -1,5 +1,5 @@
 ﻿#include <fea/state_machines/fsm.hpp>
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
 
 

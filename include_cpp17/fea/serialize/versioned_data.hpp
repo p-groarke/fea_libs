@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
-#include "fea/enum/utility.hpp"
+#include "fea/meta/enum_traits.hpp"
 #include "fea/meta/static_for.hpp"
 #include "fea/meta/traits.hpp"
 
@@ -75,12 +75,12 @@ std::enable_if_t<(FromT::version - ToT::version > 1)> downgrade(
 
 template <class D, class T>
 std::enable_if_t<T::version
-		== (std::numeric_limits<decltype(T::version)>::max)()>
+				 == (std::numeric_limits<decltype(T::version)>::max)()>
 deserialize(D&, T&);
 
 template <class F, class S>
 std::enable_if_t<F::version
-		== (std::numeric_limits<decltype(F::version)>::max)()>
+				 == (std::numeric_limits<decltype(F::version)>::max)()>
 serialize(const F&, S&);
 
 template <class FromT, class ToT>
@@ -114,17 +114,18 @@ struct upgrade_traits<D, T> {
 
 template <class DeserializerT, class T, class U, class... DataTs>
 struct upgrade_traits<DeserializerT, T, U, DataTs...> {
-	static constexpr bool has_upgrade = fea::is_detected_v<mhas_upgrade, T, U>
-			&& upgrade_traits<DeserializerT, U, DataTs...>::has_upgrade;
+	static constexpr bool has_upgrade
+			= fea::is_detected_v<mhas_upgrade, T, U>
+		   && upgrade_traits<DeserializerT, U, DataTs...>::has_upgrade;
 	static constexpr bool has_downgrade
 			= fea::is_detected_v<mhas_downgrade, U, T>
-			&& upgrade_traits<DeserializerT, U, DataTs...>::has_downgrade;
+		   && upgrade_traits<DeserializerT, U, DataTs...>::has_downgrade;
 	static constexpr bool has_deserialize
 			= fea::is_detected_v<mhas_deserialize, DeserializerT, T>
-			&& upgrade_traits<DeserializerT, U, DataTs...>::has_deserialize;
+		   && upgrade_traits<DeserializerT, U, DataTs...>::has_deserialize;
 	static constexpr bool has_serialize
 			= fea::is_detected_v<mhas_serialize, T, DeserializerT>
-			&& upgrade_traits<DeserializerT, U, DataTs...>::has_serialize;
+		   && upgrade_traits<DeserializerT, U, DataTs...>::has_serialize;
 };
 
 template <class D, class... DataTs>

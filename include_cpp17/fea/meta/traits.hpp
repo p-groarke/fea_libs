@@ -32,7 +32,7 @@
  **/
 
 #pragma once
-#include "fea/utils/platform.hpp"
+#include "fea/utility/platform.hpp"
 
 #include <array> // for std::begin, std::end
 #include <cstdint>

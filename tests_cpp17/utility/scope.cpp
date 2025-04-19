@@ -1,5 +1,5 @@
-﻿#include <fea/utils/platform.hpp>
-#include <fea/utils/scope.hpp>
+﻿#include <fea/utility/platform.hpp>
+#include <fea/utility/scope.hpp>
 #include <gtest/gtest.h>
 
 namespace {

@@ -31,10 +31,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
-#include "fea/utils/file.hpp"
-#include "fea/utils/platform.hpp"
-#include "fea/utils/scope.hpp"
-#include "fea/utils/throw.hpp"
+#include "fea/utility/file.hpp"
+#include "fea/utility/platform.hpp"
+#include "fea/utility/scope.hpp"
+#include "fea/utility/throw.hpp"
 
 #include <algorithm>
 #include <cassert>

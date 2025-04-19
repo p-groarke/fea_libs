@@ -5,7 +5,7 @@
 #include <fea/meta/tuple.hpp>
 #include <fea/reflection/reflection.hpp>
 #include <fea/reflection/reflection_macros.hpp>
-#include <fea/utils/unused.hpp>
+#include <fea/utility/unused.hpp>
 #include <gtest/gtest.h>
 
 namespace {

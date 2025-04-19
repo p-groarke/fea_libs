@@ -1,8 +1,8 @@
-﻿#include <fea/enum/enum_to_strings.hpp>
+﻿#include <fea/macros/enum_to_strings.hpp>
 #include <gtest/gtest.h>
 
 namespace {
-#define FAILMSG "enum_to_strings.cpp : Unit test failed."
+#define FAIL_MSG "enum_to_strings.cpp : Unit test failed."
 
 FEA_STRING_ENUM(my_enum, unsigned, potato, tomato)
 
@@ -99,16 +99,16 @@ TEST(enum_to_strings, to_string_view) {
 	EXPECT_EQ(u8svp, u8"potato"sv);
 	EXPECT_EQ(u8svt, u8"tomato"sv);
 
-	static_assert(to_string_view(my_enum::potato) == "potato"sv, FAILMSG);
-	static_assert(to_string_view(my_enum::tomato) == "tomato"sv, FAILMSG);
-	static_assert(to_string_view(my_enum::potato) == L"potato"sv, FAILMSG);
-	static_assert(to_string_view(my_enum::tomato) == L"tomato"sv, FAILMSG);
-	static_assert(to_string_view(my_enum::potato) == u"potato"sv, FAILMSG);
-	static_assert(to_string_view(my_enum::tomato) == u"tomato"sv, FAILMSG);
-	static_assert(to_string_view(my_enum::potato) == U"potato"sv, FAILMSG);
-	static_assert(to_string_view(my_enum::tomato) == U"tomato"sv, FAILMSG);
-	static_assert(to_string_view(my_enum::potato) == u8"potato"sv, FAILMSG);
-	static_assert(to_string_view(my_enum::tomato) == u8"tomato"sv, FAILMSG);
+	static_assert(to_string_view(my_enum::potato) == "potato"sv, FAIL_MSG);
+	static_assert(to_string_view(my_enum::tomato) == "tomato"sv, FAIL_MSG);
+	static_assert(to_string_view(my_enum::potato) == L"potato"sv, FAIL_MSG);
+	static_assert(to_string_view(my_enum::tomato) == L"tomato"sv, FAIL_MSG);
+	static_assert(to_string_view(my_enum::potato) == u"potato"sv, FAIL_MSG);
+	static_assert(to_string_view(my_enum::tomato) == u"tomato"sv, FAIL_MSG);
+	static_assert(to_string_view(my_enum::potato) == U"potato"sv, FAIL_MSG);
+	static_assert(to_string_view(my_enum::tomato) == U"tomato"sv, FAIL_MSG);
+	static_assert(to_string_view(my_enum::potato) == u8"potato"sv, FAIL_MSG);
+	static_assert(to_string_view(my_enum::tomato) == u8"tomato"sv, FAIL_MSG);
 }
 
 TEST(enum_to_strings, from_string) {

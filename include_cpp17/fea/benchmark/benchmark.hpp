@@ -29,8 +29,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #pragma once
-#include "fea/utils/platform.hpp"
-#include "fea/utils/unused.hpp"
+#include "fea/utility/platform.hpp"
+#include "fea/utility/unused.hpp"
 
 #include <algorithm>
 #include <chrono>

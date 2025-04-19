@@ -33,8 +33,8 @@
 
 #pragma once
 #include "fea/string/string.hpp"
-#include "fea/utils/platform.hpp"
-#include "fea/utils/throw.hpp"
+#include "fea/utility/platform.hpp"
+#include "fea/utility/throw.hpp"
 
 #include <cstdio>
 #include <cstring>

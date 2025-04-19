@@ -1,6 +1,6 @@
 #include <fea/meta/tuple.hpp>
 #include <fea/numerics/clamped_value.hpp>
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
 
 #if FEA_CPP20

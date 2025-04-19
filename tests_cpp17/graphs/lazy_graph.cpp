@@ -2,8 +2,8 @@
 #include <cstdint>
 #include <fea/containers/id_slotmap.hpp>
 #include <fea/graphs/lazy_graph.hpp>
-#include <fea/utils/platform.hpp>
-#include <fea/utils/unused.hpp>
+#include <fea/utility/platform.hpp>
+#include <fea/utility/unused.hpp>
 #include <gtest/gtest.h>
 #include <mutex>
 #include <vector>

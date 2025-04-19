@@ -32,10 +32,10 @@
  **/
 #pragma once
 #include "fea/terminal/translate_io.hpp"
-#include "fea/utils/error.hpp"
-#include "fea/utils/platform.hpp"
-#include "fea/utils/scope.hpp"
-#include "fea/utils/unused.hpp"
+#include "fea/utility/error.hpp"
+#include "fea/utility/platform.hpp"
+#include "fea/utility/scope.hpp"
+#include "fea/utility/unused.hpp"
 
 #include <codecvt>
 #include <iostream>

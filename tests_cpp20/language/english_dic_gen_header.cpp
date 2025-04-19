@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <cassert>
 #include <fea/string/string.hpp>
-#include <fea/utils/file.hpp>
+#include <fea/utility/file.hpp>
 #include <filesystem>
 #include <format>
 #include <fstream>

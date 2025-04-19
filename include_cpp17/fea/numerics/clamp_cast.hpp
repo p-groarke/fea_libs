@@ -32,7 +32,7 @@
  **/
 #pragma once
 #include <cstdint>
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 #include <limits>
 #include <type_traits>
 

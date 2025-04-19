@@ -32,12 +32,12 @@
  **/
 
 #pragma once
-#include "fea/enum/enum_array.hpp"
+#include "fea/containers/enum_array.hpp"
 #include "fea/macros/foreach.hpp"
 #include "fea/macros/literals.hpp"
 #include "fea/macros/macros.hpp"
 #include "fea/string/string.hpp"
-#include "fea/utils/platform.hpp"
+#include "fea/utility/platform.hpp"
 
 #include <array>
 #include <string>

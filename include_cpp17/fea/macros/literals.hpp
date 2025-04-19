@@ -34,7 +34,7 @@
 #pragma once
 #include "fea/macros/foreach.hpp"
 #include "fea/macros/macros.hpp"
-#include "fea/utils/platform.hpp"
+#include "fea/utility/platform.hpp"
 
 #include <string_view>
 #include <type_traits>

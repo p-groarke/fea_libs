@@ -1,5 +1,5 @@
 ﻿#include <algorithm>
-#include <fea/enum/enum_set.hpp>
+#include <fea/containers/enum_set.hpp>
 #include <gtest/gtest.h>
 
 namespace {

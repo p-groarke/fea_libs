@@ -31,10 +31,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
-#include "fea/utils/platform.hpp"
+#include "fea/utility/platform.hpp"
 
 #if FEA_WINDOWS
-#include "fea/utils/error.hpp"
+#include "fea/utility/error.hpp"
 #include <limits>
 
 #include <fcntl.h>

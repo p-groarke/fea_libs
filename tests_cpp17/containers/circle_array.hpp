@@ -33,7 +33,7 @@
  **/
 #pragma once
 #include "fea/memory/memory.hpp"
-#include "fea/utils/platform.hpp"
+#include "fea/utility/platform.hpp"
 
 #include <array>
 #include <cassert>

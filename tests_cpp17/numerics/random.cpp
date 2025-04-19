@@ -1,8 +1,8 @@
 ﻿#include <cstdio>
 #include <fea/math/statistics.hpp>
 #include <fea/numerics/random.hpp>
-#include <fea/utils/platform.hpp>
-#include <fea/utils/unused.hpp>
+#include <fea/utility/platform.hpp>
+#include <fea/utility/unused.hpp>
 #include <gtest/gtest.h>
 
 namespace {

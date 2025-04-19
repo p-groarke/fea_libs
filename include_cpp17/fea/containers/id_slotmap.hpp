@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fea/containers/id_hash.hpp"
 #include "fea/containers/id_slot_lookup.hpp"
 #include "fea/memory/memory.hpp"
-#include "fea/utils/throw.hpp"
+#include "fea/utility/throw.hpp"
 
 #include <cassert>
 #include <initializer_list>

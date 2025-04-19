@@ -3,7 +3,7 @@
 #include <cassert>
 #include <fea/language/language.hpp>
 #include <fea/string/string.hpp>
-#include <fea/utils/file.hpp>
+#include <fea/utility/file.hpp>
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>

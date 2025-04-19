@@ -1,5 +1,5 @@
 #include <fea/numerics/literals.hpp>
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
 #include <type_traits>
 

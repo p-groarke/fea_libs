@@ -32,7 +32,7 @@
  **/
 
 #pragma once
-#include "fea/enum/enum_array.hpp"
+#include "fea/containers/enum_array.hpp"
 #include "fea/meta/non_type_traits.hpp"
 #include "fea/meta/traits.hpp"
 
@@ -47,6 +47,10 @@ std::integral_constant<your_enum, val>...
 */
 
 namespace fea {
+// static_cast to the enum underlying type.
+template <class Enum>
+constexpr std::underlying_type_t<Enum> to_underlying(Enum e);
+
 // Explodes all enum values into a non-type parameter pack and calls your
 // function with it.
 // Enum must be from 0 to N.
@@ -113,6 +117,12 @@ constexpr void enum_for_each_w_idx(const Func& func) {
 }
 } // namespace detail
 
+template <class Enum>
+constexpr std::underlying_type_t<Enum> to_underlying(Enum e) {
+	static_assert(std::is_enum_v<Enum>,
+			"fea::to_underlying : Only supports casting enums.");
+	return static_cast<std::underlying_type_t<Enum>>(e);
+}
 
 template <class Enum, size_t N, class Func>
 constexpr auto explode_enum(const Func& func) {

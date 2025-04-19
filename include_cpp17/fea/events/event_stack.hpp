@@ -35,7 +35,7 @@
 #include "fea/containers/id_slotmap.hpp"
 #include "fea/meta/tuple.hpp"
 #include "fea/performance/constants.hpp"
-#include "fea/utils/platform.hpp"
+#include "fea/utility/platform.hpp"
 
 #include <algorithm>
 #include <cassert>

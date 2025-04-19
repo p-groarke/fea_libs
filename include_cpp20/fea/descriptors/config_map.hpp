@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
-#include "fea/enum/enum_array.hpp"
+#include "fea/containers/enum_array.hpp"
 #include "fea/meta/static_for.hpp"
 #include "fea/meta/traits.hpp"
 #include "fea/meta/tuple.hpp"

@@ -1,6 +1,6 @@
 ﻿#include <cstdio>
 #include <fea/state_machines/constexpr_fsm.hpp>
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
 
 namespace fea {

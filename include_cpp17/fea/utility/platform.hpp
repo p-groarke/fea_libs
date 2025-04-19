@@ -32,7 +32,7 @@
  **/
 
 #pragma once
-#include "fea/utils/bitmask.hpp"
+#include "fea/utility/bitmask.hpp"
 
 #include <cstdint>
 
