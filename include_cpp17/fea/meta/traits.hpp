@@ -44,6 +44,255 @@
 namespace fea {
 // Checks if the all the passed in traits are true.
 template <class...>
+struct all_of;
+
+// Checks if the all the passed in traits are true. Helper alias.
+template <class... Traits>
+inline constexpr bool all_of_v = all_of<Traits...>::value;
+
+// Checks if none of the passed in traits are true.
+template <class...>
+struct none_of;
+
+// Checks if none of the passed in traits are true. Helper alias.
+template <class... Traits>
+inline constexpr bool none_of_v = none_of<Traits...>::value;
+
+// Checks if any of the passed in traits are true.
+template <class...>
+struct any_of;
+
+// Checks if any of the passed in traits are true. Helper alias.
+template <class... Traits>
+inline constexpr bool any_of_v = any_of<Traits...>::value;
+
+// Checks if one of the passed in traits is true.
+template <class...>
+struct one_of;
+
+// Checks if one of the passed in traits is true. Helper alias.
+template <class... Traits>
+inline constexpr bool one_of_v = one_of<Traits...>::value;
+
+namespace detail {
+template <class, class, template <class...> class, class...>
+struct detector;
+
+struct nonesuch;
+} // namespace detail
+
+// is_detected checks if a given type has function.
+// You must call this with a "detector alias", for example :
+//
+// template <class T>
+// using has_myfunc = decltype(std::declval<T>().myfunc());
+//
+// constexpr bool answer = is_detected_v<has_myfunc, your_class>;
+//
+// More info : https://en.cppreference.com/w/cpp/experimental/is_detected
+//
+// See unit tests for more examples.
+template <template <class...> class Op, class... Args>
+using is_detected =
+		typename detail::detector<detail::nonesuch, void, Op, Args...>::value_t;
+
+template <template <class...> class Op, class... Args>
+using detected_t =
+		typename detail::detector<detail::nonesuch, void, Op, Args...>::type;
+
+template <class Default, template <class...> class Op, class... Args>
+using detected_or = detail::detector<Default, void, Op, Args...>;
+
+template <template <class...> class Op, class... Args>
+constexpr inline bool is_detected_v = is_detected<Op, Args...>::value;
+
+template <class Default, template <class...> class Op, class... Args>
+using detected_or_t = typename detected_or<Default, Op, Args...>::type;
+
+
+// Useful is_detected checkers
+template <class T>
+using has_begin = decltype(std::begin(std::declval<T>()));
+template <class T>
+using has_end = decltype(std::end(std::declval<T>()));
+template <class T>
+using has_get = decltype(std::get<0>(std::declval<T>()));
+template <class T>
+using has_resize = decltype(std::declval<T>().resize(std::declval<size_t>()));
+template <class T>
+using has_reserve = decltype(std::declval<T>().reserve(std::declval<size_t>()));
+template <class T>
+using has_data = decltype(std::data(std::declval<T>()));
+template <class T>
+using has_size = decltype(std::size(std::declval<T>()));
+template <class T>
+using has_value_type = typename T::value_type;
+
+
+// Compare non-type parameters.
+template <class T, T, T>
+struct is_same_nt;
+
+// Compare non-type parameters. Helper aliases.
+template <class T, T T1, T T2>
+inline constexpr bool is_same_nt_v = is_same_nt<T, T1, T2>::value;
+
+// Compare non-type parameters. Helper aliases.
+template <auto T1, auto T2>
+inline constexpr bool is_same_nt_v2 = is_same_nt<decltype(T1), T1, T2>::value;
+
+
+// Checks whether 2 types are the same, regardless of their template params.
+template <template <class...> class, template <class...> class>
+struct is_same_template;
+
+// Checks whether 2 types are the same, regardless of their template params.
+// Helper alias.
+template <template <class...> class T, template <class...> class U>
+inline constexpr bool is_same_template_v = is_same_template<T, U>::value;
+
+// Checks if a type is a template template.
+template <class>
+struct is_template_template;
+
+// Checks if a type is a template template. Helper alias.
+template <class T>
+inline constexpr bool is_template_template_v = is_template_template<T>::value;
+
+// Removes the internal consts of a template template (like a tuple for ex).
+template <class>
+struct remove_nested_const;
+
+// Removes the internal consts of a template template (like a tuple for ex).
+// Helper alias.
+template <class T>
+using remove_nested_const_t = typename remove_nested_const<T>::type;
+
+// Checks if first type of template template is const.
+template <class>
+struct is_first_const;
+
+// Checks if first type of template template is const. Helper alias.
+template <class T>
+inline constexpr bool is_first_const_v = is_first_const<T>::value;
+
+// Checks if a type is a pair.
+template <class>
+struct is_pair;
+
+// Checks if a type is a pair. Helper alias.
+template <class T>
+inline constexpr bool is_pair_v = is_pair<T>::value;
+
+// Get the iterator_traits iterator category.
+template <class T>
+using iterator_category_t = typename std::iterator_traits<T>::iterator_category;
+
+// Get the allocator_traits rebind_alloc type.
+template <class Alloc, class Value>
+using rebind_alloc_t =
+		typename std::allocator_traits<Alloc>::template rebind_alloc<Value>;
+
+// Get the iterator_traits value_type type.
+template <class Iter>
+using iterator_value_t = typename std::iterator_traits<Iter>::value_type;
+
+// Checks if a type is an iterator.
+template <class, class = void>
+struct is_iterator;
+
+// Checks if a type is an iterator.
+template <class T>
+inline constexpr bool is_iterator_v = is_iterator<T>::value;
+
+// Get the output iterator's container value_type.
+template <class>
+struct output_iterator_traits;
+
+// Get the output iterator's container value_type.
+template <class T>
+using output_iterator_vt = typename output_iterator_traits<T>::value_type;
+
+// Checks if a type has std::begin and std::end.
+template <class T>
+inline constexpr bool is_container_v
+		= fea::is_detected_v<has_begin, T> && fea::is_detected_v<has_end, T>;
+
+// Checks if a type has std::get.
+template <class T>
+inline constexpr bool is_tuple_like_v = fea::is_detected_v<has_get, T>;
+
+// Checks if a type has std::data and std::size.
+template <class T>
+inline constexpr bool is_contiguous_v
+		= fea::is_detected_v<has_data, T> && fea::is_detected_v<has_size, T>;
+
+
+// Get the first type of a parameter pack.
+template <class...>
+struct front;
+
+// Get the first type of a parameter pack. Helper alias.
+template <class... Args>
+using front_t = typename front<Args...>::type;
+
+// Get the last type of a parameter pack.
+template <class...>
+struct back;
+
+// Get the last type of a parameter pack. Helper alias.
+template <class... Args>
+using back_t = typename back<Args...>::type;
+
+// Checks whether a type can be static_casted to another.
+// https://stackoverflow.com/questions/23762224/check-if-primitive-types-are-castable-in-c
+template <class, class To, class = To>
+struct is_static_castable;
+
+// Checks whether a type can be static_casted to another.
+template <class From, class To>
+inline constexpr bool is_static_castable_v
+		= is_static_castable<From, To>::value;
+
+// Checks whether a function callback type is noexcept.
+template <class Func, class... Args>
+inline constexpr bool is_noexcept_v
+		= noexcept(std::declval<Func>()(std::declval<Args>()...));
+
+// Declares a type std::tuple<ReversedTs...> which is the reverse of your
+// variadic arguments.
+template <class...>
+struct reverse;
+
+// Declares a type std::tuple<ReversedTs...> which is the reverse of your
+// variadic arguments.
+template <class... Ts>
+using reverse_t = typename reverse<Ts...>::type;
+
+// Creates a reverse index sequence of size N.
+// https://stackoverflow.com/questions/51408771/c-reversed-integer-sequence-implementation
+template <size_t... Is>
+constexpr auto reverse_index_sequence(std::index_sequence<Is...>)
+		-> decltype(std::index_sequence<sizeof...(Is) - 1U - Is...>{});
+
+// Creates a reverse index sequence of size N.
+template <size_t N>
+using make_reverse_index_sequence
+		= decltype(reverse_index_sequence(std::make_index_sequence<N>{}));
+
+// Get aligned raw storage for a type.
+template <size_t, size_t>
+struct aligned_storage;
+
+// Get aligned raw storage for a type. Helper alias.
+template <size_t Bytes, size_t Align>
+using aligned_storage_t = typename aligned_storage<Bytes, Align>::type;
+} // namespace fea
+
+
+// Implementation
+namespace fea {
+template <class...>
 struct all_of : std::true_type {};
 
 template <class Trait, class... Traits>
@@ -54,11 +303,6 @@ struct all_of<Trait, Traits...>
 			"fea::all_of : must use type traits");
 };
 
-template <class... Traits>
-inline constexpr bool all_of_v = all_of<Traits...>::value;
-
-
-// Checks if none of the passed in traits are true.
 template <class...>
 struct none_of : std::true_type {};
 
@@ -71,11 +315,6 @@ struct none_of<Trait, Traits...>
 			"fea::none_of : must use type traits");
 };
 
-template <class... Traits>
-inline constexpr bool none_of_v = none_of<Traits...>::value;
-
-
-// Checks if any of the passed in traits are true.
 template <class...>
 struct any_of : std::false_type {};
 
@@ -87,10 +326,6 @@ struct any_of<Trait, Traits...>
 			"fea::any_of : must use type traits");
 };
 
-template <class... Traits>
-inline constexpr bool any_of_v = any_of<Traits...>::value;
-
-// Checks if one of the passed in traits is true.
 template <class...>
 struct one_of : std::false_type {};
 
@@ -109,24 +344,10 @@ struct one_of<Trait, Traits...>
 		: std::conditional_t<Trait::value, detail::one_of_found<Traits...>,
 				  one_of<Traits...>> {};
 
-// Checks if one of the passed in traits is true.
-template <class... Traits>
-inline constexpr bool one_of_v = one_of<Traits...>::value;
-
-/*
-is_detected checks if a given type has function.
-You must call this with a "detector alias", for example :
-
-template <class T>
-using has_myfunc = decltype(std::declval<T>().myfunc());
-
-constexpr bool answer = is_detected_v<has_myfunc, your_class>;
-
-More info : https://en.cppreference.com/w/cpp/experimental/is_detected
-
-See unit tests for more examples.
-*/
 namespace detail {
+template <class, class, template <class...> class, class...>
+struct detector;
+
 template <class Default, class AlwaysVoid, template <class...> class Op,
 		class... Args>
 struct detector {
@@ -147,49 +368,17 @@ struct nonesuch {
 };
 } // namespace detail
 
-template <template <class...> class Op, class... Args>
-using is_detected =
-		typename detail::detector<detail::nonesuch, void, Op, Args...>::value_t;
-
-template <template <class...> class Op, class... Args>
-using detected_t =
-		typename detail::detector<detail::nonesuch, void, Op, Args...>::type;
-
-template <class Default, template <class...> class Op, class... Args>
-using detected_or = detail::detector<Default, void, Op, Args...>;
-
-template <template <class...> class Op, class... Args>
-constexpr inline bool is_detected_v = is_detected<Op, Args...>::value;
-
-template <class Default, template <class...> class Op, class... Args>
-using detected_or_t = typename detected_or<Default, Op, Args...>::type;
-
-
-// Is the same non-type parameter.
 template <class T, T T1, T T2>
 struct is_same_nt : std::false_type {};
 
 template <class T, T T1>
 struct is_same_nt<T, T1, T1> : std::true_type {};
 
-template <class T, T T1, T T2>
-inline constexpr bool is_same_nt_v = is_same_nt<T, T1, T2>::value;
-
-template <auto T1, auto T2>
-inline constexpr bool is_same_nt_v2 = is_same_nt<decltype(T1), T1, T2>::value;
-
-
-// Checks whether 2 types are the same, regardless of their template params.
 template <template <class...> class, template <class...> class>
 struct is_same_template : std::false_type {};
 
 template <template <class...> class T>
 struct is_same_template<T, T> : std::true_type {};
-
-// Checks whether 2 types are the same, regardless of their template params.
-template <template <class...> class T, template <class...> class U>
-inline constexpr bool is_same_template_v = is_same_template<T, U>::value;
-
 
 template <class T>
 struct is_template_template : std::false_type {};
@@ -197,26 +386,10 @@ struct is_template_template : std::false_type {};
 template <template <class...> class T, class... Args>
 struct is_template_template<T<Args...>> : std::true_type {};
 
-// Checks if a type is a template template.
-template <class T>
-inline constexpr bool is_template_template_v = is_template_template<T>::value;
-
-
-// Removes the internal consts of a template template (like a tuple for ex).
-template <class T>
-struct remove_nested_const;
-
 template <class... Args, template <class...> class T>
 struct remove_nested_const<T<Args...>> {
 	using type = T<std::remove_const_t<Args>...>;
 };
-
-template <class T>
-using remove_nested_const_t = typename remove_nested_const<T>::type;
-
-// Checks if first type of template template is const.
-template <class T>
-struct is_first_const;
 
 template <class First, class... Args, template <class, class...> class T>
 struct is_first_const<T<First, Args...>> {
@@ -224,24 +397,23 @@ struct is_first_const<T<First, Args...>> {
 };
 
 template <class T>
-inline constexpr bool is_first_const_v = is_first_const<T>::value;
-
-// Checks if a type is a pair.
-template <class T>
 struct is_pair : std::false_type {};
 
 template <class U1, class U2>
 struct is_pair<std::pair<U1, U2>> : std::true_type {};
 
-template <class T>
-inline constexpr bool is_pair_v = is_pair<T>::value;
+template <template <class, class...> class OutputIt, class First, class... Args>
+struct output_iterator_traits<OutputIt<First, Args...>> {
+	using traits_t = std::iterator_traits<OutputIt<First, Args...>>;
+	static_assert(std::is_base_of_v<std::output_iterator_tag,
+						  typename traits_t::iterator_category>,
+			"output_iterator_traits : Invalid iterator, requires output "
+			"iterator.");
 
-// Iterator helper.
-template <class T>
-using iterator_category_t = typename std::iterator_traits<T>::iterator_category;
+	using value_type = detected_or_t<First, has_value_type, First>;
+};
 
-// Checks if a type is an iterator.
-template <class T, class = void>
+template <class T, class>
 struct is_iterator {
 	static constexpr bool value = false;
 };
@@ -249,56 +421,6 @@ template <class T>
 struct is_iterator<T, std::void_t<iterator_category_t<T>>> {
 	static constexpr bool value = true;
 };
-
-template <class T>
-inline constexpr bool is_iterator_v = is_iterator<T>::value;
-
-
-/**
- * Useful is_detected checkers
- */
-template <class T>
-using has_begin = decltype(std::begin(std::declval<T>()));
-template <class T>
-using has_end = decltype(std::end(std::declval<T>()));
-template <class T>
-using has_get = decltype(std::get<0>(std::declval<T>()));
-template <class T>
-using has_resize = decltype(std::declval<T>().resize(std::declval<size_t>()));
-template <class T>
-using has_reserve = decltype(std::declval<T>().reserve(std::declval<size_t>()));
-
-template <class T>
-using has_data = decltype(std::data(std::declval<T>()));
-template <class T>
-using has_size = decltype(std::size(std::declval<T>()));
-
-template <class T>
-using has_value_type = typename T::value_type;
-
-
-// Checks if a type has std::begin and std::end.
-template <class T>
-inline constexpr bool is_container_v
-		= fea::is_detected_v<has_begin, T> && fea::is_detected_v<has_end, T>;
-
-// Checks if a type has std::get.
-template <class T>
-inline constexpr bool is_tuple_like_v = fea::is_detected_v<has_get, T>;
-
-// Checks if a type has std::data and std::size.
-template <class T>
-inline constexpr bool is_contiguous_v
-		= fea::is_detected_v<has_data, T> && fea::is_detected_v<has_size, T>;
-
-
-/**
- * First and last types in a parameter pack.
- */
-
-namespace detail {
-template <class...>
-struct front;
 
 template <>
 struct front<> {
@@ -309,16 +431,6 @@ template <class T, class... Args>
 struct front<T, Args...> {
 	using type = T;
 };
-
-} // namespace detail
-
-// Get the first type of a pack.
-template <class... Args>
-using front_t = typename detail::front<Args...>::type;
-
-namespace detail {
-template <class...>
-struct back;
 
 template <class T>
 struct back<T> {
@@ -333,34 +445,13 @@ template <>
 struct back<> {
 	using type = void;
 };
-} // namespace detail
 
-// Get the last type of a pack.
-template <class... Args>
-using back_t = typename detail::back<Args...>::type;
-
-// https://stackoverflow.com/questions/23762224/check-if-primitive-types-are-castable-in-c
-template <class From, class To, class = To>
+template <class From, class To, class>
 struct is_static_castable : std::false_type {};
 
 template <class From, class To>
 struct is_static_castable<From, To,
 		decltype(static_cast<To>(std::declval<From>()))> : std::true_type {};
-
-// Checks whether a type can be static_casted to another.
-template <class From, class To>
-inline constexpr bool is_static_castable_v
-		= is_static_castable<From, To>::value;
-
-
-// Checks whether a function callback type is noexcept.
-template <class Func, class... Args>
-inline constexpr bool is_noexcept_v
-		= noexcept(std::declval<Func>()(std::declval<Args>()...));
-
-namespace detail {
-template <class...>
-struct reverse;
 
 template <class T, class... Ts>
 struct reverse<T, Ts...> {
@@ -372,63 +463,11 @@ template <class T>
 struct reverse<T> {
 	using type = std::tuple<T>;
 };
-} // namespace detail
 
-// Declares a type std::tuple<ReversedTs...> which is the reverse of your
-// variadic arguments.
-template <class... Ts>
-using reverse_t = typename detail::reverse<Ts...>::type;
-
-namespace detail {
-// https://stackoverflow.com/questions/51408771/c-reversed-integer-sequence-implementation
-template <size_t... Is>
-constexpr auto reverse_index_sequence(std::index_sequence<Is...>)
-		-> decltype(std::index_sequence<sizeof...(Is) - 1U - Is...>{});
-} // namespace detail
-
-// Creates a reverse index sequence of size N.
-template <size_t N>
-using make_reverse_index_sequence = decltype(detail::reverse_index_sequence(
-		std::make_index_sequence<N>{}));
-
-// Get the allocator_traits rebind_alloc type.
-template <class Alloc, class Value>
-using rebind_alloc_t =
-		typename std::allocator_traits<Alloc>::template rebind_alloc<Value>;
-
-// Get the iterator_traits value_type type.
-template <class Iter>
-using iterator_value_t = typename std::iterator_traits<Iter>::value_type;
-
-
-// Get aligned raw storage for a type.
 template <size_t Bytes, size_t Align>
 struct aligned_storage {
 	struct type {
 		alignas(Align) uint8_t data[Bytes];
 	};
 };
-
-// Helper alias.
-template <size_t Bytes, size_t Align>
-using aligned_storage_t = typename aligned_storage<Bytes, Align>::type;
-
-
-// Get the output iterator's container value_type.
-template <class>
-struct output_iterator_traits;
-
-template <template <class, class...> class OutputIt, class First, class... Args>
-struct output_iterator_traits<OutputIt<First, Args...>> {
-	using traits_t = std::iterator_traits<OutputIt<First, Args...>>;
-	static_assert(std::is_base_of_v<std::output_iterator_tag,
-						  typename traits_t::iterator_category>,
-			"output_iterator_traits : Invalid iterator, requires output "
-			"iterator.");
-
-	using value_type = detected_or_t<First, has_value_type, First>;
-};
-
-template <class T>
-using output_iterator_vt = typename output_iterator_traits<T>::value_type;
 } // namespace fea
