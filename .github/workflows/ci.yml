@@ -182,7 +182,7 @@ jobs:
 
     - name: Update apt-get
       run: |
-        apt-get update
+        sudo apt-get update
 
     - name: Install Gcc
       uses: egor-tensin/setup-gcc@v1
