@@ -240,7 +240,7 @@ void decode_base64(FwdIt first, FwdIt last, OutIt out) noexcept {
 	// For each input char, reverse lookup, pack in staging and flush
 	// to temp object.
 	// When the object is filled, output to iterator.
-	for (first; first != last; ++first) {
+	for (; first != last; ++first) {
 		assert(0 <= insert_idx && insert_idx <= insert_idx_init);
 		assert(value_staging_idx < sizeof(value_t));
 

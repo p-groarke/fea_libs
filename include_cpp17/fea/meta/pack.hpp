@@ -91,6 +91,20 @@ constexpr void pack_for_each(Func&& func, fea::pack<Args...>);
 template <class Func, auto... Args>
 constexpr void pack_for_each(Func&& func, fea::pack_nt<Args...>);
 
+// Get the index of a type at runtime.
+template <class T, class... Args>
+constexpr size_t runtime_get_idx(const T&, const fea::pack<Args...>&);
+
+// Get the index of a non-type at runtime.
+// E must be enum or integral non-type.
+template <class E, auto... Args>
+size_t runtime_get_idx(E e, const fea::pack_nt<Args...>&);
+
+// Returns concatenated packs into 1 pack.
+// For ex : cat<pack<int, double>, pack<float>> -> pack<int, double, float>
+template <class... Packs>
+constexpr auto pack_cat(Packs...);
+
 
 // The pack type of pack concatenation.
 // For ex : cat<pack<int, double>, pack<float>> -> pack<int, double, float>
@@ -101,16 +115,6 @@ struct pack_cat_type;
 // For ex : cat<pack<int, double>, pack<float>> -> pack<int, double, float>
 template <class... Packs>
 using pack_cat_t = typename pack_cat_type<Packs...>::type;
-
-// Returns concatenated packs into 1 pack.
-// For ex : cat<pack<int, double>, pack<float>> -> pack<int, double, float>
-template <class... Packs>
-constexpr auto pack_cat(Packs...);
-
-
-/**
- * Helper classes
- */
 
 // Size of parameter pack.
 template <class>
@@ -193,45 +197,26 @@ struct pack_contains_nt;
 template <auto T, class Pack>
 inline constexpr bool pack_contains_nt_v = pack_contains_nt<T, Pack>::value;
 
-
-// Splice
-
+// Splice a parameter pack at index Idx.
+// Finds the type at Idx, and stores the remaining parameters (parameters after
+// splice point) in a fea::pack.
 template <size_t, class...>
 struct idx_splice;
 
 // Get the element type at index Idx in parameter pack.
+// Helper alias.
 template <size_t Idx, class... Args>
 using idx_splice_t = typename idx_splice<Idx, Args...>::type;
 
 // Get the elements before Idx in parameter pack, stored as a tuple type.
+// Helper alias.
 template <size_t Idx, class... Args>
 using idx_splice_before_t = typename idx_splice<Idx, Args...>::before_pack;
 
 // Get the elements after Idx in parameter pack, stored as a tuple type.
+// Helper alias.
 template <size_t Idx, class... Args>
 using idx_splice_after_t = typename idx_splice<Idx, Args...>::after_pack;
-
-
-// Get the index of a type at runtime.
-template <class T, class... Args>
-constexpr size_t runtime_get_idx(const T&, const fea::pack<Args...>&) {
-	static_assert(fea::pack_contains_v<T, fea::pack<Args...>>,
-			"fea::runtime_get_idx : pack doesn't contain type T");
-
-	return fea::pack_idx_v<T, fea::pack<Args...>>;
-}
-
-// Get the index of a non-type at runtime.
-// E must be enum or integral non-type.
-template <class E, auto... Args>
-size_t runtime_get_idx(E e, const fea::pack_nt<Args...>&) {
-	static_assert(fea::all_of_v<std::is_same<E, decltype(Args)>...>,
-			"fea::pack_get_idx : E must be of same type as non-type arguments");
-
-	static constexpr auto lookup = fea::make_enum_lookup<Args...>();
-	return lookup[size_t(e)];
-}
-
 } // namespace fea
 
 
@@ -292,6 +277,28 @@ constexpr void pack_for_each(Func&& func, pack_nt<Args...>) {
 	(func(std::integral_constant<decltype(Args), Args>{}), ...);
 }
 
+template <class T, class... Args>
+constexpr size_t runtime_get_idx(const T&, const pack<Args...>&) {
+	static_assert(fea::pack_contains_v<T, fea::pack<Args...>>,
+			"fea::runtime_get_idx : pack doesn't contain type T");
+
+	return fea::pack_idx_v<T, fea::pack<Args...>>;
+}
+
+template <class E, auto... Args>
+size_t runtime_get_idx(E e, const pack_nt<Args...>&) {
+	static_assert(fea::all_of_v<std::is_same<E, decltype(Args)>...>,
+			"fea::pack_get_idx : E must be of same type as non-type arguments");
+
+	static constexpr auto lookup = fea::make_enum_lookup<Args...>();
+	return lookup[size_t(e)];
+}
+
+template <class... Packs>
+constexpr auto pack_cat(Packs...) {
+	return pack_cat_t<Packs...>{};
+}
+
 
 template <class... Args, template <class...> class Pack>
 struct pack_cat_type<Pack<Args...>> {
@@ -312,11 +319,6 @@ template <auto... Args1, auto... Args2, template <auto...> class Pack1,
 		template <auto...> class Pack2, class... Rest>
 struct pack_cat_type<Pack1<Args1...>, Pack2<Args2...>, Rest...>
 		: pack_cat_type<fea::pack_nt<Args1..., Args2...>, Rest...> {};
-
-template <class... Packs>
-constexpr auto pack_cat(Packs...) {
-	return pack_cat_t<Packs...>{};
-}
 
 
 template <class... Args>
@@ -459,11 +461,9 @@ template <auto T, class Pack>
 struct pack_contains_nt<T, const Pack> : pack_contains_nt<T, Pack> {};
 
 
-namespace detail {
 template <size_t, size_t, class, class...>
 struct idx_splice_impl;
 
-// Found idx.
 template <size_t TargetIdx, class BeforePack, class T, class... Rest>
 struct idx_splice_impl<TargetIdx, TargetIdx, BeforePack, T, Rest...> {
 	using before_pack = BeforePack;
@@ -477,13 +477,8 @@ struct idx_splice_impl<TargetIdx, CurrentIdx, BeforePack, T, Rest...>
 		: idx_splice_impl<TargetIdx, CurrentIdx + 1,
 				  fea::pack_cat_t<BeforePack, fea::pack<T>>, Rest...> {};
 
-} // namespace detail
-
-// Splice a parameter pack at index Idx.
-// Finds the type at Idx, and stores the remaining parameters (parameters after
-// splice point) in a fea::pack.
 template <size_t Idx, class... Args>
-struct idx_splice : detail::idx_splice_impl<Idx, 0, fea::pack<>, Args...> {
+struct idx_splice : idx_splice_impl<Idx, 0, fea::pack<>, Args...> {
 	static_assert(
 			Idx < sizeof...(Args), "fea::idx_splice : index out-of-range");
 };
