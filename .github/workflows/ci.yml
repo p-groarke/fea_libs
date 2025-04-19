@@ -174,11 +174,15 @@ jobs:
           - { os: ubuntu-20.04, gcc_ver: "9", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
 
     steps:
+    - uses: actions/checkout@v4
+
     - name: Git Line Endings
       run: |
         git config --global core.autocrlf false
 
-    - uses: actions/checkout@v4
+    - name: Update apt-get
+      run: |
+        apt-get update
 
     - name: Install Gcc
       uses: egor-tensin/setup-gcc@v1

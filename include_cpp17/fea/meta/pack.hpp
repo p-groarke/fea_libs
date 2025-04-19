@@ -169,7 +169,6 @@ struct pack_idxes;
 template <class T, class Pack>
 using pack_idxes_t = typename pack_idxes<T, Pack>::idxes;
 
-
 // Get indexes of all non-type T in pack.
 // Returns a fea::pack_nt<size_t, found_indexes...>;
 template <auto, class Pack, size_t Count = fea::pack_size_v<Pack>>
