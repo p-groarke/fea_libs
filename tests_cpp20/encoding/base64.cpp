@@ -157,9 +157,11 @@ TEST(base64, basics) {
 		// Works since we can always convert to bytes, but incorrect output.
 		std::string dec;
 		fea::from_base64(enc.begin(), enc.end(), std::back_inserter(dec));
-		std::string expected = "S"; //\0u\0n\0 ";
+		std::string expected;
 #if FEA_WINDOWS
+		//"S\0u\0n\0";
 		{
+			expected.push_back('S');
 			expected.push_back('\0');
 			expected.push_back('u');
 			expected.push_back('\0');
@@ -167,6 +169,7 @@ TEST(base64, basics) {
 			expected.push_back('\0');
 		}
 #else
+		//"S\0\0\0u\0\0\0n\0\0\0";
 		expected.push_back('\0');
 		expected.push_back('\0');
 		expected.push_back('\0');
