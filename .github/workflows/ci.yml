@@ -163,15 +163,15 @@ jobs:
         build_type: [Release, Debug]
         # build_arch: [x64, x86]
         config:
-          - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_ONETBB=On" } # tbb doesn't compile
-          - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_ONETBB=On" }
-          - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
-          - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
-          - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_DATE=Off" }
-          - { os: ubuntu-22.04, gcc_ver: "13", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_DATE=Off" }
-          - { os: ubuntu-22.04, gcc_ver: "12", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
-          - { os: ubuntu-20.04, gcc_ver: "10", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
-          - { os: ubuntu-20.04, gcc_ver: "9", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
+          - { os: ubuntu-24.04, gcc_ver: "13", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_ONETBB=On" } # tbb doesn't compile
+          - { os: ubuntu-24.04, gcc_ver: "13", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_ONETBB=On" }
+          - { os: ubuntu-24.04, gcc_ver: "13", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
+          - { os: ubuntu-24.04, gcc_ver: "13", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
+          - { os: ubuntu-24.04, gcc_ver: "13", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_DATE=Off" }
+          - { os: ubuntu-24.04, gcc_ver: "13", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_DATE=Off" }
+          - { os: ubuntu-24.04, gcc_ver: "12", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
+          - { os: ubuntu-24.04, gcc_ver: "10", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
+          - { os: ubuntu-24.04, gcc_ver: "9", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
 
     steps:
     - uses: actions/checkout@v4
