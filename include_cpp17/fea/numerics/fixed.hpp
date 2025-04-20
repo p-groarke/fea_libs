@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fea/numerics/numerics.hpp"
 #include "fea/utility/platform.hpp"
 
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <limits>
