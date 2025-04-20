@@ -295,15 +295,12 @@ TEST(fixed, basics) {
 		EXPECT_EQ(ans, fea::fixed(-2.0000001192092896));
 
 		ans = f1 & f2;
-		double d(ans);
 		EXPECT_EQ(ans, fea::fixed(0.0));
 
 		ans = f1 | f2;
-		d = double(ans);
 		EXPECT_EQ(ans, fea::fixed(-6.0));
 
 		ans = f1 ^ f2;
-		d = double(ans);
 		EXPECT_EQ(ans, fea::fixed(-6.0));
 
 		if constexpr (fea::debug_build) {
