@@ -67,9 +67,9 @@ struct basic_fixed {
 	static constexpr value_t scaling_v = value_t(Scaling);
 
 	// Enable some bit-shifting optimizations if scaling is 2^n.
-	static constexpr bool is_scaling_pow2_v = fea::is_pow2(scaling_v);
+	static constexpr bool is_scaling_pow2_v = fea::is_pow2<scaling_v>();
 	static constexpr value_t scaling_sqrt_v
-			= is_scaling_pow2_v ? fea::sqrt(scaling_v) : value_t(0);
+			= is_scaling_pow2_v ? fea::sqrt<scaling_v>() : value_t(0);
 
 private:
 	static constexpr float _float_to_int_v = float(scaling_v);

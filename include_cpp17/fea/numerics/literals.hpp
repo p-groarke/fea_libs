@@ -47,69 +47,105 @@
 namespace fea {
 namespace literals {
 
-constexpr inline int8_t operator"" _8(unsigned long long v) {
+constexpr inline int8_t operator"" _8(unsigned long long v);
+constexpr inline int16_t operator"" _16(unsigned long long v);
+constexpr inline int32_t operator"" _32(unsigned long long v);
+constexpr inline int64_t operator"" _64(unsigned long long v);
+
+// Whichever you prefer, _N or _iN.
+constexpr inline int8_t operator"" _i8(unsigned long long v);
+constexpr inline int16_t operator"" _i16(unsigned long long v);
+constexpr inline int32_t operator"" _i32(unsigned long long v);
+constexpr inline int64_t operator"" _i64(unsigned long long v);
+constexpr inline uint8_t operator"" _u8(unsigned long long v);
+constexpr inline uint16_t operator"" _u16(unsigned long long v);
+constexpr inline uint32_t operator"" _u32(unsigned long long v);
+constexpr inline uint64_t operator"" _u64(unsigned long long v);
+
+#if FEA_CPP23
+#if defined(__STDCPP_FLOAT16_T__)
+constexpr inline float16_t operator"" _16(long double v);
+#endif
+constexpr inline float32_t operator"" _32(long double v);
+constexpr inline float64_t operator"" _64(long double v);
+
+// Whichever you prefer, _N or _fN.
+#if defined(__STDCPP_FLOAT16_T__)
+constexpr inline float16_t operator"" _f16(long double v);
+#endif
+constexpr inline float32_t operator"" _f32(long double v);
+constexpr inline float64_t operator"" _f64(long double v);
+#endif
+} // namespace literals
+} // namespace fea
+
+
+// Implementation
+namespace fea {
+namespace literals {
+constexpr int8_t operator"" _8(unsigned long long v) {
 	return int8_t(v);
 }
-constexpr inline int16_t operator"" _16(unsigned long long v) {
+constexpr int16_t operator"" _16(unsigned long long v) {
 	return int16_t(v);
 }
-constexpr inline int32_t operator"" _32(unsigned long long v) {
+constexpr int32_t operator"" _32(unsigned long long v) {
 	return int32_t(v);
 }
-constexpr inline int64_t operator"" _64(unsigned long long v) {
+constexpr int64_t operator"" _64(unsigned long long v) {
 	return int64_t(v);
 }
 
 // Whichever you prefer, _N or _iN.
-constexpr inline int8_t operator"" _i8(unsigned long long v) {
+constexpr int8_t operator"" _i8(unsigned long long v) {
 	return int8_t(v);
 }
-constexpr inline int16_t operator"" _i16(unsigned long long v) {
+constexpr int16_t operator"" _i16(unsigned long long v) {
 	return int16_t(v);
 }
-constexpr inline int32_t operator"" _i32(unsigned long long v) {
+constexpr int32_t operator"" _i32(unsigned long long v) {
 	return int32_t(v);
 }
-constexpr inline int64_t operator"" _i64(unsigned long long v) {
+constexpr int64_t operator"" _i64(unsigned long long v) {
 	return int64_t(v);
 }
 
-constexpr inline uint8_t operator"" _u8(unsigned long long v) {
+constexpr uint8_t operator"" _u8(unsigned long long v) {
 	return uint8_t(v);
 }
-constexpr inline uint16_t operator"" _u16(unsigned long long v) {
+constexpr uint16_t operator"" _u16(unsigned long long v) {
 	return uint16_t(v);
 }
-constexpr inline uint32_t operator"" _u32(unsigned long long v) {
+constexpr uint32_t operator"" _u32(unsigned long long v) {
 	return uint32_t(v);
 }
-constexpr inline uint64_t operator"" _u64(unsigned long long v) {
+constexpr uint64_t operator"" _u64(unsigned long long v) {
 	return uint64_t(v);
 }
 
 #if FEA_CPP23
 #if defined(__STDCPP_FLOAT16_T__)
-constexpr inline float16_t operator"" _16(long double v) {
+constexpr float16_t operator"" _16(long double v) {
 	return float16_t(v);
 }
 #endif
-constexpr inline float32_t operator"" _32(long double v) {
+constexpr float32_t operator"" _32(long double v) {
 	return float32_t(v);
 }
-constexpr inline float64_t operator"" _64(long double v) {
+constexpr float64_t operator"" _64(long double v) {
 	return float64_t(v);
 }
 
 // Whichever you prefer, _N or _fN.
 #if defined(__STDCPP_FLOAT16_T__)
-constexpr inline float16_t operator"" _f16(long double v) {
+constexpr float16_t operator"" _f16(long double v) {
 	return float16_t(v);
 }
 #endif
-constexpr inline float32_t operator"" _f32(long double v) {
+constexpr float32_t operator"" _f32(long double v) {
 	return float32_t(v);
 }
-constexpr inline float64_t operator"" _f64(long double v) {
+constexpr float64_t operator"" _f64(long double v) {
 	return float64_t(v);
 }
 #endif

@@ -42,17 +42,87 @@
 
 namespace fea {
 // Returns true if integer value is a power of 2.
-template <class T>
-constexpr bool is_pow2(T v) noexcept;
+template <auto v>
+constexpr bool is_pow2() noexcept;
 
 // Return the (bit-shifted) square root of the integer v.
 // Must be power of 2.
-template <class T>
-constexpr T sqrt(T v) noexcept;
+template <auto v>
+constexpr auto sqrt() noexcept;
 
-namespace detail {
+// Absolute function that works with signed min (returns signed max).
+// Casts chars and shorts to int internally, forwards to std::abs when
+// appropriate.
+template <class T>
+constexpr T abs(T v);
+
+// Float aliases.
+using float32_t = float;
+#if FEA_64BIT
+using float64_t = double;
+#endif
+
+#if FEA_32BIT
+using floatmax_t = float;
+#elif FEA_64BIT
+using floatmax_t = double;
+#endif
+
+// Returns the next bigger fundamental type to hold T, or T if size == size_t.
 template <class>
 struct next_bigger;
+
+// Returns the next bigger fundamental type to hold T, or T if size == size_t.
+template <class T>
+using next_bigger_t = typename next_bigger<T>::type;
+
+} // namespace fea
+
+
+// Implementation
+namespace fea {
+template <auto v>
+constexpr bool is_pow2() noexcept {
+	// https://graphics.stanford.edu/~seander/bithacks.html#DetermineIfPowerOf2
+	using T = std::decay_t<decltype(v)>;
+	static_assert(std::is_integral_v<T>, "fea::is_pow2 : T must be integer.");
+	return v && !(v & (v - 1));
+}
+
+template <auto v>
+constexpr auto sqrt() noexcept {
+	using T = std::decay_t<decltype(v)>;
+	static_assert(std::is_integral_v<T>, "fea::sqrt : T must be integer.");
+
+	T mask = T(1);
+	for (size_t i = 0; i < sizeof(T) * 8; ++i) {
+		if (v & (mask << i)) {
+			return T(i);
+		}
+	}
+	return T(0);
+}
+
+template <class T>
+constexpr T abs(T v) {
+	if constexpr (std::is_unsigned_v<T>) {
+		return v;
+	} else if constexpr (std::is_floating_point_v<T>) {
+		return std::abs(v);
+	} else {
+		constexpr T t_max = (std::numeric_limits<T>::max)();
+		constexpr T t_min = std::numeric_limits<T>::lowest();
+		if (v == t_min) {
+			return t_max;
+		}
+
+		if constexpr (sizeof(T) >= 4) {
+			return std::abs(v);
+		} else {
+			return T(std::abs(int(v)));
+		}
+	}
+}
 
 template <>
 struct next_bigger<char> {
@@ -126,73 +196,5 @@ struct next_bigger<long double> {
 #else
 static_assert(false, "need to update maps");
 #endif
-
-} // namespace detail
-
-// Returns the next bigger fundamental type to hold T, or T if size == size_t.
-template <class T>
-using next_bigger_t = typename detail::next_bigger<T>::type;
-
-// Absolute function that works with signed min (returns signed max).
-// Casts chars and shorts to int internally, forwards to std::abs when
-// appropriate.
-template <class T>
-constexpr T abs(T v) {
-	if constexpr (std::is_unsigned_v<T>) {
-		return v;
-	} else if constexpr (std::is_floating_point_v<T>) {
-		return std::abs(v);
-	} else {
-		constexpr T t_max = (std::numeric_limits<T>::max)();
-		constexpr T t_min = std::numeric_limits<T>::lowest();
-		if (v == t_min) {
-			return t_max;
-		}
-
-		if constexpr (sizeof(T) >= 4) {
-			return std::abs(v);
-		} else {
-			return T(std::abs(int(v)));
-		}
-	}
-}
-
-// Float aliases.
-using float32_t = float;
-#if FEA_64BIT
-using float64_t = double;
-#endif
-
-#if FEA_32BIT
-using floatmax_t = float;
-#elif FEA_64BIT
-using floatmax_t = double;
-#endif
-
-} // namespace fea
-
-
-// Implementation
-namespace fea {
-template <class T>
-constexpr bool is_pow2(T v) noexcept {
-	// https://graphics.stanford.edu/~seander/bithacks.html#DetermineIfPowerOf2
-	static_assert(std::is_integral_v<T>, "fea::is_pow2 : T must be integer.");
-	return v && !(v & (v - 1));
-}
-
-template <class T>
-constexpr T sqrt(T v) noexcept {
-	static_assert(std::is_integral_v<T>, "fea::sqrt : T must be integer.");
-	static_assert(fea::is_pow2(v), "fea::sqrt : v must be power of 2.");
-
-	T mask = T(1);
-	for (size_t i = 0; i < sizeof(T) * 8; ++i) {
-		if (v & (mask << i)) {
-			return T(i);
-		}
-	}
-	return T(0);
-}
 
 } // namespace fea
