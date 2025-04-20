@@ -253,7 +253,7 @@ void random_fill(ForwardIt begin, ForwardIt end) {
 			(std::numeric_limits<value_t>::max)());
 }
 
-size_t fea::random_idx(size_t count) {
+size_t random_idx(size_t count) {
 	return random_val(size_t(0), count - 1);
 }
 
@@ -290,7 +290,7 @@ std::array<uint8_t, N> random_bytes() {
 	return ret;
 }
 
-std::vector<uint8_t> fea::random_bytes(size_t num_bytes) {
+std::vector<uint8_t> random_bytes(size_t num_bytes) {
 	std::vector<uint8_t> ret;
 	ret.reserve(num_bytes);
 	for (size_t i = 0; i < num_bytes; ++i) {
