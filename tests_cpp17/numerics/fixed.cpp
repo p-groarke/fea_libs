@@ -1,4 +1,5 @@
 #include <fea/numerics/fixed.hpp>
+#include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
 
 namespace {
@@ -122,6 +123,31 @@ TEST(fixed, basics) {
 		ans = f1 % f2;
 		EXPECT_EQ(ans, fea::fixed(0.0));
 
+		ans = ~f1;
+		EXPECT_EQ(ans, fea::fixed(-2.0000001192092896));
+
+		ans = f1 & f2;
+		EXPECT_EQ(ans, fea::fixed(2.0));
+
+		ans = f1 | f2;
+		EXPECT_EQ(ans, fea::fixed(2.0));
+
+		ans = f1 ^ f2;
+		EXPECT_EQ(ans, fea::fixed(0.0));
+
+		ans = f1 >> f2;
+		EXPECT_EQ(ans, fea::fixed(0.5));
+
+		ans = f1 >> size_t(f2);
+		EXPECT_EQ(ans, fea::fixed(0.5));
+
+		ans = f1 << f2;
+		EXPECT_EQ(ans, fea::fixed(8.0));
+
+		ans = f1 << size_t(f2);
+		EXPECT_EQ(ans, fea::fixed(8.0));
+
+
 		f1 = 8.0;
 		f2 = 2.0;
 		ans = f1 + f2;
@@ -138,6 +164,31 @@ TEST(fixed, basics) {
 
 		ans = f1 % f2;
 		EXPECT_EQ(ans, fea::fixed(0.0));
+
+		ans = ~f1;
+		EXPECT_EQ(ans, fea::fixed(-8.0000001192092896));
+
+		ans = f1 & f2;
+		EXPECT_EQ(ans, fea::fixed(0.0));
+
+		ans = f1 | f2;
+		EXPECT_EQ(ans, fea::fixed(10.0));
+
+		ans = f1 ^ f2;
+		EXPECT_EQ(ans, fea::fixed(10.0));
+
+		ans = f1 >> f2;
+		EXPECT_EQ(ans, fea::fixed(2.0));
+
+		ans = f1 >> size_t(f2);
+		EXPECT_EQ(ans, fea::fixed(2.0));
+
+		ans = f1 << f2;
+		EXPECT_EQ(ans, fea::fixed(32.0));
+
+		ans = f1 << size_t(f2);
+		EXPECT_EQ(ans, fea::fixed(32.0));
+
 
 		f1 = 2.0;
 		f2 = 8.0;
@@ -156,6 +207,31 @@ TEST(fixed, basics) {
 		ans = f1 % f2;
 		EXPECT_EQ(ans, fea::fixed(2.0));
 
+		ans = ~f1;
+		EXPECT_EQ(ans, fea::fixed(-2.0000001192092896));
+
+		ans = f1 & f2;
+		EXPECT_EQ(ans, fea::fixed(0.0));
+
+		ans = f1 | f2;
+		EXPECT_EQ(ans, fea::fixed(10.0));
+
+		ans = f1 ^ f2;
+		EXPECT_EQ(ans, fea::fixed(10.0));
+
+		ans = f1 >> f2;
+		EXPECT_EQ(ans, fea::fixed(0.0078125));
+
+		ans = f1 >> size_t(f2);
+		EXPECT_EQ(ans, fea::fixed(0.0078125));
+
+		ans = f1 << f2;
+		EXPECT_EQ(ans, fea::fixed(512.0));
+
+		ans = f1 << size_t(f2);
+		EXPECT_EQ(ans, fea::fixed(512.0));
+
+
 		f1 = -2.0;
 		f2 = 8.0;
 		ans = f1 + f2;
@@ -173,6 +249,31 @@ TEST(fixed, basics) {
 		ans = f1 % f2;
 		EXPECT_EQ(ans, fea::fixed(-2.0));
 
+		ans = ~f1;
+		EXPECT_EQ(ans, fea::fixed(1.9999998807907104));
+
+		ans = f1 & f2;
+		EXPECT_EQ(ans, fea::fixed(8.0));
+
+		ans = f1 | f2;
+		EXPECT_EQ(ans, fea::fixed(-2.0));
+
+		ans = f1 ^ f2;
+		EXPECT_EQ(ans, fea::fixed(-10.0));
+
+		ans = f1 >> f2;
+		EXPECT_EQ(ans, fea::fixed(-0.0078125));
+
+		ans = f1 >> size_t(f2);
+		EXPECT_EQ(ans, fea::fixed(-0.0078125));
+
+		ans = f1 << f2;
+		EXPECT_EQ(ans, fea::fixed(-512.0));
+
+		ans = f1 << size_t(f2);
+		EXPECT_EQ(ans, fea::fixed(-512.0));
+
+
 		f1 = 2.0;
 		f2 = -8.0;
 		ans = f1 + f2;
@@ -189,6 +290,40 @@ TEST(fixed, basics) {
 
 		ans = f1 % f2;
 		EXPECT_EQ(ans, fea::fixed(2.0));
+
+		ans = ~f1;
+		EXPECT_EQ(ans, fea::fixed(-2.0000001192092896));
+
+		ans = f1 & f2;
+		double d(ans);
+		EXPECT_EQ(ans, fea::fixed(0.0));
+
+		ans = f1 | f2;
+		d = double(ans);
+		EXPECT_EQ(ans, fea::fixed(-6.0));
+
+		ans = f1 ^ f2;
+		d = double(ans);
+		EXPECT_EQ(ans, fea::fixed(-6.0));
+
+		if constexpr (fea::debug_build) {
+			EXPECT_DEATH(f1 >> f2, "");
+			// ans = f1 >> f2;
+			// EXPECT_EQ(ans, fea::fixed(0.0));
+		}
+
+		// ans = f1 >> size_t(f2);
+		// EXPECT_EQ(ans, fea::fixed(-0.0078125));
+
+		if constexpr (fea::debug_build) {
+			EXPECT_DEATH(f1 << f2, "");
+			// ans = f1 << f2;
+			// EXPECT_EQ(ans, fea::fixed(-512.0));
+		}
+
+		// ans = f1 << size_t(f2);
+		// EXPECT_EQ(ans, fea::fixed(-512.0));
+
 
 		// A few more modulo
 		f1 = 1.0;
@@ -543,5 +678,101 @@ TEST(fixed, precision) {
 		fea::fixed f42 = eps / 1.0;
 		EXPECT_NE(f42, 1.0);
 	}
+}
+
+TEST(fixed, assignement_ops) {
+	fea::fixed f = 42.0;
+
+	f += 1.0;
+	EXPECT_EQ(43.0, f);
+
+	f -= 1.0;
+	EXPECT_EQ(42.0, f);
+
+	f = f * 2.0;
+	EXPECT_EQ(84.0, f);
+
+	f *= 0.5;
+	EXPECT_EQ(42.0, f);
+
+	f /= 0.5;
+	EXPECT_EQ(84.0, f);
+
+	f /= 2.0;
+	EXPECT_EQ(42.0, f);
+
+	f %= 8.0;
+	EXPECT_EQ(2.0, f);
+
+	f %= 2.0;
+	EXPECT_EQ(0.0, f);
+
+	f = fea::fixed(int64_t(0xff));
+	f &= 3.0;
+	EXPECT_EQ(3.0, f);
+
+	f = fea::fixed(int64_t(0xff));
+	f &= 6.0;
+	EXPECT_EQ(6.0, f);
+
+	f &= 1.0;
+	EXPECT_EQ(0.0, f);
+
+	f = 6.0;
+	f |= 1.0;
+	EXPECT_EQ(7.0, f);
+
+	f |= 8.0;
+	EXPECT_EQ(15.0, f);
+
+	f ^= 8.0;
+	EXPECT_EQ(7.0, f);
+
+	f ^= 4.0;
+	EXPECT_EQ(3.0, f);
+
+	f <<= 1;
+	EXPECT_EQ(6.0, f);
+
+	f >>= 2;
+	EXPECT_EQ(1.5, f);
+
+	f >>= 1;
+	EXPECT_EQ(0.75, f);
+
+	f <<= 2;
+	EXPECT_EQ(3.0, f);
+
+	f <<= 1;
+	EXPECT_EQ(6.0, f);
+
+	f = 3.0;
+	f <<= fea::fixed(1.0);
+	EXPECT_EQ(6.0, f);
+
+	f >>= fea::fixed(2.0);
+	EXPECT_EQ(1.5, f);
+
+	f >>= fea::fixed(1.0);
+	EXPECT_EQ(0.75, f);
+
+	f <<= fea::fixed(2.0);
+	EXPECT_EQ(3.0, f);
+
+	f <<= fea::fixed(1.0);
+	EXPECT_EQ(6.0, f);
+
+	f = 1.0;
+	EXPECT_EQ(2.0, ++f);
+	EXPECT_EQ(3.0, ++f);
+	EXPECT_EQ(3.0, f++);
+	EXPECT_EQ(4.0, f++);
+	EXPECT_EQ(5.0, f);
+
+	EXPECT_EQ(4.0, --f);
+	EXPECT_EQ(3.0, --f);
+	EXPECT_EQ(3.0, f--);
+	EXPECT_EQ(2.0, f--);
+	EXPECT_EQ(1.0, f);
 }
 } // namespace
