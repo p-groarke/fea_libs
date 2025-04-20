@@ -305,21 +305,11 @@ TEST(fixed, basics) {
 
 		if constexpr (fea::debug_build) {
 			EXPECT_DEATH(f1 >> f2, "");
-			// ans = f1 >> f2;
-			// EXPECT_EQ(ans, fea::fixed(0.0));
 		}
-
-		// ans = f1 >> size_t(f2);
-		// EXPECT_EQ(ans, fea::fixed(-0.0078125));
 
 		if constexpr (fea::debug_build) {
 			EXPECT_DEATH(f1 << f2, "");
-			// ans = f1 << f2;
-			// EXPECT_EQ(ans, fea::fixed(-512.0));
 		}
-
-		// ans = f1 << size_t(f2);
-		// EXPECT_EQ(ans, fea::fixed(-512.0));
 
 
 		// A few more modulo
