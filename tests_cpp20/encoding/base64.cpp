@@ -170,6 +170,7 @@ TEST(base64, basics) {
 		}
 #else
 		//"S\0\0\0u\0\0\0n\0\0\0";
+		expected.push_back('S');
 		expected.push_back('\0');
 		expected.push_back('\0');
 		expected.push_back('\0');

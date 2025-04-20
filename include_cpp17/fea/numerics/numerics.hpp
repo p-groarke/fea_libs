@@ -41,6 +41,15 @@
 #include <type_traits>
 
 namespace fea {
+// Returns true if integer value is a power of 2.
+template <class T>
+constexpr bool is_pow2(T v) noexcept;
+
+// Return the (bit-shifted) square root of the integer v.
+// Must be power of 2.
+template <class T>
+constexpr T sqrt(T v) noexcept;
+
 namespace detail {
 template <class>
 struct next_bigger;
@@ -159,5 +168,31 @@ using floatmax_t = float;
 #elif FEA_64BIT
 using floatmax_t = double;
 #endif
+
+} // namespace fea
+
+
+// Implementation
+namespace fea {
+template <class T>
+constexpr bool is_pow2(T v) noexcept {
+	// https://graphics.stanford.edu/~seander/bithacks.html#DetermineIfPowerOf2
+	static_assert(std::is_integral_v<T>, "fea::is_pow2 : T must be integer.");
+	return v && !(v & (v - 1));
+}
+
+template <class T>
+constexpr T sqrt(T v) noexcept {
+	static_assert(std::is_integral_v<T>, "fea::sqrt : T must be integer.");
+	static_assert(fea::is_pow2(v), "fea::sqrt : v must be power of 2.");
+
+	T mask = T(1);
+	for (size_t i = 0; i < sizeof(T) * 8; ++i) {
+		if (v & (mask << i)) {
+			return T(i);
+		}
+	}
+	return T(0);
+}
 
 } // namespace fea

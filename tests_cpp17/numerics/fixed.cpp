@@ -342,11 +342,11 @@ TEST(fixed, basics) {
 		using mfixed4 = fea::basic_fixed<int, 2>;
 		using mfixed5 = fea::basic_fixed<int, 4>;
 
-		static_assert(mfixed1::scaling_is_pow2_v, FAIL_MSG);
-		static_assert(!mfixed2::scaling_is_pow2_v, FAIL_MSG);
-		static_assert(!mfixed3::scaling_is_pow2_v, FAIL_MSG);
-		static_assert(mfixed4::scaling_is_pow2_v, FAIL_MSG);
-		static_assert(mfixed5::scaling_is_pow2_v, FAIL_MSG);
+		static_assert(mfixed1::is_scaling_pow2_v, FAIL_MSG);
+		static_assert(!mfixed2::is_scaling_pow2_v, FAIL_MSG);
+		static_assert(!mfixed3::is_scaling_pow2_v, FAIL_MSG);
+		static_assert(mfixed4::is_scaling_pow2_v, FAIL_MSG);
+		static_assert(mfixed5::is_scaling_pow2_v, FAIL_MSG);
 
 		static_assert(mfixed1::scaling_sqrt_v == 23, FAIL_MSG);
 		static_assert(mfixed2::scaling_sqrt_v == 0, FAIL_MSG);
@@ -356,7 +356,7 @@ TEST(fixed, basics) {
 
 #if FEA_ARCH >= 64
 		using mfixed6 = fea::basic_fixed<int64_t, (size_t(1) << 62)>;
-		static_assert(mfixed6::scaling_is_pow2_v, FAIL_MSG);
+		static_assert(mfixed6::is_scaling_pow2_v, FAIL_MSG);
 		static_assert(mfixed6::scaling_sqrt_v == 62, FAIL_MSG);
 #endif
 	}
