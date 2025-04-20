@@ -59,19 +59,9 @@ template <class T>
 struct clamp_v<T> {
 	using value_type = T;
 
-	constexpr clamp_v(T minimum, T maximum)
-			: _minimum(minimum)
-			, _maximum(maximum)
-			, _value(minimum) {
-		assert(_minimum <= _maximum);
-	}
-
-	constexpr clamp_v(T value, T minimum, T maximum)
-			: _minimum(minimum)
-			, _maximum(maximum)
-			, _value(std::clamp(value, _minimum, _maximum)) {
-		assert(_minimum <= _maximum);
-	}
+	constexpr clamp_v(T minimum, T maximum);
+	constexpr clamp_v(T value, T minimum, T maximum);
+	clamp_v& operator=(T v);
 
 	constexpr clamp_v() = default;
 	~clamp_v() = default;
@@ -80,143 +70,37 @@ struct clamp_v<T> {
 	clamp_v& operator=(const clamp_v&) = default;
 	clamp_v& operator=(clamp_v&&) noexcept = default;
 
-	clamp_v& operator=(T v) {
-		_value = std::clamp(v, _minimum, _maximum);
-		return *this;
-	}
+	// Returns underlying value.
+	[[nodiscard]] operator T() const;
 
 	// Returns underlying value.
-	[[nodiscard]] operator T() const {
-		return _value;
-	}
-	[[nodiscard]] T get() const {
-		return _value;
-	}
+	[[nodiscard]]
+	T get() const;
 
 	// Get/set new maximum.
-	[[nodiscard]] T maximum() const {
-		return _maximum;
-	}
-	void maximum(T m) {
-		assert(_minimum <= m);
-		_maximum = m;
-		clampit();
-	}
+	[[nodiscard]]
+	T maximum() const;
+	void maximum(T m);
 
 	// Get/set new minimum.
-	[[nodiscard]] T minimum() const {
-		return _minimum;
-	}
-	void minimum(T m) {
-		assert(m <= _maximum);
-		_minimum = m;
-		clampit();
-	}
+	[[nodiscard]]
+	T minimum() const;
+	void minimum(T m);
 
-	clamp_v& operator+=(T v) {
-		if constexpr (!std::is_unsigned_v<T>) {
-			if (v < 0) {
-				return (*this) -= fea::abs(v);
-			}
-		}
-
-		// Prevent overflows.
-		T diff = _maximum - _value;
-		if (v > diff) {
-			// Case : val + v could overflow
-			_value = _maximum;
-			return *this;
-		}
-
-		_value += v;
-		return *this;
-	}
-
-	// For unsigned values, prevents underflow.
-	clamp_v& operator-=(T v) {
-		if constexpr (!std::is_unsigned_v<T>) {
-			if (v < 0) {
-				return (*this) += fea::abs(v);
-			}
-		}
-
-		// Prevent underflows.
-		T diff = _value - _minimum;
-		if (v > diff) {
-			_value = _minimum;
-			return *this;
-		}
-
-		_value -= v;
-		return *this;
-	}
-
-	clamp_v& operator*=(T v) {
-		_value *= v;
-		clampit();
-		return *this;
-	}
-
-	clamp_v& operator/=(T v) {
-		_value /= v;
-		clampit();
-		return *this;
-	}
-
-	clamp_v& operator%=(T v) {
-		_value %= v;
-		clampit();
-		return *this;
-	}
-
-	clamp_v& operator&=(T v) {
-		_value &= v;
-		clampit();
-		return *this;
-	}
-
-	clamp_v& operator|=(T v) {
-		_value |= v;
-		clampit();
-		return *this;
-	}
-
-	clamp_v& operator^=(T v) {
-		_value ^= v;
-		clampit();
-		return *this;
-	}
-
-	clamp_v& operator<<=(T v) {
-		_value <<= v;
-		clampit();
-		return *this;
-	}
-
-	clamp_v& operator>>=(T v) {
-		_value >>= v;
-		clampit();
-		return *this;
-	}
-
-	clamp_v& operator++() {
-		return (*this) += T(1);
-	}
-	clamp_v operator++(int) {
-		clamp_v ret = *this;
-		++(*this);
-		return ret;
-	}
-
-	clamp_v& operator--() {
-		return (*this) -= T(1);
-	}
-	clamp_v operator--(int) {
-		clamp_v ret = *this;
-		--(*this);
-		return ret;
-	}
-
+	clamp_v& operator+=(T v);
+	clamp_v& operator-=(T v);
+	clamp_v& operator*=(T v);
+	clamp_v& operator/=(T v);
+	clamp_v& operator%=(T v);
+	clamp_v& operator&=(T v);
+	clamp_v& operator|=(T v);
+	clamp_v& operator^=(T v);
+	clamp_v& operator<<=(T v);
+	clamp_v& operator>>=(T v);
+	clamp_v& operator++();
+	clamp_v operator++(int);
+	clamp_v& operator--();
+	clamp_v operator--(int);
 
 	// operator~
 
@@ -236,9 +120,7 @@ struct clamp_v<T> {
 
 
 private:
-	void clampit() {
-		_value = std::clamp(_value, _minimum, _maximum);
-	}
+	void clampit();
 
 	T _minimum = {};
 	T _maximum = {};
@@ -255,9 +137,8 @@ struct clamp_v<T, Min, Max> {
 	static_assert(minimum_v < maximum_v,
 			"clamp_v : Minimum value must be less than Maximum.");
 
-	constexpr clamp_v(T value)
-			: _value(std::clamp(value, minimum_v, maximum_v)) {
-	}
+	constexpr clamp_v(T value);
+	clamp_v& operator=(T v);
 
 	constexpr clamp_v() = default;
 	~clamp_v() = default;
@@ -266,137 +147,42 @@ struct clamp_v<T, Min, Max> {
 	clamp_v& operator=(const clamp_v&) = default;
 	clamp_v& operator=(clamp_v&&) noexcept = default;
 
-	clamp_v& operator=(T v) {
-		_value = std::clamp(v, minimum_v, maximum_v);
-		return *this;
-	}
+	// Returns underlying value.
+	[[nodiscard]] operator T() const;
 
 	// Returns underlying value.
-	[[nodiscard]] operator T() const {
-		return _value;
-	}
-	[[nodiscard]] T get() const {
-		return _value;
-	}
+	[[nodiscard]]
+	T get() const;
 
-	[[nodiscard]] static constexpr T maximum() {
-		return maximum_v;
-	}
-	[[nodiscard]] static constexpr T minimum() {
-		return minimum_v;
-	}
+	// Get maximum.
+	[[nodiscard]]
+	static constexpr T maximum();
 
-	clamp_v& operator+=(T v) {
-		if constexpr (!std::is_unsigned_v<T>) {
-			if (v < 0) {
-				return (*this) -= fea::abs(v);
-			}
-		}
+	// Get minimum.
+	[[nodiscard]]
+	static constexpr T minimum();
 
-		// Prevent overflows.
-		T diff = maximum_v - _value;
-		if (v > diff) {
-			// Case : val + v could overflow
-			_value = maximum_v;
-			return *this;
-		}
-
-		_value += v;
-		return *this;
-	}
-
-	// For unsigned values, prevents underflow.
-	clamp_v& operator-=(T v) {
-		if constexpr (!std::is_unsigned_v<T>) {
-			if (v < 0) {
-				return (*this) += fea::abs(v);
-			}
-		}
-
-		// Prevent underflows.
-		T diff = _value - minimum_v;
-		if (v > diff) {
-			_value = minimum_v;
-			return *this;
-		}
-
-		_value -= v;
-		return *this;
-	}
-
-	clamp_v& operator*=(T v) {
-		_value *= v;
-		clampit();
-		return *this;
-	}
-
-	clamp_v& operator/=(T v) {
-		_value /= v;
-		clampit();
-		return *this;
-	}
-
-	clamp_v& operator%=(T v) {
-		_value %= v;
-		clampit();
-		return *this;
-	}
-
-	clamp_v& operator&=(T v) {
-		_value &= v;
-		clampit();
-		return *this;
-	}
-
-	clamp_v& operator|=(T v) {
-		_value |= v;
-		clampit();
-		return *this;
-	}
-
-	clamp_v& operator^=(T v) {
-		_value ^= v;
-		clampit();
-		return *this;
-	}
-
-	clamp_v& operator<<=(T v) {
-		_value <<= v;
-		clampit();
-		return *this;
-	}
-
-	clamp_v& operator>>=(T v) {
-		_value >>= v;
-		clampit();
-		return *this;
-	}
-
-	clamp_v& operator++() {
-		return (*this) += T(1);
-	}
-	clamp_v operator++(int) {
-		clamp_v ret = *this;
-		++(*this);
-		return ret;
-	}
-
-	clamp_v& operator--() {
-		return (*this) -= T(1);
-	}
-	clamp_v operator--(int) {
-		clamp_v ret = *this;
-		--(*this);
-		return ret;
-	}
+	clamp_v& operator+=(T v);
+	clamp_v& operator-=(T v);
+	clamp_v& operator*=(T v);
+	clamp_v& operator/=(T v);
+	clamp_v& operator%=(T v);
+	clamp_v& operator&=(T v);
+	clamp_v& operator|=(T v);
+	clamp_v& operator^=(T v);
+	clamp_v& operator<<=(T v);
+	clamp_v& operator>>=(T v);
+	clamp_v& operator++();
+	clamp_v operator++(int);
+	clamp_v& operator--();
+	clamp_v operator--(int);
 
 private:
-	void clampit() {
-		_value = std::clamp(_value, minimum_v, maximum_v);
-	}
+	void clampit();
 
 	T _value = {};
 };
+
 
 // Readability alias.
 template <class T>
@@ -406,6 +192,346 @@ using clamped_value = clamp_v<T>;
 // using clamped_value = clamp_v<T, Min, Max>;
 } // namespace fea
 
+
+// Implementation
+namespace fea {
+template <class T>
+constexpr clamp_v<T>::clamp_v(T minimum, T maximum)
+		: _minimum(minimum)
+		, _maximum(maximum)
+		, _value(minimum) {
+	assert(_minimum <= _maximum);
+}
+
+template <class T>
+constexpr clamp_v<T>::clamp_v(T value, T minimum, T maximum)
+		: _minimum(minimum)
+		, _maximum(maximum)
+		, _value(std::clamp(value, _minimum, _maximum)) {
+	assert(_minimum <= _maximum);
+}
+
+template <class T>
+clamp_v<T>& clamp_v<T>::operator=(T v) {
+	_value = std::clamp(v, _minimum, _maximum);
+	return *this;
+}
+
+template <class T>
+clamp_v<T>::operator T() const {
+	return _value;
+}
+
+template <class T>
+T clamp_v<T>::get() const {
+	return _value;
+}
+
+template <class T>
+T clamp_v<T>::maximum() const {
+	return _maximum;
+}
+
+template <class T>
+void clamp_v<T>::maximum(T m) {
+	assert(_minimum <= m);
+	_maximum = m;
+	clampit();
+}
+
+template <class T>
+T clamp_v<T>::minimum() const {
+	return _minimum;
+}
+
+template <class T>
+void clamp_v<T>::minimum(T m) {
+	assert(m <= _maximum);
+	_minimum = m;
+	clampit();
+}
+
+template <class T>
+clamp_v<T>& clamp_v<T>::operator+=(T v) {
+	if constexpr (!std::is_unsigned_v<T>) {
+		if (v < 0) {
+			return (*this) -= fea::abs(v);
+		}
+	}
+
+	// Prevent overflows.
+	T diff = _maximum - _value;
+	if (v > diff) {
+		// Case : val + v could overflow
+		_value = _maximum;
+		return *this;
+	}
+
+	_value += v;
+	return *this;
+}
+
+template <class T>
+clamp_v<T>& clamp_v<T>::operator-=(T v) {
+	if constexpr (!std::is_unsigned_v<T>) {
+		if (v < 0) {
+			return (*this) += fea::abs(v);
+		}
+	}
+
+	// Prevent underflows.
+	T diff = _value - _minimum;
+	if (v > diff) {
+		_value = _minimum;
+		return *this;
+	}
+
+	_value -= v;
+	return *this;
+}
+
+template <class T>
+clamp_v<T>& clamp_v<T>::operator*=(T v) {
+	_value *= v;
+	clampit();
+	return *this;
+}
+
+template <class T>
+clamp_v<T>& clamp_v<T>::operator/=(T v) {
+	_value /= v;
+	clampit();
+	return *this;
+}
+
+template <class T>
+clamp_v<T>& clamp_v<T>::operator%=(T v) {
+	_value %= v;
+	clampit();
+	return *this;
+}
+
+template <class T>
+clamp_v<T>& clamp_v<T>::operator&=(T v) {
+	_value &= v;
+	clampit();
+	return *this;
+}
+
+template <class T>
+clamp_v<T>& clamp_v<T>::operator|=(T v) {
+	_value |= v;
+	clampit();
+	return *this;
+}
+
+template <class T>
+clamp_v<T>& clamp_v<T>::operator^=(T v) {
+	_value ^= v;
+	clampit();
+	return *this;
+}
+
+template <class T>
+clamp_v<T>& clamp_v<T>::operator<<=(T v) {
+	_value <<= v;
+	clampit();
+	return *this;
+}
+
+template <class T>
+clamp_v<T>& clamp_v<T>::operator>>=(T v) {
+	_value >>= v;
+	clampit();
+	return *this;
+}
+
+template <class T>
+clamp_v<T>& clamp_v<T>::operator++() {
+	return (*this) += T(1);
+}
+
+template <class T>
+clamp_v<T> clamp_v<T>::operator++(int) {
+	clamp_v ret = *this;
+	++(*this);
+	return ret;
+}
+
+template <class T>
+clamp_v<T>& clamp_v<T>::operator--() {
+	return (*this) -= T(1);
+}
+
+template <class T>
+clamp_v<T> clamp_v<T>::operator--(int) {
+	clamp_v ret = *this;
+	--(*this);
+	return ret;
+}
+
+template <class T>
+void clamp_v<T>::clampit() {
+	_value = std::clamp(_value, _minimum, _maximum);
+}
+
+
+template <class T, T Min, T Max>
+constexpr clamp_v<T, Min, Max>::clamp_v(T value)
+		: _value(std::clamp(value, minimum_v, maximum_v)) {
+}
+
+template <class T, T Min, T Max>
+clamp_v<T, Min, Max>& clamp_v<T, Min, Max>::operator=(T v) {
+	_value = std::clamp(v, minimum_v, maximum_v);
+	return *this;
+}
+
+template <class T, T Min, T Max>
+clamp_v<T, Min, Max>::operator T() const {
+	return _value;
+}
+
+template <class T, T Min, T Max>
+T clamp_v<T, Min, Max>::get() const {
+	return _value;
+}
+
+template <class T, T Min, T Max>
+constexpr T clamp_v<T, Min, Max>::maximum() {
+	return maximum_v;
+}
+
+template <class T, T Min, T Max>
+constexpr T clamp_v<T, Min, Max>::minimum() {
+	return minimum_v;
+}
+
+
+template <class T, T Min, T Max>
+clamp_v<T, Min, Max>& clamp_v<T, Min, Max>::operator+=(T v) {
+	if constexpr (!std::is_unsigned_v<T>) {
+		if (v < 0) {
+			return (*this) -= fea::abs(v);
+		}
+	}
+
+	// Prevent overflows.
+	T diff = maximum_v - _value;
+	if (v > diff) {
+		// Case : val + v could overflow
+		_value = maximum_v;
+		return *this;
+	}
+
+	_value += v;
+	return *this;
+}
+
+template <class T, T Min, T Max>
+clamp_v<T, Min, Max>& clamp_v<T, Min, Max>::operator-=(T v) {
+	if constexpr (!std::is_unsigned_v<T>) {
+		if (v < 0) {
+			return (*this) += fea::abs(v);
+		}
+	}
+
+	// Prevent underflows.
+	T diff = _value - minimum_v;
+	if (v > diff) {
+		_value = minimum_v;
+		return *this;
+	}
+
+	_value -= v;
+	return *this;
+}
+
+template <class T, T Min, T Max>
+clamp_v<T, Min, Max>& clamp_v<T, Min, Max>::operator*=(T v) {
+	_value *= v;
+	clampit();
+	return *this;
+}
+
+template <class T, T Min, T Max>
+clamp_v<T, Min, Max>& clamp_v<T, Min, Max>::operator/=(T v) {
+	_value /= v;
+	clampit();
+	return *this;
+}
+
+template <class T, T Min, T Max>
+clamp_v<T, Min, Max>& clamp_v<T, Min, Max>::operator%=(T v) {
+	_value %= v;
+	clampit();
+	return *this;
+}
+
+template <class T, T Min, T Max>
+clamp_v<T, Min, Max>& clamp_v<T, Min, Max>::operator&=(T v) {
+	_value &= v;
+	clampit();
+	return *this;
+}
+
+template <class T, T Min, T Max>
+clamp_v<T, Min, Max>& clamp_v<T, Min, Max>::operator|=(T v) {
+	_value |= v;
+	clampit();
+	return *this;
+}
+
+template <class T, T Min, T Max>
+clamp_v<T, Min, Max>& clamp_v<T, Min, Max>::operator^=(T v) {
+	_value ^= v;
+	clampit();
+	return *this;
+}
+
+template <class T, T Min, T Max>
+clamp_v<T, Min, Max>& clamp_v<T, Min, Max>::operator<<=(T v) {
+	_value <<= v;
+	clampit();
+	return *this;
+}
+
+template <class T, T Min, T Max>
+clamp_v<T, Min, Max>& clamp_v<T, Min, Max>::operator>>=(T v) {
+	_value >>= v;
+	clampit();
+	return *this;
+}
+
+template <class T, T Min, T Max>
+clamp_v<T, Min, Max>& clamp_v<T, Min, Max>::operator++() {
+	return (*this) += T(1);
+}
+
+template <class T, T Min, T Max>
+clamp_v<T, Min, Max> clamp_v<T, Min, Max>::operator++(int) {
+	clamp_v ret = *this;
+	++(*this);
+	return ret;
+}
+
+template <class T, T Min, T Max>
+clamp_v<T, Min, Max>& clamp_v<T, Min, Max>::operator--() {
+	return (*this) -= T(1);
+}
+
+template <class T, T Min, T Max>
+clamp_v<T, Min, Max> clamp_v<T, Min, Max>::operator--(int) {
+	clamp_v ret = *this;
+	--(*this);
+	return ret;
+}
+
+template <class T, T Min, T Max>
+void clamp_v<T, Min, Max>::clampit() {
+	_value = std::clamp(_value, minimum_v, maximum_v);
+}
+} // namespace fea
 
 #if FEA_CPP20
 // Enable direct use in std::format.
