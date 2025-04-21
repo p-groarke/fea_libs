@@ -124,7 +124,11 @@ TEST(fixed, basics) {
 		EXPECT_EQ(ans, fea::fixed(0.0));
 
 		ans = ~f1;
+#if FEA_32BIT
+		EXPECT_EQ(ans, fea::fixed(-2.00048828125));
+#else
 		EXPECT_EQ(ans, fea::fixed(-2.0000001192092896));
+#endif
 
 		ans = f1 & f2;
 		EXPECT_EQ(ans, fea::fixed(2.0));
@@ -166,7 +170,11 @@ TEST(fixed, basics) {
 		EXPECT_EQ(ans, fea::fixed(0.0));
 
 		ans = ~f1;
+#if FEA_32BIT
+		EXPECT_EQ(ans, fea::fixed(-8.00048828125));
+#else
 		EXPECT_EQ(ans, fea::fixed(-8.0000001192092896));
+#endif
 
 		ans = f1 & f2;
 		EXPECT_EQ(ans, fea::fixed(0.0));
@@ -208,7 +216,11 @@ TEST(fixed, basics) {
 		EXPECT_EQ(ans, fea::fixed(2.0));
 
 		ans = ~f1;
+#if FEA_32BIT
+		EXPECT_EQ(ans, fea::fixed(-2.00048828125));
+#else
 		EXPECT_EQ(ans, fea::fixed(-2.0000001192092896));
+#endif
 
 		ans = f1 & f2;
 		EXPECT_EQ(ans, fea::fixed(0.0));
@@ -250,7 +262,11 @@ TEST(fixed, basics) {
 		EXPECT_EQ(ans, fea::fixed(-2.0));
 
 		ans = ~f1;
+#if FEA_32BIT
+		EXPECT_EQ(ans, fea::fixed(1.99951171875));
+#else
 		EXPECT_EQ(ans, fea::fixed(1.9999998807907104));
+#endif
 
 		ans = f1 & f2;
 		EXPECT_EQ(ans, fea::fixed(8.0));
@@ -292,7 +308,11 @@ TEST(fixed, basics) {
 		EXPECT_EQ(ans, fea::fixed(2.0));
 
 		ans = ~f1;
+#if FEA_32BIT
+		EXPECT_EQ(ans, fea::fixed(-2.00048828125));
+#else
 		EXPECT_EQ(ans, fea::fixed(-2.0000001192092896));
+#endif
 
 		ans = f1 & f2;
 		EXPECT_EQ(ans, fea::fixed(0.0));
