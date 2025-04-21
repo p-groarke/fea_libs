@@ -1,6 +1,6 @@
 ﻿#include "global.hpp"
 
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
 #include <list>
 #include <unordered_map>

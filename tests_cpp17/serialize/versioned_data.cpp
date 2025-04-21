@@ -1,12 +1,12 @@
 #include <cstdint>
 #include <fea/serialize/versioned_data.hpp>
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
 
 #if FEA_VS_GT(2017)
 
 namespace {
-#define FAILMSG "versioned_data.cpp : Unit test failed."
+#define FAIL_MSG "versioned_data.cpp : Unit test failed."
 
 struct test_cerealizer {
 	std::vector<uint32_t> call_version;
@@ -191,13 +191,13 @@ TEST(versioned_data, basics) {
 	{
 		static_assert(
 				fea::is_detected_v<fea::detail::mhas_upgrade, data_v0, data_v1>,
-				FAILMSG);
+				FAIL_MSG);
 		static_assert(fea::is_detected_v<fea::detail::mhas_downgrade, data_v1,
 							  data_v0>,
-				FAILMSG);
+				FAIL_MSG);
 		static_assert(fea::is_detected_v<fea::detail::mhas_deserialize,
 							  test_cerealizer, data_v0>,
-				FAILMSG);
+				FAIL_MSG);
 	}
 
 	// Test going through the versions one by one.

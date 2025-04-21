@@ -1,5 +1,5 @@
 #include <fea/functional/func_ptr.hpp>
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
 
 namespace {

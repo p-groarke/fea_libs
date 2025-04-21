@@ -1,5 +1,5 @@
 ﻿#include <fea/time/time.hpp>
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 
 #if FEA_WITH_DATE
 #include <chrono>

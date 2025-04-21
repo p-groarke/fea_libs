@@ -1,7 +1,7 @@
 /**
  * BSD 3-Clause License
  *
- * Copyright (c) 2024, Philippe Groarke
+ * Copyright (c) 2025, Philippe Groarke
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -34,8 +34,8 @@
 #include "fea/containers/flat_id_slotmap.hpp"
 #include "fea/string/conversions.hpp"
 #include "fea/string/string.hpp"
-#include "fea/utils/file.hpp"
-#include "fea/utils/platform.hpp"
+#include "fea/utility/file.hpp"
+#include "fea/utility/platform.hpp"
 
 #include <cassert>
 #include <cctype>

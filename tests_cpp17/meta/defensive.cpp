@@ -2,6 +2,8 @@
 #include <fea/meta/defensive.hpp>
 
 namespace {
+#define FAIL_MSG "defensive.cpp : Test failed."
+
 struct test1 {
 	~test1() {
 	}
@@ -16,8 +18,7 @@ struct test1 {
 		return *this;
 	}
 };
-FEA_FULFILLS_5_CTORS(test1);
-FEA_FULFILLS_RULE_OF_5(test1);
+static_assert(fea::fulfills_rule_of_5<test1>(), FAIL_MSG);
 
 struct test2 {
 	~test2() = default;
@@ -26,14 +27,12 @@ struct test2 {
 	test2& operator=(const test2&) = default;
 	test2& operator=(test2&&) = default;
 };
-FEA_FULFILLS_5_CTORS(test2);
-FEA_FULFILLS_RULE_OF_5(test2);
-FEA_FULFILLS_FAST_VECTOR(test2);
+static_assert(fea::fulfills_rule_of_5<test2>(), FAIL_MSG);
+static_assert(fea::fulfills_fast_vector<test2>(), FAIL_MSG);
 
 struct test3 {};
-FEA_FULFILLS_5_CTORS(test3);
-FEA_FULFILLS_RULE_OF_5(test3);
-FEA_FULFILLS_FAST_VECTOR(test3);
+static_assert(fea::fulfills_rule_of_5<test3>(), FAIL_MSG);
+static_assert(fea::fulfills_fast_vector<test3>(), FAIL_MSG);
 
 struct test4 {
 	test4() {
@@ -44,9 +43,8 @@ struct test4 {
 	test4& operator=(const test4&) = default;
 	test4& operator=(test4&&) = default;
 };
-FEA_FULFILLS_6_CTORS(test4);
-FEA_FULFILLS_RULE_OF_6(test4);
-FEA_FULFILLS_FAST_VECTOR(test4);
+static_assert(fea::fulfills_rule_of_5<test4>(), FAIL_MSG);
+static_assert(fea::fulfills_fast_vector<test4>(), FAIL_MSG);
 
 struct test5 {
 	test5() = default;
@@ -63,25 +61,24 @@ struct test5 {
 		return *this;
 	}
 };
-FEA_FULFILLS_6_CTORS(test5);
-FEA_FULFILLS_RULE_OF_6(test5);
+static_assert(fea::fulfills_rule_of_5<test5>(), FAIL_MSG);
 
 struct test6 {};
-FEA_FULFILLS_FAST_VECTOR(test6);
+static_assert(fea::fulfills_fast_vector<test6>(), FAIL_MSG);
 
 struct test7 {
 	~test7() = default;
 	test7(const test7&) = default;
 	test7(test7&&) = delete;
 };
-FEA_FULFILLS_FAST_VECTOR(test7);
+static_assert(fea::fulfills_fast_vector<test7>(), FAIL_MSG);
 
 struct test8 {
 	test8(const test8&) = delete;
 	test8(test8&&) noexcept {
 	}
 };
-FEA_FULFILLS_FAST_VECTOR(test8);
+static_assert(fea::fulfills_fast_vector<test8>(), FAIL_MSG);
 
 struct test9 {
 	~test9() = default;
@@ -90,13 +87,13 @@ struct test9 {
 	test9& operator=(const test9&) = delete;
 	test9& operator=(test9&&) = default;
 };
-FEA_FULFILLS_MOVE_ONLY(test9);
+static_assert(fea::fulfills_move_only<test9>(), FAIL_MSG);
 
 struct test10 {
 	test10(test10&&) = default;
 	test10& operator=(test10&&) = default;
 };
-FEA_FULFILLS_MOVE_ONLY(test10);
+static_assert(fea::fulfills_move_only<test10>(), FAIL_MSG);
 
 struct test11 {
 	test11(test11&&) noexcept {
@@ -105,7 +102,7 @@ struct test11 {
 		return *this;
 	}
 };
-FEA_FULFILLS_MOVE_ONLY(test11);
+static_assert(fea::fulfills_move_only<test11>(), FAIL_MSG);
 
 struct test12 {
 	test12() = delete;
@@ -115,5 +112,5 @@ struct test12 {
 	test12& operator=(const test12&) = delete;
 	test12& operator=(test12&&) = delete;
 };
-FEA_FULFILLS_NON_CONSTRUCTIBLE(test12);
+static_assert(fea::fulfills_non_constructible<test12>(), FAIL_MSG);
 } // namespace

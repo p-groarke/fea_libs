@@ -1,7 +1,7 @@
 ﻿/*
 BSD 3-Clause License
 
-Copyright (c) 2024, Philippe Groarke
+Copyright (c) 2025, Philippe Groarke
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -42,26 +42,59 @@ namespace fea {
 template <class T>
 using has_operator_paren = decltype(&T::operator());
 
-namespace detail {
+// fea::member_func_ptr is a trait which constructs a member function pointer,
+// given Ret and Args...
+//
+// It uses the first argument of Args as the class type.
+// If no Args are provided, aliases void*.
+template <class, class...>
+struct member_func_ptr;
+
+// Helper alias.
+template <class Ret, class... Args>
+using member_func_ptr_t = typename member_func_ptr<Ret, Args...>::type;
+
+// fea::func_ret creates a 'type' alias to a function pointer's return type.
+// You may provide a lambda or function object directly to it.
+template <class>
+struct func_ret;
+
+// Helper alias.
+template <class Func>
+using func_ret_t = typename func_ret<Func>::type;
+
+// fea::func_args creates a fea::pack 'type' alias to a function pointer's
+// arguments. You may provide a lambda or function object directly to it.
+template <class>
+struct func_args;
+
+// Helper alias.
+template <class Func>
+using func_args_t = typename func_args<Func>::type;
+
+// The following based off of Functional C++ blog post :
+// https://functionalcpp.wordpress.com/2013/08/05/function-traits/
+// Extracts pretty much verything from a function pointer.
+//
+// Declares member aliases : return_t, args_tuple, args_decay_typle, arity,
+// argument<N>.
+template <class>
+struct function_traits;
+} // namespace fea
+
+
+// Implementation
+namespace fea {
 template <class, class, bool, class...>
-struct member_func_ptr {
+struct member_func_ptr_impl {
 	using type = void*;
 };
 
 template <class Ret, class T, class... Rest>
-struct member_func_ptr<Ret, T, true, Rest...> {
+struct member_func_ptr_impl<Ret, T, true, Rest...> {
 	using type = Ret (T::*)(Rest...);
 };
 
-} // namespace detail
-
-/*
-fea::member_func_ptr is a trait which constructs a member function pointer,
-given Ret and Args...
-
-It uses the first argument of Args as the class type.
-If no Args are provided, aliases void*.
-*/
 template <class, class...>
 struct member_func_ptr {
 	using type = void*;
@@ -69,18 +102,7 @@ struct member_func_ptr {
 
 template <class Ret, class T, class... Rest>
 struct member_func_ptr<Ret, T*, Rest...>
-		: detail::member_func_ptr<Ret, T, std::is_class_v<T>, Rest...> {};
-
-template <class Ret, class... Args>
-using member_func_ptr_t = typename member_func_ptr<Ret, Args...>::type;
-
-
-/*
-fea::func_ret creates a 'type' alias to a function pointer's return type.
-You may provide a lambda or function object directly to it.
-*/
-template <class>
-struct func_ret;
+		: member_func_ptr_impl<Ret, T, std::is_class_v<T>, Rest...> {};
 
 template <class Ret, class... Args>
 struct func_ret<Ret(Args...)> {
@@ -103,17 +125,6 @@ struct func_ret {
 	using type = typename func_ret<decltype(&Func::operator())>::type;
 };
 
-template <class Func>
-using func_ret_t = typename func_ret<Func>::type;
-
-
-/*
-fea::func_args creates a fea::pack 'type' alias to a function pointer's
-arguments. You may provide a lambda or function object directly to it.
-*/
-template <class>
-struct func_args;
-
 template <class Ret, class... Args>
 struct func_args<Ret(Args...)> {
 	using type = std::tuple<Args...>;
@@ -135,16 +146,6 @@ struct func_args {
 	using type = typename func_args<decltype(&Func::operator())>::type;
 };
 
-template <class Func>
-using func_args_t = typename func_args<Func>::type;
-
-
-/*
-The following based off of Functional C++ blog post :
-https://functionalcpp.wordpress.com/2013/08/05/function-traits/
-
-Extracts pretty much verything from a function pointer.
-*/
 
 // Required for the "functor" overload, as the object reference would get stored
 // in args.
@@ -157,9 +158,6 @@ struct drop_first<std::tuple<T, Args...>> {
 	using type = std::tuple<Args...>;
 };
 
-
-template <class F>
-struct function_traits;
 
 template <class F>
 struct function_traits<F&> : public function_traits<F> {};

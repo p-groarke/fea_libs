@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <fea/benchmark/benchmark.hpp>
 #include <fea/containers/unsigned_hole_hashmap.hpp>
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
 #include <map>
 #include <random>

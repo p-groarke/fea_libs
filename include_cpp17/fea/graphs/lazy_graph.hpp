@@ -1,7 +1,7 @@
 ﻿/*
 BSD 3-Clause License
 
-Copyright (c) 2024, Philippe Groarke
+Copyright (c) 2025, Philippe Groarke
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -34,8 +34,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fea/containers/stack_vector.hpp"
 #include "fea/functional/callback.hpp"
 #include "fea/performance/constants.hpp"
-#include "fea/utils/platform.hpp"
-#include "fea/utils/throw.hpp"
+#include "fea/utility/platform.hpp"
+#include "fea/utility/throw.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -51,6 +51,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <tbb/task_group.h>
 #endif
 
+/*
+lazy_graph : A lazily evaluated, lazily deduced compute graph.
+
+Dirtyness propagates on compute demand, not on dirtying. This leads to faster
+modification of parents, somewhat slower dirtyness deduction for children.
+
+Use this graph if you modify parents often and compute children less often.
+*/
+
 namespace fea {
 namespace detail {
 template <size_t N, class T>
@@ -64,10 +73,11 @@ struct choose_vector<0, T> {
 
 template <size_t N, class T>
 using choose_vector_t = typename choose_vector<N, T>::type;
-
 } // namespace detail
-// TODO : callback should be 1 vector of pair<parent_id, bool_was_dirty>
 
+// Used internally to store a node.
+//
+// TODO : callback should be 1 vector of pair<parent_id, bool_was_dirty>
 template <class Id, class NodeData, class DirtyVersion, size_t MaxParents,
 		size_t MaxChildren>
 struct node {
@@ -78,132 +88,71 @@ struct node {
 	node& operator=(const node&) = default;
 	node& operator=(node&&) noexcept = default;
 
-	/**
-	 * Graph Functions
-	 */
+	// Does the node have parents?
+	bool is_root() const;
 
-	bool is_root() const {
-		return _parents.empty();
-	}
+	// Does the node have children?
+	bool has_children() const;
 
-	bool has_children() const {
-		return !_children.empty();
-	}
+	// Does the node have this specific child?
+	bool has_child(Id child_id) const;
 
-	bool has_child(Id child_id) const {
-		auto it = std::find(_children.begin(), _children.end(), child_id);
-		return it != _children.end();
-	}
+	// Add a child to the node.
+	void add_child(Id child_id);
 
-	void add_child(Id child_id) {
-		add_child(child_id, std::conditional_t < MaxChildren == 0,
-				std::true_type, std::false_type > {});
-	}
+	// Remove a child of the node.
+	// Q : Allow invalid?
+	void remove_child(Id child_id);
 
-	void remove_child(Id child_id) {
-		auto it = std::find(_children.begin(), _children.end(), child_id);
-		if (it == _children.end()) {
-			return;
-		}
+	// Does the node have this specific parent?
+	bool has_parent(Id parent_id) const;
 
-		if (it != std::prev(_children.end())) {
-			*it = _children.back();
+	// Add a parent to the node.
+	void add_parent(Id parent_id);
 
-			size_t i = std::distance(_children.begin(), it);
-			_children_versions[i] = _children_versions.back();
-		}
+	// Remove a parent of the node.
+	// Q : Allow invalid?
+	void remove_parent(Id parent_id);
 
-		_children.pop_back();
-		_children_versions.pop_back();
-		assert(_children.size() == _children_versions.size());
-	}
+	// Get the node's children.
+	fea::span<const Id> children() const;
 
-	bool has_parent(Id parent_id) const {
-		return std::find(_parents.begin(), _parents.end(), parent_id)
-			!= _parents.end();
-	}
+	// Get the parents of the node.
+	fea::span<const Id> parents() const;
 
-	void add_parent(Id parent_id) {
-		add_parent(parent_id, std::conditional_t < MaxParents == 0,
-				std::true_type, std::false_type > {});
-	}
-
-	void remove_parent(Id parent_id) {
-		auto it = std::find(_parents.begin(), _parents.end(), parent_id);
-		assert(it != _parents.end());
-		_parents.erase(it);
-		_dirty_evaluation_graph = true;
-	}
-
-	fea::span<const Id> children() const {
-		return { _children.data(), _children.size() };
-	}
-
-	fea::span<const DirtyVersion> children_versions() const {
-		return { _children_versions.data(), _children_versions.size() };
-	}
-	fea::span<DirtyVersion> children_versions() {
-		return { _children_versions.data(), _children_versions.size() };
-	}
-
-	fea::span<const Id> parents() const {
-		return { _parents.data(), _parents.size() };
-	}
 	//// Only use this to change dirty version, not add or remove parents.
 	// std::vector<Id>& parents() {
 	//	return _parents;
 	//}
 
-	bool is_evaluation_graph_dirty() const {
-		return _dirty_evaluation_graph;
-	}
-	void clean_evaluation_graph() {
-		_dirty_evaluation_graph = false;
-	}
+	// Check if the eval graph is clean.
+	// ALWAYS check this before accessing the evaluation graph.
+	// It is recomputed lazily, just like everything else.
+	bool is_evaluation_graph_dirty() const;
+
+	// Clean and update the evaluation graph.
+	// Call this before accessing it.
+	void clean_evaluation_graph();
 
 	// A left to right graph of parents needed to update this node.
-	fea::span<const Id> evaluation_graph() const {
-		if (_dirty_evaluation_graph) {
-			fea::maybe_throw(
-					__FUNCTION__, __LINE__, "reading dirty evaluation graph");
-		}
-		return _evaluation_graph;
-	}
-	std::vector<Id>& evaluation_graph() {
-		return _evaluation_graph;
-	}
+	fea::span<const Id> evaluation_graph() const;
+	std::vector<Id>& evaluation_graph();
 
-	const NodeData& node_data() const {
-		return _node_data;
-	}
-	NodeData& node_data() {
-		return _node_data;
-	}
+	// The user's custom node data associated with this node.
+	const NodeData& node_data() const;
+	NodeData& node_data();
 
-	/**
-	 * Dirtyness Functions
-	 */
+	// This node's version.
+	DirtyVersion version() const;
+	DirtyVersion& version();
 
-	DirtyVersion version() const {
-		return _dirty_version;
-	}
-	DirtyVersion& version() {
-		return _dirty_version;
-	}
+	// The version of a specific child.
+	const DirtyVersion& child_version(Id child_id) const;
+	DirtyVersion& child_version(Id child_id);
 
-	const DirtyVersion& child_version(Id child_id) const {
-		auto it = std::find(_children.begin(), _children.end(), child_id);
-		assert(it != _children.end());
-
-		size_t idx = std::distance(_children.begin(), it);
-		assert(idx < _children_versions.size());
-		return _children_versions[idx];
-	}
-	DirtyVersion& child_version(Id child_id) {
-		return const_cast<DirtyVersion&>(
-				static_cast<const node*>(this)->child_version(child_id));
-	}
-
+	// Get the node's children versions.
+	fea::span<const DirtyVersion> children_versions() const;
+	fea::span<DirtyVersion> children_versions();
 
 	// The graph uses a dirty versioning system. This means you can check if you
 	// are dirty in O(1) by comparing your last updated parent version to the
@@ -214,43 +163,22 @@ struct node {
 	// When a version reaches the DirtyVersion max value, we reset the version
 	// to init_sentinel and recurse through children to set their version to
 	// dirty_sentinel.
-	static constexpr DirtyVersion dirty_sentinel() {
-		return 0;
-	}
-	static constexpr DirtyVersion clean_sentinel() {
-		return 1;
-	}
-	static constexpr DirtyVersion init_sentinel() {
-		return 2;
-	}
+	static constexpr DirtyVersion dirty_sentinel();
+	static constexpr DirtyVersion clean_sentinel();
+	static constexpr DirtyVersion init_sentinel();
 
 private:
 	// Fixed children num.
-	void add_child(Id child_id, std::false_type) {
-		if (_children.size() == MaxChildren) {
-			fea::maybe_throw(
-					__FUNCTION__, __LINE__, "trying to add too many children");
-		}
-		add_child(child_id, std::true_type{});
-	}
-	void add_child(Id child_id, std::true_type) {
-		_children.push_back(child_id);
-		_children_versions.push_back(dirty_sentinel());
-		assert(_children.size() == _children_versions.size());
-	}
+	void add_child(Id child_id, std::false_type);
+
+	// Non-fixed children num.
+	void add_child(Id child_id, std::true_type);
 
 	// Fixed parent num.
-	void add_parent(Id parent_id, std::false_type) {
-		if (_parents.size() == MaxParents) {
-			fea::maybe_throw(
-					__FUNCTION__, __LINE__, "trying to add too many parents");
-		}
-		add_parent(parent_id, std::true_type{});
-	}
-	void add_parent(Id parent_id, std::true_type) {
-		_parents.push_back(parent_id);
-		_dirty_evaluation_graph = true;
-	}
+	void add_parent(Id parent_id, std::false_type);
+
+	// Non-fixed parent num.
+	void add_parent(Id parent_id, std::true_type);
 
 	// Your children.
 	detail::choose_vector_t<MaxChildren, Id> _children;
@@ -288,11 +216,7 @@ private:
 template <class Id, class NodeData = char>
 struct parent_status {
 	parent_status() = default;
-	parent_status(Id id, const NodeData* n, bool dirty)
-			: node_data(n)
-			, parent_id(id)
-			, was_dirty(dirty) {
-	}
+	parent_status(Id id, const NodeData* n, bool dirty);
 
 	const NodeData* node_data = nullptr;
 	Id parent_id{};
@@ -326,10 +250,10 @@ template <class Id, class NodeData = char, class DirtyVersion = uint64_t,
 		size_t MaxParents = 0, size_t MaxChildren = 0>
 struct lazy_graph {
 	static_assert(std::is_unsigned_v<DirtyVersion>,
-			"fea::lazy_graph : DirtyVersion must be an unsigned integral");
+			"lazy_graph : DirtyVersion must be an unsigned integral");
 
 	static_assert(std::is_default_constructible_v<NodeData>,
-			"fea::lazy_graph : NodeData must be default constructible.");
+			"lazy_graph : NodeData must be default constructible.");
 
 	using node_t = node<Id, NodeData, DirtyVersion, MaxParents, MaxChildren>;
 	using callback_data_t = callback_data<Id, NodeData>;
@@ -350,135 +274,43 @@ struct lazy_graph {
 	 */
 
 	// Get your user data stored inside a node.
-	const NodeData& node_data(Id id) const {
-		return _nodes.at(id).node_data();
-	}
-	NodeData& node_data(Id id) {
-		return _nodes.at(id).node_data();
-	}
+	const NodeData& node_data(Id id) const;
+	NodeData& node_data(Id id);
 
 	// Is the node a root (has no parents)?
-	bool is_root(Id id) const {
-		return _nodes.at(id).is_root();
-	}
+	bool is_root(Id id) const;
 
 	// Does the node have this child?
-	bool has_child(Id child_id, Id parent_id) const {
-		return _nodes.at(parent_id).has_child(child_id);
-	}
+	bool has_child(Id child_id, Id parent_id) const;
 	// Does the node have children?
-	bool has_children(Id id) const {
-		return _nodes.at(id).has_children();
-	}
+	bool has_children(Id id) const;
 
 	// Does the node have this parent?
-	bool has_parent(Id child_id, Id parent_id) const {
-		// TODO : deal with children that don't exist or continue throwing?
-		return _nodes.at(child_id).has_parent(parent_id);
-	}
+	bool has_parent(Id child_id, Id parent_id) const;
 	// Does the node have children?
-	bool has_parents(Id id) const {
-		return !is_root(id);
-	}
+	bool has_parents(Id id) const;
 
 
 	// This is called for you in add_dependency, but you can still check
 	// yourself if you prefer.
 	// Checks if nodes are the same, if child is already set, if the child would
 	// create a loop.
-	bool is_invalid_child(Id child_id, Id parent_id) const {
-		if (parent_id == child_id) {
-			return true;
-		}
-
-		// If the nodes don't exist, then there is no loop or problem. So it is
-		// valid.
-		// AKA, if parent doesn't exist, it will be a root with no child.
-		// If child doesn't exist, parent doesn't already have child and there
-		// is no possibility for a loop.
-		auto parent_it = _nodes.find(parent_id);
-		auto child_it = _nodes.find(child_id);
-		if (parent_it == _nodes.end() || child_it == _nodes.end()) {
-			return false;
-		}
-
-		// Already has dependency?
-		if (parent_it->second.has_child(child_id)) {
-			assert(child_it->second.has_parent(parent_id));
-			return true;
-		}
-
-		// TODO : Benchmark threaded recursion.
-		return recurse_up(parent_id,
-				[&](Id, const node_t& n) { return n.has_parent(child_id); });
-	}
+	bool is_invalid_child(Id child_id, Id parent_id) const;
 
 	// Adds a root node with no dependency.
 	// noop if it already exists.
-	void add_node(Id id) {
-		_nodes.insert({ id, {} });
-	}
+	void add_node(Id id);
 
 	// Removes a given node from the graph.
 	// Its children are orphaned.
-	void remove_node(Id id) {
-		auto it = _nodes.find(id);
-		if (it == _nodes.end()) {
-			return;
-		}
-
-		node_t& n = it->second;
-
-		fea::span<const Id> parents = n.parents();
-		for (Id parent_id : parents) {
-			_nodes.at(parent_id).remove_child(id);
-		}
-
-		fea::span<const Id> children = n.children();
-		for (Id child_id : children) {
-			_nodes.at(child_id).remove_parent(id);
-		}
-
-		_nodes.erase(it);
-	}
+	void remove_node(Id id);
 
 	// Removes a node and its subgraph.
 	// The children are removed if and ONLY IF, the children would be
 	// orphaned.
 	// In other words, removes a node and its children hierarchy if those
 	// children don't have other parents.
-	void remove_subgraph(Id node_id) {
-		if (_nodes.count(node_id) == 0) {
-			return;
-		}
-
-		// Collect candidate nodes to remove.
-		// The end result is a breadth ordered vector, front to back.
-		std::vector<Id> subgraph;
-
-		recurse_breadth_down(node_id, [&](Id id, const node_t&) {
-			subgraph.push_back(id);
-			return false; // recurse whole graph
-		});
-
-		// We must force remove the top node manually. This is because it could
-		// have other parents, but we don't care about that.
-		remove_node(subgraph.front());
-		subgraph.erase(subgraph.begin());
-
-		// Now, go through the subgraph and remove nodes that would become
-		// leaves. We keep the duplicates, as a node could have multiple parents
-		// that end up being removed.
-		for (Id parent_id : subgraph) {
-			if (_nodes.count(parent_id) == 0) {
-				continue;
-			}
-
-			if (!has_parents(parent_id)) {
-				remove_node(parent_id);
-			}
-		}
-	}
+	void remove_subgraph(Id node_id);
 
 	// Creates a dependency between 2 nodes.
 	// If any node doesn't exist, creates it.
@@ -486,66 +318,26 @@ struct lazy_graph {
 	// Causes for failure :
 	// - Adding the dependency would create a loop.
 	// - Dependency already exists.
-	bool add_dependency(Id child_id, Id parent_id) {
-		// Would this dependency create a loop?
-		// Call this before creating the nodes, as it is a shortcut.
-		if (is_invalid_child(child_id, parent_id)) {
-			return false;
-		}
-
-		// Inserts if not already in.
-		// Invalidates iterators.
-		{
-			node_t& child = _nodes.insert({ child_id, {} }).first->second;
-			child.add_parent(parent_id);
-		}
-		{
-			node_t& parent = _nodes.insert({ parent_id, {} }).first->second;
-			parent.add_child(child_id);
-		}
-
-		return true;
-	}
+	bool add_dependency(Id child_id, Id parent_id);
 
 	// Removes a dependency relationship.
 	// Leaves nodes in place.
-	void remove_dependency(Id child_id, Id parent_id) {
-		node_t& child = _nodes.at(child_id);
-		if (!child.has_parent(parent_id)) {
-			assert(!_nodes.at(parent_id).has_child(child_id));
-			return;
-		}
-
-		node_t& parent = _nodes.at(parent_id);
-
-		child.remove_parent(parent_id);
-		parent.remove_child(child_id);
-	}
+	void remove_dependency(Id child_id, Id parent_id);
 
 	// Does the graph contain this node?
-	bool contains(Id id) const {
-		return _nodes.count(id) != 0;
-	}
+	bool contains(Id id) const;
 
 	// Is the graph empty?
-	bool empty() const {
-		return _nodes.empty();
-	}
+	bool empty() const;
 
-	void clear() {
-		_nodes.clear();
-	}
+	void clear();
 
 	// Get a nodes children
-	fea::span<const Id> children(Id id) const {
-		return _nodes.at(id).children();
-	}
+	fea::span<const Id> children(Id id) const;
 
 	// Get a nodes parent.
 	// Note this is in a map with dirtyness.
-	fea::span<const Id> parents(Id id) const {
-		return _nodes.at(id).parents();
-	}
+	fea::span<const Id> parents(Id id) const;
 
 
 	/**
@@ -553,64 +345,18 @@ struct lazy_graph {
 	 */
 
 	// Mark a node as written to. AKA deal with the dirtyness.
-	void make_dirty(Id id) {
-		node_t& n = _nodes.at(id);
-
-		// We've reached the end of the version space.
-		// Reset version to init_sentinel and set all children to
-		// dirty_sentinel. Happens rarely.
-		if (n.version() == (std::numeric_limits<DirtyVersion>::max)()) {
-			n.version() = node_t::init_sentinel();
-
-			fea::span<DirtyVersion> children_versions = n.children_versions();
-			for (DirtyVersion& child_ver : children_versions) {
-				child_ver = node_t::dirty_sentinel();
-			}
-
-			return;
-		}
-
-		++n.version();
-	}
+	void make_dirty(Id id);
 
 	// Mark a node as written to, but only if it's not dirty.
 	// This helps increase the version space if you call write many times.
 	// Has loop overhead.
-	void make_dirty_if_not(Id id) {
-		node_t& n = _nodes.at(id);
-
-		if (n.children().empty()) {
-			return;
-		}
-
-		DirtyVersion parent_ver = n.version();
-		fea::span<const DirtyVersion> children_versions = n.children_versions();
-
-		for (DirtyVersion child_ver : children_versions) {
-			if (child_ver == parent_ver) {
-				return make_dirty(id);
-			}
-		}
-	}
+	void make_dirty_if_not(Id id);
 
 	// Can you read a node? Does a node need an update?
-	bool is_dirty(Id id) const {
-		return recurse_up(id, [this](Id id, const node_t& n) {
-			fea::span<const Id> parents = n.parents();
-			for (Id pid : parents) {
-				const node_t& p_node = _nodes.at(pid);
-				if (p_node.version() != p_node.child_version(id)) {
-					return true;
-				}
-			}
-			return false;
-		});
-	}
+	bool is_dirty(Id id) const;
 
 	// Get a node's version.
-	DirtyVersion version(Id id) const {
-		return _nodes.at(id).version();
-	}
+	DirtyVersion version(Id id) const;
 
 	// Recurse on the dirty graph, but do not clean the nodes.
 	// Your lambda will be called recursively from parent to child.
@@ -619,161 +365,13 @@ struct lazy_graph {
 	// At the end of this call, all sub-nodes of dirty nodes are also dirty.
 	template <class Func>
 	void evaluate_dirty(Id id,
-			const fea::callback<Func, void(const callback_data_t&)>& func) {
-		if (_nodes.at(id).is_root()) {
-			return;
-		}
-
-		// Get back to front node subgraph.
-		fea::span<const Id> graph = evaluation_graph(id);
-
-		// Stored here to reuse memory.
-		detail::choose_vector_t<MaxParents, parent_status_t> parent_statuses;
-
-		// Now that we have the correct evaluation graph, evaluate it.
-		// Call the user funcion with the current node id and provide it's
-		// parent ids.
-		// Since we evaluate from top to bottom here, we can check if
-		// things are clean in a faster way (still relatively slow though).
-		// All we need to check is our parents version.
-		for (size_t i = 0; i < graph.size(); ++i) {
-			Id nid = graph[i];
-			node_t& n = _nodes.at(nid);
-
-			// Nodes that don't depend on anything never need to be updated.
-			if (n.is_root()) {
-				continue;
-			}
-
-			parent_statuses.clear();
-
-			// Check all my parents to see if I am really dirty.
-			// Also reset my version while we are looping.
-			bool dirty = false;
-			fea::span<const Id> parents = n.parents();
-
-			for (Id parent_id : parents) {
-				node_t& parent_node = _nodes.at(parent_id);
-
-				parent_statuses.push_back(
-						{ parent_id, &parent_node.node_data(), false });
-
-				DirtyVersion parent_version = parent_node.version();
-				DirtyVersion child_version = parent_node.child_version(nid);
-				if (child_version != parent_version) {
-					parent_statuses.back().was_dirty = true;
-					dirty = true;
-				}
-			}
-
-			if (!dirty) {
-				continue;
-			}
-
-			callback_data_t c_data;
-			c_data.id = nid;
-			c_data.node_data = &n.node_data();
-			c_data.parents = { parent_statuses.data(), parent_statuses.size() };
-
-			// And finally, call the user lambda. Provide it with its id and
-			// parent ids.
-			func(c_data);
-			make_dirty(nid);
-		}
-	}
+			const fea::callback<Func, void(const callback_data_t&)>& func);
 
 #if FEA_WITH_TBB
 	// Same as evaluate_dirty but threaded breaths.
 	template <class Func>
 	void evaluate_dirty_mt(Id id,
-			const fea::callback<Func, void(const callback_data_t&)>& func) {
-		if (_nodes.at(id).is_root()) {
-			return;
-		}
-
-		// Get back to front node subgraph.
-		fea::span<const Id> graph = evaluation_graph(id);
-
-
-		// We will keep a vector of currently evaluating nodes.
-		// If a child node depends on something that is evaluating, we lock
-		// since we've reached a new breadth of the graph.
-		std::vector<Id> evaluating;
-		tbb::task_group g;
-
-		// Now that we have the correct evaluation graph, evaluate it.
-		// Call the user funcion with the current node id.
-		// Since we evaluate from top to bottom here, we can check if
-		// things are clean in a faster way (still relatively slow though).
-		// All we need to check is our parents version.
-		for (size_t i = 0; i < graph.size(); ++i) {
-			Id nid = graph[i];
-			node_t& n = _nodes.at(nid);
-
-			// Nodes that don't depend on anything never need to be updated.
-			if (n.is_root()) {
-				continue;
-			}
-
-			// Here, we lock if any of our parent is being evaluated.
-			// This would be both problematic for data access and dirty
-			// checking.
-			for (size_t j = 0; j < evaluating.size(); ++j) {
-				if (n.has_parent(evaluating[j])) {
-					g.wait();
-					evaluating.clear();
-					break;
-				}
-			}
-
-			// We can check the dirtyness with parents on the main thread, since
-			// we guarantee you never execute at the same time as your parents.
-
-			// Check all my parents to see if I am really dirty.
-			// Also reset my version while we are looping.
-			bool dirty = false;
-			fea::span<const Id> parents = n.parents();
-
-			detail::choose_vector_t<MaxParents, parent_status_t>
-					parent_statuses;
-			parent_statuses.reserve(parents.size());
-
-			// eh, not great. better way to pass on parents to user funcion?
-			for (Id parent_id : parents) {
-				node_t& parent_node = _nodes.at(parent_id);
-
-				parent_statuses.push_back(
-						{ parent_id, &parent_node.node_data(), false });
-
-				DirtyVersion parent_version = parent_node.version();
-				DirtyVersion child_version = parent_node.child_version(nid);
-				if (child_version != parent_version) {
-					// set the callback bool to dirty
-					parent_statuses.back().was_dirty = true;
-					dirty = true;
-				}
-			}
-
-			if (!dirty) {
-				continue;
-			}
-
-			evaluating.push_back(nid);
-			g.run([p = std::move(parent_statuses), nid, node_d = &n.node_data(),
-						  func, this]() {
-				callback_data_t c_data;
-				c_data.id = nid;
-				c_data.node_data = node_d;
-				c_data.parents = { p.data(), p.size() };
-
-				// And finally, call the user lambda. Provide it with its id.
-				func(c_data);
-				make_dirty(nid);
-			});
-		}
-
-		g.wait();
-	}
+			const fea::callback<Func, void(const callback_data_t&)>& func);
 #endif
 
 	// Update a node.
@@ -783,29 +381,7 @@ struct lazy_graph {
 	// This call is heavy, so the overhead of std::function is minimized.
 	template <class Func>
 	void clean(Id id,
-			const fea::callback<Func, void(const callback_data_t&)>& func) {
-
-		// Call our evaluation function, and clean nodes.
-		evaluate_dirty(id,
-				fea::make_callback([&, this](const callback_data_t& c_data) {
-					// Clean the node.
-					for (const parent_status_t& ps : c_data.parents) {
-						if (!ps.was_dirty) {
-							continue;
-						}
-
-						// Get parent node.
-						node_t& parent_node = _nodes.at(ps.parent_id);
-						DirtyVersion parent_version = parent_node.version();
-						DirtyVersion& child_version
-								= parent_node.child_version(c_data.id);
-						child_version = parent_version;
-					}
-
-					// Call user function.
-					func(c_data);
-				}));
-	}
+			const fea::callback<Func, void(const callback_data_t&)>& func);
 
 	// Update multiple nodes.
 	// Your lambda will be called recursively from parent to child.
@@ -814,38 +390,13 @@ struct lazy_graph {
 	// This call is heavy, so the overhead of std::function is minimized.
 	template <class Func>
 	void clean(fea::span<const Id> ids,
-			const fea::callback<Func, void(const callback_data_t&)>& func) {
-		for (Id id : ids) {
-			clean(id, func);
-		}
-	}
+			const fea::callback<Func, void(const callback_data_t&)>& func);
 
 #if FEA_WITH_TBB
 	// Same as clean but threaded breadths.
 	template <class Func>
 	void clean_mt(Id id,
-			const fea::callback<Func, void(const callback_data_t&)>& func) {
-		// Call our evaluation function, and clean nodes.
-		evaluate_dirty_mt(id,
-				fea::make_callback([&, this](const callback_data_t& c_data) {
-					// Clean the node.
-					for (const parent_status_t& ps : c_data.parents) {
-						if (!ps.was_dirty) {
-							continue;
-						}
-
-						// Get parent node.
-						node_t& parent_node = _nodes.at(ps.parent_id);
-						DirtyVersion parent_version = parent_node.version();
-						DirtyVersion& child_version
-								= parent_node.child_version(c_data.id);
-						child_version = parent_version;
-					}
-
-					// Call user function.
-					func(c_data);
-				}));
-	}
+			const fea::callback<Func, void(const callback_data_t&)>& func);
 
 	// Update multiple node, thread as much as possible.
 	// Thread independent evaluation graphs and each's breadths (when
@@ -858,27 +409,7 @@ struct lazy_graph {
 	// during this evaluation!
 	template <class Func>
 	void clean_mt(fea::span<const Id> ids,
-			const fea::callback<Func, void(const callback_data_t&)>& func) {
-		// Figure out which graphs can run completely in parallel and which
-		// can't.
-		auto ind_data = are_eval_graphs_independent(ids);
-
-		// 'ind_data.independent_graphs' can be updated in parallel.
-		tbb::task_group g;
-		for (Id id : ind_data.independent_graphs) {
-			g.run([&, id, this]() { clean_mt(id, func); });
-		}
-
-		// 'ind_data.dependent_graphs' cannot be cleaned in parallel.
-		// But they are still independent from 'ind_data.independent_graphs'.
-		g.run_and_wait([&, this]() {
-			for (Id id : ind_data.dependent_graphs) {
-				// Clean one at a time. But you can still call clean_mt at
-				// least.
-				clean_mt(id, func);
-			}
-		});
-	}
+			const fea::callback<Func, void(const callback_data_t&)>& func);
 #endif
 
 	// Data representing independance information for evaluation graphs.
@@ -898,57 +429,7 @@ struct lazy_graph {
 	// without locks.
 	// This function is not const as it will compute the evaluation graphs if
 	// needed.
-	independance_data are_eval_graphs_independent(fea::span<const Id> nodes) {
-		if (nodes.size() < 2) {
-			return { std::vector<Id>(nodes.begin(), nodes.end()), {} };
-		}
-
-		independance_data ret;
-		std::vector<fea::span<const Id>> eval_graphs(nodes.size());
-
-		// TODO : thread this?
-		for (size_t i = 0; i < eval_graphs.size(); ++i) {
-			eval_graphs[i] = evaluation_graph(nodes[i]);
-		}
-
-		// Check which channels are independent.
-		// That is, if all channels of a graph aren't found in other graphs,
-		// it is independent and that whole graph can be run in parrallel to
-		// others.
-		// This works because each eval graph only has an id once (no
-		// duplicates). So if the node count is more than 1, another graph
-		// refers to that node. aka, not independent.
-
-		std::unordered_map<Id, size_t> node_counter;
-
-		for (size_t i = 0; i < eval_graphs.size(); ++i) {
-			for (Id id : eval_graphs[i]) {
-				++node_counter[id];
-			}
-		}
-
-		for (size_t i = 0; i < eval_graphs.size(); ++i) {
-			bool found = false;
-
-			for (Id id : eval_graphs[i]) {
-				assert(node_counter[id] != 0);
-
-				if (node_counter[id] != 1) {
-					ret.dependent_graphs.push_back(nodes[i]);
-					found = true;
-					break;
-				}
-			}
-
-			if (found) {
-				continue;
-			}
-
-			ret.independent_graphs.push_back(nodes[i]);
-		}
-
-		return ret;
-	}
+	independance_data are_eval_graphs_independent(fea::span<const Id> nodes);
 
 	// This returns the flattened graph required to clean a node.
 	// To visit the graph, loop left to right.
@@ -956,78 +437,11 @@ struct lazy_graph {
 	// needed. Recomputing the evaluation graph is heavy and mallocs, so we do
 	// it rarely. You shouldn't need to call this yourself, but it is exposed
 	// for debugging and testing purposes.
-	fea::span<const Id> evaluation_graph(Id node_id) {
-		node_t& n = _nodes.at(node_id);
-		if (!n.is_evaluation_graph_dirty()) {
-			return n.evaluation_graph();
-		}
-
-		// Clear the eval graph, we will recompute it all.
-		std::vector<Id>& eval_graph = n.evaluation_graph();
-		eval_graph.clear();
-
-		// Keep track of visited nodes in O(1).
-		// Also stores thier index in the graph. It is necessary for quick
-		// rotations.
-		std::unordered_map<Id, size_t> visited;
-
-		// Now go through parents and parents of parents.
-		// If a parent was previously visited, it must be moved earlier in
-		// the evaluation. It means that parent has a higher up dependency.
-		// During the recursion, the graph is sorted back to front. We
-		// reverse it at the end because it just makes things easier to
-		// reason about.
-		recurse_breadth_up(node_id, [&](Id id, const node_t&) {
-			if (visited.count(id) == 0) {
-				// Not previously visited, simply push back.
-				visited.insert({ id, eval_graph.size() });
-				eval_graph.push_back(id);
-			} else {
-				// A previous node also had this parent. So we must evaluate
-				// it before the current node. Which means move the parent
-				// to the end of the evaluation graph (remember back to
-				// front).
-
-				// will be at end
-				auto beg_it = eval_graph.begin() + visited[id];
-				// chunk to move before duplicate
-				auto pivot_it = beg_it + 1;
-
-				// update positions
-				visited[id] = eval_graph.size() - 1; // now at end
-
-				for (auto it = pivot_it; it != eval_graph.end(); ++it) {
-					// channels are moved 1 position to the left.
-					--visited[*it];
-				}
-
-				// move shared parent to the end, move everything else 1 pos
-				// to the left
-				std::rotate(beg_it, pivot_it, eval_graph.end());
-			}
-
-			return false; // go through whole graph
-		});
-
-		std::reverse(eval_graph.begin(), eval_graph.end());
-
-#if FEA_DEBUG
-		// Make sure there are no duplicate nodes (aka, duplicate messages).
-		std::vector<Id> dup = eval_graph;
-		std::sort(dup.begin(), dup.end());
-		auto it = std::unique(dup.begin(), dup.end());
-		assert(it == dup.end());
-#endif
-
-		n.clean_evaluation_graph();
-		return n.evaluation_graph();
-	}
+	fea::span<const Id> evaluation_graph(Id node_id);
 
 	// Get the internal node representation.
 	// Careful with this call, you are on your own.
-	const node_t& internal_node(Id id) const {
-		return _nodes.at(id);
-	}
+	const node_t& internal_node(Id id) const;
 
 
 	// Recurse downward, by breadth.
@@ -1035,58 +449,14 @@ struct lazy_graph {
 	// We pass the node on to minimize map lookups.
 	// Your function should return true to stop recursion.
 	template <class Func>
-	bool recurse_breadth_down(Id id, Func&& func) const {
-		// We must gather the children in a container graph.
-		// We will iterate through this as long as there are new children,
-		// or the user function returns true.
-		std::vector<Id> graph;
-
-		// Prime it.
-		graph.push_back(id);
-
-		for (size_t i = 0; i < graph.size(); ++i) {
-			Id mid = graph[i];
-			const node_t& n = _nodes.at(mid);
-
-			if (func(mid, n)) {
-				return true;
-			}
-
-			fea::span<const Id> children = n.children();
-
-#if FEA_GCC
-			// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=106199
-			for (const Id& mid : children) {
-				graph.push_back(mid);
-			}
-#else
-			graph.insert(graph.end(), children.begin(), children.end());
-#endif
-		}
-
-		return false;
-	}
+	bool recurse_breadth_down(Id id, Func&& func) const;
 
 	// Recurse upward.
 	// Your function should accept both an id and a node reference.
 	// We pass the node on to minimize map lookups.
 	// Your function should return true to stop recursion.
 	template <class Func>
-	bool recurse_up(Id id, Func&& func) const {
-		const node_t& n = _nodes.at(id);
-		if (func(id, n)) {
-			return true;
-		}
-
-		fea::span<const Id> parents = n.parents();
-		for (Id parent_id : parents) {
-			if (recurse_up(parent_id, func)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
+	bool recurse_up(Id id, Func&& func) const;
 
 	// Recurse upward with filtered subgraphs.
 	// Your function should accept both an id and a node reference.
@@ -1094,50 +464,14 @@ struct lazy_graph {
 	// If your callback returns true, the current node's parents aren't visited.
 	// The rest of the graph still continues to recurse.
 	template <class Func>
-	void recurse_up_filtered(Id id, Func&& func) const {
-		const node_t& n = _nodes.at(id);
-		if (func(id, n)) {
-			return;
-		}
-
-		fea::span<const Id> parents = n.parents();
-		for (Id parent_id : parents) {
-			recurse_up_filtered(parent_id, func);
-		}
-	}
+	void recurse_up_filtered(Id id, Func&& func) const;
 
 	// Recurse upward, by breadths.
 	// Your function should accept both an id and a node reference.
 	// We pass the node on to minimize map lookups.
 	// Your function should return true to stop recursion.
 	template <class Func>
-	bool recurse_breadth_up(Id id, Func&& func) const {
-		// We need to gather a graph to recurse upwards.
-		// This graph *will* contain duplicates, it is up to the user
-		// function to cull them if desired.
-		std::vector<Id> graph;
-
-		// Prime it.
-		graph.push_back(id);
-
-		// As long as there are parents, push them back in the vector and
-		// continue recursing upwards.
-		for (size_t i = 0; i < graph.size(); ++i) {
-			Id mid = graph[i];
-			const node_t& n = _nodes.at(mid);
-
-			if (func(mid, n)) {
-				return true;
-			}
-
-			fea::span<const Id> parents = n.parents();
-			for (Id parent_id : parents) {
-				graph.push_back(parent_id);
-			}
-		}
-
-		return false;
-	}
+	bool recurse_breadth_up(Id id, Func&& func) const;
 
 	// Recurse upward, by breadths, with filtered subgraphs.
 	// Your function should accept both an id and a node reference.
@@ -1145,71 +479,1019 @@ struct lazy_graph {
 	// If your callback returns true, the current node's parents aren't visited.
 	// The rest of the graph still continues to recurse.
 	template <class Func>
-	void recurse_breadth_up_filtered(Id id, Func&& func) const {
-		// We need to gather a graph to recurse upwards.
-		// This graph *will* contain duplicates, it is up to the user
-		// function to cull them if desired.
-		std::vector<Id> graph;
+	void recurse_breadth_up_filtered(Id id, Func&& func) const;
 
-		// Prime it.
-		graph.push_back(id);
+private:
+	UnorderedContainer<Id, node_t> _nodes;
+};
+} // namespace fea
 
-		// As long as there are parents, push them back in the vector and
-		// continue recursing upwards.
-		// Unless they are filtered out.
-		for (size_t i = 0; i < graph.size(); ++i) {
-			Id mid = graph[i];
-			const node_t& n = _nodes.at(mid);
 
-			if (func(mid, n)) {
-				continue;
+// Implementation
+namespace fea {
+// Cleanup the signatures.
+#define FEA_NODE_TEMPLATE \
+	class Id, class NodeData, class DirtyVersion, size_t MaxParents, \
+			size_t MaxChildren
+
+#define FEA_NODE_TARGS Id, NodeData, DirtyVersion, MaxParents, MaxChildren
+
+
+template <FEA_NODE_TEMPLATE>
+bool node<FEA_NODE_TARGS>::is_root() const {
+	return _parents.empty();
+}
+
+template <FEA_NODE_TEMPLATE>
+bool node<FEA_NODE_TARGS>::has_children() const {
+	return !_children.empty();
+}
+
+template <FEA_NODE_TEMPLATE>
+bool node<FEA_NODE_TARGS>::has_child(Id child_id) const {
+	auto it = std::find(_children.begin(), _children.end(), child_id);
+	return it != _children.end();
+}
+
+template <FEA_NODE_TEMPLATE>
+void node<FEA_NODE_TARGS>::add_child(Id child_id) {
+	add_child(child_id, std::conditional_t < MaxChildren == 0, std::true_type,
+			std::false_type > {});
+}
+
+template <FEA_NODE_TEMPLATE>
+void node<FEA_NODE_TARGS>::remove_child(Id child_id) {
+	auto it = std::find(_children.begin(), _children.end(), child_id);
+	if (it == _children.end()) {
+		return;
+	}
+
+	if (it != std::prev(_children.end())) {
+		*it = _children.back();
+
+		size_t i = std::distance(_children.begin(), it);
+		_children_versions[i] = _children_versions.back();
+	}
+
+	_children.pop_back();
+	_children_versions.pop_back();
+	assert(_children.size() == _children_versions.size());
+}
+
+template <FEA_NODE_TEMPLATE>
+bool node<FEA_NODE_TARGS>::has_parent(Id parent_id) const {
+	return std::find(_parents.begin(), _parents.end(), parent_id)
+		!= _parents.end();
+}
+
+template <FEA_NODE_TEMPLATE>
+void node<FEA_NODE_TARGS>::add_parent(Id parent_id) {
+	add_parent(parent_id, std::conditional_t < MaxParents == 0, std::true_type,
+			std::false_type > {});
+}
+
+template <FEA_NODE_TEMPLATE>
+void node<FEA_NODE_TARGS>::remove_parent(Id parent_id) {
+	auto it = std::find(_parents.begin(), _parents.end(), parent_id);
+	assert(it != _parents.end());
+	_parents.erase(it);
+	_dirty_evaluation_graph = true;
+}
+
+template <FEA_NODE_TEMPLATE>
+fea::span<const Id> node<FEA_NODE_TARGS>::children() const {
+	return { _children.data(), _children.size() };
+}
+
+template <FEA_NODE_TEMPLATE>
+fea::span<const Id> node<FEA_NODE_TARGS>::parents() const {
+	return { _parents.data(), _parents.size() };
+}
+
+template <FEA_NODE_TEMPLATE>
+bool node<FEA_NODE_TARGS>::is_evaluation_graph_dirty() const {
+	return _dirty_evaluation_graph;
+}
+
+template <FEA_NODE_TEMPLATE>
+void node<FEA_NODE_TARGS>::clean_evaluation_graph() {
+	_dirty_evaluation_graph = false;
+}
+
+template <FEA_NODE_TEMPLATE>
+fea::span<const Id> node<FEA_NODE_TARGS>::evaluation_graph() const {
+	if (_dirty_evaluation_graph) {
+		fea::maybe_throw(
+				__FUNCTION__, __LINE__, "reading dirty evaluation graph");
+	}
+	return _evaluation_graph;
+}
+
+template <FEA_NODE_TEMPLATE>
+std::vector<Id>& node<FEA_NODE_TARGS>::evaluation_graph() {
+	return _evaluation_graph;
+}
+
+template <FEA_NODE_TEMPLATE>
+const NodeData& node<FEA_NODE_TARGS>::node_data() const {
+	return _node_data;
+}
+
+template <FEA_NODE_TEMPLATE>
+NodeData& node<FEA_NODE_TARGS>::node_data() {
+	return _node_data;
+}
+
+template <FEA_NODE_TEMPLATE>
+DirtyVersion node<FEA_NODE_TARGS>::version() const {
+	return _dirty_version;
+}
+
+template <FEA_NODE_TEMPLATE>
+DirtyVersion& node<FEA_NODE_TARGS>::version() {
+	return _dirty_version;
+}
+
+template <FEA_NODE_TEMPLATE>
+const DirtyVersion& node<FEA_NODE_TARGS>::child_version(Id child_id) const {
+	auto it = std::find(_children.begin(), _children.end(), child_id);
+	assert(it != _children.end());
+
+	size_t idx = std::distance(_children.begin(), it);
+	assert(idx < _children_versions.size());
+	return _children_versions[idx];
+}
+
+template <FEA_NODE_TEMPLATE>
+DirtyVersion& node<FEA_NODE_TARGS>::child_version(Id child_id) {
+	return const_cast<DirtyVersion&>(
+			static_cast<const node*>(this)->child_version(child_id));
+}
+
+template <FEA_NODE_TEMPLATE>
+fea::span<const DirtyVersion> node<FEA_NODE_TARGS>::children_versions() const {
+	return { _children_versions.data(), _children_versions.size() };
+}
+
+template <FEA_NODE_TEMPLATE>
+fea::span<DirtyVersion> node<FEA_NODE_TARGS>::children_versions() {
+	return { _children_versions.data(), _children_versions.size() };
+}
+
+template <FEA_NODE_TEMPLATE>
+constexpr DirtyVersion node<FEA_NODE_TARGS>::dirty_sentinel() {
+	return 0;
+}
+
+template <FEA_NODE_TEMPLATE>
+constexpr DirtyVersion node<FEA_NODE_TARGS>::clean_sentinel() {
+	return 1;
+}
+
+template <FEA_NODE_TEMPLATE>
+constexpr DirtyVersion node<FEA_NODE_TARGS>::init_sentinel() {
+	return 2;
+}
+
+template <FEA_NODE_TEMPLATE>
+void node<FEA_NODE_TARGS>::add_child(Id child_id, std::false_type) {
+	if (_children.size() == MaxChildren) {
+		fea::maybe_throw(
+				__FUNCTION__, __LINE__, "trying to add too many children");
+	}
+
+	add_child(child_id, std::true_type{});
+}
+
+template <FEA_NODE_TEMPLATE>
+void node<FEA_NODE_TARGS>::add_child(Id child_id, std::true_type) {
+	_children.push_back(child_id);
+	_children_versions.push_back(dirty_sentinel());
+	assert(_children.size() == _children_versions.size());
+}
+
+template <FEA_NODE_TEMPLATE>
+void node<FEA_NODE_TARGS>::add_parent(Id parent_id, std::false_type) {
+	if (_parents.size() == MaxParents) {
+		fea::maybe_throw(
+				__FUNCTION__, __LINE__, "trying to add too many parents");
+	}
+
+	add_parent(parent_id, std::true_type{});
+}
+
+template <FEA_NODE_TEMPLATE>
+void node<FEA_NODE_TARGS>::add_parent(Id parent_id, std::true_type) {
+	_parents.push_back(parent_id);
+	_dirty_evaluation_graph = true;
+}
+
+
+template <class Id, class NodeData /*= char*/>
+fea::parent_status<Id, NodeData>::parent_status(
+		Id id, const NodeData* n, bool dirty)
+		: node_data(n)
+		, parent_id(id)
+		, was_dirty(dirty) {
+}
+
+
+// Cleanup the signatures.
+#define FEA_LAZY_GRAPH_TEMPLATE \
+	class Id, class NodeData, class DirtyVersion, \
+			template <class...> \
+			class UnorderedContainer, size_t MaxParents, size_t MaxChildren
+
+#define FEA_LAZY_GRAPH_TARGS \
+	Id, NodeData, DirtyVersion, UnorderedContainer, MaxParents, MaxChildren
+
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+const NodeData& lazy_graph<FEA_LAZY_GRAPH_TARGS>::node_data(Id id) const {
+	return _nodes.at(id).node_data();
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+NodeData& lazy_graph<FEA_LAZY_GRAPH_TARGS>::node_data(Id id) {
+	return _nodes.at(id).node_data();
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+bool lazy_graph<FEA_LAZY_GRAPH_TARGS>::is_root(Id id) const {
+	return _nodes.at(id).is_root();
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+bool lazy_graph<FEA_LAZY_GRAPH_TARGS>::has_child(
+		Id child_id, Id parent_id) const {
+	return _nodes.at(parent_id).has_child(child_id);
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+bool lazy_graph<FEA_LAZY_GRAPH_TARGS>::has_children(Id id) const {
+	return _nodes.at(id).has_children();
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+bool lazy_graph<FEA_LAZY_GRAPH_TARGS>::has_parent(
+		Id child_id, Id parent_id) const {
+	// TODO : deal with children that don't exist or continue throwing?
+	return _nodes.at(child_id).has_parent(parent_id);
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+bool lazy_graph<FEA_LAZY_GRAPH_TARGS>::has_parents(Id id) const {
+	return !is_root(id);
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+bool lazy_graph<FEA_LAZY_GRAPH_TARGS>::is_invalid_child(
+		Id child_id, Id parent_id) const {
+	if (parent_id == child_id) {
+		return true;
+	}
+
+	// If the nodes don't exist, then there is no loop or problem. So it is
+	// valid.
+	// AKA, if parent doesn't exist, it will be a root with no child.
+	// If child doesn't exist, parent doesn't already have child and there
+	// is no possibility for a loop.
+	auto parent_it = _nodes.find(parent_id);
+	auto child_it = _nodes.find(child_id);
+	if (parent_it == _nodes.end() || child_it == _nodes.end()) {
+		return false;
+	}
+
+	// Already has dependency?
+	if (parent_it->second.has_child(child_id)) {
+		assert(child_it->second.has_parent(parent_id));
+		return true;
+	}
+
+	// TODO : Benchmark threaded recursion.
+	return recurse_up(parent_id,
+			[&](Id, const node_t& n) { return n.has_parent(child_id); });
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+void lazy_graph<FEA_LAZY_GRAPH_TARGS>::add_node(Id id) {
+	_nodes.insert({ id, {} });
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+void lazy_graph<FEA_LAZY_GRAPH_TARGS>::remove_node(Id id) {
+	auto it = _nodes.find(id);
+	if (it == _nodes.end()) {
+		return;
+	}
+
+	node_t& n = it->second;
+
+	fea::span<const Id> parents = n.parents();
+	for (Id parent_id : parents) {
+		_nodes.at(parent_id).remove_child(id);
+	}
+
+	fea::span<const Id> children = n.children();
+	for (Id child_id : children) {
+		_nodes.at(child_id).remove_parent(id);
+	}
+
+	_nodes.erase(it);
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+void lazy_graph<FEA_LAZY_GRAPH_TARGS>::remove_subgraph(Id node_id) {
+	if (_nodes.count(node_id) == 0) {
+		return;
+	}
+
+	// Collect candidate nodes to remove.
+	// The end result is a breadth ordered vector, front to back.
+	std::vector<Id> subgraph;
+
+	recurse_breadth_down(node_id, [&](Id id, const node_t&) {
+		subgraph.push_back(id);
+		return false; // recurse whole graph
+	});
+
+	// We must force remove the top node manually. This is because it could
+	// have other parents, but we don't care about that.
+	remove_node(subgraph.front());
+	subgraph.erase(subgraph.begin());
+
+	// Now, go through the subgraph and remove nodes that would become
+	// leaves. We keep the duplicates, as a node could have multiple parents
+	// that end up being removed.
+	for (Id parent_id : subgraph) {
+		if (_nodes.count(parent_id) == 0) {
+			continue;
+		}
+
+		if (!has_parents(parent_id)) {
+			remove_node(parent_id);
+		}
+	}
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+bool lazy_graph<FEA_LAZY_GRAPH_TARGS>::add_dependency(
+		Id child_id, Id parent_id) {
+	// Would this dependency create a loop?
+	// Call this before creating the nodes, as it is a shortcut.
+	if (is_invalid_child(child_id, parent_id)) {
+		return false;
+	}
+
+	// Inserts if not already in.
+	// Invalidates iterators.
+	{
+		node_t& child = _nodes.insert({ child_id, {} }).first->second;
+		child.add_parent(parent_id);
+	}
+	{
+		node_t& parent = _nodes.insert({ parent_id, {} }).first->second;
+		parent.add_child(child_id);
+	}
+
+	return true;
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+void lazy_graph<FEA_LAZY_GRAPH_TARGS>::remove_dependency(
+		Id child_id, Id parent_id) {
+	node_t& child = _nodes.at(child_id);
+	if (!child.has_parent(parent_id)) {
+		assert(!_nodes.at(parent_id).has_child(child_id));
+		return;
+	}
+
+	node_t& parent = _nodes.at(parent_id);
+
+	child.remove_parent(parent_id);
+	parent.remove_child(child_id);
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+bool lazy_graph<FEA_LAZY_GRAPH_TARGS>::contains(Id id) const {
+	return _nodes.count(id) != 0;
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+bool lazy_graph<FEA_LAZY_GRAPH_TARGS>::empty() const {
+	return _nodes.empty();
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+void lazy_graph<FEA_LAZY_GRAPH_TARGS>::clear() {
+	_nodes.clear();
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+fea::span<const Id> lazy_graph<FEA_LAZY_GRAPH_TARGS>::children(Id id) const {
+	return _nodes.at(id).children();
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+fea::span<const Id> lazy_graph<FEA_LAZY_GRAPH_TARGS>::parents(Id id) const {
+	return _nodes.at(id).parents();
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+void lazy_graph<FEA_LAZY_GRAPH_TARGS>::make_dirty(Id id) {
+	node_t& n = _nodes.at(id);
+
+	// We've reached the end of the version space.
+	// Reset version to init_sentinel and set all children to
+	// dirty_sentinel. Happens rarely.
+	if (n.version() == (std::numeric_limits<DirtyVersion>::max)()) {
+		n.version() = node_t::init_sentinel();
+
+		fea::span<DirtyVersion> children_versions = n.children_versions();
+		for (DirtyVersion& child_ver : children_versions) {
+			child_ver = node_t::dirty_sentinel();
+		}
+
+		return;
+	}
+
+	++n.version();
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+void lazy_graph<FEA_LAZY_GRAPH_TARGS>::make_dirty_if_not(Id id) {
+	node_t& n = _nodes.at(id);
+
+	if (n.children().empty()) {
+		return;
+	}
+
+	DirtyVersion parent_ver = n.version();
+	fea::span<const DirtyVersion> children_versions = n.children_versions();
+
+	for (DirtyVersion child_ver : children_versions) {
+		if (child_ver == parent_ver) {
+			return make_dirty(id);
+		}
+	}
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+bool lazy_graph<FEA_LAZY_GRAPH_TARGS>::is_dirty(Id id) const {
+	return recurse_up(id, [this](Id id, const node_t& n) {
+		fea::span<const Id> parents = n.parents();
+		for (Id pid : parents) {
+			const node_t& p_node = _nodes.at(pid);
+			if (p_node.version() != p_node.child_version(id)) {
+				return true;
 			}
+		}
+		return false;
+	});
+}
 
-			fea::span<const Id> parents = n.parents();
-			for (Id parent_id : parents) {
-				graph.push_back(parent_id);
+template <FEA_LAZY_GRAPH_TEMPLATE>
+DirtyVersion lazy_graph<FEA_LAZY_GRAPH_TARGS>::version(Id id) const {
+	return _nodes.at(id).version();
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+template <class Func>
+void lazy_graph<FEA_LAZY_GRAPH_TARGS>::evaluate_dirty(
+		Id id, const fea::callback<Func, void(const callback_data_t&)>& func) {
+	if (_nodes.at(id).is_root()) {
+		return;
+	}
+
+	// Get back to front node subgraph.
+	fea::span<const Id> graph = evaluation_graph(id);
+
+	// Stored here to reuse memory.
+	detail::choose_vector_t<MaxParents, parent_status_t> parent_statuses;
+
+	// Now that we have the correct evaluation graph, evaluate it.
+	// Call the user funcion with the current node id and provide it's
+	// parent ids.
+	// Since we evaluate from top to bottom here, we can check if
+	// things are clean in a faster way (still relatively slow though).
+	// All we need to check is our parents version.
+	for (size_t i = 0; i < graph.size(); ++i) {
+		Id nid = graph[i];
+		node_t& n = _nodes.at(nid);
+
+		// Nodes that don't depend on anything never need to be updated.
+		if (n.is_root()) {
+			continue;
+		}
+
+		parent_statuses.clear();
+
+		// Check all my parents to see if I am really dirty.
+		// Also reset my version while we are looping.
+		bool dirty = false;
+		fea::span<const Id> parents = n.parents();
+
+		for (Id parent_id : parents) {
+			node_t& parent_node = _nodes.at(parent_id);
+
+			parent_statuses.push_back(
+					{ parent_id, &parent_node.node_data(), false });
+
+			DirtyVersion parent_version = parent_node.version();
+			DirtyVersion child_version = parent_node.child_version(nid);
+			if (child_version != parent_version) {
+				parent_statuses.back().was_dirty = true;
+				dirty = true;
 			}
+		}
+
+		if (!dirty) {
+			continue;
+		}
+
+		callback_data_t c_data;
+		c_data.id = nid;
+		c_data.node_data = &n.node_data();
+		c_data.parents = { parent_statuses.data(), parent_statuses.size() };
+
+		// And finally, call the user lambda. Provide it with its id and
+		// parent ids.
+		func(c_data);
+		make_dirty(nid);
+	}
+}
+
+#if FEA_WITH_TBB
+template <FEA_LAZY_GRAPH_TEMPLATE>
+template <class Func>
+void lazy_graph<FEA_LAZY_GRAPH_TARGS>::evaluate_dirty_mt(
+		Id id, const fea::callback<Func, void(const callback_data_t&)>& func) {
+	if (_nodes.at(id).is_root()) {
+		return;
+	}
+
+	// Get back to front node subgraph.
+	fea::span<const Id> graph = evaluation_graph(id);
+
+
+	// We will keep a vector of currently evaluating nodes.
+	// If a child node depends on something that is evaluating, we lock
+	// since we've reached a new breadth of the graph.
+	std::vector<Id> evaluating;
+	tbb::task_group g;
+
+	// Now that we have the correct evaluation graph, evaluate it.
+	// Call the user funcion with the current node id.
+	// Since we evaluate from top to bottom here, we can check if
+	// things are clean in a faster way (still relatively slow though).
+	// All we need to check is our parents version.
+	for (size_t i = 0; i < graph.size(); ++i) {
+		Id nid = graph[i];
+		node_t& n = _nodes.at(nid);
+
+		// Nodes that don't depend on anything never need to be updated.
+		if (n.is_root()) {
+			continue;
+		}
+
+		// Here, we lock if any of our parent is being evaluated.
+		// This would be both problematic for data access and dirty
+		// checking.
+		for (size_t j = 0; j < evaluating.size(); ++j) {
+			if (n.has_parent(evaluating[j])) {
+				g.wait();
+				evaluating.clear();
+				break;
+			}
+		}
+
+		// We can check the dirtyness with parents on the main thread, since
+		// we guarantee you never execute at the same time as your parents.
+
+		// Check all my parents to see if I am really dirty.
+		// Also reset my version while we are looping.
+		bool dirty = false;
+		fea::span<const Id> parents = n.parents();
+
+		detail::choose_vector_t<MaxParents, parent_status_t> parent_statuses;
+		parent_statuses.reserve(parents.size());
+
+		// eh, not great. better way to pass on parents to user funcion?
+		for (Id parent_id : parents) {
+			node_t& parent_node = _nodes.at(parent_id);
+
+			parent_statuses.push_back(
+					{ parent_id, &parent_node.node_data(), false });
+
+			DirtyVersion parent_version = parent_node.version();
+			DirtyVersion child_version = parent_node.child_version(nid);
+			if (child_version != parent_version) {
+				// set the callback bool to dirty
+				parent_statuses.back().was_dirty = true;
+				dirty = true;
+			}
+		}
+
+		if (!dirty) {
+			continue;
+		}
+
+		evaluating.push_back(nid);
+		g.run([p = std::move(parent_statuses), nid, node_d = &n.node_data(),
+					  func, this]() {
+			callback_data_t c_data;
+			c_data.id = nid;
+			c_data.node_data = node_d;
+			c_data.parents = { p.data(), p.size() };
+
+			// And finally, call the user lambda. Provide it with its id.
+			func(c_data);
+			make_dirty(nid);
+		});
+	}
+
+	g.wait();
+}
+#endif
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+template <class Func>
+void lazy_graph<FEA_LAZY_GRAPH_TARGS>::clean(
+		Id id, const fea::callback<Func, void(const callback_data_t&)>& func) {
+	// Call our evaluation function, and clean nodes.
+	evaluate_dirty(
+			id, fea::make_callback([&, this](const callback_data_t& c_data) {
+				// Clean the node.
+				for (const parent_status_t& ps : c_data.parents) {
+					if (!ps.was_dirty) {
+						continue;
+					}
+
+					// Get parent node.
+					node_t& parent_node = _nodes.at(ps.parent_id);
+					DirtyVersion parent_version = parent_node.version();
+					DirtyVersion& child_version
+							= parent_node.child_version(c_data.id);
+					child_version = parent_version;
+				}
+
+				// Call user function.
+				func(c_data);
+			}));
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+template <class Func>
+void lazy_graph<FEA_LAZY_GRAPH_TARGS>::clean(fea::span<const Id> ids,
+		const fea::callback<Func, void(const callback_data_t&)>& func) {
+	for (Id id : ids) {
+		clean(id, func);
+	}
+}
+
+#if FEA_WITH_TBB
+template <FEA_LAZY_GRAPH_TEMPLATE>
+template <class Func>
+void lazy_graph<FEA_LAZY_GRAPH_TARGS>::clean_mt(
+		Id id, const fea::callback<Func, void(const callback_data_t&)>& func) {
+	// Call our evaluation function, and clean nodes.
+	evaluate_dirty_mt(
+			id, fea::make_callback([&, this](const callback_data_t& c_data) {
+				// Clean the node.
+				for (const parent_status_t& ps : c_data.parents) {
+					if (!ps.was_dirty) {
+						continue;
+					}
+
+					// Get parent node.
+					node_t& parent_node = _nodes.at(ps.parent_id);
+					DirtyVersion parent_version = parent_node.version();
+					DirtyVersion& child_version
+							= parent_node.child_version(c_data.id);
+					child_version = parent_version;
+				}
+
+				// Call user function.
+				func(c_data);
+			}));
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+template <class Func>
+void lazy_graph<FEA_LAZY_GRAPH_TARGS>::clean_mt(fea::span<const Id> ids,
+		const fea::callback<Func, void(const callback_data_t&)>& func) {
+	// Figure out which graphs can run completely in parallel and which
+	// can't.
+	auto ind_data = are_eval_graphs_independent(ids);
+
+	// 'ind_data.independent_graphs' can be updated in parallel.
+	tbb::task_group g;
+	for (Id id : ind_data.independent_graphs) {
+		g.run([&, id, this]() { clean_mt(id, func); });
+	}
+
+	// 'ind_data.dependent_graphs' cannot be cleaned in parallel.
+	// But they are still independent from 'ind_data.independent_graphs'.
+	g.run_and_wait([&, this]() {
+		for (Id id : ind_data.dependent_graphs) {
+			// Clean one at a time. But you can still call clean_mt at
+			// least.
+			clean_mt(id, func);
+		}
+	});
+}
+#endif
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+auto lazy_graph<FEA_LAZY_GRAPH_TARGS>::are_eval_graphs_independent(
+		fea::span<const Id> nodes) -> independance_data {
+	if (nodes.size() < 2) {
+		return { std::vector<Id>(nodes.begin(), nodes.end()), {} };
+	}
+
+	independance_data ret;
+	std::vector<fea::span<const Id>> eval_graphs(nodes.size());
+
+	// TODO : thread this?
+	for (size_t i = 0; i < eval_graphs.size(); ++i) {
+		eval_graphs[i] = evaluation_graph(nodes[i]);
+	}
+
+	// Check which channels are independent.
+	// That is, if all channels of a graph aren't found in other graphs,
+	// it is independent and that whole graph can be run in parrallel to
+	// others.
+	// This works because each eval graph only has an id once (no
+	// duplicates). So if the node count is more than 1, another graph
+	// refers to that node. aka, not independent.
+
+	std::unordered_map<Id, size_t> node_counter;
+
+	for (size_t i = 0; i < eval_graphs.size(); ++i) {
+		for (Id id : eval_graphs[i]) {
+			++node_counter[id];
 		}
 	}
 
-private:
-	//// Recurse downward.
-	//// Your function should accept both an id and a node reference.
-	//// We pass the node on to minimize map lookups.
-	//// Your function should return true to stop recursion.
-	// template <class Func>
-	// bool recurse_down(Id id, Func&& func) const {
-	//	const node_t& n = _nodes.at(id);
-	//	if (func(id, n)) {
-	//		return true;
-	//	}
+	for (size_t i = 0; i < eval_graphs.size(); ++i) {
+		bool found = false;
 
-	//	const std::vector<Id>& children = n.children();
-	//	for (Id child_id : children) {
-	//		if (recurse_down(child_id, func)) {
-	//			return true;
-	//		}
-	//	}
+		for (Id id : eval_graphs[i]) {
+			assert(node_counter[id] != 0);
 
-	//	return false;
-	//}
-	// template <class Func>
-	// bool recurse_down(Id id, Func&& func) {
-	//	node_t& n = _nodes.at(id);
-	//	if (func(id, n)) {
-	//		return true;
-	//	}
+			if (node_counter[id] != 1) {
+				ret.dependent_graphs.push_back(nodes[i]);
+				found = true;
+				break;
+			}
+		}
 
-	//	const std::vector<Id>& children = n.children();
-	//	for (Id child_id : children) {
-	//		if (recurse_down(child_id, func)) {
-	//			return true;
-	//		}
-	//	}
+		if (found) {
+			continue;
+		}
 
-	//	return false;
-	//}
+		ret.independent_graphs.push_back(nodes[i]);
+	}
 
-	UnorderedContainer<Id, node_t> _nodes;
-}; // namespace fea
+	return ret;
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+fea::span<const Id> lazy_graph<FEA_LAZY_GRAPH_TARGS>::evaluation_graph(
+		Id node_id) {
+	node_t& n = _nodes.at(node_id);
+	if (!n.is_evaluation_graph_dirty()) {
+		return n.evaluation_graph();
+	}
+
+	// Clear the eval graph, we will recompute it all.
+	std::vector<Id>& eval_graph = n.evaluation_graph();
+	eval_graph.clear();
+
+	// Keep track of visited nodes in O(1).
+	// Also stores thier index in the graph. It is necessary for quick
+	// rotations.
+	std::unordered_map<Id, size_t> visited;
+
+	// Now go through parents and parents of parents.
+	// If a parent was previously visited, it must be moved earlier in
+	// the evaluation. It means that parent has a higher up dependency.
+	// During the recursion, the graph is sorted back to front. We
+	// reverse it at the end because it just makes things easier to
+	// reason about.
+	recurse_breadth_up(node_id, [&](Id id, const node_t&) {
+		if (visited.count(id) == 0) {
+			// Not previously visited, simply push back.
+			visited.insert({ id, eval_graph.size() });
+			eval_graph.push_back(id);
+		} else {
+			// A previous node also had this parent. So we must evaluate
+			// it before the current node. Which means move the parent
+			// to the end of the evaluation graph (remember back to
+			// front).
+
+			// will be at end
+			auto beg_it = eval_graph.begin() + visited[id];
+			// chunk to move before duplicate
+			auto pivot_it = beg_it + 1;
+
+			// update positions
+			visited[id] = eval_graph.size() - 1; // now at end
+
+			for (auto it = pivot_it; it != eval_graph.end(); ++it) {
+				// channels are moved 1 position to the left.
+				--visited[*it];
+			}
+
+			// move shared parent to the end, move everything else 1 pos
+			// to the left
+			std::rotate(beg_it, pivot_it, eval_graph.end());
+		}
+
+		return false; // go through whole graph
+	});
+
+	std::reverse(eval_graph.begin(), eval_graph.end());
+
+#if FEA_DEBUG
+	// Make sure there are no duplicate nodes (aka, duplicate messages).
+	std::vector<Id> dup = eval_graph;
+	std::sort(dup.begin(), dup.end());
+	auto it = std::unique(dup.begin(), dup.end());
+	assert(it == dup.end());
+#endif
+
+	n.clean_evaluation_graph();
+	return n.evaluation_graph();
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+auto lazy_graph<FEA_LAZY_GRAPH_TARGS>::internal_node(Id id) const
+		-> const node_t& {
+	return _nodes.at(id);
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+template <class Func>
+bool lazy_graph<FEA_LAZY_GRAPH_TARGS>::recurse_breadth_down(
+		Id id, Func&& func) const {
+	// We must gather the children in a container graph.
+	// We will iterate through this as long as there are new children,
+	// or the user function returns true.
+	std::vector<Id> graph;
+
+	// Prime it.
+	graph.push_back(id);
+
+	for (size_t i = 0; i < graph.size(); ++i) {
+		Id mid = graph[i];
+		const node_t& n = _nodes.at(mid);
+
+		if (func(mid, n)) {
+			return true;
+		}
+
+		fea::span<const Id> children = n.children();
+
+#if FEA_GCC
+		// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=106199
+		for (const Id& mid : children) {
+			graph.push_back(mid);
+		}
+#else
+		graph.insert(graph.end(), children.begin(), children.end());
+#endif
+	}
+
+	return false;
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+template <class Func>
+bool lazy_graph<FEA_LAZY_GRAPH_TARGS>::recurse_up(Id id, Func&& func) const {
+	const node_t& n = _nodes.at(id);
+	if (func(id, n)) {
+		return true;
+	}
+
+	fea::span<const Id> parents = n.parents();
+	for (Id parent_id : parents) {
+		if (recurse_up(parent_id, func)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+template <class Func>
+void lazy_graph<FEA_LAZY_GRAPH_TARGS>::recurse_up_filtered(
+		Id id, Func&& func) const {
+	const node_t& n = _nodes.at(id);
+	if (func(id, n)) {
+		return;
+	}
+
+	fea::span<const Id> parents = n.parents();
+	for (Id parent_id : parents) {
+		recurse_up_filtered(parent_id, func);
+	}
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+template <class Func>
+bool lazy_graph<FEA_LAZY_GRAPH_TARGS>::recurse_breadth_up(
+		Id id, Func&& func) const {
+	// We need to gather a graph to recurse upwards.
+	// This graph *will* contain duplicates, it is up to the user
+	// function to cull them if desired.
+	std::vector<Id> graph;
+
+	// Prime it.
+	graph.push_back(id);
+
+	// As long as there are parents, push them back in the vector and
+	// continue recursing upwards.
+	for (size_t i = 0; i < graph.size(); ++i) {
+		Id mid = graph[i];
+		const node_t& n = _nodes.at(mid);
+
+		if (func(mid, n)) {
+			return true;
+		}
+
+		fea::span<const Id> parents = n.parents();
+		for (Id parent_id : parents) {
+			graph.push_back(parent_id);
+		}
+	}
+
+	return false;
+}
+
+template <FEA_LAZY_GRAPH_TEMPLATE>
+template <class Func>
+void lazy_graph<FEA_LAZY_GRAPH_TARGS>::recurse_breadth_up_filtered(
+		Id id, Func&& func) const {
+	// We need to gather a graph to recurse upwards.
+	// This graph *will* contain duplicates, it is up to the user
+	// function to cull them if desired.
+	std::vector<Id> graph;
+
+	// Prime it.
+	graph.push_back(id);
+
+	// As long as there are parents, push them back in the vector and
+	// continue recursing upwards.
+	// Unless they are filtered out.
+	for (size_t i = 0; i < graph.size(); ++i) {
+		Id mid = graph[i];
+		const node_t& n = _nodes.at(mid);
+
+		if (func(mid, n)) {
+			continue;
+		}
+
+		fea::span<const Id> parents = n.parents();
+		for (Id parent_id : parents) {
+			graph.push_back(parent_id);
+		}
+	}
+}
+
+//// Recurse downward.
+//// Your function should accept both an id and a node reference.
+//// We pass the node on to minimize map lookups.
+//// Your function should return true to stop recursion.
+// template <class Func>
+// bool recurse_down(Id id, Func&& func) const {
+//	const node_t& n = _nodes.at(id);
+//	if (func(id, n)) {
+//		return true;
+//	}
+//	const std::vector<Id>& children = n.children();
+//	for (Id child_id : children) {
+//		if (recurse_down(child_id, func)) {
+//			return true;
+//		}
+//	}
+//	return false;
+//}
+
+// template <class Func>
+// bool recurse_down(Id id, Func&& func) {
+//	node_t& n = _nodes.at(id);
+//	if (func(id, n)) {
+//		return true;
+//	}
+//	const std::vector<Id>& children = n.children();
+//	for (Id child_id : children) {
+//		if (recurse_down(child_id, func)) {
+//			return true;
+//		}
+//	}
+//	return false;
+//}
+
 } // namespace fea

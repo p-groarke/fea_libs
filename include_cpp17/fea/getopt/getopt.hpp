@@ -1,7 +1,7 @@
 ﻿/*
 BSD 3-Clause License
 
-Copyright (c) 2024, Philippe Groarke
+Copyright (c) 2025, Philippe Groarke
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 #include "fea/state_machines/fsm.hpp"
 #include "fea/string/string.hpp"
-#include "fea/utils/throw.hpp"
+#include "fea/utility/throw.hpp"
 
 #include <cassert>
 #include <cstdarg>
@@ -48,23 +48,63 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <unordered_map>
 #include <vector>
 
+/*
+fea::getopt : Command line argument parsing.
+
+Supports long args, short args, parameter args, multi param args, switches,
+unnamed args, etc, etc.
+
+Pretty help printing with nice layout.
+*/
 
 namespace fea {
+// Ignore this.
 namespace detail {
-inline int mprintf(const std::string& message) {
-	return printf("%s", message.c_str());
-}
-inline int mwprintf(const std::wstring& message) {
-	return wprintf(L"%s", message.c_str());
-}
-inline int u16printf(const std::u16string& message) {
-	std::string out = utf16_to_utf8(message);
-	return printf("%s", out.c_str());
-}
-inline int u32printf(const std::u32string& message) {
-	std::string out = utf32_to_utf8(message);
-	return printf("%s", out.c_str());
-}
+enum class user_option_e : std::uint8_t {
+	flag,
+	required_arg,
+	optional_arg,
+	default_arg,
+	multi_arg,
+	raw_arg,
+	count,
+};
+
+template <class CharT = char>
+struct user_option {
+	using string_t = std::basic_string<CharT, std::char_traits<CharT>,
+			std::allocator<CharT>>;
+
+	user_option() = default;
+	user_option(string_t&& longopt, CharT shortopt, user_option_e t,
+			std::function<bool()> func, string_t&& help);
+	user_option(string_t&& longopt, CharT shortopt, user_option_e t,
+			std::function<bool(string_t&&)> func, string_t&& help);
+	user_option(string_t&& longopt, CharT shortopt, user_option_e t,
+			std::function<bool(string_t&&)> func, string_t&& help,
+			string_t&& default_val, bool always_execute);
+	user_option(string_t&& longopt, CharT shortopt, user_option_e t,
+			std::function<bool(std::vector<string_t>&&)> func, string_t&& help);
+
+	string_t long_name;
+	CharT short_name;
+	user_option_e opt_type = user_option_e::count;
+	bool always_execute = false;
+
+	std::function<bool()> flag_func;
+	std::function<bool(string_t&&)> one_arg_func;
+	std::function<bool(std::vector<string_t>&&)> multi_arg_func;
+
+	string_t description;
+	string_t default_val;
+
+	bool has_been_parsed = false;
+};
+
+inline int mprintf(const std::string&);
+inline int mwprintf(const std::wstring&);
+inline int u16printf(const std::u16string&);
+inline int u32printf(const std::u32string&);
 
 template <class CharT>
 constexpr auto get_print() {
@@ -80,83 +120,12 @@ constexpr auto get_print() {
 		return u32printf;
 	}
 }
-
-
-enum class user_option_e : std::uint8_t {
-	flag,
-	required_arg,
-	optional_arg,
-	default_arg,
-	multi_arg,
-	raw_arg,
-	count,
-};
-
-template <class CharT = char>
-struct user_option {
-	using string = std::basic_string<CharT, std::char_traits<CharT>,
-			std::allocator<CharT>>;
-
-	user_option() = default;
-
-	user_option(string&& longopt, CharT shortopt, user_option_e t,
-			std::function<bool()> func, string&& help)
-			: long_name(longopt)
-			, short_name(shortopt)
-			, opt_type(t)
-			, flag_func(std::move(func))
-			, description(std::move(help)) {
-	}
-	user_option(string&& longopt, CharT shortopt, user_option_e t,
-			std::function<bool(string&&)> func, string&& help)
-			: long_name(longopt)
-			, short_name(shortopt)
-			, opt_type(t)
-			, one_arg_func(std::move(func))
-			, description(std::move(help)) {
-	}
-	user_option(string&& longopt, CharT shortopt, user_option_e t,
-			std::function<bool(string&&)> func, string&& help,
-			string&& default_val, bool always_execute)
-			: long_name(longopt)
-			, short_name(shortopt)
-			, opt_type(t)
-			, always_execute(always_execute)
-			, one_arg_func(std::move(func))
-			, description(std::move(help))
-			, default_val(std::move(default_val)) {
-	}
-	user_option(string&& longopt, CharT shortopt, user_option_e t,
-			std::function<bool(std::vector<string>&&)> func, string&& help)
-			: long_name(longopt)
-			, short_name(shortopt)
-			, opt_type(t)
-			, multi_arg_func(std::move(func))
-			, description(std::move(help)) {
-	}
-
-
-	string long_name;
-	CharT short_name;
-	user_option_e opt_type = user_option_e::count;
-	bool always_execute = false;
-
-	std::function<bool()> flag_func;
-	std::function<bool(string&&)> one_arg_func;
-	std::function<bool(std::vector<string>&&)> multi_arg_func;
-
-	string description;
-	string default_val;
-
-	bool has_been_parsed = false;
-};
 } // namespace detail
-
 
 // get_opt supports all char types.
 // Uses printf if you provide char.
 // Uses wprintf if you provide wchar_t.
-
+//
 // By default, will convert char16_t and char32_t into utf8 and will print
 // with printf. You can customize the print function. If it is customized,
 // it will be used as-is. Must be a compatible signature with printf.
@@ -264,12 +233,12 @@ struct get_opt {
 
 private:
 	static_assert(std::is_same_v<CharT, char> || std::is_same_v<CharT, wchar_t>
-					|| std::is_same_v<CharT, char16_t>
-					|| std::is_same_v<CharT, char32_t>,
+						  || std::is_same_v<CharT, char16_t>
+						  || std::is_same_v<CharT, char32_t>,
 			"getopt : unknown character type, getopt only supports char, "
 			"wchar_t, char16_t and char32_t");
 
-	void add_option(detail::user_option<CharT>&& o);
+	void add_option(struct detail::user_option<CharT>&& o);
 
 	enum class state {
 		arg0,
@@ -332,6 +301,73 @@ private:
 	std::deque<string> _parser_args;
 	bool _success = true;
 };
+} // namespace fea
+
+
+// Implementation
+namespace fea {
+namespace detail {
+inline int mprintf(const std::string& message) {
+	return printf("%s", message.c_str());
+}
+inline int mwprintf(const std::wstring& message) {
+	return wprintf(L"%s", message.c_str());
+}
+inline int u16printf(const std::u16string& message) {
+	std::string out = utf16_to_utf8(message);
+	return printf("%s", out.c_str());
+}
+inline int u32printf(const std::u32string& message) {
+	std::string out = utf32_to_utf8(message);
+	return printf("%s", out.c_str());
+}
+
+
+template <class CharT>
+user_option<CharT>::user_option(string_t&& longopt, CharT shortopt,
+		user_option_e t, std::function<bool()> func, string_t&& help)
+		: long_name(longopt)
+		, short_name(shortopt)
+		, opt_type(t)
+		, flag_func(std::move(func))
+		, description(std::move(help)) {
+}
+
+template <class CharT>
+user_option<CharT>::user_option(string_t&& longopt, CharT shortopt,
+		user_option_e t, std::function<bool(string_t&&)> func, string_t&& help)
+		: long_name(longopt)
+		, short_name(shortopt)
+		, opt_type(t)
+		, one_arg_func(std::move(func))
+		, description(std::move(help)) {
+}
+
+template <class CharT>
+user_option<CharT>::user_option(string_t&& longopt, CharT shortopt,
+		user_option_e t, std::function<bool(string_t&&)> func, string_t&& help,
+		string_t&& default_val, bool always_execute)
+		: long_name(longopt)
+		, short_name(shortopt)
+		, opt_type(t)
+		, always_execute(always_execute)
+		, one_arg_func(std::move(func))
+		, description(std::move(help))
+		, default_val(std::move(default_val)) {
+}
+
+template <class CharT>
+user_option<CharT>::user_option(string_t&& longopt, CharT shortopt,
+		user_option_e t, std::function<bool(std::vector<string_t>&&)> func,
+		string_t&& help)
+		: long_name(longopt)
+		, short_name(shortopt)
+		, opt_type(t)
+		, multi_arg_func(std::move(func))
+		, description(std::move(help)) {
+}
+} // namespace detail
+
 
 template <class CharT, class PrintfT>
 get_opt<CharT, PrintfT>::get_opt()
@@ -555,8 +591,8 @@ void get_opt<CharT, PrintfT>::print(const string& message) const {
 }
 
 template <class CharT, class PrintfT>
-std::unique_ptr<typename get_opt<CharT, PrintfT>::fsm_t>
-get_opt<CharT, PrintfT>::make_machine() const {
+std::unique_ptr<typename get_opt<CharT, PrintfT>::fsm_t> get_opt<CharT,
+		PrintfT>::make_machine() const {
 	std::unique_ptr<fsm_t> ret = std::make_unique<fsm_t>();
 
 	// arg0
@@ -1129,7 +1165,7 @@ void get_opt<CharT, PrintfT>::on_print_help(fsm_t&) {
 				size += req_str.size();
 			} else if (opt.opt_type == user_option_e::default_arg) {
 				size += default_beg.size() + opt.default_val.size()
-						+ default_end.size();
+					  + default_end.size();
 			} else if (opt.opt_type == user_option_e::multi_arg) {
 				size += multi_str.size();
 			}

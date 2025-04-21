@@ -1,7 +1,7 @@
 ﻿/**
  * BSD 3-Clause License
  *
- * Copyright (c) 2024, Philippe Groarke
+ * Copyright (c) 2025, Philippe Groarke
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,36 +48,60 @@ struct pimpl_ptr {
 	using element_type = T;
 	using deleter_type = Deleter;
 
-	pimpl_ptr()
-			: _impl(std::make_unique<T>()) {
-	}
+	pimpl_ptr();
 
 	template <class... Args>
-	pimpl_ptr(Args&&... args)
-			: _impl(std::make_unique<T>(std::forward<Args>(args)...)) {
-	}
+	pimpl_ptr(Args&&... args);
 
-	pimpl_ptr(const pimpl_ptr& other)
-			: _impl(std::make_unique<T>(*other._impl)) {
-	}
-	pimpl_ptr(pimpl_ptr&& other) noexcept
-			: _impl(std::make_unique<T>(std::move(*other._impl))) {
-	}
-	pimpl_ptr& operator=(const pimpl_ptr& other) {
-		if (this != &other) {
-			*_impl = *other._impl;
-		}
-		return *this;
-	}
-	pimpl_ptr& operator=(pimpl_ptr&& other) noexcept {
-		if (this != &other) {
-			*_impl = std::move(*other._impl);
-		}
-		return *this;
-	}
+	pimpl_ptr(const pimpl_ptr& other);
+	pimpl_ptr(pimpl_ptr&& other) noexcept;
+	pimpl_ptr& operator=(const pimpl_ptr& other);
+	pimpl_ptr& operator=(pimpl_ptr&& other) noexcept;
 
 protected:
 	const std::unique_ptr<element_type, deleter_type> _impl;
 };
+} // namespace fea
 
+
+// Implementation
+namespace fea {
+template <class T, class Deleter>
+pimpl_ptr<T, Deleter>::pimpl_ptr()
+		: _impl(std::make_unique<T>()) {
+}
+
+template <class T, class Deleter>
+template <class... Args>
+pimpl_ptr<T, Deleter>::pimpl_ptr(Args&&... args)
+		: _impl(std::make_unique<T>(std::forward<Args>(args)...)) {
+}
+
+template <class T, class Deleter>
+pimpl_ptr<T, Deleter>::pimpl_ptr(const pimpl_ptr& other)
+		: _impl(std::make_unique<T>(*other._impl)) {
+}
+
+template <class T, class Deleter>
+pimpl_ptr<T, Deleter>::pimpl_ptr(pimpl_ptr&& other) noexcept
+		: _impl(std::make_unique<T>(std::move(*other._impl))) {
+}
+
+template <class T, class Deleter>
+auto pimpl_ptr<T, Deleter>::operator=(const pimpl_ptr& other) -> pimpl_ptr& {
+	if (this != &other) {
+		*_impl = *other._impl;
+	}
+	return *this;
+}
+
+template <class T, class Deleter>
+auto pimpl_ptr<T, Deleter>::operator=(pimpl_ptr&& other) noexcept
+		-> pimpl_ptr& {
+	if (this != &other) {
+		*_impl = std::move(*other._impl);
+	}
+
+	return *this;
+}
 } // namespace fea

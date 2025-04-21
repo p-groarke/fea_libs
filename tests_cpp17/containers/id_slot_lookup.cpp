@@ -1,6 +1,6 @@
 #include <fea/containers/id_slot_lookup.hpp>
-#include <fea/utils/platform.hpp>
-#include <fea/utils/unused.hpp>
+#include <fea/utility/platform.hpp>
+#include <fea/utility/unused.hpp>
 #include <gtest/gtest.h>
 #include <unordered_map>
 

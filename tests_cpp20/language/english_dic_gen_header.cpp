@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <cassert>
 #include <fea/string/string.hpp>
-#include <fea/utils/file.hpp>
+#include <fea/utility/file.hpp>
 #include <filesystem>
 #include <format>
 #include <fstream>
@@ -33,7 +33,7 @@ constexpr std::string_view file_header = R"xx(
 /**
  * BSD 3-Clause License
  *
- * Copyright (c) 2024, Philippe Groarke
+ * Copyright (c) 2025, Philippe Groarke
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

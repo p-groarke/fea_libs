@@ -1,7 +1,7 @@
 ﻿/*
 BSD 3-Clause License
 
-Copyright (c) 2024, Philippe Groarke
+Copyright (c) 2025, Philippe Groarke
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -30,8 +30,10 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
-#include "fea/utils/platform.hpp"
+#include "fea/numerics/numerics.hpp"
+#include "fea/utility/platform.hpp"
 
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <limits>
@@ -57,32 +59,6 @@ digital signal processing tasks.
 */
 
 namespace fea {
-namespace detail {
-// Returns true if integer value is a power of 2.
-// https://graphics.stanford.edu/~seander/bithacks.html#DetermineIfPowerOf2
-//
-// TODO : Put where? Add unit tests.
-template <class T>
-constexpr bool mis_pow2(T v) noexcept {
-	static_assert(std::is_integral_v<T>, "fea::mis_pow2 : T must be integer.");
-	return v && !(v & (v - 1));
-}
-
-template <class T>
-constexpr T msqrt_base2(T v) noexcept {
-	static_assert(
-			std::is_integral_v<T>, "fea::msqrt_base2 : T must be integer.");
-
-	T mask = T(1);
-	for (size_t i = 0; i < sizeof(T) * 8; ++i) {
-		if (v & (mask << i)) {
-			return T(i);
-		}
-	}
-	return T(0);
-}
-} // namespace detail
-
 template <class IntT, size_t Scaling>
 struct basic_fixed {
 	static_assert(std::is_integral_v<IntT>,
@@ -92,9 +68,9 @@ struct basic_fixed {
 	static constexpr value_t scaling_v = value_t(Scaling);
 
 	// Enable some bit-shifting optimizations if scaling is 2^n.
-	static constexpr bool scaling_is_pow2_v = detail::mis_pow2(scaling_v);
+	static constexpr bool is_scaling_pow2_v = fea::is_pow2<scaling_v>();
 	static constexpr value_t scaling_sqrt_v
-			= scaling_is_pow2_v ? detail::msqrt_base2(scaling_v) : value_t(0);
+			= is_scaling_pow2_v ? fea::sqrt<scaling_v>() : value_t(0);
 
 private:
 	static constexpr float _float_to_int_v = float(scaling_v);
@@ -119,113 +95,135 @@ public:
 	explicit constexpr operator float() const noexcept;
 	explicit constexpr operator double() const noexcept;
 	explicit constexpr operator value_t() const noexcept;
+	explicit constexpr operator size_t() const noexcept;
+
+	// Member operators
+	constexpr basic_fixed& operator+=(basic_fixed rhs) noexcept;
+	constexpr basic_fixed& operator-=(basic_fixed rhs) noexcept;
+	constexpr basic_fixed& operator*=(basic_fixed rhs) noexcept;
+	constexpr basic_fixed& operator/=(basic_fixed rhs) noexcept;
+	constexpr basic_fixed& operator%=(basic_fixed rhs) noexcept;
+	constexpr basic_fixed& operator&=(basic_fixed rhs) noexcept;
+	constexpr basic_fixed& operator|=(basic_fixed rhs) noexcept;
+	constexpr basic_fixed& operator^=(basic_fixed rhs) noexcept;
+	constexpr basic_fixed& operator<<=(size_t rhs) noexcept;
+	constexpr basic_fixed& operator<<=(basic_fixed rhs) noexcept;
+	constexpr basic_fixed& operator>>=(size_t rhs) noexcept;
+	constexpr basic_fixed& operator>>=(basic_fixed rhs) noexcept;
+	constexpr basic_fixed& operator++() noexcept;
+	constexpr basic_fixed operator++(int) noexcept;
+	constexpr basic_fixed& operator--() noexcept;
+	constexpr basic_fixed operator--(int) noexcept;
+
+	// Non-member Operators
+	// Unfortunately, the friend operators MUST be "hidden friends", or else all
+	// hell breaks loose.
+	friend constexpr basic_fixed operator+(
+			basic_fixed lhs, basic_fixed rhs) noexcept {
+		basic_fixed ret = lhs;
+		ret += rhs;
+		return ret;
+	}
+	friend constexpr basic_fixed operator-(
+			basic_fixed lhs, basic_fixed rhs) noexcept {
+		basic_fixed ret = lhs;
+		ret -= rhs;
+		return ret;
+	}
+
+	friend constexpr basic_fixed operator*(
+			basic_fixed lhs, basic_fixed rhs) noexcept {
+		basic_fixed ret = lhs;
+		ret *= rhs;
+		return ret;
+	}
+	friend constexpr basic_fixed operator/(
+			basic_fixed lhs, basic_fixed rhs) noexcept {
+		basic_fixed ret = lhs;
+		ret /= rhs;
+		return ret;
+	}
+	friend constexpr basic_fixed operator%(
+			basic_fixed lhs, basic_fixed rhs) noexcept {
+		basic_fixed ret = lhs;
+		ret %= rhs;
+		return ret;
+	}
+
+	friend constexpr basic_fixed operator~(basic_fixed lhs) noexcept {
+		basic_fixed ret = lhs;
+		ret.value = ~ret.value;
+		return ret;
+	}
+
+	friend constexpr basic_fixed operator&(
+			basic_fixed lhs, basic_fixed rhs) noexcept {
+		basic_fixed ret = lhs;
+		ret &= rhs;
+		return ret;
+	}
+	friend constexpr basic_fixed operator|(
+			basic_fixed lhs, basic_fixed rhs) noexcept {
+		basic_fixed ret = lhs;
+		ret |= rhs;
+		return ret;
+	}
+	friend constexpr basic_fixed operator^(
+			basic_fixed lhs, basic_fixed rhs) noexcept {
+		basic_fixed ret = lhs;
+		ret ^= rhs;
+		return ret;
+	}
+	friend constexpr basic_fixed operator<<(
+			basic_fixed lhs, size_t rhs) noexcept {
+		basic_fixed ret = lhs;
+		ret <<= rhs;
+		return ret;
+	}
+	friend constexpr basic_fixed operator<<(
+			basic_fixed lhs, basic_fixed rhs) noexcept {
+		assert(rhs.value >= value_t(0));
+		basic_fixed ret = lhs;
+		ret <<= rhs;
+		return ret;
+	}
+	friend constexpr basic_fixed operator>>(
+			basic_fixed lhs, size_t rhs) noexcept {
+		basic_fixed ret = lhs;
+		ret >>= rhs;
+		return ret;
+	}
+	friend constexpr basic_fixed operator>>(
+			basic_fixed lhs, basic_fixed rhs) noexcept {
+		assert(rhs.value >= value_t(0));
+		basic_fixed ret = lhs;
+		ret >>= rhs;
+		return ret;
+	}
 
 	// Comparison Operators
 	friend constexpr bool operator==(
 			basic_fixed lhs, basic_fixed rhs) noexcept {
 		return lhs.value == rhs.value;
 	}
-
 	friend constexpr bool operator!=(
 			basic_fixed lhs, basic_fixed rhs) noexcept {
 		return !(lhs == rhs);
 	}
-
 	friend constexpr bool operator<(basic_fixed lhs, basic_fixed rhs) noexcept {
 		return lhs.value < rhs.value;
 	}
-
 	friend constexpr bool operator>(basic_fixed lhs, basic_fixed rhs) noexcept {
 		return rhs < lhs;
 	}
-
 	friend constexpr bool operator<=(
 			basic_fixed lhs, basic_fixed rhs) noexcept {
 		return !(rhs < lhs);
 	}
-
 	friend constexpr bool operator>=(
 			basic_fixed lhs, basic_fixed rhs) noexcept {
 		return !(lhs < rhs);
 	}
-
-	// Arithmetic Operators
-	friend constexpr basic_fixed operator+(
-			basic_fixed lhs, basic_fixed rhs) noexcept {
-		basic_fixed ret;
-		ret.value = lhs.value + rhs.value;
-		return ret;
-	}
-
-	friend constexpr basic_fixed operator-(
-			basic_fixed lhs, basic_fixed rhs) noexcept {
-		basic_fixed ret;
-		ret.value = lhs.value - rhs.value;
-		return ret;
-	}
-
-	friend constexpr basic_fixed operator*(
-			basic_fixed lhs, basic_fixed rhs) noexcept {
-		basic_fixed ret;
-		if constexpr (scaling_is_pow2_v) {
-			ret.value = (lhs.value * rhs.value) >> scaling_sqrt_v;
-		} else {
-			ret.value = (lhs.value * rhs.value) / scaling_v;
-		}
-		return ret;
-	}
-
-	friend constexpr basic_fixed operator/(
-			basic_fixed lhs, basic_fixed rhs) noexcept {
-		basic_fixed ret;
-		if constexpr (scaling_is_pow2_v) {
-			ret.value = (lhs.value << scaling_sqrt_v) / rhs.value;
-		} else {
-			ret.value = (lhs.value * scaling_v) / rhs.value;
-		}
-		return ret;
-	}
-
-	friend constexpr basic_fixed operator%(
-			basic_fixed lhs, basic_fixed rhs) noexcept {
-		basic_fixed ret;
-		ret.value = lhs.value % rhs.value;
-		return ret;
-	}
-
-	// TODO : tests
-	// constexpr basic_fixed& operator+=(basic_fixed rhs) noexcept {
-	//	value += rhs.value;
-	//	return *this;
-	//}
-
-	// constexpr basic_fixed& operator-=(basic_fixed rhs) noexcept {
-	//	value -= rhs.value;
-	//	return *this;
-	// }
-
-	// constexpr basic_fixed& operator*=(basic_fixed rhs) noexcept {
-	//	if constexpr (scaling_is_pow2_v) {
-	//		value = (value * rhs.value) >> scaling_sqrt_v;
-	//	} else {
-	//		value = (value * rhs.value) / scaling_v;
-	//	}
-	//	return *this;
-	// }
-
-	// constexpr basic_fixed& operator/=(basic_fixed rhs) noexcept {
-	//	if constexpr (scaling_is_pow2_v) {
-	//		value = (value << scaling_sqrt_v) / rhs.value;
-	//	} else {
-	//		value = (value * scaling_v) / rhs.value;
-	//	}
-	//	return *this;
-	// }
-
-	// constexpr basic_fixed& operator%=(basic_fixed rhs) noexcept {
-	//	value %= rhs.value;
-	//	return *this;
-	// }
 
 	// Public for serialization purposes.
 	value_t value = value_t(0);
@@ -252,4 +250,260 @@ using fixed64_t = fea::basic_fixed<int64_t, (size_t(1) << 23)>;
 #endif
 } // namespace fea
 
-#include "imp/fixed.imp.hpp"
+
+// Implementation
+namespace fea {
+template <class I, size_t S>
+constexpr basic_fixed<I, S>::basic_fixed(float f) noexcept
+		: value(value_t(f * _float_to_int_v)) {
+	// Keep it simple and fast for now.
+	// Could do modf for more fractional precision.
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>::basic_fixed(double d) noexcept
+		: value(value_t(d * _double_to_int_v)) {
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>::basic_fixed(value_t v) noexcept {
+	if constexpr (is_scaling_pow2_v) {
+		value = v << scaling_sqrt_v;
+	} else {
+		value = v * scaling_v;
+	}
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>::operator float() const noexcept {
+	return float(value) * _int_to_float_v;
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>::operator double() const noexcept {
+	return double(value) * _int_to_double_v;
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>::operator value_t() const noexcept {
+	if constexpr (is_scaling_pow2_v) {
+		return value >> scaling_sqrt_v;
+	} else {
+		return value / scaling_v;
+	}
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>::operator size_t() const noexcept {
+	// if (value < value_t(0)) {
+	//	return size_t(0);
+	// }
+
+	if constexpr (is_scaling_pow2_v) {
+		return (value >> scaling_sqrt_v);
+	} else {
+		return (value / scaling_v);
+	}
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>& basic_fixed<I, S>::operator+=(
+		basic_fixed rhs) noexcept {
+	value += rhs.value;
+	return *this;
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>& basic_fixed<I, S>::operator-=(
+		basic_fixed rhs) noexcept {
+	value -= rhs.value;
+	return *this;
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>& basic_fixed<I, S>::operator*=(
+		basic_fixed rhs) noexcept {
+	if constexpr (is_scaling_pow2_v) {
+		value = (value * rhs.value) >> scaling_sqrt_v;
+	} else {
+		value = (value * rhs.value) / scaling_v;
+	}
+	return *this;
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>& basic_fixed<I, S>::operator/=(
+		basic_fixed rhs) noexcept {
+	if constexpr (is_scaling_pow2_v) {
+		value = (value << scaling_sqrt_v) / rhs.value;
+	} else {
+		value = (value * scaling_v) / rhs.value;
+	}
+	return *this;
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>& basic_fixed<I, S>::operator%=(
+		basic_fixed rhs) noexcept {
+	value %= rhs.value;
+	return *this;
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>& basic_fixed<I, S>::operator&=(
+		basic_fixed rhs) noexcept {
+	value &= rhs.value;
+	return *this;
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>& basic_fixed<I, S>::operator|=(
+		basic_fixed rhs) noexcept {
+	value |= rhs.value;
+	return *this;
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>& basic_fixed<I, S>::operator^=(
+		basic_fixed rhs) noexcept {
+	value ^= rhs.value;
+	return *this;
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>& basic_fixed<I, S>::operator<<=(
+		size_t rhs) noexcept {
+	value <<= rhs;
+	return *this;
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>& basic_fixed<I, S>::operator<<=(
+		basic_fixed rhs) noexcept {
+	assert(rhs.value >= value_t(0));
+	return (*this) <<= size_t(rhs);
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>& basic_fixed<I, S>::operator>>=(
+		size_t rhs) noexcept {
+	value >>= rhs;
+	return *this;
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>& basic_fixed<I, S>::operator>>=(
+		basic_fixed rhs) noexcept {
+	assert(rhs.value >= value_t(0));
+	return (*this) >>= size_t(rhs);
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>& basic_fixed<I, S>::operator++() noexcept {
+	value += scaling_v;
+	return *this;
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S> basic_fixed<I, S>::operator++(int) noexcept {
+	basic_fixed ret = *this;
+	++(*this);
+	return ret;
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>& basic_fixed<I, S>::operator--() noexcept {
+	value -= scaling_v;
+	return *this;
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S> basic_fixed<I, S>::operator--(int) noexcept {
+	basic_fixed ret = *this;
+	--(*this);
+	return ret;
+}
+} // namespace fea
+
+
+namespace std {
+template <class T, size_t S>
+class numeric_limits<fea::basic_fixed<T, S>> {
+	using value_t = fea::basic_fixed<T, S>;
+
+public:
+	// Member constants
+	static constexpr bool is_specialized = true;
+	static constexpr bool is_signed = std::is_signed_v<T>;
+	static constexpr bool is_integer = false;
+	static constexpr bool is_exact = true;
+	static constexpr bool has_infinity = false;
+	static constexpr bool has_quiet_NaN = false;
+	static constexpr bool has_signaling_NaN = false;
+	static constexpr std::float_denorm_style has_denorm = std::denorm_absent;
+	static constexpr bool has_denorm_loss = false;
+	static constexpr std::float_round_style round_style
+			= std::round_toward_zero;
+	static constexpr bool is_iec559 = false;
+	static constexpr bool is_bounded = true;
+	static constexpr bool is_modulo = std::numeric_limits<T>::is_modulo;
+
+	static constexpr int digits = std::numeric_limits<T>::digits;
+	static constexpr int digits10 = std::numeric_limits<T>::digits10;
+	static constexpr int max_digits10 = std::numeric_limits<T>::max_digits10;
+	static constexpr int radix = 2;
+
+	static constexpr int min_exponent = 0;
+	static constexpr int min_exponent10 = 0;
+	static constexpr int max_exponent = 0;
+	static constexpr int max_exponent10 = 0;
+	static constexpr bool traps = std::numeric_limits<T>::traps;
+	static constexpr bool tinyness_before = false;
+
+	// Member functions
+	static constexpr value_t min() noexcept {
+		// Even though it isn't necessary, since we can perfectly represent
+		// zero. Return value closest to zero (0), to allow interchange with
+		// floating types.
+		value_t ret;
+		ret.value = T(0);
+		// ret.value = (std::numeric_limits<T>::min)();
+		return ret;
+	}
+
+	static constexpr value_t lowest() noexcept {
+		value_t ret;
+		ret.value = std::numeric_limits<T>::lowest();
+		return ret;
+	}
+
+	static constexpr value_t max() noexcept {
+		value_t ret;
+		ret.value = (std::numeric_limits<T>::max)();
+		return ret;
+	}
+
+	static constexpr value_t epsilon() noexcept {
+		value_t ret;
+		ret.value = T(1);
+		return ret;
+	}
+
+	static constexpr value_t round_error() noexcept {
+		return value_t(0.5);
+	}
+
+	static constexpr value_t infinity() noexcept {
+		return value_t(T(0));
+	}
+	static constexpr value_t quiet_NaN() noexcept {
+		return value_t(T(0));
+	}
+	static constexpr value_t signaling_NaN() noexcept {
+		return value_t(T(0));
+	}
+	static constexpr value_t denorm_min() noexcept {
+		return value_t(T(0));
+	}
+};
+} // namespace std

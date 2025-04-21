@@ -1,7 +1,7 @@
 ﻿/**
  * BSD 3-Clause License
  *
- * Copyright (c) 2024, Philippe Groarke
+ * Copyright (c) 2025, Philippe Groarke
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,17 +32,40 @@
  **/
 
 #pragma once
-#include "fea/utils/platform.hpp"
+#include "fea/utility/platform.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
 
 namespace fea {
-namespace detail {
 template <class T, T...>
 struct max_nt;
 
+template <class T, T...>
+struct min_nt;
+
+
+// Finds the maximum value of provided non-type values.
+template <class T, T... Args>
+inline constexpr auto max_nt_v = max_nt<T, Args...>::value;
+
+// Finds the minimum value of provided non-type values.
+template <class T, T... Args>
+inline constexpr auto min_nt_v = min_nt<T, Args...>::value;
+
+// Finds the maximum value of provided non-type values.
+template <auto First, auto... Args>
+inline constexpr auto max_v = max_nt_v<decltype(First), First, Args...>;
+
+// Finds the minimum value of provided non-type values.
+template <auto First, auto... Args>
+inline constexpr auto min_v = min_nt_v<decltype(First), First, Args...>;
+} // namespace fea
+
+
+// Implementation
+namespace fea {
 template <class T, T First, T Second>
 struct max_nt<T, First, Second> {
 	static constexpr auto value = First > Second ? First : Second;
@@ -55,9 +78,6 @@ struct max_nt<T, First, Second, Args...> {
 										: max_nt<T, Second, Args...>::value;
 };
 
-template <class T, T...>
-struct min_nt;
-
 template <class T, T First, T Second>
 struct min_nt<T, First, Second> {
 	static constexpr auto value = First < Second ? First : Second;
@@ -69,23 +89,4 @@ struct min_nt<T, First, Second, Args...> {
 										? min_nt<T, First, Args...>::value
 										: min_nt<T, Second, Args...>::value;
 };
-} // namespace detail
-
-// Finds the maximum value of provided non-type values.
-template <class T, T... Args>
-inline constexpr auto max_nt_v = detail::max_nt<T, Args...>::value;
-
-// Finds the minimum value of provided non-type values.
-template <class T, T... Args>
-inline constexpr auto min_nt_v = detail::min_nt<T, Args...>::value;
-
-
-// Finds the maximum value of provided non-type values.
-template <auto First, auto... Args>
-inline constexpr auto max_v = max_nt_v<decltype(First), First, Args...>;
-
-// Finds the minimum value of provided non-type values.
-template <auto First, auto... Args>
-inline constexpr auto min_v = min_nt_v<decltype(First), First, Args...>;
-
 } // namespace fea

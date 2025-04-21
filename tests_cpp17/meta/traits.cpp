@@ -2,6 +2,7 @@
 #include <fea/meta/tuple.hpp>
 #include <functional>
 #include <gtest/gtest.h>
+#include <iostream>
 #include <set>
 #include <string>
 #include <tuple>
@@ -199,6 +200,24 @@ TEST(traits, aligned_storage) {
 	using align_t = fea::aligned_storage_t<8, 4>;
 	static_assert(alignof(align_t) == 4, FAIL_MSG);
 	static_assert(sizeof(align_t) == 8, FAIL_MSG);
+}
+
+TEST(traits, output_iterator_traits) {
+	std::vector<int> v;
+	using bi_t = decltype(std::back_inserter(v));
+	using i_t = decltype(std::inserter(v, v.begin() + 5));
+	using fi_t = decltype(std::front_inserter(v));
+
+	static_assert(std::is_same_v<fea::output_iterator_vt<bi_t>, int>, FAIL_MSG);
+	static_assert(std::is_same_v<fea::output_iterator_vt<i_t>, int>, FAIL_MSG);
+	static_assert(std::is_same_v<fea::output_iterator_vt<fi_t>, int>, FAIL_MSG);
+
+	using os_t = decltype(std::ostream_iterator<float>(std::cout, ", "));
+	using osb_t = decltype(std::ostreambuf_iterator<wchar_t>(std::wcout));
+	static_assert(
+			std::is_same_v<fea::output_iterator_vt<os_t>, float>, FAIL_MSG);
+	static_assert(
+			std::is_same_v<fea::output_iterator_vt<osb_t>, wchar_t>, FAIL_MSG);
 }
 
 } // namespace

@@ -1,7 +1,7 @@
 ﻿/**
  * BSD 3-Clause License
  *
- * Copyright (c) 2024, Philippe Groarke
+ * Copyright (c) 2025, Philippe Groarke
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,8 +33,8 @@
 
 #pragma once
 #include "fea/meta/traits.hpp"
-#include "fea/utils/platform.hpp"
-#include "fea/utils/unused.hpp"
+#include "fea/utility/platform.hpp"
+#include "fea/utility/unused.hpp"
 
 #include <array>
 #include <cstddef>
@@ -46,10 +46,32 @@ namespace fea {
 // Fold expressions for c++ < 17.
 // Calls your function with each of the provided variadic argument.
 template <class Func, class... Args>
-constexpr void fold(Func&& func, Args&&... args) {
-	(func(args), ...);
-}
+constexpr void fold(Func&& func, Args&&... args);
 
+// Call a for loop at compile time.
+// Your lambda is provided with an integral_constant.
+// Accept it with auto, access the index with '::value' or '()'.
+// If any of your lambda invocations returns values:
+// they are concatenated in an array if all identical types, or tuple if not.
+// std::nullptr_t is used as a sentinel to denote invocations that don't return
+// anything (when returning tuples).
+// If all invocations return void, returns void.
+template <size_t N, class Func>
+constexpr auto static_for(Func&& func);
+
+// Same as static_for, but reversed.
+// Starts at N - 1, ends at 0.
+template <size_t N, class Func>
+constexpr auto static_for_reversed(Func&& func);
+
+// "std::apply index_sequence"
+template <size_t N, class Func>
+constexpr auto apply_indexes(Func&& f);
+} // namespace fea
+
+
+// Implementation
+namespace fea {
 namespace detail {
 // Checks if the all the passed in traits are true.
 template <class...>
@@ -173,36 +195,27 @@ constexpr auto static_for(Func& func, std::index_sequence<I...>) {
 	return do_static_for<static_for_ret_t<Func, I...>, Func, I...>{}(func);
 }
 
-} // namespace detail
-
-// Call a for loop at compile time.
-// Your lambda is provided with an integral_constant.
-// Accept it with auto, access the index with '::value' or '()'.
-// If any of your lambda invocations returns values:
-// they are concatenated in an array if all identical types, or tuple if not.
-// std::nullptr_t is used as a sentinel to denote invocations that don't return
-// anything (when returning tuples).
-// If all invocations return void, returns void.
-template <size_t N, class Func>
-constexpr auto static_for(Func&& func) {
-	return detail::static_for(func, std::make_index_sequence<N>{});
-}
-
-// Same as static_for, but reversed.
-// Starts at N - 1, ends at 0.
-template <size_t N, class Func>
-constexpr auto static_for_reversed(Func&& func) {
-	return detail::static_for(func, fea::make_reverse_index_sequence<N>{});
-}
-
-
-// "std::apply index_sequence"
-namespace detail {
 template <class Func, size_t... Idx>
 constexpr auto apply_indexes(Func&& f, std::index_sequence<Idx...>) {
 	return std::forward<Func>(f)(std::integral_constant<size_t, Idx>{}...);
 }
 } // namespace detail
+
+
+template <class Func, class... Args>
+constexpr void fold(Func&& func, Args&&... args) {
+	(func(args), ...);
+}
+
+template <size_t N, class Func>
+constexpr auto static_for(Func&& func) {
+	return detail::static_for(func, std::make_index_sequence<N>{});
+}
+
+template <size_t N, class Func>
+constexpr auto static_for_reversed(Func&& func) {
+	return detail::static_for(func, fea::make_reverse_index_sequence<N>{});
+}
 
 template <size_t N, class Func>
 constexpr auto apply_indexes(Func&& f) {

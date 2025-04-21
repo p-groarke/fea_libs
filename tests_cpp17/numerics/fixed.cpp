@@ -1,4 +1,5 @@
 #include <fea/numerics/fixed.hpp>
+#include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
 
 namespace {
@@ -122,6 +123,35 @@ TEST(fixed, basics) {
 		ans = f1 % f2;
 		EXPECT_EQ(ans, fea::fixed(0.0));
 
+		ans = ~f1;
+#if FEA_32BIT
+		EXPECT_EQ(ans, fea::fixed(-2.00048828125));
+#else
+		EXPECT_EQ(ans, fea::fixed(-2.0000001192092896));
+#endif
+
+		ans = f1 & f2;
+		EXPECT_EQ(ans, fea::fixed(2.0));
+
+		ans = f1 | f2;
+		EXPECT_EQ(ans, fea::fixed(2.0));
+
+		ans = f1 ^ f2;
+		EXPECT_EQ(ans, fea::fixed(0.0));
+
+		ans = f1 >> f2;
+		EXPECT_EQ(ans, fea::fixed(0.5));
+
+		ans = f1 >> size_t(f2);
+		EXPECT_EQ(ans, fea::fixed(0.5));
+
+		ans = f1 << f2;
+		EXPECT_EQ(ans, fea::fixed(8.0));
+
+		ans = f1 << size_t(f2);
+		EXPECT_EQ(ans, fea::fixed(8.0));
+
+
 		f1 = 8.0;
 		f2 = 2.0;
 		ans = f1 + f2;
@@ -138,6 +168,35 @@ TEST(fixed, basics) {
 
 		ans = f1 % f2;
 		EXPECT_EQ(ans, fea::fixed(0.0));
+
+		ans = ~f1;
+#if FEA_32BIT
+		EXPECT_EQ(ans, fea::fixed(-8.00048828125));
+#else
+		EXPECT_EQ(ans, fea::fixed(-8.0000001192092896));
+#endif
+
+		ans = f1 & f2;
+		EXPECT_EQ(ans, fea::fixed(0.0));
+
+		ans = f1 | f2;
+		EXPECT_EQ(ans, fea::fixed(10.0));
+
+		ans = f1 ^ f2;
+		EXPECT_EQ(ans, fea::fixed(10.0));
+
+		ans = f1 >> f2;
+		EXPECT_EQ(ans, fea::fixed(2.0));
+
+		ans = f1 >> size_t(f2);
+		EXPECT_EQ(ans, fea::fixed(2.0));
+
+		ans = f1 << f2;
+		EXPECT_EQ(ans, fea::fixed(32.0));
+
+		ans = f1 << size_t(f2);
+		EXPECT_EQ(ans, fea::fixed(32.0));
+
 
 		f1 = 2.0;
 		f2 = 8.0;
@@ -156,6 +215,35 @@ TEST(fixed, basics) {
 		ans = f1 % f2;
 		EXPECT_EQ(ans, fea::fixed(2.0));
 
+		ans = ~f1;
+#if FEA_32BIT
+		EXPECT_EQ(ans, fea::fixed(-2.00048828125));
+#else
+		EXPECT_EQ(ans, fea::fixed(-2.0000001192092896));
+#endif
+
+		ans = f1 & f2;
+		EXPECT_EQ(ans, fea::fixed(0.0));
+
+		ans = f1 | f2;
+		EXPECT_EQ(ans, fea::fixed(10.0));
+
+		ans = f1 ^ f2;
+		EXPECT_EQ(ans, fea::fixed(10.0));
+
+		ans = f1 >> f2;
+		EXPECT_EQ(ans, fea::fixed(0.0078125));
+
+		ans = f1 >> size_t(f2);
+		EXPECT_EQ(ans, fea::fixed(0.0078125));
+
+		ans = f1 << f2;
+		EXPECT_EQ(ans, fea::fixed(512.0));
+
+		ans = f1 << size_t(f2);
+		EXPECT_EQ(ans, fea::fixed(512.0));
+
+
 		f1 = -2.0;
 		f2 = 8.0;
 		ans = f1 + f2;
@@ -173,6 +261,35 @@ TEST(fixed, basics) {
 		ans = f1 % f2;
 		EXPECT_EQ(ans, fea::fixed(-2.0));
 
+		ans = ~f1;
+#if FEA_32BIT
+		EXPECT_EQ(ans, fea::fixed(1.99951171875));
+#else
+		EXPECT_EQ(ans, fea::fixed(1.9999998807907104));
+#endif
+
+		ans = f1 & f2;
+		EXPECT_EQ(ans, fea::fixed(8.0));
+
+		ans = f1 | f2;
+		EXPECT_EQ(ans, fea::fixed(-2.0));
+
+		ans = f1 ^ f2;
+		EXPECT_EQ(ans, fea::fixed(-10.0));
+
+		ans = f1 >> f2;
+		EXPECT_EQ(ans, fea::fixed(-0.0078125));
+
+		ans = f1 >> size_t(f2);
+		EXPECT_EQ(ans, fea::fixed(-0.0078125));
+
+		ans = f1 << f2;
+		EXPECT_EQ(ans, fea::fixed(-512.0));
+
+		ans = f1 << size_t(f2);
+		EXPECT_EQ(ans, fea::fixed(-512.0));
+
+
 		f1 = 2.0;
 		f2 = -8.0;
 		ans = f1 + f2;
@@ -189,6 +306,28 @@ TEST(fixed, basics) {
 
 		ans = f1 % f2;
 		EXPECT_EQ(ans, fea::fixed(2.0));
+
+		ans = ~f1;
+#if FEA_32BIT
+		EXPECT_EQ(ans, fea::fixed(-2.00048828125));
+#else
+		EXPECT_EQ(ans, fea::fixed(-2.0000001192092896));
+#endif
+
+		ans = f1 & f2;
+		EXPECT_EQ(ans, fea::fixed(0.0));
+
+		ans = f1 | f2;
+		EXPECT_EQ(ans, fea::fixed(-6.0));
+
+		ans = f1 ^ f2;
+		EXPECT_EQ(ans, fea::fixed(-6.0));
+
+#if FEA_DEBUG
+		EXPECT_DEATH(f1 >> f2, "");
+		EXPECT_DEATH(f1 << f2, "");
+#endif
+
 
 		// A few more modulo
 		f1 = 1.0;
@@ -342,11 +481,11 @@ TEST(fixed, basics) {
 		using mfixed4 = fea::basic_fixed<int, 2>;
 		using mfixed5 = fea::basic_fixed<int, 4>;
 
-		static_assert(mfixed1::scaling_is_pow2_v, FAIL_MSG);
-		static_assert(!mfixed2::scaling_is_pow2_v, FAIL_MSG);
-		static_assert(!mfixed3::scaling_is_pow2_v, FAIL_MSG);
-		static_assert(mfixed4::scaling_is_pow2_v, FAIL_MSG);
-		static_assert(mfixed5::scaling_is_pow2_v, FAIL_MSG);
+		static_assert(mfixed1::is_scaling_pow2_v, FAIL_MSG);
+		static_assert(!mfixed2::is_scaling_pow2_v, FAIL_MSG);
+		static_assert(!mfixed3::is_scaling_pow2_v, FAIL_MSG);
+		static_assert(mfixed4::is_scaling_pow2_v, FAIL_MSG);
+		static_assert(mfixed5::is_scaling_pow2_v, FAIL_MSG);
 
 		static_assert(mfixed1::scaling_sqrt_v == 23, FAIL_MSG);
 		static_assert(mfixed2::scaling_sqrt_v == 0, FAIL_MSG);
@@ -356,7 +495,7 @@ TEST(fixed, basics) {
 
 #if FEA_ARCH >= 64
 		using mfixed6 = fea::basic_fixed<int64_t, (size_t(1) << 62)>;
-		static_assert(mfixed6::scaling_is_pow2_v, FAIL_MSG);
+		static_assert(mfixed6::is_scaling_pow2_v, FAIL_MSG);
 		static_assert(mfixed6::scaling_sqrt_v == 62, FAIL_MSG);
 #endif
 	}
@@ -543,5 +682,101 @@ TEST(fixed, precision) {
 		fea::fixed f42 = eps / 1.0;
 		EXPECT_NE(f42, 1.0);
 	}
+}
+
+TEST(fixed, assignement_ops) {
+	fea::fixed f = 42.0;
+
+	f += 1.0;
+	EXPECT_EQ(43.0, f);
+
+	f -= 1.0;
+	EXPECT_EQ(42.0, f);
+
+	f = f * 2.0;
+	EXPECT_EQ(84.0, f);
+
+	f *= 0.5;
+	EXPECT_EQ(42.0, f);
+
+	f /= 0.5;
+	EXPECT_EQ(84.0, f);
+
+	f /= 2.0;
+	EXPECT_EQ(42.0, f);
+
+	f %= 8.0;
+	EXPECT_EQ(2.0, f);
+
+	f %= 2.0;
+	EXPECT_EQ(0.0, f);
+
+	f = fea::fixed(15.0);
+	f &= 3.0;
+	EXPECT_EQ(3.0, f);
+
+	f = fea::fixed(15.0);
+	f &= 6.0;
+	EXPECT_EQ(6.0, f);
+
+	f &= 1.0;
+	EXPECT_EQ(0.0, f);
+
+	f = 6.0;
+	f |= 1.0;
+	EXPECT_EQ(7.0, f);
+
+	f |= 8.0;
+	EXPECT_EQ(15.0, f);
+
+	f ^= 8.0;
+	EXPECT_EQ(7.0, f);
+
+	f ^= 4.0;
+	EXPECT_EQ(3.0, f);
+
+	f <<= 1;
+	EXPECT_EQ(6.0, f);
+
+	f >>= 2;
+	EXPECT_EQ(1.5, f);
+
+	f >>= 1;
+	EXPECT_EQ(0.75, f);
+
+	f <<= 2;
+	EXPECT_EQ(3.0, f);
+
+	f <<= 1;
+	EXPECT_EQ(6.0, f);
+
+	f = 3.0;
+	f <<= fea::fixed(1.0);
+	EXPECT_EQ(6.0, f);
+
+	f >>= fea::fixed(2.0);
+	EXPECT_EQ(1.5, f);
+
+	f >>= fea::fixed(1.0);
+	EXPECT_EQ(0.75, f);
+
+	f <<= fea::fixed(2.0);
+	EXPECT_EQ(3.0, f);
+
+	f <<= fea::fixed(1.0);
+	EXPECT_EQ(6.0, f);
+
+	f = 1.0;
+	EXPECT_EQ(2.0, ++f);
+	EXPECT_EQ(3.0, ++f);
+	EXPECT_EQ(3.0, f++);
+	EXPECT_EQ(4.0, f++);
+	EXPECT_EQ(5.0, f);
+
+	EXPECT_EQ(4.0, --f);
+	EXPECT_EQ(3.0, --f);
+	EXPECT_EQ(3.0, f--);
+	EXPECT_EQ(2.0, f--);
+	EXPECT_EQ(1.0, f);
 }
 } // namespace

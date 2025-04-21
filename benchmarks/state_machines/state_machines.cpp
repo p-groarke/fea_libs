@@ -1,7 +1,7 @@
 ﻿#include <fea/benchmark/benchmark.hpp>
 #include <fea/state_machines/fsm.hpp>
 #include <fea/state_machines/hfsm.hpp>
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <memory>

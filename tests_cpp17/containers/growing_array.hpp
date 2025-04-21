@@ -1,7 +1,7 @@
 ﻿///**
 // * BSD 3-Clause License
 // *
-// * Copyright (c) 2024, Philippe Groarke
+// * Copyright (c) 2025, Philippe Groarke
 // * All rights reserved.
 // *
 // * Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@
 // **/
 //#pragma once
 //#include <fea/containers/stack_vector.hpp>
-//#include <fea/utils/throw.hpp>
+//#include <fea/utility/throw.hpp>
 //
 //#include <array>
 //#include <cassert>

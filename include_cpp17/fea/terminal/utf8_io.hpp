@@ -1,7 +1,7 @@
 /**
  * BSD 3-Clause License
  *
- * Copyright (c) 2024, Philippe Groarke
+ * Copyright (c) 2025, Philippe Groarke
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
  **/
 #pragma once
 #include "fea/terminal/translate_io.hpp"
-#include "fea/utils/platform.hpp"
+#include "fea/utility/platform.hpp"
 
 /*
 Terminal utf tools for windows.
@@ -40,7 +40,7 @@ Does nothing (but is still callable) on other OSes.
 */
 
 #if FEA_WINDOWS
-#include "fea/utils/error.hpp"
+#include "fea/utility/error.hpp"
 #include <limits>
 
 #include <fcntl.h>

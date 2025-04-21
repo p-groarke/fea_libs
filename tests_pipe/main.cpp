@@ -1,6 +1,6 @@
 ﻿#include <fea/terminal/pipe.hpp>
 #include <fea/terminal/utf8_io.hpp>
-#include <fea/utils/unused.hpp>
+#include <fea/utility/unused.hpp>
 #include <gtest/gtest.h>
 #include <iostream>
 

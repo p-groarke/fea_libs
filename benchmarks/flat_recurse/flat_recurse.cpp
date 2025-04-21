@@ -4,7 +4,7 @@
 #include <array>
 #include <chrono>
 #include <fea/benchmark/benchmark.hpp>
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
 #include <random>
 #include <thread>

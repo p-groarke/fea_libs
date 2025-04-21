@@ -3,7 +3,7 @@
 #include <fea/functional/function.hpp>
 #include <fea/meta/pack.hpp>
 #include <fea/meta/traits.hpp>
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
 #include <random>
 #include <vector>

@@ -2,7 +2,7 @@
 #include <array>
 #include <chrono>
 #include <fea/getopt/getopt.hpp>
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
 #include <random>
 

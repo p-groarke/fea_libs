@@ -1,7 +1,7 @@
 ﻿/**
  * BSD 3-Clause License
  *
- * Copyright (c) 2024, Philippe Groarke
+ * Copyright (c) 2025, Philippe Groarke
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,7 +37,7 @@
 #include "fea/string/conversions.hpp"
 #include "fea/string/details.hpp"
 #include "fea/string/split.hpp"
-#include "fea/utils/platform.hpp"
+#include "fea/utility/platform.hpp"
 
 #include <algorithm>
 #include <cctype>
@@ -59,27 +59,31 @@ TODO : Integrate std::string_view.
 namespace fea {
 // Returns the size of a given string, string_view or c_string.
 template <class Str>
-[[nodiscard]] constexpr size_t size(const Str& str) {
+[[nodiscard]]
+constexpr size_t size(const Str& str) {
 	return detail::str_view<Str>{ str }.size();
 }
 
 // Returns true if provided string 'str' contains 'search'.
 template <class Str1, class Str2>
-[[nodiscard]] constexpr bool contains(const Str1& str, const Str2& search) {
+[[nodiscard]]
+constexpr bool contains(const Str1& str, const Str2& search) {
 	return detail::str_view<Str1>{ str }.find(detail::str_view<Str2>{ search })
-			!= detail::str_view<Str1>::npos;
+		!= detail::str_view<Str1>::npos;
 }
 
 // Returns true if provided string 'str' starts with 'search'.
 template <class Str1, class Str2>
-[[nodiscard]] constexpr bool starts_with(const Str1& str, const Str2& search) {
+[[nodiscard]]
+constexpr bool starts_with(const Str1& str, const Str2& search) {
 	return detail::str_view<Str1>{ str }.starts_with(
 			detail::str_view<Str2>{ search });
 }
 
 // Returns true if provided string 'str' ends with 'search'.
 template <class Str1, class Str2>
-[[nodiscard]] constexpr bool ends_with(const Str1& str, const Str2& search) {
+[[nodiscard]]
+constexpr bool ends_with(const Str1& str, const Str2& search) {
 	return detail::str_view<Str1>{ str }.ends_with(
 			detail::str_view<Str2>{ search });
 }
@@ -104,8 +108,8 @@ void replace_all_inplace(Str<CharT, Traits<CharT>, Args...>& out,
 // Replaces all 'search' occurences with 'replace'.
 // Returns new modified std::string.
 template <class Str1, class Str2, class Str3>
-[[nodiscard]] auto replace_all(
-		const Str1& str, const Str2& search, const Str3& replace) {
+[[nodiscard]]
+auto replace_all(const Str1& str, const Str2& search, const Str3& replace) {
 	using CharT = typename detail::str_view<Str1>::char_type;
 	using Traits = typename detail::str_view<Str1>::traits_type;
 	std::basic_string<CharT, Traits> ret{ str };
@@ -116,20 +120,23 @@ template <class Str1, class Str2, class Str3>
 
 // Returns true if the character is an ascii letter.
 template <class CharT, class = std::enable_if_t<std::is_integral_v<CharT>>>
-[[nodiscard]] constexpr CharT is_letter_ascii(CharT ch) {
+[[nodiscard]]
+constexpr CharT is_letter_ascii(CharT ch) {
 	return (ch >= FEA_CH('a') && ch <= FEA_CH('z'))
-			|| (ch >= FEA_CH('A') && ch <= FEA_CH('Z'));
+		|| (ch >= FEA_CH('A') && ch <= FEA_CH('Z'));
 }
 
 // Returns true if the character is a lower case ascii letter.
 template <class CharT, class = std::enable_if_t<std::is_integral_v<CharT>>>
-[[nodiscard]] constexpr CharT is_lower_letter_ascii(CharT ch) {
+[[nodiscard]]
+constexpr CharT is_lower_letter_ascii(CharT ch) {
 	return ch >= FEA_CH('a') && ch <= FEA_CH('z');
 }
 
 // Returns true if the character is an upper case ascii letter.
 template <class CharT, class = std::enable_if_t<std::is_integral_v<CharT>>>
-[[nodiscard]] constexpr CharT is_upper_letter_ascii(CharT ch) {
+[[nodiscard]]
+constexpr CharT is_upper_letter_ascii(CharT ch) {
 	return ch >= FEA_CH('A') && ch <= FEA_CH('Z');
 }
 
@@ -137,7 +144,8 @@ template <class CharT, class = std::enable_if_t<std::is_integral_v<CharT>>>
 // C's tolower(int) is undefined for characters unrepresentable by unsigned
 // char.
 template <class CharT, class = std::enable_if_t<std::is_integral_v<CharT>>>
-[[nodiscard]] constexpr CharT to_lower_ascii(CharT ch) {
+[[nodiscard]]
+constexpr CharT to_lower_ascii(CharT ch) {
 	constexpr auto diff = FEA_CH('a') - FEA_CH('A');
 	if (fea::is_upper_letter_ascii(ch)) {
 		return ch + diff;
@@ -156,7 +164,8 @@ constexpr void to_lower_ascii_inplace(Str<CharT, Traits<CharT>, Args...>& out) {
 
 // Lower case ASCII string, returns new modified std::string.
 template <class Str, class = std::enable_if_t<!std::is_integral_v<Str>>>
-[[nodiscard]] auto to_lower_ascii(const Str& str) {
+[[nodiscard]]
+auto to_lower_ascii(const Str& str) {
 	using CharT = typename detail::str_view<Str>::char_type;
 	using Traits = typename detail::str_view<Str>::traits_type;
 	std::basic_string<CharT, Traits> ret{ str };
@@ -171,7 +180,8 @@ template <class Str, class = std::enable_if_t<!std::is_integral_v<Str>>>
 // C's toupper(int) is undefined for characters unrepresentable by unsigned
 // char.
 template <class CharT, class = std::enable_if_t<std::is_integral_v<CharT>>>
-[[nodiscard]] constexpr CharT to_upper_ascii(CharT ch) {
+[[nodiscard]]
+constexpr CharT to_upper_ascii(CharT ch) {
 	constexpr auto diff = FEA_CH('a') - FEA_CH('A');
 	if (fea::is_lower_letter_ascii(ch)) {
 		return ch - diff;
@@ -190,7 +200,8 @@ constexpr void to_upper_ascii_inplace(Str<CharT, Traits<CharT>, Args...>& out) {
 
 // Upper case ASCII string.
 template <class Str, class = std::enable_if_t<!std::is_integral_v<Str>>>
-[[nodiscard]] auto to_upper_ascii(const Str& str) {
+[[nodiscard]]
+auto to_upper_ascii(const Str& str) {
 	using CharT = typename detail::str_view<Str>::char_type;
 	using Traits = typename detail::str_view<Str>::traits_type;
 	std::basic_string<CharT, Traits> ret{ str };
@@ -212,7 +223,8 @@ constexpr void capitalize_ascii_inplace(
 
 // Capitalizes first character and lowercases the rest.
 template <class Str, class = std::enable_if_t<!std::is_integral_v<Str>>>
-[[nodiscard]] auto capitalize_ascii(const Str& str) {
+[[nodiscard]]
+auto capitalize_ascii(const Str& str) {
 	using CharT = typename detail::str_view<Str>::char_type;
 	using Traits = typename detail::str_view<Str>::traits_type;
 	std::basic_string<CharT, Traits> ret{ str };
@@ -245,7 +257,8 @@ constexpr void capitalize_words_ascii_inplace(
 
 // Capitalizes first letter of each word and lowercases the rest.
 template <class Str, class = std::enable_if_t<!std::is_integral_v<Str>>>
-[[nodiscard]] auto capitalize_words_ascii(const Str& str) {
+[[nodiscard]]
+auto capitalize_words_ascii(const Str& str) {
 	using CharT = typename detail::str_view<Str>::char_type;
 	using Traits = typename detail::str_view<Str>::traits_type;
 	std::basic_string<CharT, Traits> ret{ str };
@@ -256,7 +269,8 @@ template <class Str, class = std::enable_if_t<!std::is_integral_v<Str>>>
 
 // Removes any of the leading trim_chars.
 template <class CharT>
-[[nodiscard]] std::basic_string<CharT> trim_leading(
+[[nodiscard]]
+std::basic_string<CharT> trim_leading(
 		const std::basic_string<CharT>& str, const CharT* trim_chars) {
 	size_t new_begin = str.find_first_not_of(trim_chars);
 	if (new_begin == std::basic_string<CharT>::npos) {
@@ -268,7 +282,8 @@ template <class CharT>
 // Removes any of the leading characters and returns an appropriately sized
 // string_view.
 template <class CharT>
-[[nodiscard]] std::basic_string_view<CharT> trim_leading(
+[[nodiscard]]
+std::basic_string_view<CharT> trim_leading(
 		std::basic_string_view<CharT> str, const CharT* trim_chars) {
 	size_t new_begin = str.find_first_not_of(trim_chars);
 	if (new_begin == std::basic_string_view<CharT>::npos) {
@@ -279,7 +294,8 @@ template <class CharT>
 
 // Removes all trailing trim_chars.
 template <class CharT>
-[[nodiscard]] std::basic_string<CharT> trim_trailing(
+[[nodiscard]]
+std::basic_string<CharT> trim_trailing(
 		const std::basic_string<CharT>& str, const CharT* trim_chars) {
 	size_t new_end = str.find_last_not_of(trim_chars);
 	if (new_end == std::basic_string<CharT>::npos) {
@@ -291,7 +307,8 @@ template <class CharT>
 // Removes all trailing trim_chars and returns appropriately sized
 // string_view.
 template <class CharT>
-[[nodiscard]] std::basic_string_view<CharT> trim_trailing(
+[[nodiscard]]
+std::basic_string_view<CharT> trim_trailing(
 		std::basic_string_view<CharT> str, const CharT* trim_chars) {
 	size_t new_end = str.find_last_not_of(trim_chars);
 	if (new_end == std::basic_string_view<CharT>::npos) {
@@ -405,8 +422,8 @@ auto get_line(const Str& str, size_t line_num) {
 
 // Replaces conflicting html characters with entities.
 template <class CharT>
-[[nodiscard]] std::basic_string<CharT> html_escape(
-		std::basic_string_view<CharT> str) {
+[[nodiscard]]
+std::basic_string<CharT> html_escape(std::basic_string_view<CharT> str) {
 	std::basic_string<CharT> ret;
 	ret.reserve(str.size());
 	for (size_t i = 0; i < str.size(); ++i) {
@@ -426,6 +443,39 @@ template <class CharT>
 		case FEA_CH('>'): {
 			ret.append(FEA_LIT("&gt;"));
 		} break;
+		case FEA_CH('\n'): {
+			ret.append(FEA_LIT("&NewLine;"));
+		} break;
+		case FEA_CH('\r'): {
+			// note : &crarr; is both \n\r
+			ret.append(FEA_LIT("&#13;"));
+		} break;
+
+		// TODO : utf8 input.
+		// case FEA_CH('™'): {
+		//	ret.append(FEA_LIT("&trade;"));
+		//} break;
+		// case FEA_CH('®'): {
+		//	ret.append(FEA_LIT("&reg;"));
+		//} break;
+		// case FEA_CH('©'): {
+		//	ret.append(FEA_LIT("&copy;"));
+		//} break;
+		// case FEA_CH('€'): {
+		//	ret.append(FEA_LIT("&euro;"));
+		//} break;
+		// case FEA_CH('¥'): {
+		//	ret.append(FEA_LIT("&yen;"));
+		//} break;
+		// case FEA_CH('£'): {
+		//	ret.append(FEA_LIT("&pound;"));
+		//} break;
+		// case FEA_CH('¢'): {
+		//	ret.append(FEA_LIT("&cent;"));
+		//} break;
+		// case FEA_CH('\U00A0'): {
+		//	ret.append(FEA_LIT("&nbsp;"));
+		//} break;
 		default: {
 			ret.push_back(str[i]);
 		} break;
@@ -436,8 +486,8 @@ template <class CharT>
 
 // Overload for strings.
 template <class CharT>
-[[nodiscard]] std::basic_string<CharT> html_escape(
-		const std::basic_string<CharT>& str) {
+[[nodiscard]]
+std::basic_string<CharT> html_escape(const std::basic_string<CharT>& str) {
 	return html_escape(std::basic_string_view<CharT>{ str });
 }
 
@@ -445,7 +495,8 @@ template <class CharT>
 // https://stackoverflow.com/questions/49319461/how-to-use-custom-thousand-separator-and-decimal-character-with-stdstringstrea
 
 template <class CharT>
-[[nodiscard]] std::basic_string<CharT> thousand_seperate(
+[[nodiscard]]
+std::basic_string<CharT> thousand_seperate(
 		const std::basic_string<CharT>& str, CharT sep) {
 	std::basic_string<CharT> ret = str;
 
@@ -468,15 +519,16 @@ template <class CharT>
 // std::isdigit is undefined for types that cannot by represented by unsigned
 // char.
 template <class CharT>
-[[nodiscard]] constexpr bool is_digit_ascii(CharT c) {
+[[nodiscard]]
+constexpr bool is_digit_ascii(CharT c) {
 	return c <= FEA_CH('9') && c >= FEA_CH('0');
 }
 
 // Returns true if the string is an ascii number.
 template <template <class, class, class...> class Str, class CharT,
 		template <class> class Traits, class... Args>
-[[nodiscard]] constexpr bool is_number_ascii(
-		const Str<CharT, Traits<CharT>, Args...>& str) {
+[[nodiscard]]
+constexpr bool is_number_ascii(const Str<CharT, Traits<CharT>, Args...>& str) {
 	for (CharT c : str) {
 		if (!is_digit_ascii(c)) {
 			return false;
@@ -485,7 +537,8 @@ template <template <class, class, class...> class Str, class CharT,
 	return true;
 }
 template <class CharT>
-[[nodiscard]] constexpr bool is_number_ascii(const CharT* str) {
+[[nodiscard]]
+constexpr bool is_number_ascii(const CharT* str) {
 	size_t i = 0;
 	while (CharT c = str[i++]) {
 		if (!is_digit_ascii(c)) {
@@ -500,7 +553,8 @@ template <class CharT>
 // Given : a, A, aa, AA, b, B, 1
 // Produces : 1, A, AA, a, aa, B, b
 template <class InputIt1, class InputIt2>
-[[nodiscard]] constexpr std::strong_ordering lexicographical_compare(
+[[nodiscard]]
+constexpr std::strong_ordering lexicographical_compare(
 		InputIt1 first1, InputIt1 last1, InputIt2 first2, InputIt2 last2) {
 	for (; (first1 != last1) && (first2 != last2); ++first1, (void)++first2) {
 		// Lower check (alpha grouping).

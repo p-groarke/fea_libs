@@ -1,5 +1,5 @@
 #include <fea/terminal/translate_io.hpp>
-#include <fea/utils/unused.hpp>
+#include <fea/utility/unused.hpp>
 #include <gtest/gtest.h>
 
 namespace {

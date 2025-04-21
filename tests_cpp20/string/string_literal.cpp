@@ -1,9 +1,9 @@
 ﻿#include <fea/string/string_literal.hpp>
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
 
 namespace {
-#define FAILMSG "string_literal.cpp : Unit test failed."
+#define FAIL_MSG "string_literal.cpp : Unit test failed."
 
 template <fea::string_literal _lit>
 struct test {
@@ -54,9 +54,9 @@ TEST(string_literal, basics) {
 	{
 		constexpr test<"bla"> t;
 		constexpr std::string_view t2{ "bla" };
-		static_assert(t.lit.size() == 3, FAILMSG);
-		static_assert(t.lit.sv() == t2, FAILMSG);
-		static_assert(t.lit.hash() == answers[sizeof(char)], FAILMSG);
+		static_assert(t.lit.size() == 3, FAIL_MSG);
+		static_assert(t.lit.sv() == t2, FAIL_MSG);
+		static_assert(t.lit.hash() == answers[sizeof(char)], FAIL_MSG);
 
 #if FEA_WINDOWS
 		// Windows uses fnv1a.
@@ -68,9 +68,9 @@ TEST(string_literal, basics) {
 	{
 		constexpr wtest<L"bla"> t;
 		constexpr std::wstring_view t2{ L"bla" };
-		static_assert(t.lit.size() == 3, FAILMSG);
-		static_assert(t.lit.sv() == t2, FAILMSG);
-		static_assert(t.lit.hash() == answers[sizeof(wchar_t)], FAILMSG);
+		static_assert(t.lit.size() == 3, FAIL_MSG);
+		static_assert(t.lit.sv() == t2, FAIL_MSG);
+		static_assert(t.lit.hash() == answers[sizeof(wchar_t)], FAIL_MSG);
 
 #if FEA_WINDOWS
 		size_t std_hash = std::hash<std::wstring_view>{}(t2);
@@ -81,9 +81,9 @@ TEST(string_literal, basics) {
 	{
 		constexpr u8test<u8"bla"> t;
 		constexpr std::u8string_view t2{ u8"bla" };
-		static_assert(t.lit.size() == 3, FAILMSG);
-		static_assert(t.lit.sv() == t2, FAILMSG);
-		static_assert(t.lit.hash() == answers[sizeof(char8_t)], FAILMSG);
+		static_assert(t.lit.size() == 3, FAIL_MSG);
+		static_assert(t.lit.sv() == t2, FAIL_MSG);
+		static_assert(t.lit.hash() == answers[sizeof(char8_t)], FAIL_MSG);
 
 #if FEA_WINDOWS
 		size_t std_hash = std::hash<std::u8string_view>{}(t2);
@@ -94,9 +94,9 @@ TEST(string_literal, basics) {
 	{
 		constexpr u16test<u"bla"> t;
 		constexpr std::u16string_view t2{ u"bla" };
-		static_assert(t.lit.size() == 3, FAILMSG);
-		static_assert(t.lit.sv() == t2, FAILMSG);
-		static_assert(t.lit.hash() == answers[sizeof(char16_t)], FAILMSG);
+		static_assert(t.lit.size() == 3, FAIL_MSG);
+		static_assert(t.lit.sv() == t2, FAIL_MSG);
+		static_assert(t.lit.hash() == answers[sizeof(char16_t)], FAIL_MSG);
 
 #if FEA_WINDOWS
 		size_t std_hash = std::hash<std::u16string_view>{}(t2);
@@ -107,9 +107,9 @@ TEST(string_literal, basics) {
 	{
 		constexpr u32test<U"bla"> t;
 		constexpr std::u32string_view t2{ U"bla" };
-		static_assert(t.lit.size() == 3, FAILMSG);
-		static_assert(t.lit.sv() == t2, FAILMSG);
-		static_assert(t.lit.hash() == answers[sizeof(char32_t)], FAILMSG);
+		static_assert(t.lit.size() == 3, FAIL_MSG);
+		static_assert(t.lit.sv() == t2, FAIL_MSG);
+		static_assert(t.lit.hash() == answers[sizeof(char32_t)], FAIL_MSG);
 
 #if FEA_WINDOWS
 		size_t std_hash = std::hash<std::u32string_view>{}(t2);
@@ -140,7 +140,7 @@ TEST(string_literal, cexpr_hash) {
 	{
 		constexpr std::string_view sv = "a test";
 		constexpr size_t hash = fea::cexpr_make_hash(sv);
-		static_assert(hash == answers[sizeof(char)], FAILMSG);
+		static_assert(hash == answers[sizeof(char)], FAIL_MSG);
 
 #if FEA_WINDOWS
 		size_t std_hash = std::hash<std::string_view>{}(sv);
@@ -150,7 +150,7 @@ TEST(string_literal, cexpr_hash) {
 	{
 		constexpr std::wstring_view sv = L"a test";
 		constexpr size_t hash = fea::cexpr_make_hash(sv);
-		static_assert(hash == answers[sizeof(wchar_t)], FAILMSG);
+		static_assert(hash == answers[sizeof(wchar_t)], FAIL_MSG);
 
 #if FEA_WINDOWS
 		size_t std_hash = std::hash<std::wstring_view>{}(sv);
@@ -160,7 +160,7 @@ TEST(string_literal, cexpr_hash) {
 	{
 		constexpr std::u16string_view sv = u"a test";
 		constexpr size_t hash = fea::cexpr_make_hash(sv);
-		static_assert(hash == answers[sizeof(char16_t)], FAILMSG);
+		static_assert(hash == answers[sizeof(char16_t)], FAIL_MSG);
 
 #if FEA_WINDOWS
 		size_t std_hash = std::hash<std::u16string_view>{}(sv);
@@ -170,7 +170,7 @@ TEST(string_literal, cexpr_hash) {
 	{
 		constexpr std::u32string_view sv = U"a test";
 		constexpr size_t hash = fea::cexpr_make_hash(sv);
-		static_assert(hash == answers[sizeof(char32_t)], FAILMSG);
+		static_assert(hash == answers[sizeof(char32_t)], FAIL_MSG);
 
 #if FEA_WINDOWS
 		size_t std_hash = std::hash<std::u32string_view>{}(sv);
@@ -180,7 +180,7 @@ TEST(string_literal, cexpr_hash) {
 	{
 		constexpr std::u8string_view sv = u8"a test";
 		constexpr size_t hash = fea::cexpr_make_hash(sv);
-		static_assert(hash == answers[sizeof(char8_t)], FAILMSG);
+		static_assert(hash == answers[sizeof(char8_t)], FAIL_MSG);
 
 #if FEA_WINDOWS
 		size_t std_hash = std::hash<std::u8string_view>{}(sv);
@@ -207,13 +207,13 @@ TEST(string_literal, cexpr_hash) {
 		constexpr size_t hash6_miss = fea::cexpr_make_hash(
 				std::string_view{ arr2.data(), arr2.size() });
 
-		static_assert(hash == hash2, FAILMSG);
-		static_assert(hash == hash3, FAILMSG);
-		static_assert(hash == hash4, FAILMSG);
-		static_assert(hash == hash5, FAILMSG);
-		static_assert(hash == hash6, FAILMSG);
-		static_assert(hash == hash5_miss, FAILMSG);
-		static_assert(hash == hash6_miss, FAILMSG);
+		static_assert(hash == hash2, FAIL_MSG);
+		static_assert(hash == hash3, FAIL_MSG);
+		static_assert(hash == hash4, FAIL_MSG);
+		static_assert(hash == hash5, FAIL_MSG);
+		static_assert(hash == hash6, FAIL_MSG);
+		static_assert(hash == hash5_miss, FAIL_MSG);
+		static_assert(hash == hash6_miss, FAIL_MSG);
 
 #if FEA_WINDOWS
 		size_t std_hash1
@@ -251,29 +251,29 @@ TEST(string_literal, make) {
 	constexpr const char arr[5] = "test";
 	static_assert(std::equal(test_sl.data, test_sl.data + test_sl.size(),
 						  std::begin(arr)),
-			FAILMSG);
+			FAIL_MSG);
 
 	constexpr fea::string_literal sl = "test";
-	static_assert(sl == test_sl, FAILMSG);
+	static_assert(sl == test_sl, FAIL_MSG);
 }
 
 TEST(string_literal, equality) {
 	constexpr fea::string_literal t1 = "test";
 	constexpr fea::string_literal t2 = "test\0\0\0";
-	static_assert(t1 == t2, FAILMSG);
-	static_assert(!(t1 != t2), FAILMSG);
+	static_assert(t1 == t2, FAIL_MSG);
+	static_assert(!(t1 != t2), FAIL_MSG);
 
 	constexpr fea::string_literal t3 = "Test\0\0\0";
-	static_assert(t1 != t3, FAILMSG);
-	static_assert(!(t1 == t3), FAILMSG);
+	static_assert(t1 != t3, FAIL_MSG);
+	static_assert(!(t1 == t3), FAIL_MSG);
 
 	constexpr fea::string_literal t4 = "test";
-	static_assert(t1 == t4, FAILMSG);
-	static_assert(!(t1 != t4), FAILMSG);
+	static_assert(t1 == t4, FAIL_MSG);
+	static_assert(!(t1 != t4), FAIL_MSG);
 
 	constexpr fea::string_literal t5 = "tesT";
-	static_assert(t1 != t5, FAILMSG);
-	static_assert(!(t1 == t5), FAILMSG);
+	static_assert(t1 != t5, FAIL_MSG);
+	static_assert(!(t1 == t5), FAIL_MSG);
 }
 
 TEST(string_literal, concat) {
@@ -283,9 +283,9 @@ TEST(string_literal, concat) {
 
 	constexpr fea::string_literal result = fea::cexpr_concat<sl1, sl2, sl3>();
 	using result_t = std::decay_t<decltype(result)>;
-	static_assert(std::is_same_v<result_t, fea::string_literal<22>>, FAILMSG);
+	static_assert(std::is_same_v<result_t, fea::string_literal<22>>, FAIL_MSG);
 
 	constexpr fea::string_literal expected = "string literal concat";
-	static_assert(result == expected, FAILMSG);
+	static_assert(result == expected, FAIL_MSG);
 }
 } // namespace

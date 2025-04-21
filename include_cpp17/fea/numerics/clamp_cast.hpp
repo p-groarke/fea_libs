@@ -1,7 +1,7 @@
 ﻿/**
  * BSD 3-Clause License
  *
- * Copyright (c) 2024, Philippe Groarke
+ * Copyright (c) 2025, Philippe Groarke
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,7 +32,7 @@
  **/
 #pragma once
 #include <cstdint>
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 #include <limits>
 #include <type_traits>
 
@@ -41,6 +41,31 @@ namespace fea {
 // Returns 1 if T max > U max
 // Returns 0 if T max == U max
 // Returns -1 if T max < U max
+template <class T, class U>
+[[nodiscard]]
+constexpr int compare_max();
+
+// Returns 1 if T lowest < U lowest
+// Returns 0 if T lowest == U lowest
+// Returns -1 if T lowest > U lowest
+template <class T, class U>
+[[nodiscard]]
+constexpr int compare_lowest();
+
+// Saturating cast.
+// Casts the input type to the output type,
+// but saturates at the limits.
+// For ex :
+// - Casting a negative number to unsigned results in 0.
+// - Casting a higher value than output returns output max.
+template <class Output, class Input>
+[[nodiscard]]
+constexpr Output clamp_cast(Input input);
+} // namespace fea
+
+
+// Implementation
+namespace fea {
 template <class T, class U>
 constexpr int compare_max() {
 	static_assert(std::is_arithmetic_v<T> && std::is_arithmetic_v<U>,
@@ -73,9 +98,6 @@ constexpr int compare_max() {
 	}
 }
 
-// Returns 1 if T lowest < U lowest
-// Returns 0 if T lowest == U lowest
-// Returns -1 if T lowest > U lowest
 template <class T, class U>
 constexpr int compare_lowest() {
 	static_assert(std::is_arithmetic_v<T> && std::is_arithmetic_v<U>,
@@ -107,10 +129,6 @@ constexpr int compare_lowest() {
 	}
 }
 
-template <class T, class U>
-constexpr bool not_floating() {
-	return !std::is_floating_point_v<T> && !std::is_floating_point_v<U>;
-}
 
 #if FEA_WINDOWS
 // As far as I can tell, this is a problem with overzealous MSVC.
@@ -120,14 +138,9 @@ constexpr bool not_floating() {
 #pragma warning(disable : 4756)
 #endif
 
-// Saturating cast.
-// Casts the input type to the output type,
-// but saturates at the limits.
-// For ex :
-// - Casting a negative number to unsigned results in 0.
-// - Casting a higher value than output returns output max.
 template <class Output, class Input>
-[[nodiscard]] constexpr Output clamp_cast(Input input) {
+[[nodiscard]]
+constexpr Output clamp_cast(Input input) {
 	static_assert(std::is_arithmetic_v<Input> && std::is_arithmetic_v<Output>,
 			"clamp_cast : Only supports number types.");
 
@@ -159,7 +172,6 @@ template <class Output, class Input>
 
 	return Output(input);
 }
-
 #if FEA_WINDOWS
 #pragma warning(pop)
 #endif

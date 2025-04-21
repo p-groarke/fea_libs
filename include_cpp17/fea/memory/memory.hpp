@@ -1,7 +1,7 @@
 ﻿/**
  * BSD 3-Clause License
  *
- * Copyright (c) 2024, Philippe Groarke
+ * Copyright (c) 2025, Philippe Groarke
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  **/
 #pragma once
-#include "fea/utils/platform.hpp"
+#include "fea/utility/platform.hpp"
 
 #include <algorithm>
 #include <cstring>
@@ -138,13 +138,10 @@ constexpr void destroy_at(T* p) noexcept;
 // In debug, zeros memory.
 template <class FwdIt>
 constexpr void destroy(FwdIt first, FwdIt last) noexcept;
-
 } // namespace fea
 
 
-/**
- * Implementation
- */
+// Implementation
 namespace fea {
 template <class T>
 std::conditional_t<!std::is_move_constructible_v<T>
@@ -263,40 +260,6 @@ constexpr OutputIt uninitialized_move_if_noexcept_moveable(
 		return std::uninitialized_move(first, last, dest);
 	}
 }
-
-// template <class InputIt, class OutputIt>
-// constexpr OutputIt uninitialized_move_backward_if_moveable(
-//		InputIt first, InputIt last, OutputIt dest) {
-//	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
-//	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
-//	static_assert(std::is_same_v<in_val_t, out_val_t>,
-//			"fea::copy_or_move only works with identical input and destination "
-//			"types");
-//
-//	if constexpr (std::is_trivially_copyable_v<in_val_t>
-//				  || !std::is_move_constructible_v<in_val_t>) {
-//		return std::uninitialized_copy_backward(first, last, dest);
-//	} else {
-//		return std::move_backward(first, last, dest);
-//	}
-// }
-//
-// template <class InputIt, class OutputIt>
-// constexpr OutputIt uninitialized_move_backward_if_noexcept_moveable(
-//		InputIt first, InputIt last, OutputIt dest) {
-//	using in_val_t = typename std::iterator_traits<InputIt>::value_type;
-//	using out_val_t = typename std::iterator_traits<OutputIt>::value_type;
-//	static_assert(std::is_same_v<in_val_t, out_val_t>,
-//			"fea::copy_or_move only works with identical input and destination "
-//			"types");
-//
-//	if constexpr (std::is_trivially_copyable_v<in_val_t>
-//				  || !std::is_nothrow_move_constructible_v<in_val_t>) {
-//		return std::copy_backward(first, last, dest);
-//	} else {
-//		return std::move_backward(first, last, dest);
-//	}
-// }
 
 template <class Iter>
 constexpr auto make_move_iterator_if_moveable(Iter it) noexcept {

@@ -2,7 +2,7 @@
 #include <fea/containers/unsigned_compact_slotset.hpp>
 #include <fea/containers/unsigned_slotset.hpp>
 #include <fea/numerics/random.hpp>
-#include <fea/utils/platform.hpp>
+#include <fea/utility/platform.hpp>
 #include <format>
 #include <gtest/gtest.h>
 #include <iostream>

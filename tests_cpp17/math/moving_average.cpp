@@ -8,22 +8,22 @@ using namespace fea::moving_average::abbrev;
 }
 
 namespace {
-#define FAILMSG "average.cpp : Failed unit test."
+#define FAIL_MSG "average.cpp : Failed unit test."
 
 TEST(moving_average, ca_unbounded) {
-	static_assert(fea::ca<double>::is_int_v == false, FAILMSG);
-	static_assert(fea::ca<float>::is_int_v == false, FAILMSG);
-	static_assert(fea::ca<int64_t>::is_int_v == true, FAILMSG);
-	static_assert(fea::ca<int>::is_int_v == true, FAILMSG);
+	static_assert(fea::ca<double>::is_int_v == false, FAIL_MSG);
+	static_assert(fea::ca<float>::is_int_v == false, FAIL_MSG);
+	static_assert(fea::ca<int64_t>::is_int_v == true, FAIL_MSG);
+	static_assert(fea::ca<int>::is_int_v == true, FAIL_MSG);
 
 	static_assert(std::is_same_v<typename fea::ca<double>::mfloat_t, double>,
-			FAILMSG);
+			FAIL_MSG);
 	static_assert(
-			std::is_same_v<typename fea::ca<float>::mfloat_t, float>, FAILMSG);
+			std::is_same_v<typename fea::ca<float>::mfloat_t, float>, FAIL_MSG);
 	static_assert(std::is_same_v<typename fea::ca<int64_t>::mfloat_t, double>,
-			FAILMSG);
+			FAIL_MSG);
 	static_assert(
-			std::is_same_v<typename fea::ca<int>::mfloat_t, float>, FAILMSG);
+			std::is_same_v<typename fea::ca<int>::mfloat_t, float>, FAIL_MSG);
 
 	// unbounded
 	{
@@ -136,21 +136,21 @@ TEST(moving_average, ca_unbounded) {
 
 
 TEST(moving_average, sma) {
-	static_assert(fea::sma<double, 10>::is_int_v == false, FAILMSG);
-	static_assert(fea::sma<float, 10>::is_int_v == false, FAILMSG);
-	static_assert(fea::sma<int64_t, 10>::is_int_v == true, FAILMSG);
-	static_assert(fea::sma<int, 10>::is_int_v == true, FAILMSG);
+	static_assert(fea::sma<double, 10>::is_int_v == false, FAIL_MSG);
+	static_assert(fea::sma<float, 10>::is_int_v == false, FAIL_MSG);
+	static_assert(fea::sma<int64_t, 10>::is_int_v == true, FAIL_MSG);
+	static_assert(fea::sma<int, 10>::is_int_v == true, FAIL_MSG);
 
 	static_assert(
 			std::is_same_v<typename fea::sma<double, 10>::mfloat_t, double>,
-			FAILMSG);
+			FAIL_MSG);
 	static_assert(std::is_same_v<typename fea::sma<float, 10>::mfloat_t, float>,
-			FAILMSG);
+			FAIL_MSG);
 	static_assert(
 			std::is_same_v<typename fea::sma<int64_t, 10>::mfloat_t, double>,
-			FAILMSG);
+			FAIL_MSG);
 	static_assert(std::is_same_v<typename fea::sma<int, 10>::mfloat_t, float>,
-			FAILMSG);
+			FAIL_MSG);
 
 	{
 		fea::simple_moving_average<double, 2> sma;
@@ -226,19 +226,19 @@ TEST(moving_average, sma) {
 }
 
 TEST(moving_average, ema) {
-	static_assert(fea::ema<double>::is_int_v == false, FAILMSG);
-	static_assert(fea::ema<float>::is_int_v == false, FAILMSG);
-	static_assert(fea::ema<int64_t>::is_int_v == true, FAILMSG);
-	static_assert(fea::ema<int>::is_int_v == true, FAILMSG);
+	static_assert(fea::ema<double>::is_int_v == false, FAIL_MSG);
+	static_assert(fea::ema<float>::is_int_v == false, FAIL_MSG);
+	static_assert(fea::ema<int64_t>::is_int_v == true, FAIL_MSG);
+	static_assert(fea::ema<int>::is_int_v == true, FAIL_MSG);
 
 	static_assert(std::is_same_v<typename fea::ema<double>::mfloat_t, double>,
-			FAILMSG);
-	static_assert(
-			std::is_same_v<typename fea::ema<float>::mfloat_t, float>, FAILMSG);
+			FAIL_MSG);
+	static_assert(std::is_same_v<typename fea::ema<float>::mfloat_t, float>,
+			FAIL_MSG);
 	static_assert(std::is_same_v<typename fea::ema<int64_t>::mfloat_t, double>,
-			FAILMSG);
+			FAIL_MSG);
 	static_assert(
-			std::is_same_v<typename fea::ema<int>::mfloat_t, float>, FAILMSG);
+			std::is_same_v<typename fea::ema<int>::mfloat_t, float>, FAIL_MSG);
 
 	{
 		// Alpha 0.5, init avg 0.0.
@@ -284,21 +284,21 @@ TEST(moving_average, ema) {
 }
 
 TEST(moving_average, wma) {
-	static_assert(fea::wma<double, 10>::is_int_v == false, FAILMSG);
-	static_assert(fea::wma<float, 10>::is_int_v == false, FAILMSG);
-	static_assert(fea::wma<int64_t, 10>::is_int_v == true, FAILMSG);
-	static_assert(fea::wma<int, 10>::is_int_v == true, FAILMSG);
+	static_assert(fea::wma<double, 10>::is_int_v == false, FAIL_MSG);
+	static_assert(fea::wma<float, 10>::is_int_v == false, FAIL_MSG);
+	static_assert(fea::wma<int64_t, 10>::is_int_v == true, FAIL_MSG);
+	static_assert(fea::wma<int, 10>::is_int_v == true, FAIL_MSG);
 
 	static_assert(
 			std::is_same_v<typename fea::wma<double, 10>::mfloat_t, double>,
-			FAILMSG);
+			FAIL_MSG);
 	static_assert(std::is_same_v<typename fea::wma<float, 10>::mfloat_t, float>,
-			FAILMSG);
+			FAIL_MSG);
 	static_assert(
 			std::is_same_v<typename fea::wma<int64_t, 10>::mfloat_t, double>,
-			FAILMSG);
+			FAIL_MSG);
 	static_assert(std::is_same_v<typename fea::wma<int, 10>::mfloat_t, float>,
-			FAILMSG);
+			FAIL_MSG);
 
 	{
 		fea::weighted_moving_average<double, 2> wma;
@@ -387,21 +387,21 @@ TEST(moving_average, wma) {
 }
 
 TEST(moving_average, mm) {
-	static_assert(fea::mm<double, 10>::is_int_v == false, FAILMSG);
-	static_assert(fea::mm<float, 10>::is_int_v == false, FAILMSG);
-	static_assert(fea::mm<int64_t, 10>::is_int_v == true, FAILMSG);
-	static_assert(fea::mm<int, 10>::is_int_v == true, FAILMSG);
+	static_assert(fea::mm<double, 10>::is_int_v == false, FAIL_MSG);
+	static_assert(fea::mm<float, 10>::is_int_v == false, FAIL_MSG);
+	static_assert(fea::mm<int64_t, 10>::is_int_v == true, FAIL_MSG);
+	static_assert(fea::mm<int, 10>::is_int_v == true, FAIL_MSG);
 
 	static_assert(
 			std::is_same_v<typename fea::mm<double, 10>::mfloat_t, double>,
-			FAILMSG);
+			FAIL_MSG);
 	static_assert(std::is_same_v<typename fea::mm<float, 10>::mfloat_t, float>,
-			FAILMSG);
+			FAIL_MSG);
 	static_assert(
 			std::is_same_v<typename fea::mm<int64_t, 10>::mfloat_t, double>,
-			FAILMSG);
+			FAIL_MSG);
 	static_assert(std::is_same_v<typename fea::mm<int, 10>::mfloat_t, float>,
-			FAILMSG);
+			FAIL_MSG);
 
 	{
 		fea::moving_median<double, 2> mm;
