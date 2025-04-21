@@ -34,7 +34,6 @@
 #include "fea/utility/platform.hpp"
 
 #include <algorithm>
-#include <bit>
 #include <cstring>
 #include <iterator>
 #include <memory>
