@@ -694,11 +694,11 @@ TEST(fixed, assignement_ops) {
 	f %= 2.0;
 	EXPECT_EQ(0.0, f);
 
-	f = fea::fixed(int64_t(0xff));
+	f = fea::fixed(15.0);
 	f &= 3.0;
 	EXPECT_EQ(3.0, f);
 
-	f = fea::fixed(int64_t(0xff));
+	f = fea::fixed(15.0);
 	f &= 6.0;
 	EXPECT_EQ(6.0, f);
 
