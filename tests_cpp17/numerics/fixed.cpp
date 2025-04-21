@@ -303,13 +303,10 @@ TEST(fixed, basics) {
 		ans = f1 ^ f2;
 		EXPECT_EQ(ans, fea::fixed(-6.0));
 
-		if constexpr (fea::debug_build) {
-			EXPECT_DEATH(f1 >> f2, "");
-		}
-
-		if constexpr (fea::debug_build) {
-			EXPECT_DEATH(f1 << f2, "");
-		}
+#if FEA_DEBUG
+		EXPECT_DEATH(f1 >> f2, "");
+		EXPECT_DEATH(f1 << f2, "");
+#endif
 
 
 		// A few more modulo
