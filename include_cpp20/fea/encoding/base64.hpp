@@ -37,7 +37,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <array>
 #include <bit>
 #include <cassert>
-// #include <cstring>
 #include <iterator>
 #include <type_traits>
 
@@ -51,13 +50,10 @@ void to_base64(FwdIt first, FwdIt last, OutIt out) noexcept;
 // Supports an output iterator, a single pointer, an iterator to types T, etc.
 template <std::forward_iterator FwdIt, class OutIt>
 void from_base64(FwdIt first, FwdIt last, OutIt out);
-
 } // namespace fea
 
 
-/**
- * Implementation
- */
+// Implementation
 namespace fea {
 namespace detail {
 // 6 bit part to char.
@@ -162,7 +158,7 @@ void to_base64(FwdIt first, FwdIt last, OutIt out) noexcept {
 
 namespace detail {
 template <class T, std::forward_iterator FwdIt, std::output_iterator<T> OutIt>
-void decode_base64(FwdIt first, FwdIt last, OutIt out) noexcept {
+void from_base64(FwdIt first, FwdIt last, OutIt out) noexcept {
 	using value_t = T;
 	using storage_t = fea::aligned_storage_t<sizeof(value_t), alignof(value_t)>;
 	static_assert(std::is_trivially_copyable_v<value_t>,
@@ -282,19 +278,19 @@ void decode_base64(FwdIt first, FwdIt last, OutIt out) noexcept {
 // Overload for real output iterators. Deduces the output value_type.
 template <std::forward_iterator FwdIt, template <class, class...> class OutIt,
 		class First, class... Args>
-void decode_base64(FwdIt first, FwdIt last, OutIt<First, Args...> out,
+void from_base64(FwdIt first, FwdIt last, OutIt<First, Args...> out,
 		std::output_iterator_tag) {
 	using value_t = fea::output_iterator_vt<OutIt<First, Args...>>;
-	return decode_base64<value_t>(first, last, out);
+	return from_base64<value_t>(first, last, out);
 }
 
 // Overload for forward iterators. Simple. Used for example when amount is known
 // or with pointers.
 template <std::forward_iterator FwdIt, std::forward_iterator OutIt>
-void decode_base64(
+void from_base64(
 		FwdIt first, FwdIt last, OutIt out, std::forward_iterator_tag) {
 	using value_t = typename std::iterator_traits<OutIt>::value_type;
-	return decode_base64<value_t>(first, last, out);
+	return from_base64<value_t>(first, last, out);
 }
 } // namespace detail
 
@@ -304,6 +300,6 @@ void decode_base64(
 template <std::forward_iterator FwdIt, class OutIt>
 void from_base64(FwdIt first, FwdIt last, OutIt out) {
 	using cat_t = typename std::iterator_traits<OutIt>::iterator_category;
-	return detail::decode_base64(first, last, out, cat_t{});
+	return detail::from_base64(first, last, out, cat_t{});
 }
 } // namespace fea

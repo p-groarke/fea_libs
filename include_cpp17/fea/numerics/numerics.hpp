@@ -75,7 +75,6 @@ struct next_bigger;
 // Returns the next bigger fundamental type to hold T, or T if size == size_t.
 template <class T>
 using next_bigger_t = typename next_bigger<T>::type;
-
 } // namespace fea
 
 

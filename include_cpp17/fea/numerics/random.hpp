@@ -84,6 +84,14 @@ inline uint8_t random_val<uint8_t>();
 template <>
 inline bool random_val<bool>();
 
+// Get a random value from container.
+template <class Container>
+const auto& random_val(const Container& container);
+
+// Get a random value from container.
+template <class Container>
+auto& random_val(Container& container);
+
 // Fills a range, from begin to end, with random values between [min, max].
 // Iterator value type should be supported by fea::random_val.
 template <class ForwardIt,
@@ -106,14 +114,6 @@ FwdIt random_iter(FwdIt first, FwdIt last);
 // Fills the range with random indexes from [0, count[
 template <class FwdIt>
 void random_idxes(FwdIt begin, FwdIt end, size_t count);
-
-// Get a random value from container.
-template <class Container>
-const auto& random_val(const Container& container);
-
-// Get a random value from container.
-template <class Container>
-auto& random_val(Container& container);
 
 // Get some random bytes.
 template <size_t N>
@@ -238,6 +238,16 @@ bool random_val<bool>() {
 	return bool(random_val(uint8_t(0), uint8_t(1)));
 }
 
+template <class Container>
+const auto& random_val(const Container& container) {
+	return *random_iter(container.begin(), container.end());
+}
+
+template <class Container>
+auto& random_val(Container& container) {
+	return *random_iter(container.begin(), container.end());
+}
+
 template <class ForwardIt,
 		class T /*= typename std::iterator_traits<ForwardIt>::value_type*/>
 void random_fill(ForwardIt begin, ForwardIt end, T min, T max) {
@@ -269,16 +279,6 @@ void random_idxes(FwdIt begin, FwdIt end, size_t count) {
 	for (auto it = begin; it != end; ++it) {
 		*it = fea::random_idx(count);
 	}
-}
-
-template <class Container>
-const auto& random_val(const Container& container) {
-	return *random_iter(container.begin(), container.end());
-}
-
-template <class Container>
-auto& random_val(Container& container) {
-	return *random_iter(container.begin(), container.end());
 }
 
 template <size_t N>
