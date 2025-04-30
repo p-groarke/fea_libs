@@ -34,7 +34,7 @@
 #include "fea/containers/span.hpp"
 #include "fea/utility/error.hpp"
 #include "fea/utility/platform.hpp"
-#include "fea/utility/throw.hpp"
+#include "fea/utility/error.hpp"
 
 #include <cstddef>
 #include <cstdint>

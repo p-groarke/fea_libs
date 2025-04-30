@@ -39,7 +39,7 @@
 #include "fea/string/string.hpp"
 #include "fea/string/string_literal.hpp"
 #include "fea/utility/file.hpp"
-#include "fea/utility/throw.hpp"
+#include "fea/utility/error.hpp"
 
 #include <cassert>
 #include <charconv>

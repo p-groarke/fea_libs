@@ -34,7 +34,7 @@
 #include "fea/utility/file.hpp"
 #include "fea/utility/platform.hpp"
 #include "fea/utility/scope.hpp"
-#include "fea/utility/throw.hpp"
+#include "fea/utility/error.hpp"
 
 #include <algorithm>
 #include <cassert>
