@@ -184,6 +184,22 @@ struct is_pair;
 template <class T>
 inline constexpr bool is_pair_v = is_pair<T>::value;
 
+// Get the iterator_traits value_type type.
+template <class Iter>
+using iterator_value_t = typename std::iterator_traits<Iter>::value_type;
+
+// Get the iterator_traits pointer type.
+template <class Iter>
+using iterator_pointer_t = typename std::iterator_traits<Iter>::pointer;
+
+// Get the iterator_traits reference type.
+template <class Iter>
+using iterator_reference_t = typename std::iterator_traits<Iter>::reference;
+
+// Get the iterator_traits iterator difference type.
+template <class T>
+using iterator_difference_t = typename std::iterator_traits<T>::difference_type;
+
 // Get the iterator_traits iterator category.
 template <class T>
 using iterator_category_t = typename std::iterator_traits<T>::iterator_category;
@@ -192,10 +208,6 @@ using iterator_category_t = typename std::iterator_traits<T>::iterator_category;
 template <class Alloc, class Value>
 using rebind_alloc_t =
 		typename std::allocator_traits<Alloc>::template rebind_alloc<Value>;
-
-// Get the iterator_traits value_type type.
-template <class Iter>
-using iterator_value_t = typename std::iterator_traits<Iter>::value_type;
 
 // Checks if a type is an iterator.
 template <class, class = void>
