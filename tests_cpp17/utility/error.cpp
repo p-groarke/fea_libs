@@ -1,4 +1,6 @@
 ﻿#include <fea/utility/error.hpp>
+
+#include <cassert>
 #include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
 
@@ -13,7 +15,7 @@ TEST(error, basics) {
 	EXPECT_TRUE(ec || !ec);
 
 
-#if defined(FEA_NOTHROW)
+#if defined(FEA_NOTHROW) || !defined(NDEBUG)
 	EXPECT_DEATH(fea::maybe_throw(__FUNCTION__, __LINE__, "msg"), "");
 	EXPECT_DEATH(fea::maybe_throw(__FUNCTION__, __LINE__, L"msg"), "");
 
@@ -59,9 +61,11 @@ TEST(error, basics) {
 	EXPECT_DEATH(fea::error_exit_w(__FUNCTION__, __LINE__, L"msg"), "");
 
 	EXPECT_DEATH(fea::error_exit(__FUNCTION__, __LINE__,
-			std::error_code{ 42, std::system_category() }), "");
+						 std::error_code{ 42, std::system_category() }),
+			"");
 	EXPECT_DEATH(fea::error_exit_w(__FUNCTION__, __LINE__,
-			std::error_code{ 42, std::system_category() }), "");
+						 std::error_code{ 42, std::system_category() }),
+			"");
 }
 
 } // namespace
