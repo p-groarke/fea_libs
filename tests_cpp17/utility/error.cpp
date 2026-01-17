@@ -1,6 +1,5 @@
-﻿#include <fea/utility/error.hpp>
-
-#include <cassert>
+﻿#include <cassert>
+#include <fea/utility/error.hpp>
 #include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
 
@@ -15,7 +14,7 @@ TEST(error, basics) {
 	EXPECT_TRUE(ec || !ec);
 
 
-#if FEA_NOTHROW || !defined(NDEBUG)
+#if FEA_NOTHROW || FEA_DEBUG
 	EXPECT_DEATH(fea::maybe_throw(__FUNCTION__, __LINE__, "msg"), "");
 	EXPECT_DEATH(fea::maybe_throw(__FUNCTION__, __LINE__, L"msg"), "");
 

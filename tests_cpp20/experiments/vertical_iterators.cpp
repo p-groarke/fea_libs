@@ -183,13 +183,15 @@ auto vbegin(First& first_container, Args&... containers) {
 				__FUNCTION__, __LINE__, "Container size mismatch.");
 	}
 
-	if constexpr (std::is_const_v<First>) {
-		return vertical_iterator{ std::begin(first_container), std::begin(containers)... };
-	} else {
-		static_assert(false);
-		// return vertical_iterator{ std::begin(first),
-		//	std::begin(args)... };
-	}
+	return vertical_iterator{ std::begin(first_container),
+		std::begin(containers)... };
+
+	// if constexpr (std::is_const_v<First>) {
+	//	return vertical_iterator{ std::begin(first_container),
+	//std::begin(containers)... }; } else { 	static_assert(false);
+	//	// return vertical_iterator{ std::begin(first),
+	//	//	std::begin(args)... };
+	// }
 }
 
 template <class First, class... Args>
@@ -206,12 +208,14 @@ auto vend(First& first_container, Args&... containers) {
 					== std::distance(containers.begin(), containers.end()))
 			&& ...));
 
-	if constexpr (std::is_const_v<First>) {
-		return vertical_iterator{ std::end(first_container), std::end(containers)... };
-	} else {
-		static_assert(false);
-		// return vertical_iterator{ std::end(first), std::end(args)... };
-	}
+	return vertical_iterator{ std::end(first_container),
+		std::end(containers)... };
+
+	// if constexpr (std::is_const_v<First>) {
+	//	return vertical_iterator{ std::end(first_container),
+	//std::end(containers)... }; } else { 	static_assert(false);
+	//	// return vertical_iterator{ std::end(first), std::end(args)... };
+	// }
 }
 
 template <class First, class... Args>
@@ -250,6 +254,7 @@ TEST(vertical_iterators, basics) {
 		const std::vector<double> d_vec(10);
 		const std::vector<bool> b_vec(10);
 
+		// Implementation defined.
 		using bool_iter_t = typename std::vector<bool>::const_iterator;
 		using bool_ref_t = typename bool_iter_t::reference;
 		using bool_ptr_t = typename bool_iter_t::pointer;
@@ -259,14 +264,17 @@ TEST(vertical_iterators, basics) {
 		using value_t = std::decay_t<decltype(*it)>;
 
 		// Check types.
-		static_assert(std::is_same_v<typename vertical_t::value_type,
-							  std::tuple<const int&, const double&, bool>>,
+		static_assert(
+				std::is_same_v<typename vertical_t::value_type,
+						std::tuple<const int&, const double&, bool_ref_t>>,
 				FAIL_MSG);
-		static_assert(std::is_same_v<typename vertical_t::pointer,
-							  std::tuple<const int*, const double*, bool*>>,
+		static_assert(
+				std::is_same_v<typename vertical_t::pointer,
+						std::tuple<const int*, const double*, bool_ptr_t>>,
 				FAIL_MSG);
-		static_assert(std::is_same_v<value_t,
-							  std::tuple<const int&, const double&, bool>>,
+		static_assert(
+				std::is_same_v<value_t,
+						std::tuple<const int&, const double&, bool_ref_t>>,
 				FAIL_MSG);
 
 		auto it2 = fea::vbegin(i_vec, d_vec, b_vec);
