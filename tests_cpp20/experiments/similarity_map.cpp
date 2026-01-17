@@ -14,6 +14,7 @@
 #include <string_view>
 
 namespace {
+#if 0
 
 /*
 English letter frequencies (wiki)
@@ -200,7 +201,6 @@ std::vector<double> dct2(std::string_view sv) {
 }
 
 
-#if 0
 TEST(similarity_map, experiments) {
 	using namespace std::string_view_literals;
 	// Print out the "most likely" english word, navigating bigrams
@@ -294,6 +294,6 @@ TEST(similarity_map, experiments) {
 		}
 	}
 }
-#endif
 
+#endif
 } // namespace
