@@ -15,7 +15,7 @@ TEST(error, basics) {
 	EXPECT_TRUE(ec || !ec);
 
 
-#if defined(FEA_NOTHROW) || !defined(NDEBUG)
+#if FEA_NOTHROW || !defined(NDEBUG)
 	EXPECT_DEATH(fea::maybe_throw(__FUNCTION__, __LINE__, "msg"), "");
 	EXPECT_DEATH(fea::maybe_throw(__FUNCTION__, __LINE__, L"msg"), "");
 

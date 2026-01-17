@@ -200,6 +200,7 @@ std::vector<double> dct2(std::string_view sv) {
 }
 
 
+#if 0
 TEST(similarity_map, experiments) {
 	using namespace std::string_view_literals;
 	// Print out the "most likely" english word, navigating bigrams
@@ -250,10 +251,9 @@ TEST(similarity_map, experiments) {
 			}
 		}
 
-		// std::cout << std::format("Most likely word :\n  {}\n", result);
+		 std::cout << std::format("Most likely word :\n  {}\n", result);
 	}
 
-#if 0
 	{
 		std::vector<std::string_view> words{
 			"zzz"sv,
@@ -293,7 +293,7 @@ TEST(similarity_map, experiments) {
 			// std::cout << sv << ": a = " << a << ", b = " << b << std::endl;
 		}
 	}
-#endif
 }
+#endif
 
 } // namespace

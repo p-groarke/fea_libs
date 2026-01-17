@@ -175,16 +175,16 @@ vertical_iterator(First f, Args... args) -> vertical_iterator<First, Args...>;
 
 template <class First, class... Args>
 	requires detail::vertical_ranges<First, Args...>
-auto vbegin(First& first, Args&... args) {
+auto vbegin(First& first_container, Args&... containers) {
 	// Checks containers are the same size.
-	auto s = std::distance(first.begin(), first.end());
-	if (!((s == std::distance(args.begin(), args.end())) && ...)) {
+	auto s = std::distance(first_container.begin(), first_container.end());
+	if (!((s == std::distance(containers.begin(), containers.end())) && ...)) {
 		fea::maybe_throw<std::invalid_argument>(
 				__FUNCTION__, __LINE__, "Container size mismatch.");
 	}
 
 	if constexpr (std::is_const_v<First>) {
-		return vertical_iterator{ std::begin(first), std::begin(args)... };
+		return vertical_iterator{ std::begin(first_container), std::begin(containers)... };
 	} else {
 		static_assert(false);
 		// return vertical_iterator{ std::begin(first),
@@ -199,15 +199,15 @@ auto vcbegin(const First& f, const Args&... args) {
 
 template <class First, class... Args>
 	requires detail::vertical_ranges<First, Args...>
-auto vend(First& first, Args&... args) {
+auto vend(First& first_container, Args&... containers) {
 	// Checks containers are the same size.
 	// Release builds throw is in fea::vbegin() function.
-	assert(((std::distance(first.begin(), first.end())
-					== std::distance(args.begin(), args.end()))
+	assert(((std::distance(first_container.begin(), first_container.end())
+					== std::distance(containers.begin(), containers.end()))
 			&& ...));
 
 	if constexpr (std::is_const_v<First>) {
-		return vertical_iterator{ std::end(first), std::end(args)... };
+		return vertical_iterator{ std::end(first_container), std::end(containers)... };
 	} else {
 		static_assert(false);
 		// return vertical_iterator{ std::end(first), std::end(args)... };
