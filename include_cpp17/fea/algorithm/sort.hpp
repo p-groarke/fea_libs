@@ -37,6 +37,7 @@
 // #include "fea/performance/tls.hpp"
 
 #include <array>
+#include <cassert>
 #include <cstdint>
 #include <iterator>
 #include <vector>
@@ -98,11 +99,6 @@ void radix_sort(FwdIt first, FwdIt last) {
 		assert(false);
 	}
 
-	auto sorted_first = sorted_values.begin();
-	for (; first != last; ++first)
-	{
-		*first = *sorted_first;
-		++sorted_first;
-	}
+	std::copy(sorted_values.begin(), sorted_values.end(), first);
 }
 } // namespace fea

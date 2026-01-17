@@ -7,7 +7,8 @@
 namespace {
 
 TEST(sort, basics) {
-	std::vector<uint8_t> vals{ 54, 18, 2, 128, 3 };
+	std::vector<uint8_t> vals(42);
+	fea::random_fill(vals.begin(), vals.end());
 	std::vector<uint8_t> cmp = vals;
 
 	fea::radix_sort(vals.begin(), vals.end());
