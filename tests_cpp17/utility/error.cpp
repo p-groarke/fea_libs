@@ -42,10 +42,10 @@ TEST(error, basics) {
 
 	EXPECT_THROW(
 			fea::maybe_throw<std::out_of_range>(__FUNCTION__, __LINE__, "msg"),
-			std::runtime_error);
+			std::out_of_range);
 	EXPECT_THROW(
 			fea::maybe_throw<std::out_of_range>(__FUNCTION__, __LINE__, L"msg"),
-			std::runtime_error);
+			std::out_of_range);
 
 	EXPECT_THROW(fea::maybe_throw(__FUNCTION__, __LINE__,
 						 std::error_code{ int(std::errc::file_exists),

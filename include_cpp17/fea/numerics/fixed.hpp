@@ -89,7 +89,14 @@ public:
 
 	constexpr basic_fixed(float f) noexcept;
 	constexpr basic_fixed(double d) noexcept;
-	explicit constexpr basic_fixed(value_t v) noexcept;
+	explicit constexpr basic_fixed(int8_t v) noexcept;
+	explicit constexpr basic_fixed(uint8_t v) noexcept;
+	explicit constexpr basic_fixed(int16_t v) noexcept;
+	explicit constexpr basic_fixed(uint16_t v) noexcept;
+	explicit constexpr basic_fixed(int32_t v) noexcept;
+	explicit constexpr basic_fixed(uint32_t v) noexcept;
+	explicit constexpr basic_fixed(int64_t v) noexcept;
+	explicit constexpr basic_fixed(uint64_t v) noexcept;
 
 	// Conversions
 	explicit constexpr operator float() const noexcept;
@@ -267,12 +274,55 @@ constexpr basic_fixed<I, S>::basic_fixed(double d) noexcept
 }
 
 template <class I, size_t S>
-constexpr basic_fixed<I, S>::basic_fixed(value_t v) noexcept {
+constexpr basic_fixed<I, S>::basic_fixed(int8_t v) noexcept {
 	if constexpr (is_scaling_pow2_v) {
-		value = v << scaling_sqrt_v;
+		value = value_t(v) << scaling_sqrt_v;
 	} else {
-		value = v * scaling_v;
+		value = value_t(v) * scaling_v;
 	}
+}
+template <class I, size_t S>
+constexpr basic_fixed<I, S>::basic_fixed(uint8_t v) noexcept
+		: basic_fixed(value_t(v)) {
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>::basic_fixed(int16_t v) noexcept {
+	if constexpr (is_scaling_pow2_v) {
+		value = value_t(v) << scaling_sqrt_v;
+	} else {
+		value = value_t(v) * scaling_v;
+	}
+}
+template <class I, size_t S>
+constexpr basic_fixed<I, S>::basic_fixed(uint16_t v) noexcept
+		: basic_fixed(value_t(v)) {
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>::basic_fixed(int32_t v) noexcept {
+	if constexpr (is_scaling_pow2_v) {
+		value = value_t(v) << scaling_sqrt_v;
+	} else {
+		value = value_t(v) * scaling_v;
+	}
+}
+template <class I, size_t S>
+constexpr basic_fixed<I, S>::basic_fixed(uint32_t v) noexcept
+		: basic_fixed(value_t(v)) {
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>::basic_fixed(int64_t v) noexcept {
+	if constexpr (is_scaling_pow2_v) {
+		value = value_t(v) << scaling_sqrt_v;
+	} else {
+		value = value_t(v) * scaling_v;
+	}
+}
+template <class I, size_t S>
+constexpr basic_fixed<I, S>::basic_fixed(uint64_t v) noexcept
+		: basic_fixed(value_t(v)) {
 }
 
 template <class I, size_t S>
