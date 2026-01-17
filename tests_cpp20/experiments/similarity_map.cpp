@@ -250,7 +250,7 @@ TEST(similarity_map, experiments) {
 			}
 		}
 
-		std::cout << std::format("Most likely word :\n  {}\n", result);
+		//std::cout << std::format("Most likely word :\n  {}\n", result);
 	}
 
 
@@ -274,22 +274,22 @@ TEST(similarity_map, experiments) {
 			"tomatoss"sv,
 		};
 
-		std::cout << "\nLinear Regression\n";
+		//std::cout << "\nLinear Regression\n";
 		for (std::string_view word : words) {
 			auto [a, b] = linear_regression(word);
-			std::cout << std::format("{} : a = {}, b = {}\n", word, a, b);
+			//std::cout << std::format("{} : a = {}, b = {}\n", word, a, b);
 		}
 
-		std::cout << "\nDHT\n";
+		//std::cout << "\nDHT\n";
 		for (std::string_view word : words) {
 			std::vector<double> dht = dct2(word);
-			std::cout << word << " : ";
+			//std::cout << word << " : ";
 			double tot = 0.0;
 			for (double d : dht) {
-				std::cout << std::format("{:.6f},", d);
+				//std::cout << std::format("{:.6f},", d);
 				tot += d;
 			}
-			std::cout << std::format("\n  total : {:.6f}\n", tot);
+			//std::cout << std::format("\n  total : {:.6f}\n", tot);
 			// std::cout << sv << ": a = " << a << ", b = " << b << std::endl;
 		}
 	}

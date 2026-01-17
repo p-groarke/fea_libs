@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fea/utility/platform.hpp"
 
 #include <cassert>
+#include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <string>
@@ -42,7 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #if FEA_WINDOWS
 #include <windows.h>
 #else
-#include <errno.h>
+//#include <errno.h> // Maybe unnecessary?
 #endif
 
 namespace std {
@@ -83,14 +84,16 @@ inline std::error_code last_errno_error();
 inline void print_error_message(
 		const char* func_name, size_t line, const std::string& message);
 inline void print_error_message(
-		const wchar_t* func_name, size_t line, const std::wstring& message);
+		const char* func_name, size_t line, const std::wstring& message);
+inline void print_error_message_w(
+		const char* func_name, size_t line, const std::wstring& message);
 
 // Prints error message.
 // Provide __FUNCTION__, __LINE__, std::error_code.
 inline void print_error_message(
 		const char* func_name, size_t line, const std::error_code& ec);
-inline void print_error_message(
-		const wchar_t* func_name, size_t line, const std::error_code& ec);
+inline void print_error_message_w(
+		const char* func_name, size_t line, const std::error_code& ec);
 
 // Prints error message.
 // Throws if FEA_NOTHROW is not defined, else exits with error code.
@@ -100,28 +103,31 @@ void maybe_throw(
 		const char* func_name, size_t line, const std::string& message);
 template <class Ex = std::runtime_error>
 void maybe_throw(
-		const wchar_t* func_name, size_t line, const std::wstring& message);
+		const char* func_name, size_t line, const std::wstring& message);
+template <class Ex = std::runtime_error>
+void maybe_throw_w(
+		const char* func_name, size_t line, const std::wstring& message);
 
 // Throws if FEA_NOTHROW is not defined, else exits with error code.
 // Provide __FUNCTION__, __LINE__, std::error_code.
 inline void maybe_throw(
 		const char* func_name, size_t line, const std::error_code& ec);
-inline void maybe_throw(
-		const wchar_t* func_name, size_t line, const std::error_code& ec);
+inline void maybe_throw_w(
+		const char* func_name, size_t line, const std::error_code& ec);
 
 // If there is a system error, throws if FEA_NOTHROW is not defined, else exits
 // with error code. Prints last error message.
 // Provide __FUNCTION__, __LINE__.
 // Uses GetLastError on windows, errno on posix.
 inline void maybe_throw_on_os_error(const char* func_name, size_t line);
-inline void maybe_throw_on_os_error(const wchar_t* func_name, size_t line);
+inline void maybe_throw_on_os_error_w(const char* func_name, size_t line);
 
 // If there is a system error, throws if FEA_NOTHROW is not defined, else exits
 // with error code. Prints last error message.
 // Provide __FUNCTION__, __LINE__.
 // Uses errno on all platforms.
 inline void maybe_throw_on_errno(const char* func_name, size_t line);
-inline void maybe_throw_on_errno(const wchar_t* func_name, size_t line);
+inline void maybe_throw_on_errno_w(const char* func_name, size_t line);
 
 // Prints message and exits with error code.
 // Use this when you absolutely can't throw (from destructors for example).
@@ -129,29 +135,31 @@ inline void maybe_throw_on_errno(const wchar_t* func_name, size_t line);
 inline void error_exit(
 		const char* func_name, size_t line, const std::string& message);
 inline void error_exit(
-		const wchar_t* func_name, size_t line, const std::wstring& message);
+		const char* func_name, size_t line, const std::wstring& message);
+inline void error_exit_w(
+		const char* func_name, size_t line, const std::wstring& message);
 
 // Prints message and exits with error code.
 // Use this when you absolutely can't throw (from destructors for example).
 // Provide __FUNCTION__, __LINE__, "your message".
 inline void error_exit(
 		const char* func_name, size_t line, const std::error_code& ec);
-inline void error_exit(
-		const wchar_t* func_name, size_t line, const std::error_code& ec);
+inline void error_exit_w(
+		const char* func_name, size_t line, const std::error_code& ec);
 
 // Prints message and exits with error code.
 // Use this when you absolutely can't throw (from destructors for example).
 // Provide __FUNCTION__, __LINE__.
 // Uses GetLastError on windows, errno on posix.
 inline void error_exit_on_os_error(const char* func_name, size_t line);
-inline void error_exit_on_os_error(const wchar_t* func_name, size_t line);
+inline void error_exit_on_os_error_w(const char* func_name, size_t line);
 
 // Prints message and exits with error code.
 // Use this when you absolutely can't throw (from destructors for example).
 // Provide __FUNCTION__, __LINE__.
 // Uses errno on all platforms.
 inline void error_exit_on_errno(const char* func_name, size_t line);
-inline void error_exit_on_errno(const wchar_t* func_name, size_t line);
+inline void error_exit_on_errno_w(const char* func_name, size_t line);
 } // namespace fea
 
 
@@ -175,9 +183,14 @@ void print_error_message(
 	fprintf(stderr, "%s(%zu) : %s\n", func_name, line, message.c_str());
 }
 
+void print_error_message_w(
+	const char* func_name, size_t line, const std::wstring& message) {
+	std::wstring wfunc_name = fea::utf8_to_utf16_w(std::string{ func_name });
+	fwprintf(stderr, L"%s(%zu) : %s\n", wfunc_name.c_str(), line, message.c_str());
+}
 void print_error_message(
-		const wchar_t* func_name, size_t line, const std::wstring& message) {
-	fwprintf(stderr, L"%s(%zu) : %s\n", func_name, line, message.c_str());
+		const char* func_name, size_t line, const std::wstring& message) {
+	return fea::print_error_message_w(func_name, line, message);
 }
 
 
@@ -188,11 +201,11 @@ void print_error_message(
 	fea::print_error_message(func_name, line, msg);
 }
 
-void print_error_message(
-		const wchar_t* func_name, size_t line, const std::error_code& ec) {
+void print_error_message_w(
+		const char* func_name, size_t line, const std::error_code& ec) {
 	std::wstring msg = L"Error Code " + std::to_wstring(ec.value()) + L". "
 					 + fea::utf8_to_utf16_w(ec.message());
-	fea::print_error_message(func_name, line, msg);
+	fea::print_error_message_w(func_name, line, msg);
 }
 
 
@@ -211,17 +224,23 @@ void maybe_throw(
 }
 
 template <class Ex /*= std::runtime_error*/>
-void maybe_throw(
-		const wchar_t* func_name, size_t line, const std::wstring& message) {
-	fea::print_error_message(func_name, line, message);
+void maybe_throw_w(
+		const char* func_name, size_t line, const std::wstring& message) {
+	fea::print_error_message_w(func_name, line, message);
 	assert(false);
 
 #if !FEA_NOTHROW
-	throw Ex{ fea::utf16_to_utf8(func_name) + "(" + std::to_string(line) + ")"
+	throw Ex{ std::string{ func_name } + "(" + std::to_string(line) + ")"
 			  + " : " + fea::utf16_to_utf8(message) };
 #else
 	std::exit(EXIT_FAILURE);
 #endif
+
+}
+template <class Ex /*= std::runtime_error*/>
+void maybe_throw(
+		const char* func_name, size_t line, const std::wstring& message) {
+	return fea::maybe_throw_w<Ex>(func_name, line, message);
 }
 
 
@@ -245,19 +264,19 @@ void maybe_throw(
 #endif
 }
 
-void maybe_throw(
-		const wchar_t* func_name, size_t line, const std::error_code& ec) {
+void maybe_throw_w(
+		const char* func_name, size_t line, const std::error_code& ec) {
 	if (!ec) {
 		return;
 	}
 
-	fea::print_error_message(func_name, line, ec);
+	fea::print_error_message_w(func_name, line, ec);
 	assert(false);
 
 #if !FEA_NOTHROW
 	std::string msg
 			= "Error Code " + std::to_string(ec.value()) + ". " + ec.message();
-	throw std::system_error{ ec, fea::utf16_to_utf8(func_name) + "("
+	throw std::system_error{ ec, std::string{func_name} + "("
 										 + std::to_string(line) + ")" + " : "
 										 + msg };
 #else
@@ -270,8 +289,8 @@ void maybe_throw_on_os_error(const char* func_name, size_t line) {
 	maybe_throw(func_name, line, fea::last_os_error());
 }
 
-void maybe_throw_on_os_error(const wchar_t* func_name, size_t line) {
-	maybe_throw(func_name, line, fea::last_os_error());
+void maybe_throw_on_os_error_w(const char* func_name, size_t line) {
+	maybe_throw_w(func_name, line, fea::last_os_error());
 }
 
 
@@ -279,8 +298,8 @@ void maybe_throw_on_errno(const char* func_name, size_t line) {
 	maybe_throw(func_name, line, fea::last_errno_error());
 }
 
-void maybe_throw_on_errno(const wchar_t* func_name, size_t line) {
-	maybe_throw(func_name, line, fea::last_errno_error());
+void maybe_throw_on_errno_w(const char* func_name, size_t line) {
+	maybe_throw_w(func_name, line, fea::last_errno_error());
 }
 
 
@@ -291,11 +310,15 @@ void error_exit(
 	std::exit(EXIT_FAILURE);
 }
 
-void error_exit(
-		const wchar_t* func_name, size_t line, const std::wstring& message) {
-	fea::print_error_message(func_name, line, message);
+void error_exit_w(
+		const char* func_name, size_t line, const std::wstring& message) {
+	fea::print_error_message_w(func_name, line, message);
 	assert(false);
 	std::exit(EXIT_FAILURE);
+}
+void error_exit(
+		const char* func_name, size_t line, const std::wstring& message) {
+	return fea::error_exit_w(func_name, line, message);
 }
 
 
@@ -309,13 +332,13 @@ void error_exit(const char* func_name, size_t line, const std::error_code& ec) {
 	std::exit(EXIT_FAILURE);
 }
 
-void error_exit(
-		const wchar_t* func_name, size_t line, const std::error_code& ec) {
+void error_exit_w(
+		const char* func_name, size_t line, const std::error_code& ec) {
 	if (!ec) {
 		return;
 	}
 
-	fea::print_error_message(func_name, line, ec);
+	fea::print_error_message_w(func_name, line, ec);
 	assert(false);
 	std::exit(EXIT_FAILURE);
 }
@@ -325,8 +348,8 @@ void error_exit_on_os_error(const char* func_name, size_t line) {
 	error_exit(func_name, line, fea::last_os_error());
 }
 
-void error_exit_on_os_error(const wchar_t* func_name, size_t line) {
-	error_exit(func_name, line, fea::last_os_error());
+void error_exit_on_os_error_w(const char* func_name, size_t line) {
+	error_exit_w(func_name, line, fea::last_os_error());
 }
 
 
@@ -334,7 +357,7 @@ void error_exit_on_errno(const char* func_name, size_t line) {
 	error_exit(func_name, line, fea::last_errno_error());
 }
 
-void error_exit_on_errno(const wchar_t* func_name, size_t line) {
-	error_exit(func_name, line, fea::last_errno_error());
+void error_exit_on_errno_w(const char* func_name, size_t line) {
+	error_exit_w(func_name, line, fea::last_errno_error());
 }
 } // namespace fea
