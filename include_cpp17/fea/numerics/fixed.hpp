@@ -244,6 +244,7 @@ static_assert(false, "fea::fixed : Missing architecture.");
 
 // std::intmax_t == 8 bytes on win32...
 using currency = fea::basic_fixed<std::intptr_t, 100>;
+using fixed16_t = fea::basic_fixed<int16_t, (size_t(1) << 5)>;
 using fixed32_t = fea::basic_fixed<int32_t, (size_t(1) << 11)>;
 #if FEA_ARCH == 64
 using fixed64_t = fea::basic_fixed<int64_t, (size_t(1) << 23)>;
