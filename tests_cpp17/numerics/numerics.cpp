@@ -3,6 +3,7 @@
 #include <gtest/gtest.h>
 
 namespace {
+#define FAIL_MSG "numerics.cpp : failed test"
 TEST(numerics, basics) {
 	{
 		// constexpr test
@@ -36,5 +37,23 @@ TEST(numerics, basics) {
 				EXPECT_EQ(t, t_max);
 			},
 			test_types);
+
+	// fea::best_index
+	{
+		struct potato {
+			int cals = 110;
+		};
+
+		static_assert(std::is_same_v<fea::best_index_t<potato>, size_t>, FAIL_MSG);
+		static_assert(std::is_same_v<fea::best_index_t<bool>, uint8_t>, FAIL_MSG);
+		static_assert(std::is_same_v<fea::best_index_t<char>, uint8_t>, FAIL_MSG);
+		static_assert(std::is_same_v<fea::best_index_t<unsigned char>, uint8_t>, FAIL_MSG);
+		static_assert(std::is_same_v<fea::best_index_t<short>, uint16_t>, FAIL_MSG);
+		static_assert(std::is_same_v<fea::best_index_t<unsigned short>, uint16_t>, FAIL_MSG);
+		static_assert(std::is_same_v<fea::best_index_t<int>, uint32_t>, FAIL_MSG);
+		static_assert(std::is_same_v<fea::best_index_t<unsigned int>, uint32_t>, FAIL_MSG);
+		static_assert(std::is_same_v<fea::best_index_t<int64_t>, uint64_t>, FAIL_MSG);
+		static_assert(std::is_same_v<fea::best_index_t<uint64_t>, uint64_t>, FAIL_MSG);
+	}
 }
 } // namespace

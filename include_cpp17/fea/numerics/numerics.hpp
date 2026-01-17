@@ -37,6 +37,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <limits>
 #include <type_traits>
 
@@ -56,6 +57,18 @@ constexpr auto sqrt() noexcept;
 template <class T>
 constexpr T abs(T v);
 
+
+// According to the byte size of T, what unsigned integer should be used for
+// optimal indexes (when storing lookup tables for example).
+template <class>
+struct best_index;
+
+// According to the byte size of T, what unsigned integer should be used for
+// optimal indexes (when storing lookup tables for example).
+template <class T>
+using best_index_t = typename best_index<T>::type;
+
+
 // Float aliases.
 using float32_t = float;
 #if FEA_64BIT
@@ -67,6 +80,7 @@ using floatmax_t = float;
 #elif FEA_64BIT
 using floatmax_t = double;
 #endif
+
 
 // Returns the next bigger fundamental type to hold T, or T if size == size_t.
 template <class>
@@ -122,6 +136,57 @@ constexpr T abs(T v) {
 		}
 	}
 }
+
+namespace detail {
+template <size_t>
+struct best_byte_index;
+
+template <>
+struct best_byte_index<1> {
+	using type = uint8_t;
+};
+template <>
+struct best_byte_index<2> {
+	using type = uint16_t;
+};
+template <>
+struct best_byte_index<4> {
+	using type = uint32_t;
+};
+template <>
+struct best_byte_index<8> {
+	using type = uint64_t;
+};
+template <>
+struct best_byte_index<16> {
+	// TODO
+	using type = void;
+};
+template <>
+struct best_byte_index<32> {
+	// TODO
+	using type = void;
+};
+
+template <class, bool>
+struct best_index;
+
+// Arithmetic.
+template <class T>
+struct best_index<T, true> {
+	using type = typename best_byte_index<sizeof(T)>::type;
+};
+
+// Non-arithmetic, simply return current platform index type.
+template <class T>
+struct best_index<T, false> {
+	using type = size_t;
+};
+}
+
+template <class T>
+struct best_index : detail::best_index<T, std::is_arithmetic_v<T>> {
+};
 
 template <>
 struct next_bigger<char> {
