@@ -34,7 +34,7 @@
 #include "fea/meta/static_for.hpp"
 #include "fea/meta/traits.hpp"
 #include "fea/numerics/numerics.hpp"
-#include "fea/performance/intrinsics.hpp"
+//#include "fea/performance/intrinsics.hpp"
 #include "fea/utility/error.hpp"
 // #include "fea/performance/constants.hpp"
 #include "fea/performance/tls.hpp"
@@ -56,7 +56,8 @@ A collection of sorts.
 
 // Radix sort.
 // Thread-safe.
-// Allocates thread caches on first call only.
+// Allocates thread caches on first call.
+// Allocates n values every call.
 template <class FwdIt>
 void radix_sort(FwdIt first, FwdIt last);
 } // namespace fea
@@ -77,7 +78,7 @@ inline fea::tls<radix_data<uint16_t>> radix_data_cache16;
 inline fea::tls<radix_data<uint32_t>> radix_data_cache32;
 inline fea::tls<radix_data<uint64_t>> radix_data_cache64;
 
-template <class IndexT, class FwdIt>
+template <class FwdIt, class IndexT>
 void radix_sort(
 		FwdIt first, FwdIt last, size_t count, radix_data<IndexT>& rad_data) {
 	using value_t = fea::iterator_value_t<FwdIt>;
@@ -106,7 +107,6 @@ void radix_sort(
 		}
 
 		// Compute offsets / jump tables / lookup tables.
-		// for (size_t pass_idx = 0; pass_idx < sizeof(value_t); ++pass_idx) {
 		fea::static_for<sizeof(value_t)>([&](auto const_pass_idx) {
 			constexpr size_t pass_idx = const_pass_idx;
 			const std::array<IndexT, 256>& counts
@@ -118,7 +118,6 @@ void radix_sort(
 				jmp_table[i] = jmp_table[i - 1] + counts[i - 1];
 			}
 		});
-		//}
 
 		// TODO : fea::static_for
 		// Performance Q : To simplify and minimize allocations, we copy
@@ -139,8 +138,8 @@ void radix_sort(
 
 			write_first = (pass_idx % 2) == 0 ? scratch.begin() : first;
 			write_last = (pass_idx % 2) == 0 ? scratch.end() : last;
-
 			assert(&(*read_first) != &(*write_first));
+
 			for (FwdIt it = read_first; it != read_last; ++it) {
 				const uint8_t* radixes_ptr
 						= reinterpret_cast<const uint8_t*>(&(*it));
@@ -195,25 +194,25 @@ void radix_sort(FwdIt first, FwdIt last) {
 		using index_t = uint8_t;
 		fea::tls_lock<detail::radix_data<index_t>> lock
 				= detail::radix_data_cache8.lock();
-		return detail::radix_sort<index_t>(first, last, count, lock.local());
+		return detail::radix_sort(first, last, count, lock.local());
 	}
 	if (count < size_t((std::numeric_limits<uint16_t>::max)())) {
 		using index_t = uint16_t;
 		fea::tls_lock<detail::radix_data<index_t>> lock
 				= detail::radix_data_cache16.lock();
-		return detail::radix_sort<index_t>(first, last, count, lock.local());
+		return detail::radix_sort(first, last, count, lock.local());
 	}
 	if (count < size_t((std::numeric_limits<uint32_t>::max)())) {
 		using index_t = uint32_t;
 		fea::tls_lock<detail::radix_data<index_t>> lock
 				= detail::radix_data_cache32.lock();
-		return detail::radix_sort<index_t>(first, last, count, lock.local());
+		return detail::radix_sort(first, last, count, lock.local());
 	}
 
 	static_assert(sizeof(void*) <= 8, "TODO : Update if statement + cache.");
 	using index_t = uint64_t;
 	fea::tls_lock<detail::radix_data<index_t>> lock
 			= detail::radix_data_cache64.lock();
-	return detail::radix_sort<index_t>(first, last, count, lock.local());
+	return detail::radix_sort(first, last, count, lock.local());
 }
 } // namespace fea
