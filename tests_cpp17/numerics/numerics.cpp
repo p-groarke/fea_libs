@@ -38,22 +38,15 @@ TEST(numerics, basics) {
 			},
 			test_types);
 
-	// fea::best_index
 	{
-		struct potato {
-			int cals = 110;
-		};
-
-		static_assert(std::is_same_v<fea::best_index_t<potato>, size_t>, FAIL_MSG);
-		static_assert(std::is_same_v<fea::best_index_t<bool>, uint8_t>, FAIL_MSG);
-		static_assert(std::is_same_v<fea::best_index_t<char>, uint8_t>, FAIL_MSG);
-		static_assert(std::is_same_v<fea::best_index_t<unsigned char>, uint8_t>, FAIL_MSG);
-		static_assert(std::is_same_v<fea::best_index_t<short>, uint16_t>, FAIL_MSG);
-		static_assert(std::is_same_v<fea::best_index_t<unsigned short>, uint16_t>, FAIL_MSG);
-		static_assert(std::is_same_v<fea::best_index_t<int>, uint32_t>, FAIL_MSG);
-		static_assert(std::is_same_v<fea::best_index_t<unsigned int>, uint32_t>, FAIL_MSG);
-		static_assert(std::is_same_v<fea::best_index_t<int64_t>, uint64_t>, FAIL_MSG);
-		static_assert(std::is_same_v<fea::best_index_t<uint64_t>, uint64_t>, FAIL_MSG);
+		static_assert(std::is_same_v<fea::uint_t<8>, uint8_t>, FAIL_MSG);
+		static_assert(std::is_same_v<fea::uint_t<16>, uint16_t>, FAIL_MSG);
+		static_assert(std::is_same_v<fea::uint_t<32>, uint32_t>, FAIL_MSG);
+		static_assert(std::is_same_v<fea::uint_t<64>, uint64_t>, FAIL_MSG);
+		static_assert(std::is_same_v<fea::byte_uint_t<1>, uint8_t>, FAIL_MSG);
+		static_assert(std::is_same_v<fea::byte_uint_t<2>, uint16_t>, FAIL_MSG);
+		static_assert(std::is_same_v<fea::byte_uint_t<4>, uint32_t>, FAIL_MSG);
+		static_assert(std::is_same_v<fea::byte_uint_t<8>, uint64_t>, FAIL_MSG);
 	}
 }
 } // namespace

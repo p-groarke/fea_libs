@@ -57,16 +57,20 @@ constexpr auto sqrt() noexcept;
 template <class T>
 constexpr T abs(T v);
 
+namespace detail {
+template <size_t>
+struct uint_t;
+template <size_t>
+struct byte_uint_t;
+} // namespace detail
 
-// According to the byte size of T, what unsigned integer should be used for
-// optimal indexes (when storing lookup tables for example).
-template <class>
-struct best_index;
+// Get an unsigned of bit size.
+template <size_t Bits>
+using uint_t = typename detail::uint_t<Bits>::type;
 
-// According to the byte size of T, what unsigned integer should be used for
-// optimal indexes (when storing lookup tables for example).
-template <class T>
-using best_index_t = typename best_index<T>::type;
+// Get an unsigned of bit size.
+template <size_t Bytes>
+using byte_uint_t = typename detail::byte_uint_t<Bytes>::type;
 
 
 // Float aliases.
@@ -139,54 +143,64 @@ constexpr T abs(T v) {
 
 namespace detail {
 template <size_t>
-struct best_byte_index;
-
+struct byte_uint_t;
 template <>
-struct best_byte_index<1> {
+struct byte_uint_t<1> {
 	using type = uint8_t;
 };
 template <>
-struct best_byte_index<2> {
+struct byte_uint_t<2> {
 	using type = uint16_t;
 };
 template <>
-struct best_byte_index<4> {
+struct byte_uint_t<4> {
 	using type = uint32_t;
 };
 template <>
-struct best_byte_index<8> {
+struct byte_uint_t<8> {
 	using type = uint64_t;
 };
 template <>
-struct best_byte_index<16> {
+struct byte_uint_t<16> {
 	// TODO
 	using type = void;
 };
 template <>
-struct best_byte_index<32> {
+struct byte_uint_t<32> {
 	// TODO
 	using type = void;
 };
 
-template <class, bool>
-struct best_index;
-
-// Arithmetic.
-template <class T>
-struct best_index<T, true> {
-	using type = typename best_byte_index<sizeof(T)>::type;
+template <size_t>
+struct uint_t;
+template <>
+struct uint_t<8> {
+	using type = uint8_t;
 };
-
-// Non-arithmetic, simply return current platform index type.
-template <class T>
-struct best_index<T, false> {
-	using type = size_t;
+template <>
+struct uint_t<16> {
+	using type = uint16_t;
 };
-}
-
-template <class T>
-struct best_index : detail::best_index<T, std::is_arithmetic_v<T>> {
+template <>
+struct uint_t<32> {
+	using type = uint32_t;
 };
+template <>
+struct uint_t<64> {
+	using type = uint64_t;
+};
+template <>
+struct uint_t<128> {
+	// TODO
+	using type = void;
+};
+template <>
+struct uint_t<256> {
+	// TODO
+	using type = void;
+};
+} // namespace detail
+
 
 template <>
 struct next_bigger<char> {
