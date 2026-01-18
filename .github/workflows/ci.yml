@@ -23,14 +23,12 @@ jobs:
         build_type: [Release, Debug]
         build_arch: [x64, Win32]
         config:
+          - { toolset_ver: "v143", fea_ver: "-DFEA_CPP20=On", fea_tbb: "" }
           - { toolset_ver: "v143", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_ONETBB=On" }
           - { toolset_ver: "v143", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_ONETBB=On" }
           - { toolset_ver: "v143", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_TBB=On" }
-          - { toolset_ver: "v143", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
           - { toolset_ver: "v143", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
-          - { toolset_ver: "v143", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
           - { toolset_ver: "v143", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_DATE=Off" }
-          - { toolset_ver: "v143", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_DATE=Off" }
           - { toolset_ver: "v142", fea_ver: "-DFEA_CPP20=On", fea_tbb: "-DFEA_WITH_TBB=On" }
           - { toolset_ver: "v142", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=On" }
           # - { toolset_ver: "v141", fea_ver: "-DFEA_CPP17=On" }
@@ -96,8 +94,8 @@ jobs:
           - { os: macos-15, xcode_ver: "16.4", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_ONETBB=On" }
           - { os: macos-15, xcode_ver: "16.4", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
           - { os: macos-15, xcode_ver: "16.4", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_DATE=Off" }
-          - { os: macos-14, xcode_ver: "15.2", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
-          - { os: macos-14, xcode_ver: "15.2", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
+          - { os: macos-14, xcode_ver: "15.4", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
+          - { os: macos-14, xcode_ver: "15.4", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
 
     steps:
     - name: Git Line Endings
