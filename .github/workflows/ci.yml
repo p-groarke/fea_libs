@@ -93,11 +93,11 @@ jobs:
       matrix:
         build_type: [Release, Debug]
         config:
-          - { os: macos-14, xcode_ver: "15.2", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_ONETBB=On" }
+          - { os: macos-15, xcode_ver: "16.4", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_ONETBB=On" }
+          - { os: macos-15, xcode_ver: "16.4", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
+          - { os: macos-15, xcode_ver: "16.4", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_DATE=Off" }
           - { os: macos-14, xcode_ver: "15.2", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
-          - { os: macos-14, xcode_ver: "15.2", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_DATE=Off" }
-          - { os: macos-13, xcode_ver: "15.0.1", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
-          - { os: macos-13, xcode_ver: "14.3.1", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
+          - { os: macos-14, xcode_ver: "15.2", fea_ver: "-DFEA_CPP17=On", fea_tbb: "-DFEA_WITH_TBB=Off" }
 
     steps:
     - name: Git Line Endings
