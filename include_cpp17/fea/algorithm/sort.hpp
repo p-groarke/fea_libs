@@ -34,7 +34,7 @@
 #include "fea/meta/static_for.hpp"
 #include "fea/meta/traits.hpp"
 #include "fea/numerics/numerics.hpp"
-//#include "fea/performance/intrinsics.hpp"
+// #include "fea/performance/intrinsics.hpp"
 #include "fea/utility/error.hpp"
 // #include "fea/performance/constants.hpp"
 #include "fea/performance/tls.hpp"

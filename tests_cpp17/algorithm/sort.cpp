@@ -79,7 +79,7 @@ TEST(sort, basics) {
 	}
 }
 
-//TEST(sort, signedints) {
+// TEST(sort, signedints) {
 //	// Simplest.
 //	{
 //		using t = char;
@@ -94,8 +94,8 @@ TEST(sort, basics) {
 ////	// Test passes.
 ////	{
 ////		using t = int64_t;
-////		std::vector<t> vals{ 0, 54, 100'000, 18, 100'042, 0, 2, 128, 3, 0, 128,
-////			100'000, 3, 54, 54, 54, 0, 100'042, 100'042, 1, 100'000 };
+////		std::vector<t> vals{ 0, 54, 100'000, 18, 100'042, 0, 2, 128, 3, 0,
+///128, /			100'000, 3, 54, 54, 54, 0, 100'042, 100'042, 1, 100'000 };
 ////		std::vector<t> cmp = vals;
 ////
 ////		fea::radix_sort(vals.begin(), vals.end());
