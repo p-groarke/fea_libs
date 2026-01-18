@@ -83,12 +83,10 @@ void radix_sort(
 	using value_t = fea::iterator_value_t<FwdIt>;
 
 	// Reset counts.
-	// for (size_t pass_idx = 0; pass_idx < sizeof(value_t); ++pass_idx) {
 	fea::static_for<sizeof(value_t)>([&](auto const_pass_idx) {
 		constexpr size_t pass_idx = const_pass_idx;
 		std::get<pass_idx>(rad_data.counts) = {};
 	});
-	//}
 
 	if constexpr (std::is_unsigned_v<value_t>) {
 		// Compute counters / histograms.
@@ -96,6 +94,8 @@ void radix_sort(
 		for (FwdIt it = first; it != last; ++it) {
 			const uint8_t* radixes_ptr
 					= reinterpret_cast<const uint8_t*>(&(*it));
+			// std::array<uint8_t, sizeof(value_t)> radixes;
+			// std::memcpy(radixes.data(), &(*it), sizeof(value_t));
 
 			fea::static_for<sizeof(value_t)>([&](auto const_pass_idx) {
 				constexpr size_t pass_idx = const_pass_idx;
@@ -129,7 +129,6 @@ void radix_sort(
 		std::vector<value_t> scratch(count);
 		FwdIt write_first;
 		FwdIt write_last;
-		// for (size_t pass_idx = 0; pass_idx < sizeof(value_t); ++pass_idx) {
 		fea::static_for<sizeof(value_t)>([&](auto const_pass_idx) {
 			constexpr size_t pass_idx = const_pass_idx;
 			std::array<IndexT, 256>& jmp_table
@@ -150,7 +149,6 @@ void radix_sort(
 				*cpy_it = *it;
 			}
 		});
-		//}
 
 		if constexpr (sizeof(value_t) == 1) {
 			// We were a char (non-even byte size).
