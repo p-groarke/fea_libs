@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 #include "fea/utility/platform.hpp"
+#include "fea/meta/traits.hpp"
 
 #include <algorithm>
 #include <array>
@@ -46,7 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace fea {
 // Get a random int between [min, max].
 template <class T>
-std::enable_if_t<std::is_integral_v<T>, T> random_val(T min, T max);
+std::enable_if_t<std::is_integral_v<T> || std::is_unsigned_v<T>, T> random_val(T min, T max);
 
 // Get a random float between [min, max].
 template <class T>
@@ -94,15 +95,14 @@ auto& random_val(Container& container);
 
 // Fills a range, from begin to end, with random values between [min, max].
 // Iterator value type should be supported by fea::random_val.
-template <class ForwardIt,
-		class T = typename std::iterator_traits<ForwardIt>::value_type>
-void random_fill(ForwardIt begin, ForwardIt end, T min, T max);
+template <class FwdIt>
+void random_fill(FwdIt begin, FwdIt end, fea::iterator_value_t<FwdIt> min, fea::iterator_value_t<FwdIt> max);
 
 // Fills a range, from begin to end, with random values between
 // [numeric_limits::lowest, numeric_limits::max].
 // Iterator value type should be supported by fea::random_val.
-template <class ForwardIt>
-void random_fill(ForwardIt begin, ForwardIt end);
+template <class FwdIt>
+void random_fill(FwdIt begin, FwdIt end);
 
 // Get a random index, [0, count[
 inline size_t random_idx(size_t count);
@@ -123,8 +123,8 @@ std::array<uint8_t, N> random_bytes();
 inline std::vector<uint8_t> random_bytes(size_t num_bytes);
 
 // Shuffles items in range [begin, end[
-template <class ForwardIt>
-void random_shuffle(ForwardIt begin, ForwardIt end);
+template <class FwdIt>
+void random_shuffle(FwdIt begin, FwdIt end);
 
 // Shuffles items in container.
 template <class Container>
@@ -179,7 +179,7 @@ inline platform_mt19937 gen(
 
 
 template <class T>
-std::enable_if_t<std::is_integral_v<T>, T> random_val(T min, T max) {
+std::enable_if_t<std::is_integral_v<T> || std::is_unsigned_v<T>, T> random_val(T min, T max) {
 	std::uniform_int_distribution<T> dist(min, max);
 	return dist(detail::gen);
 }
@@ -248,17 +248,17 @@ auto& random_val(Container& container) {
 	return *random_iter(container.begin(), container.end());
 }
 
-template <class ForwardIt,
-		class T /*= typename std::iterator_traits<ForwardIt>::value_type*/>
-void random_fill(ForwardIt begin, ForwardIt end, T min, T max) {
+template <class FwdIt>
+void random_fill(FwdIt begin, FwdIt end, fea::iterator_value_t<FwdIt> min,
+		fea::iterator_value_t<FwdIt> max) {
 	for (; begin != end; ++begin) {
 		*begin = fea::random_val(min, max);
 	}
 }
 
-template <class ForwardIt>
-void random_fill(ForwardIt begin, ForwardIt end) {
-	using value_t = typename std::iterator_traits<ForwardIt>::value_type;
+template <class FwdIt>
+void random_fill(FwdIt begin, FwdIt end) {
+	using value_t = typename std::iterator_traits<FwdIt>::value_type;
 	random_fill(begin, end, std::numeric_limits<value_t>::lowest(),
 			(std::numeric_limits<value_t>::max)());
 }
@@ -299,8 +299,8 @@ std::vector<uint8_t> random_bytes(size_t num_bytes) {
 	return ret;
 }
 
-template <class ForwardIt>
-void random_shuffle(ForwardIt begin, ForwardIt end) {
+template <class FwdIt>
+void random_shuffle(FwdIt begin, FwdIt end) {
 	std::shuffle(begin, end, detail::gen);
 }
 

@@ -1,6 +1,4 @@
-﻿#include <fea/meta/traits.hpp>
-#include <fea/meta/tuple.hpp>
-#include <functional>
+﻿#include <functional>
 #include <gtest/gtest.h>
 #include <iostream>
 #include <set>
@@ -8,6 +6,10 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+
+#include <fea/meta/traits.hpp>
+#include <fea/meta/tuple.hpp>
+#include <fea/utility/platform.hpp>
 
 namespace {
 #define FAIL_MSG "traits.cpp : failed test"
@@ -191,9 +193,16 @@ TEST(traits, rebind_alloc) {
 			FAIL_MSG);
 }
 
-TEST(traits, iterator_valut) {
+TEST(traits, iterator_wrappers) {
 	using iter_t = std::vector<int>::iterator;
 	static_assert(std::is_same_v<fea::iterator_value_t<iter_t>, int>, FAIL_MSG);
+	static_assert(
+			std::is_same_v<fea::iterator_pointer_t<iter_t>, int*>, FAIL_MSG);
+	static_assert(
+			std::is_same_v<fea::iterator_reference_t<iter_t>, int&>, FAIL_MSG);
+	static_assert(std::is_same_v<fea::iterator_category_t<iter_t>,
+						  std::random_access_iterator_tag>,
+			FAIL_MSG);
 }
 
 TEST(traits, aligned_storage) {

@@ -30,7 +30,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
-#include "fea/utility/throw.hpp"
+#include "fea/utility/error.hpp"
 
 #include <algorithm>
 #include <array>
@@ -127,8 +127,8 @@ struct fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 	template <fsm_event Event>
 	void add_event(fsm_func_t&& func) {
 		static_assert(Event == fsm_event::on_enter
-						|| Event == fsm_event::on_exit
-						|| Event == fsm_event::on_update,
+							  || Event == fsm_event::on_exit
+							  || Event == fsm_event::on_update,
 				"add_event : wrong template resolution called");
 
 		if constexpr (Event == fsm_event::on_enter) {
@@ -143,7 +143,7 @@ struct fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 	template <fsm_event Event, StateEnum State>
 	void add_event(fsm_func_t&& func) {
 		static_assert(Event == fsm_event::on_enter_from
-						|| Event == fsm_event::on_exit_to,
+							  || Event == fsm_event::on_exit_to,
 				"add_event : must use on_enter_from or on_exit_to when "
 				"custumizing on transition");
 
@@ -158,7 +158,7 @@ struct fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 	template <fsm_event Event, TransitionEnum Transition>
 	void add_event(fsm_func_t&& func) {
 		static_assert(Event == fsm_event::on_enter_from
-						|| Event == fsm_event::on_exit_to,
+							  || Event == fsm_event::on_exit_to,
 				"add_event : must use on_enter_from or on_exit_to when "
 				"custumizing on transition");
 
@@ -216,8 +216,8 @@ struct fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 						func_args..., machine);
 
 			} else if (to_from_transition != TransitionEnum::count
-					&& _on_enter_from_transition_funcs[size_t(
-							to_from_transition)]) {
+					   && _on_enter_from_transition_funcs[size_t(
+							   to_from_transition)]) {
 				// has enter_from transition
 				_on_enter_from_transition_funcs[size_t(to_from_transition)](
 						func_args..., machine);
@@ -238,8 +238,8 @@ struct fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 						func_args..., machine);
 
 			} else if (to_from_transition != TransitionEnum::count
-					&& _on_exit_to_transition_funcs[size_t(
-							to_from_transition)]) {
+					   && _on_exit_to_transition_funcs[size_t(
+							   to_from_transition)]) {
 				// has exit_to
 				_on_exit_to_transition_funcs[size_t(to_from_transition)](
 						func_args..., machine);

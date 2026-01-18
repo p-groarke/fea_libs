@@ -14,6 +14,7 @@
 #include <string_view>
 
 namespace {
+#if 0
 
 /*
 English letter frequencies (wiki)
@@ -250,9 +251,8 @@ TEST(similarity_map, experiments) {
 			}
 		}
 
-		std::cout << std::format("Most likely word :\n  {}\n", result);
+		 std::cout << std::format("Most likely word :\n  {}\n", result);
 	}
-
 
 	{
 		std::vector<std::string_view> words{
@@ -295,4 +295,5 @@ TEST(similarity_map, experiments) {
 	}
 }
 
+#endif
 } // namespace

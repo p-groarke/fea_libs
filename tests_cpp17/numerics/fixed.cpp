@@ -1,6 +1,7 @@
 #include <fea/numerics/fixed.hpp>
 #include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
+#include <cmath>
 
 namespace {
 #define FAIL_MSG "fixed.cpp : failed test"

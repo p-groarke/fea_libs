@@ -516,10 +516,10 @@ public:
 			fea::hfsm_state<transition, state, dude&> idle_state{ state::idle,
 				"idle" };
 			idle_state.add_event<fea::hfsm_event::on_enter>(
-					[](auto&, dude&) {});
+					[](dude&, auto&) {});
 			idle_state.add_event<fea::hfsm_event::on_update>(
-					[](auto&, dude&) {});
-			idle_state.add_event<fea::hfsm_event::on_exit>([](auto&, dude&) {});
+					[](dude&, auto&) {});
+			idle_state.add_event<fea::hfsm_event::on_exit>([](dude&, auto&) {});
 			idle_state.add_transition<transition::do_quick_attack,
 					state::quick_attacking>();
 			idle_state.add_transition<transition::do_chill, state::chilling>();
@@ -533,20 +533,20 @@ public:
 				state::chilling, "chilling"
 			};
 			chill_state.add_event<fea::hfsm_event::on_enter>(
-					[](auto&, dude& d) {
+					[](dude& d, auto&) {
 						printf("'%s' chilling\n", d.name);
 						d.do_chill = false;
 						d._chill_anim_counter = 0;
 					});
 			chill_state.add_event<fea::hfsm_event::on_update>(
-					[](auto& smachine, dude& d) {
+					[](dude& d, auto& smachine) {
 						++d._chill_anim_counter;
 						if (d._chill_anim_counter > 2) {
 							smachine.template trigger<transition::do_idle>(d);
 						}
 					});
 			chill_state.add_event<fea::hfsm_event::on_exit>(
-					[](auto&, dude& d) { d._htn.notify_finished(d.ai_data); });
+					[](dude& d, auto&) { d._htn.notify_finished(d.ai_data); });
 			chill_state.add_transition<transition::do_idle, state::idle>();
 			_smachine.add_state<state::chilling>(std::move(chill_state));
 
@@ -554,22 +554,22 @@ public:
 			fea::hfsm_state<transition, state, dude&> attack_state{
 				state::attacking, "attacking"
 			};
-			attack_state.add_event<fea::hfsm_event::on_enter>([](auto&,
-																	  dude& d) {
+			attack_state.add_event<fea::hfsm_event::on_enter>([](dude& d,
+																	  auto&) {
 				printf("'%s' attacked '%s'\n", d.name, d.current_ennemy->name);
 				d.do_attack = false;
 				d.current_ennemy->hp -= 10;
 				d.check_ded_ennemy();
 			});
 			attack_state.add_event<fea::hfsm_event::on_update>(
-					[](auto& machine, dude& d) {
+					[](dude& d, auto& machine) {
 						++d._attack_anim_counter;
 						if (d._attack_anim_counter > 6) {
 							machine.template trigger<transition::do_idle>(d);
 						}
 					});
 			attack_state.add_event<fea::hfsm_event::on_exit>(
-					[](auto&, dude& d) { d._htn.notify_finished(d.ai_data); });
+					[](dude& d, auto&) { d._htn.notify_finished(d.ai_data); });
 			attack_state
 					.add_transition<transition::do_chill, state::chilling>();
 			attack_state.add_transition<transition::do_idle, state::idle>();
@@ -580,7 +580,7 @@ public:
 				state::quick_attacking, "quick attacking"
 			};
 			quick_attack_state.add_event<fea::hfsm_event::on_enter>(
-					[](auto&, dude& d) {
+					[](dude& d, auto&) {
 						printf("'%s' quick attacked '%s'\n", d.name,
 								d.current_ennemy->name);
 						d.do_quick_attack = false;
@@ -588,11 +588,11 @@ public:
 						d.check_ded_ennemy();
 					});
 			quick_attack_state.add_event<fea::hfsm_event::on_update>(
-					[](auto& machine, dude& d) {
+					[](dude& d, auto& machine) {
 						machine.template trigger<transition::do_idle>(d);
 					});
 			quick_attack_state.add_event<fea::hfsm_event::on_exit>(
-					[](auto&, dude& d) { d._htn.notify_finished(d.ai_data); });
+					[](dude& d, auto&) { d._htn.notify_finished(d.ai_data); });
 			quick_attack_state
 					.add_transition<transition::do_idle, state::idle>();
 			_smachine.add_state<state::quick_attacking>(

@@ -63,10 +63,53 @@ inline constexpr bool is_bitmask_v = register_bitmask<T>::value;
 // Implements arithmetic bit operations on enum class.
 // Keeps your code type-safe.
 template <class E>
+constexpr std::enable_if_t<fea::is_bitmask_v<E>, E> operator|(E lhs, E rhs);
+
+template <class E>
+constexpr std::enable_if_t<fea::is_bitmask_v<E>, E> operator&(E lhs, E rhs);
+
+template <class E>
+constexpr std::enable_if_t<fea::is_bitmask_v<E>, E> operator^(E lhs, E rhs);
+
+template <class E>
+constexpr std::enable_if_t<fea::is_bitmask_v<E>, E> operator~(E rhs);
+
+template <class E>
+constexpr std::enable_if_t<fea::is_bitmask_v<E>, E> operator<<(
+		E lhs, size_t rhs);
+
+template <class E>
+constexpr std::enable_if_t<fea::is_bitmask_v<E>, E> operator>>(
+		E lhs, size_t rhs);
+
+template <class E>
+constexpr std::enable_if_t<fea::is_bitmask_v<E>, E>& operator|=(E& lhs, E rhs);
+
+template <class E>
+constexpr std::enable_if_t<fea::is_bitmask_v<E>, E>& operator&=(E& lhs, E rhs);
+
+template <class E>
+constexpr std::enable_if_t<fea::is_bitmask_v<E>, E>& operator^=(E& lhs, E rhs);
+
+template <class E>
+constexpr std::enable_if_t<fea::is_bitmask_v<E>, E>& operator<<=(
+		E& lhs, size_t rhs);
+
+template <class E>
+constexpr std::enable_if_t<fea::is_bitmask_v<E>, E>& operator>>=(
+		E& lhs, size_t rhs);
+
+template <class E>
+constexpr std::enable_if_t<fea::is_bitmask_v<E>, bool> operator!(E rhs);
+
+
+// Implementation
+template <class E>
 constexpr std::enable_if_t<fea::is_bitmask_v<E>, E> operator|(E lhs, E rhs) {
 	using underlying_t = std::underlying_type_t<E>;
 	return E(underlying_t(lhs) | underlying_t(rhs));
 }
+
 
 template <class E>
 constexpr std::enable_if_t<fea::is_bitmask_v<E>, E> operator&(E lhs, E rhs) {

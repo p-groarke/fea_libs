@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fea/functional/callback.hpp"
 #include "fea/performance/constants.hpp"
 #include "fea/utility/platform.hpp"
-#include "fea/utility/throw.hpp"
+#include "fea/utility/error.hpp"
 
 #include <algorithm>
 #include <cassert>

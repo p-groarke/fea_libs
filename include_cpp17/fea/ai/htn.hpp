@@ -36,7 +36,7 @@
 #include "fea/containers/stack_vector.hpp"
 #include "fea/meta/traits.hpp"
 #include "fea/meta/tuple.hpp"
-#include "fea/utility/throw.hpp"
+#include "fea/utility/error.hpp"
 
 #include <algorithm>
 #include <array>

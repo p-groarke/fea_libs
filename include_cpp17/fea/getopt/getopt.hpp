@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #pragma once
 #include "fea/state_machines/fsm.hpp"
 #include "fea/string/string.hpp"
-#include "fea/utility/throw.hpp"
+#include "fea/utility/error.hpp"
 
 #include <cassert>
 #include <cstdarg>
@@ -591,8 +591,8 @@ void get_opt<CharT, PrintfT>::print(const string& message) const {
 }
 
 template <class CharT, class PrintfT>
-std::unique_ptr<typename get_opt<CharT, PrintfT>::fsm_t> get_opt<CharT,
-		PrintfT>::make_machine() const {
+std::unique_ptr<typename get_opt<CharT, PrintfT>::fsm_t>
+get_opt<CharT, PrintfT>::make_machine() const {
 	std::unique_ptr<fsm_t> ret = std::make_unique<fsm_t>();
 
 	// arg0

@@ -37,6 +37,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <limits>
 #include <type_traits>
 
@@ -56,6 +57,22 @@ constexpr auto sqrt() noexcept;
 template <class T>
 constexpr T abs(T v);
 
+namespace detail {
+template <size_t>
+struct uint_t;
+template <size_t>
+struct byte_uint_t;
+} // namespace detail
+
+// Get an unsigned of bit size.
+template <size_t Bits>
+using uint_t = typename detail::uint_t<Bits>::type;
+
+// Get an unsigned of bit size.
+template <size_t Bytes>
+using byte_uint_t = typename detail::byte_uint_t<Bytes>::type;
+
+
 // Float aliases.
 using float32_t = float;
 #if FEA_64BIT
@@ -67,6 +84,7 @@ using floatmax_t = float;
 #elif FEA_64BIT
 using floatmax_t = double;
 #endif
+
 
 // Returns the next bigger fundamental type to hold T, or T if size == size_t.
 template <class>
@@ -122,6 +140,67 @@ constexpr T abs(T v) {
 		}
 	}
 }
+
+namespace detail {
+template <size_t>
+struct byte_uint_t;
+template <>
+struct byte_uint_t<1> {
+	using type = uint8_t;
+};
+template <>
+struct byte_uint_t<2> {
+	using type = uint16_t;
+};
+template <>
+struct byte_uint_t<4> {
+	using type = uint32_t;
+};
+template <>
+struct byte_uint_t<8> {
+	using type = uint64_t;
+};
+template <>
+struct byte_uint_t<16> {
+	// TODO
+	using type = void;
+};
+template <>
+struct byte_uint_t<32> {
+	// TODO
+	using type = void;
+};
+
+template <size_t>
+struct uint_t;
+template <>
+struct uint_t<8> {
+	using type = uint8_t;
+};
+template <>
+struct uint_t<16> {
+	using type = uint16_t;
+};
+template <>
+struct uint_t<32> {
+	using type = uint32_t;
+};
+template <>
+struct uint_t<64> {
+	using type = uint64_t;
+};
+template <>
+struct uint_t<128> {
+	// TODO
+	using type = void;
+};
+template <>
+struct uint_t<256> {
+	// TODO
+	using type = void;
+};
+} // namespace detail
+
 
 template <>
 struct next_bigger<char> {

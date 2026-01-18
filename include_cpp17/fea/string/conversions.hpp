@@ -33,10 +33,11 @@
 
 #pragma once
 #include "fea/utility/platform.hpp"
-#include "fea/utility/throw.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <codecvt>
+#include <cstdlib>
 #include <locale>
 #include <string>
 
@@ -358,7 +359,10 @@ std::string any_to_utf8(const std::basic_string<CharT>& str) {
 	} else if constexpr (std::is_same_v<CharT, char32_t>) {
 		return utf32_to_utf8(str);
 	} else {
-		fea::maybe_throw(__FUNCTION__, __LINE__, "unsupported string type");
+		// Cannot use fea::maybe_throw, the error.hpp header inlcudes us.
+		// It causes a circular dependency.
+		assert(false);
+		std::exit(EXIT_FAILURE);
 	}
 }
 
@@ -377,7 +381,10 @@ std::basic_string<CharT> utf8_to_any(const std::string& str) {
 		return std::u8string{ reinterpret_cast<const char8_t*>(str.c_str()) };
 #endif
 	} else {
-		fea::maybe_throw(__FUNCTION__, __LINE__, "unsupported string type");
+		// Cannot use fea::maybe_throw, the error.hpp header inlcudes us.
+		// It causes a circular dependency.
+		assert(false);
+		std::exit(EXIT_FAILURE);
 	}
 }
 
@@ -396,7 +403,10 @@ std::u32string any_to_utf32(const std::basic_string<CharT>& str) {
 		return utf8_to_utf32(str);
 #endif
 	} else {
-		fea::maybe_throw(__FUNCTION__, __LINE__, "unsupported string type");
+		// Cannot use fea::maybe_throw, the error.hpp header inlcudes us.
+		// It causes a circular dependency.
+		assert(false);
+		std::exit(EXIT_FAILURE);
 	}
 }
 
@@ -411,7 +421,10 @@ std::basic_string<CharT> utf32_to_any(const std::u32string& str) {
 	} else if constexpr (std::is_same_v<CharT, char32_t>) {
 		return str;
 	} else {
-		fea::maybe_throw(__FUNCTION__, __LINE__, "unsupported string type");
+		// Cannot use fea::maybe_throw, the error.hpp header inlcudes us.
+		// It causes a circular dependency.
+		assert(false);
+		std::exit(EXIT_FAILURE);
 	}
 }
 

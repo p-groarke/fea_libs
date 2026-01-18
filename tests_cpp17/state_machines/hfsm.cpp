@@ -790,15 +790,15 @@ TEST(hfsm, func_arguments) {
 
 	hfsm<transition, state, int&> smachine{};
 	hfsm_state<transition, state, int&> walk_state{ state::walk, "walk" };
-	walk_state.add_event<hfsm_event::on_enter>([&](auto&, int& v) {
+	walk_state.add_event<hfsm_event::on_enter>([&](int& v, auto&) {
 		++v;
 		++enters;
 	});
-	walk_state.add_event<hfsm_event::on_update>([&](auto&, int& v) {
+	walk_state.add_event<hfsm_event::on_update>([&](int& v, auto&) {
 		++v;
 		++updates;
 	});
-	walk_state.add_event<hfsm_event::on_exit>([&](auto&, int& v) {
+	walk_state.add_event<hfsm_event::on_exit>([&](int& v, auto&) {
 		++v;
 		++exits;
 	});
@@ -807,15 +807,15 @@ TEST(hfsm, func_arguments) {
 
 	hfsm_state<transition, state, int&> run_state{ state::run, "run" };
 	run_state.add_event<hfsm_event::on_enter_from, state::walk>(
-			[&](auto&, int& v) {
+			[&](int& v, auto&) {
 				++v;
 				++enters;
 			});
-	run_state.add_event<hfsm_event::on_update>([&](auto&, int& v) {
+	run_state.add_event<hfsm_event::on_update>([&](int& v, auto&) {
 		++v;
 		++updates;
 	});
-	run_state.add_event<hfsm_event::on_exit>([&](auto&, int& v) {
+	run_state.add_event<hfsm_event::on_exit>([&](int& v, auto&) {
 		++v;
 		++exits;
 	});

@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fea/state_machines/fsm.hpp"
 #include "fea/time/high_range_duration.hpp"
 #include "fea/time/time.hpp"
-#include "fea/utility/throw.hpp"
+#include "fea/utility/error.hpp"
 
 #include <cassert>
 

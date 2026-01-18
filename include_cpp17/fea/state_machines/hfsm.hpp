@@ -31,9 +31,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
 #include "fea/meta/static_for.hpp"
+#include "fea/utility/error.hpp"
 #include "fea/utility/platform.hpp"
 #include "fea/utility/scope.hpp"
-#include "fea/utility/throw.hpp"
 
 #include <algorithm>
 #include <array>
@@ -119,7 +119,7 @@ enum class hfsm_event : size_t {
 template <class TransitionEnum, class StateEnum, class... FuncArgs>
 struct hfsm_state {
 	using hfsm_t = hfsm<TransitionEnum, StateEnum, FuncArgs...>;
-	using hfsm_func_t = std::function<void(hfsm_t&, FuncArgs...)>;
+	using hfsm_func_t = std::function<void(FuncArgs..., hfsm_t&)>;
 	using hfsm_guard_func_t = std::function<bool(FuncArgs...)>;
 
 	struct tranny_info {
@@ -330,7 +330,7 @@ struct hfsm_state {
 		if (std::get<size_t(Transition)>(_guard_transition_exists)) {
 			for (const auto& [func, to_state] :
 					_guard_transitions[size_t(Transition)]) {
-				if (std::invoke(func, func_args...)) {
+				if (func(func_args...)) {
 					tg.from = _state;
 					tg.to = to_state;
 					tg.exit_hierarchy.push_back(this);
@@ -366,26 +366,22 @@ struct hfsm_state {
 		if constexpr (Event == hfsm_event::on_enter) {
 			if (to_from_state != StateEnum::count
 					&& _enter_from_exists[size_t(to_from_state)]) {
-				std::invoke(_enter_from_events[size_t(to_from_state)], machine,
-						func_args...);
+				_enter_from_events[size_t(to_from_state)](
+						func_args..., machine);
 			} else if (std::get<size_t(Event)>(_simple_event_exists)) {
-				std::invoke(std::get<size_t(Event)>(_simple_events), machine,
-						func_args...);
+				std::get<size_t(Event)>(_simple_events)(func_args..., machine);
 			}
 		} else if constexpr (Event == hfsm_event::on_exit) {
 			if (to_from_state != StateEnum::count
 					&& _exit_to_exists[size_t(to_from_state)]) {
-				std::invoke(_exit_to_events[size_t(to_from_state)], machine,
-						func_args...);
+				_exit_to_events[size_t(to_from_state)](func_args..., machine);
 			} else if (std::get<size_t(Event)>(_simple_event_exists)) {
-				std::invoke(std::get<size_t(Event)>(_simple_events), machine,
-						func_args...);
+				std::get<size_t(Event)>(_simple_events)(func_args..., machine);
 			}
 
 		} else if constexpr (Event == hfsm_event::on_update) {
 			if (std::get<size_t(Event)>(_simple_event_exists)) {
-				std::invoke(std::get<size_t(Event)>(_simple_events), machine,
-						func_args...);
+				std::get<size_t(Event)>(_simple_events)(func_args..., machine);
 			}
 		}
 	}
@@ -424,14 +420,14 @@ struct hfsm_state {
 			return false;
 
 		return _enter_from_calls_on_enter[size_t(from)]
-				&& std::get<size_t(hfsm_event::on_enter)>(_simple_event_exists);
+			&& std::get<size_t(hfsm_event::on_enter)>(_simple_event_exists);
 	}
 	bool exit_to_calls_on_exit(StateEnum to) const {
 		if (to == StateEnum::count)
 			return false;
 
 		return _exit_to_calls_on_exit[size_t(to)]
-				&& std::get<size_t(hfsm_event::on_exit)>(_simple_event_exists);
+			&& std::get<size_t(hfsm_event::on_exit)>(_simple_event_exists);
 	}
 
 	StateEnum state() const {
@@ -808,7 +804,7 @@ private:
 		for (state_t* s : states) {
 			bool call_generalized = s->enter_from_calls_on_enter(to_from_state);
 			if (call_generalized) {
-				events.push_back([s, this](hfsm&, FuncArgs... func_args) {
+				events.push_back([s, this](FuncArgs... func_args, hfsm&) {
 					_indentation += indentation_size;
 					maybe_print(hfsm_event::on_enter, s);
 
@@ -818,7 +814,7 @@ private:
 			}
 
 			events.push_back([s, to_from_state, indent = !call_generalized,
-									 this](hfsm&, FuncArgs... func_args) {
+									 this](FuncArgs... func_args, hfsm&) {
 				if (indent) {
 					_indentation += indentation_size;
 				}
@@ -832,7 +828,7 @@ private:
 	void enqueue_update(std::vector<hfsm_func_t>& events,
 			const std::vector<state_t*>& states) {
 		for (state_t* s : states) {
-			events.push_back([s, this](hfsm&, FuncArgs... func_args) {
+			events.push_back([s, this](FuncArgs... func_args, hfsm&) {
 				execute_auto_transition_guards(
 						s->auto_transition_guards(), func_args...);
 
@@ -853,7 +849,7 @@ private:
 		for (state_t* s : states) {
 			bool call_generalized = s->exit_to_calls_on_exit(to_from_state);
 			if (call_generalized) {
-				events.push_back([s, this](hfsm&, FuncArgs... func_args) {
+				events.push_back([s, this](FuncArgs... func_args, hfsm&) {
 					maybe_print(hfsm_event::on_exit, s);
 
 					s->template execute_event<hfsm_event::on_exit>(
@@ -862,7 +858,7 @@ private:
 			}
 
 			events.push_back(
-					[s, to_from_state, this](hfsm&, FuncArgs... func_args) {
+					[s, to_from_state, this](FuncArgs... func_args, hfsm&) {
 						maybe_print(hfsm_event::on_exit, s, to_from_state);
 
 						s->template execute_event<hfsm_event::on_exit>(
@@ -885,7 +881,7 @@ private:
 
 			constexpr size_t c_idx = decltype(idx)::value;
 			for (const auto& func : std::get<c_idx>(t_guards)) {
-				if (std::invoke(func, func_args...)) {
+				if (func(func_args...)) {
 					found = true;
 					// constexpr TransitionEnum t
 					//		= static_cast<TransitionEnum>(decltype(idx)::value);
@@ -901,7 +897,7 @@ private:
 			std::vector<hfsm_func_t>& update_events, FuncArgs... func_args) {
 
 		for (size_t i = 0; i < update_events.size(); ++i) {
-			std::invoke(update_events[i], *this, func_args...);
+			update_events[i](func_args..., *this);
 
 			if (_transition_to_handle == TransitionEnum::count)
 				continue;
@@ -921,7 +917,7 @@ private:
 
 				update_events.push_back(
 						[parent, to_state = _current_tranny_info.to](
-								hfsm&, FuncArgs...) {
+								FuncArgs..., hfsm&) {
 							parent->current_substate(to_state);
 						});
 
@@ -941,7 +937,7 @@ private:
 			enqueue_exit(update_events, exit_states, _current_tranny_info.to);
 
 			update_events.push_back([to_state = _current_tranny_info.to, this](
-											hfsm&, FuncArgs...) {
+											FuncArgs..., hfsm&) {
 				current_state(_state_topmost_parents[size_t(to_state)]);
 			});
 
@@ -985,7 +981,9 @@ private:
 								__FUNCTION__, __LINE__, "missing states");
 					}
 
-					[[maybe_unused]] size_t num_name = 0;
+					[[maybe_unused]]
+					size_t num_name
+							= 0;
 					std::for_each(
 							names.begin(), names.end(), [&](const auto& n) {
 								if (n == name)
@@ -1031,7 +1029,7 @@ private:
 			printf("%*s%s : %s\n", _indentation, "", from->name().data(),
 					ev_name);
 		} else if (ev == hfsm_event::on_enter
-				|| ev == hfsm_event::on_enter_from) {
+				   || ev == hfsm_event::on_enter_from) {
 			if (from->template handles_event<hfsm_event::on_enter_from>(to)) {
 				ev_name = "on_enter_from";
 				printf("%*s%s : %s : %s\n", _indentation, "",

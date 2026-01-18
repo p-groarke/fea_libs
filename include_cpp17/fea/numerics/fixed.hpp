@@ -89,7 +89,14 @@ public:
 
 	constexpr basic_fixed(float f) noexcept;
 	constexpr basic_fixed(double d) noexcept;
-	explicit constexpr basic_fixed(value_t v) noexcept;
+	explicit constexpr basic_fixed(int8_t v) noexcept;
+	explicit constexpr basic_fixed(uint8_t v) noexcept;
+	explicit constexpr basic_fixed(int16_t v) noexcept;
+	explicit constexpr basic_fixed(uint16_t v) noexcept;
+	explicit constexpr basic_fixed(int32_t v) noexcept;
+	explicit constexpr basic_fixed(uint32_t v) noexcept;
+	explicit constexpr basic_fixed(int64_t v) noexcept;
+	explicit constexpr basic_fixed(uint64_t v) noexcept;
 
 	// Conversions
 	explicit constexpr operator float() const noexcept;
@@ -244,6 +251,7 @@ static_assert(false, "fea::fixed : Missing architecture.");
 
 // std::intmax_t == 8 bytes on win32...
 using currency = fea::basic_fixed<std::intptr_t, 100>;
+using fixed16_t = fea::basic_fixed<int16_t, (size_t(1) << 5)>;
 using fixed32_t = fea::basic_fixed<int32_t, (size_t(1) << 11)>;
 #if FEA_ARCH == 64
 using fixed64_t = fea::basic_fixed<int64_t, (size_t(1) << 23)>;
@@ -266,12 +274,55 @@ constexpr basic_fixed<I, S>::basic_fixed(double d) noexcept
 }
 
 template <class I, size_t S>
-constexpr basic_fixed<I, S>::basic_fixed(value_t v) noexcept {
+constexpr basic_fixed<I, S>::basic_fixed(int8_t v) noexcept {
 	if constexpr (is_scaling_pow2_v) {
-		value = v << scaling_sqrt_v;
+		value = value_t(v) << scaling_sqrt_v;
 	} else {
-		value = v * scaling_v;
+		value = value_t(v) * scaling_v;
 	}
+}
+template <class I, size_t S>
+constexpr basic_fixed<I, S>::basic_fixed(uint8_t v) noexcept
+		: basic_fixed(value_t(v)) {
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>::basic_fixed(int16_t v) noexcept {
+	if constexpr (is_scaling_pow2_v) {
+		value = value_t(v) << scaling_sqrt_v;
+	} else {
+		value = value_t(v) * scaling_v;
+	}
+}
+template <class I, size_t S>
+constexpr basic_fixed<I, S>::basic_fixed(uint16_t v) noexcept
+		: basic_fixed(value_t(v)) {
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>::basic_fixed(int32_t v) noexcept {
+	if constexpr (is_scaling_pow2_v) {
+		value = value_t(v) << scaling_sqrt_v;
+	} else {
+		value = value_t(v) * scaling_v;
+	}
+}
+template <class I, size_t S>
+constexpr basic_fixed<I, S>::basic_fixed(uint32_t v) noexcept
+		: basic_fixed(value_t(v)) {
+}
+
+template <class I, size_t S>
+constexpr basic_fixed<I, S>::basic_fixed(int64_t v) noexcept {
+	if constexpr (is_scaling_pow2_v) {
+		value = value_t(v) << scaling_sqrt_v;
+	} else {
+		value = value_t(v) * scaling_v;
+	}
+}
+template <class I, size_t S>
+constexpr basic_fixed<I, S>::basic_fixed(uint64_t v) noexcept
+		: basic_fixed(value_t(v)) {
 }
 
 template <class I, size_t S>

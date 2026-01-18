@@ -50,7 +50,7 @@ if (FEA_CMAKE_LOCAL)
 endif()
 FetchContent_Declare(fea_cmake
 	GIT_REPOSITORY https://github.com/p-groarke/fea_cmake.git
-	GIT_TAG e0e3f565191c512ccb4a5f27512bc79f0168b805
+	GIT_TAG 07e1d321a54589d49a56d651287a3c99e4e5bbd0
 )
 FetchContent_MakeAvailable(fea_cmake)
 
