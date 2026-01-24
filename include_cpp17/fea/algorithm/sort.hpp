@@ -83,7 +83,9 @@ struct radix_data {
 inline fea::tls<radix_data<uint8_t>> radix_data_cache8;
 inline fea::tls<radix_data<uint16_t>> radix_data_cache16;
 inline fea::tls<radix_data<uint32_t>> radix_data_cache32;
+#if FEA_ARCH >= 64
 inline fea::tls<radix_data<uint64_t>> radix_data_cache64;
+#endif
 
 // Returns true if presorted.
 template <class FwdIt, class IndexT>
@@ -358,10 +360,12 @@ void radix_sort(FwdIt first, FwdIt last) {
 		return detail::radix_sort(first, last, count, lock.local());
 	}
 
+#if FEA_ARCH >= 64
 	static_assert(sizeof(void*) <= 8, "TODO : Update if statement + cache.");
 	using index_t = uint64_t;
 	fea::tls_lock<detail::radix_data<index_t>> lock
 			= detail::radix_data_cache64.lock();
 	return detail::radix_sort(first, last, count, lock.local());
+#endif
 }
 } // namespace fea

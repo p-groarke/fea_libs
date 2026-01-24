@@ -117,7 +117,11 @@ TEST(sort, radix_signed_ints) {
 
 	// Test passes.
 	{
+#if FEA_32BIT
+		using t = int32_t;
+#else
 		using t = int64_t;
+#endif
 		std::vector<t> vals{ 0, 54, -128, -100'000, 18, -100'042, 0, 2, 100'042,
 			128, 3, 0, 128, -128, 100'000, 3, 54, 54, 54, -128, 100'042, -54,
 			-54, -54, 0, 100'042, -128, 100'000, -100'042, 1, -128, -100'000 };
@@ -142,7 +146,11 @@ TEST(sort, radix_signed_ints) {
 
 	// Simple fuzz.
 	{
+#if FEA_32BIT
+		using t = int32_t;
+#else
 		using t = int64_t;
+#endif
 		std::vector<t> vals(1000);
 		fea::random_fill(vals.begin(), vals.end());
 		std::vector<t> cmp = vals;
