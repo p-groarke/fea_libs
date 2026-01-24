@@ -33,6 +33,7 @@ class FeaLibsConan(ConanFile):
         "onetbb/*:tbbmalloc" : False,
         "onetbb/*:tbbproxy" : False,
         # "onetbb/*:shared" : True,
+        "hwloc/*:shared" : True,
     }
     exports_sources = ["*", "!build/*", "!build_reports/*", "!Output/*", "!bin/*"]
 
