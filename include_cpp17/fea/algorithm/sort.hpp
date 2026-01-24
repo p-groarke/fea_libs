@@ -51,11 +51,22 @@
 
 namespace fea {
 // Radix sort.
+// Values pointed to must be arithmetic (integers or floats).
+// Performance wise : unsigned > signed > floats
+//
 // Thread-safe.
 // Allocates thread caches on first call.
-// Allocates n values every call.
+// Allocates values every call.
 template <class FwdIt>
 void radix_sort(FwdIt first, FwdIt last);
+
+// Radix sort.
+// This overload uses a getter callback to evaluate values.
+// Callback must return an arithmetic type to sort.
+// Callback may be called multiple times.
+// See 'radix_sort' for more details.
+template <class FwdIt, class Getter>
+void radix_sort(FwdIt first, FwdIt last, Getter&& get_func);
 } // namespace fea
 
 
@@ -89,7 +100,7 @@ void radix_sort(
 	});
 
 	// Compute counters / histograms.
-	// Performance Q : Faster to loop on each counter?
+	// Performance : Mush faster to on values only once.
 	{
 		bool pre_sorted = true;
 		value_t prev_val = *first;
@@ -240,14 +251,9 @@ void radix_sort(
 }
 } // namespace detail
 
-// Radix sort.
-// Thread-safe.
-// Allocates memory to fit 'count' items.
-//
-// Also allocates histograms and extra required data on first call from thread.
-// Subsequent thread calls do not (uses a thread-safe cache when possible).
-template <class FwdIt>
-void radix_sort(FwdIt first, FwdIt last) {
+
+template <class FwdIt, class Getter>
+void radix_sort(FwdIt first, FwdIt last, Getter&& getter_func) {
 	static_assert(
 			std::is_unsigned_v<size_t>, "Unsupported c++ implementation.");
 	static_assert(std::is_base_of_v<std::forward_iterator_tag,
@@ -292,5 +298,57 @@ void radix_sort(FwdIt first, FwdIt last) {
 	fea::tls_lock<detail::radix_data<index_t>> lock
 			= detail::radix_data_cache64.lock();
 	return detail::radix_sort(first, last, count, lock.local());
+}
+
+template <class FwdIt>
+void radix_sort(FwdIt first, FwdIt last) {
+	//return fea::radix_sort(first, last,
+	//		[](const fea::iterator_value_t<FwdIt>& v) { return v; });
+
+	static_assert(
+			std::is_unsigned_v<size_t>, "Unsupported c++ implementation.");
+	static_assert(std::is_base_of_v<std::forward_iterator_tag,
+						  fea::iterator_category_t<FwdIt>>,
+			"Iterators must at least be forward iterators.");
+
+	using value_t = fea::iterator_value_t<FwdIt>;
+	static_assert(std::is_arithmetic_v<value_t>,
+			"Radix sort only works on arithmetic types.");
+
+	size_t count = size_t(std::distance(first, last));
+	if (count <= 1) {
+		return;
+	}
+
+	// Dispatch to the most appropriate index type to optimize memory usage.
+	// Overall, we'll use more memory in total, since we have 1 cache per index
+	// size. However for any given sort, the memory will be as compressed as
+	// possible, accelerating the loops.
+	// Absolutely take the tradeoff!
+	if (count < size_t((std::numeric_limits<uint8_t>::max)())) {
+		using index_t = uint8_t;
+		fea::tls_lock<detail::radix_data<index_t>> lock
+				= detail::radix_data_cache8.lock();
+		return detail::radix_sort(first, last, count, lock.local());
+	}
+	if (count < size_t((std::numeric_limits<uint16_t>::max)())) {
+		using index_t = uint16_t;
+		fea::tls_lock<detail::radix_data<index_t>> lock
+				= detail::radix_data_cache16.lock();
+		return detail::radix_sort(first, last, count, lock.local());
+	}
+	if (count < size_t((std::numeric_limits<uint32_t>::max)())) {
+		using index_t = uint32_t;
+		fea::tls_lock<detail::radix_data<index_t>> lock
+				= detail::radix_data_cache32.lock();
+		return detail::radix_sort(first, last, count, lock.local());
+	}
+
+	static_assert(sizeof(void*) <= 8, "TODO : Update if statement + cache.");
+	using index_t = uint64_t;
+	fea::tls_lock<detail::radix_data<index_t>> lock
+			= detail::radix_data_cache64.lock();
+	return detail::radix_sort(first, last, count, lock.local());
+
 }
 } // namespace fea

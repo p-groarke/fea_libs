@@ -273,13 +273,17 @@ TEST(sort, radix_floats) {
 TEST(sort, radix_benchmarks) {
 	using t = float;
 	std::vector<t> vals(100'000'000);
-	fea::random_fill(vals.begin(), vals.end(), -100.f, 100.f);
+	fea::random_fill(vals.begin(), vals.end(), -1000.f, 1000.f);
 
 	fea::bench::suite suite;
 	suite.title("Radix Sort Validation");
 	suite.average(5);
 	// suite.sleep_between(std::chrono::milliseconds{ 500 });
 	suite.benchmark("The Big Short",
+			[&]() { fea::radix_sort(vals.begin(), vals.end()); });
+
+	fea::random_fill(vals.begin(), vals.end(), -1000.f, 1000.f);
+	suite.benchmark("Second run",
 			[&]() { fea::radix_sort(vals.begin(), vals.end()); });
 
 	suite.print();
