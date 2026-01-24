@@ -34,11 +34,9 @@
 #include "fea/meta/static_for.hpp"
 #include "fea/meta/traits.hpp"
 #include "fea/numerics/numerics.hpp"
-#include "fea/utility/platform.hpp"
-// #include "fea/performance/intrinsics.hpp"
-#include "fea/utility/error.hpp"
-// #include "fea/performance/constants.hpp"
 #include "fea/performance/tls.hpp"
+#include "fea/utility/error.hpp"
+#include "fea/utility/platform.hpp"
 
 #include <algorithm>
 #include <array>
@@ -61,13 +59,13 @@ namespace fea {
 template <class FwdIt>
 void radix_sort(FwdIt first, FwdIt last);
 
-// Radix sort.
-// This overload uses a getter callback to evaluate values.
-// Callback must return an arithmetic type to sort.
-// Callback may be called multiple times.
-// See 'radix_sort' for more details.
-template <class FwdIt, class Getter>
-void radix_sort(FwdIt first, FwdIt last, Getter&& get_func);
+//// Radix sort.
+//// This overload uses a getter callback to evaluate values.
+//// Callback must return an arithmetic type to sort.
+//// Callback may be called multiple times.
+//// See 'radix_sort' for more details.
+// template <class FwdIt, class Getter>
+// void radix_sort(FwdIt first, FwdIt last, Getter&& get_func);
 } // namespace fea
 
 
@@ -132,22 +130,6 @@ bool radix_precompute(
 		}
 	}
 
-	//// Compute number of negative values.
-	//[[maybe_unused]]
-	// IndexT negative_count
-	//		= 0;
-	// if constexpr (std::is_floating_point_v<value_t>) {
-	//	const std::array<IndexT, 256>& msb_counts
-	//			= std::get<sizeof(value_t) - 1>(rad_data.counts);
-
-	//	size_t cnt = 0;
-	//	for (size_t i = 128; i < 256; ++i) {
-	//		cnt += size_t(msb_counts[i]);
-	//	}
-	//	assert(cnt <= (std::numeric_limits<IndexT>::max)());
-	//	negative_count = IndexT(cnt);
-	//}
-
 	// Compute offsets / jump tables / lookup tables.
 	fea::static_for<sizeof(value_t)>([&](auto const_pass_idx) {
 		constexpr size_t pass_idx = const_pass_idx;
@@ -202,7 +184,6 @@ bool radix_precompute(
 
 	return false;
 }
-
 
 // Notes :
 // Signed negative values are at the wrong position but correct order.

@@ -186,12 +186,6 @@ TEST(sort, radix_signed_ints) {
 }
 
 TEST(sort, radix_floats) {
-	// #if FEA_32BIT
-	//	using double_t = float;
-	// #else
-	// using double_t = double;
-	// #endif
-
 	// Simplest.
 	{
 		using t = float;
@@ -205,7 +199,11 @@ TEST(sort, radix_floats) {
 
 	// Pre-sorted
 	{
+#if FEA_32BIT
+		using t = float;
+#else
 		using t = double;
+#endif
 		std::vector<t> vals{ -101.0, -54.0, -2.0, -3.0, 2.0, 18.0, 127.0 };
 		std::vector<t> cmp = vals;
 
@@ -230,7 +228,11 @@ TEST(sort, radix_floats) {
 
 	// Simple fuzz.
 	{
+#if FEA_32BIT
+		using t = float;
+#else
 		using t = double;
+#endif
 		std::vector<t> vals(42);
 		fea::random_fill(vals.begin(), vals.end());
 		std::vector<t> cmp = vals;
@@ -242,7 +244,11 @@ TEST(sort, radix_floats) {
 
 	// Simple fuzz.
 	{
+#if FEA_32BIT
+		using t = float;
+#else
 		using t = double;
+#endif
 		std::vector<t> vals(1000);
 		fea::random_fill(vals.begin(), vals.end());
 		std::vector<t> cmp = vals;
