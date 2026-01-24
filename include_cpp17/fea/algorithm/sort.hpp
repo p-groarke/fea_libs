@@ -50,10 +50,6 @@
 #include <vector>
 
 namespace fea {
-/*
-A collection of sorts.
-*/
-
 // Radix sort.
 // Thread-safe.
 // Allocates thread caches on first call.
@@ -78,6 +74,9 @@ inline fea::tls<radix_data<uint16_t>> radix_data_cache16;
 inline fea::tls<radix_data<uint32_t>> radix_data_cache32;
 inline fea::tls<radix_data<uint64_t>> radix_data_cache64;
 
+// Notes :
+// Signed negative values are at the wrong position but correct order.
+// Float negative values are at the wrong position and worng order.
 template <class FwdIt, class IndexT>
 void radix_sort(
 		FwdIt first, FwdIt last, size_t count, radix_data<IndexT>& rad_data) {
@@ -89,14 +88,23 @@ void radix_sort(
 		std::get<pass_idx>(rad_data.counts) = {};
 	});
 
-	if constexpr (std::is_unsigned_v<value_t>) {
-		// Compute counters / histograms.
-		// Performance Q : Faster to loop on each counter?
+	// Compute counters / histograms.
+	// Performance Q : Faster to loop on each counter?
+	{
+		bool pre_sorted = true;
+		value_t prev_val = *first;
 		for (FwdIt it = first; it != last; ++it) {
+			const value_t& val = *it;
 			const uint8_t* radixes_ptr
-					= reinterpret_cast<const uint8_t*>(&(*it));
-			// std::array<uint8_t, sizeof(value_t)> radixes;
-			// std::memcpy(radixes.data(), &(*it), sizeof(value_t));
+					= reinterpret_cast<const uint8_t*>(&(val));
+
+			if (pre_sorted) {
+				if (prev_val > val) {
+					pre_sorted = false;
+				} else {
+					prev_val = val;
+				}
+			}
 
 			fea::static_for<sizeof(value_t)>([&](auto const_pass_idx) {
 				constexpr size_t pass_idx = const_pass_idx;
@@ -106,58 +114,128 @@ void radix_sort(
 			});
 		}
 
-		// Compute offsets / jump tables / lookup tables.
-		fea::static_for<sizeof(value_t)>([&](auto const_pass_idx) {
-			constexpr size_t pass_idx = const_pass_idx;
-			const std::array<IndexT, 256>& counts
-					= std::get<pass_idx>(rad_data.counts);
-			std::array<IndexT, 256>& jmp_table
-					= std::get<pass_idx>(rad_data.jmp_table);
-			jmp_table[0] = IndexT(0);
-			for (size_t i = 1; i < jmp_table.size(); ++i) {
+		if (pre_sorted) {
+			return;
+		}
+	}
+
+	// Compute number of negative values.
+	[[maybe_unused]]
+	IndexT negative_count
+			= 0;
+	if constexpr (std::is_floating_point_v<value_t>) {
+		const std::array<IndexT, 256>& msb_counts
+				= std::get<sizeof(value_t) - 1>(rad_data.counts);
+
+		size_t cnt = 0;
+		for (size_t i = 128; i < 256; ++i) {
+			cnt += size_t(msb_counts[i]);
+		}
+		assert(cnt <= (std::numeric_limits<IndexT>::max)());
+		negative_count = IndexT(cnt);
+	}
+
+	// Compute offsets / jump tables / lookup tables.
+	fea::static_for<sizeof(value_t)>([&](auto const_pass_idx) {
+		constexpr size_t pass_idx = const_pass_idx;
+		const std::array<IndexT, 256>& counts
+				= std::get<pass_idx>(rad_data.counts);
+		std::array<IndexT, 256>& jmp_table
+				= std::get<pass_idx>(rad_data.jmp_table);
+
+		if constexpr (std::is_signed_v<value_t> && std::is_integral_v<value_t>
+					  && pass_idx == sizeof(value_t) - 1) {
+			// Signed integer at last pass, fix lookups.
+			// Negatives (128+) must start at offset zero, positives after.
+			jmp_table[128] = 0;
+			for (size_t i = 129; i < 256; ++i) {
 				jmp_table[i] = jmp_table[i - 1] + counts[i - 1];
 			}
-		});
 
-		// TODO : fea::static_for
-		// Performance Q : To simplify and minimize allocations, we copy
-		// values to a temporary scratch storage.
-		// Another technique is to use 2 vectors of indices and work with those
-		// instead. This will still incur the value copy at the very end,
-		// but maybe it accelerates everything since indexes can be very small.
-		std::vector<value_t> scratch(count);
-		FwdIt write_first;
-		FwdIt write_last;
-		fea::static_for<sizeof(value_t)>([&](auto const_pass_idx) {
-			constexpr size_t pass_idx = const_pass_idx;
-			std::array<IndexT, 256>& jmp_table
-					= std::get<pass_idx>(rad_data.jmp_table);
-
-			FwdIt read_first = (pass_idx % 2) == 0 ? first : scratch.begin();
-			FwdIt read_last = (pass_idx % 2) == 0 ? last : scratch.end();
-
-			write_first = (pass_idx % 2) == 0 ? scratch.begin() : first;
-			write_last = (pass_idx % 2) == 0 ? scratch.end() : last;
-			assert(&(*read_first) != &(*write_first));
-
-			for (FwdIt it = read_first; it != read_last; ++it) {
-				const uint8_t* radixes_ptr
-						= reinterpret_cast<const uint8_t*>(&(*it));
-				size_t off = size_t(jmp_table[radixes_ptr[pass_idx]]++);
-				FwdIt cpy_it = std::next(write_first, off);
-				*cpy_it = *it;
+			jmp_table[0] = jmp_table.back() + counts.back();
+			for (size_t i = 1; i < 128; ++i) {
+				jmp_table[i] = jmp_table[i - 1] + counts[i - 1];
 			}
-		});
+		} else if constexpr (std::is_floating_point_v<value_t>
+							 && pass_idx == sizeof(value_t) - 1) {
+			// Floats at last pass, fix lookups.
+			// Negatives (127+) must start at offset zero, positives after.
+			// We also must reverse the order of negatives.
 
-		if constexpr (sizeof(value_t) == 1) {
-			// We were a char (non-even byte size).
-			// The output is in the wrong storage.
-			assert(&(*write_first) != &(*first));
-			std::copy(write_first, write_last, first);
+			// Like singed ints, store the negatives before positives.
+			jmp_table[255] = 0;
+			for (size_t i = 254; i > 127; --i) {
+				jmp_table[i] = jmp_table[i + 1] + counts[i + 1];
+			}
+			jmp_table[0] = jmp_table[128] + counts[128];
+			for (size_t i = 1; i < 128; ++i) {
+				jmp_table[i] = jmp_table[i - 1] + counts[i - 1];
+			}
+
+			// In our sort loop, we'll flip the order of final radixes.
+			// To do that, we need the first hit count to be the last.
+			for (size_t i = 128; i < 256; ++i) {
+				jmp_table[i] += counts[i];
+			}
+
+		} else {
+			// Straightforward lookups.
+			jmp_table[0] = IndexT(0);
+			for (size_t i = 1; i < 256; ++i) {
+				jmp_table[i] = jmp_table[i - 1] + counts[i - 1];
+			}
 		}
-	} else {
-		// TODO : handle the signed and floats.
-		fea::maybe_throw(__FUNCTION__, __LINE__, "TODO");
+	});
+
+	// Performance Q : To simplify and minimize allocations, we copy
+	// values to a temporary scratch storage.
+	// Another technique is to use 2 vectors of indices and work with those
+	// instead. This will still incur the value copy at the very end,
+	// but maybe it accelerates everything since indexes can be very small.
+	std::vector<value_t> scratch(count);
+	FwdIt write_first;
+	FwdIt write_last;
+	fea::static_for<sizeof(value_t)>([&](auto const_pass_idx) {
+		constexpr size_t pass_idx = const_pass_idx;
+		std::array<IndexT, 256>& jmp_table
+				= std::get<pass_idx>(rad_data.jmp_table);
+
+		FwdIt read_first = (pass_idx % 2) == 0 ? first : scratch.begin();
+		FwdIt read_last = (pass_idx % 2) == 0 ? last : scratch.end();
+
+		write_first = (pass_idx % 2) == 0 ? scratch.begin() : first;
+		write_last = (pass_idx % 2) == 0 ? scratch.end() : last;
+		assert(&(*read_first) != &(*write_first));
+
+		for (FwdIt it = read_first; it != read_last; ++it) {
+			const uint8_t* radixes_ptr
+					= reinterpret_cast<const uint8_t*>(&(*it));
+
+			size_t off;
+			if constexpr (std::is_floating_point_v<value_t>
+						  && pass_idx == sizeof(value_t) - 1) {
+				const uint8_t& radix = radixes_ptr[pass_idx];
+				if (radix < 128) {
+					off = size_t(jmp_table[radix]++);
+				} else {
+					// Dealing with negative floats,
+					// the lookup is prepped from last to first.
+					off = size_t(--jmp_table[radix]);
+				}
+			} else {
+				off = size_t(jmp_table[radixes_ptr[pass_idx]]++);
+			}
+
+			FwdIt cpy_it = std::next(write_first, off);
+			*cpy_it = *it;
+		}
+	});
+
+	if constexpr (sizeof(value_t) == 1) {
+		// We were a char (non-even byte size).
+		// The output is in the wrong storage.
+		assert(&(*write_first) != &(*first));
+		std::copy(write_first, write_last, first);
 	}
 }
 } // namespace detail

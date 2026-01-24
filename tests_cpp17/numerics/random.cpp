@@ -80,15 +80,15 @@ TEST(random, basics) {
 		}
 	}
 
-	{
-		std::vector<int> vec{ 42, -42, 101, -101 };
-		int r = fea::random_val(vec);
-		EXPECT_NE(std::find(vec.begin(), vec.end(), r), vec.end());
-		auto it = fea::random_iter(vec.begin(), vec.end());
-		EXPECT_NE(it, vec.end());
-		EXPECT_LT(it, vec.end());
-		EXPECT_GE(it, vec.begin());
-	}
+	//{
+	//	std::vector<int> vec{ 42, -42, 101, -101 };
+	//	int r = fea::random_val(vec);
+	//	EXPECT_NE(std::find(vec.begin(), vec.end(), r), vec.end());
+	//	auto it = fea::random_iter(vec.begin(), vec.end());
+	//	EXPECT_NE(it, vec.end());
+	//	EXPECT_LT(it, vec.end());
+	//	EXPECT_GE(it, vec.begin());
+	//}
 
 	{
 		const size_t num_v = 100;

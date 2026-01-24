@@ -30,8 +30,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
-#include "fea/utility/platform.hpp"
 #include "fea/meta/traits.hpp"
+#include "fea/utility/platform.hpp"
 
 #include <algorithm>
 #include <array>
@@ -45,58 +45,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 namespace fea {
-// Get a random int between [min, max].
+// Get a random value between [min, max].
+// Handles all integer types, floating types and enums.
 template <class T>
-std::enable_if_t<std::is_integral_v<T> || std::is_unsigned_v<T>, T> random_val(T min, T max);
-
-// Get a random float between [min, max].
-template <class T>
-std::enable_if_t<std::is_floating_point_v<T>, T> random_val(T min, T max);
-
-// Get a random enum between [min, max].
-template <class T>
-std::enable_if_t<std::is_enum_v<T>, T> random_val(T min, T max);
-
-// Get a random char between [min, max].
-template <>
-inline char random_val<char>(char min, char max);
-
-// Get a random unsigned char between [min, max].
-template <>
-inline uint8_t random_val<uint8_t>(uint8_t min, uint8_t max);
+T random_val(T min, T max);
 
 // Get a random value between [T::min, T::max].
+// Handles integers, floats and enums.
+// For enums, returns value between [E{}, E::count[
 template <class T>
-std::enable_if_t<!std::is_enum_v<T>, T> random_val();
-
-// Get a random enum between [E{}, E::count[.
-template <class E>
-std::enable_if_t<std::is_enum_v<E>, E> random_val();
-
-// Get a random value between [T::min, T::max].
-template <>
-inline char random_val<char>();
-
-// Get a random value between [T::min, T::max].
-template <>
-inline uint8_t random_val<uint8_t>();
-
-// Get a random bool [true, false].
-template <>
-inline bool random_val<bool>();
-
-// Get a random value from container.
-template <class Container>
-const auto& random_val(const Container& container);
-
-// Get a random value from container.
-template <class Container>
-auto& random_val(Container& container);
+T random_val();
 
 // Fills a range, from begin to end, with random values between [min, max].
 // Iterator value type should be supported by fea::random_val.
 template <class FwdIt>
-void random_fill(FwdIt begin, FwdIt end, fea::iterator_value_t<FwdIt> min, fea::iterator_value_t<FwdIt> max);
+void random_fill(FwdIt begin, FwdIt end, fea::iterator_value_t<FwdIt> min,
+		fea::iterator_value_t<FwdIt> max);
 
 // Fills a range, from begin to end, with random values between
 // [numeric_limits::lowest, numeric_limits::max].
@@ -177,76 +141,59 @@ inline platform_mt19937 gen(
 		size_t(std::chrono::system_clock::now().time_since_epoch().count()));
 } // namespace detail
 
-
 template <class T>
-std::enable_if_t<std::is_integral_v<T> || std::is_unsigned_v<T>, T> random_val(T min, T max) {
-	std::uniform_int_distribution<T> dist(min, max);
-	return dist(detail::gen);
-}
-
-template <class T>
-std::enable_if_t<std::is_floating_point_v<T>, T> random_val(T min, T max) {
-	std::uniform_real_distribution<T> dist(min, max);
-	return dist(detail::gen);
-}
-
-template <class T>
-std::enable_if_t<std::is_enum_v<T>, T> random_val(T min, T max) {
-	using u_t = std::underlying_type_t<T>;
-	return T(random_val(u_t(min), u_t(max)));
-}
-
-template <>
-char random_val(char min, char max) {
-	return char(random_val(short(min), short(max)));
-}
-
-template <>
-uint8_t random_val(uint8_t min, uint8_t max) {
-	return uint8_t(random_val(uint16_t(min), uint16_t(max)));
+T random_val(T min, T max) {
+	if constexpr (std::is_floating_point_v<T>) {
+		std::uniform_real_distribution<T> dist(min, max);
+		return dist(detail::gen);
+	} else if constexpr (sizeof(T) == 1) {
+		if constexpr (std::is_unsigned_v<T>) {
+			return T(fea::random_val(uint16_t(min), uint16_t(max)));
+		} else {
+			return T(fea::random_val(short(min), short(max)));
+		}
+	} else if constexpr (std::is_enum_v<T>) {
+		using u_t = std::underlying_type_t<T>;
+		return T(fea::random_val(u_t(min), u_t(max)));
+	} else {
+		std::uniform_int_distribution<T> dist(min, max);
+		return dist(detail::gen);
+	}
 }
 
 template <class T>
-std::enable_if_t<!std::is_enum_v<T>, T> random_val() {
-	return random_val(
-			std::numeric_limits<T>::lowest(), (std::numeric_limits<T>::max)());
+T random_val() {
+	if constexpr (std::is_same_v<std::decay_t<T>, bool>) {
+		return T(fea::random_val(uint8_t(0), uint8_t(1)));
+	} else if constexpr (sizeof(T) == 1) {
+		if constexpr (std::is_unsigned_v<T>) {
+			constexpr uint16_t mmin
+					= uint16_t(std::numeric_limits<T>::lowest());
+			constexpr uint16_t mmax = uint16_t((std::numeric_limits<T>::max)());
+			return T(fea::random_val(mmin, mmax));
+		} else {
+			constexpr short mmin = short(std::numeric_limits<T>::lowest());
+			constexpr short mmax = short((std::numeric_limits<T>::max)());
+			return T(fea::random_val(mmin, mmax));
+		}
+	} else if constexpr (std::is_enum_v<T>) {
+		using u_t = std::underlying_type_t<T>;
+		return fea::random_val(T{}, T(u_t(T::count) - 1));
+	} else {
+		return fea::random_val(std::numeric_limits<T>::lowest(),
+				(std::numeric_limits<T>::max)());
+	}
 }
 
-
-template <class E>
-std::enable_if_t<std::is_enum_v<E>, E> random_val() {
-	using u_t = std::underlying_type_t<E>;
-	return random_val(E{}, E(u_t(E::count) - 1));
-}
-
-template <>
-inline char random_val<char>() {
-	constexpr short mmin = short(std::numeric_limits<char>::lowest());
-	constexpr short mmax = short((std::numeric_limits<char>::max)());
-	return char(random_val(mmin, mmax));
-}
-
-template <>
-uint8_t random_val<uint8_t>() {
-	constexpr uint16_t mmin = uint16_t(std::numeric_limits<uint8_t>::lowest());
-	constexpr uint16_t mmax = uint16_t((std::numeric_limits<uint8_t>::max)());
-	return uint8_t(random_val(mmin, mmax));
-}
-
-template <>
-bool random_val<bool>() {
-	return bool(random_val(uint8_t(0), uint8_t(1)));
-}
-
-template <class Container>
-const auto& random_val(const Container& container) {
-	return *random_iter(container.begin(), container.end());
-}
-
-template <class Container>
-auto& random_val(Container& container) {
-	return *random_iter(container.begin(), container.end());
-}
+//template <class Container>
+//const auto& random_val(const Container& container) {
+//	return *random_iter(container.begin(), container.end());
+//}
+//
+//template <class Container>
+//auto& random_val(Container& container) {
+//	return *random_iter(container.begin(), container.end());
+//}
 
 template <class FwdIt>
 void random_fill(FwdIt begin, FwdIt end, fea::iterator_value_t<FwdIt> min,
@@ -258,19 +205,28 @@ void random_fill(FwdIt begin, FwdIt end, fea::iterator_value_t<FwdIt> min,
 
 template <class FwdIt>
 void random_fill(FwdIt begin, FwdIt end) {
-	using value_t = typename std::iterator_traits<FwdIt>::value_type;
-	random_fill(begin, end, std::numeric_limits<value_t>::lowest(),
-			(std::numeric_limits<value_t>::max)());
+	using value_t = fea::iterator_value_t<FwdIt>;
+	if constexpr (std::is_floating_point_v<value_t>) {
+		// Visual studio asserts : max <= min + max, aka half the range.
+		constexpr value_t mmin
+				= std::numeric_limits<value_t>::lowest()
+				+ ((std::numeric_limits<value_t>::max)() * value_t(0.5));
+		constexpr value_t mmax = (std::numeric_limits<value_t>::max)() * value_t(0.5);
+		fea::random_fill(begin, end, mmin, mmax);
+	} else {
+		fea::random_fill(begin, end, std::numeric_limits<value_t>::lowest(),
+				(std::numeric_limits<value_t>::max)());
+	}
 }
 
 size_t random_idx(size_t count) {
-	return random_val(size_t(0), count - 1);
+	return fea::random_val(size_t(0), count - 1);
 }
 
 template <class FwdIt>
 FwdIt random_iter(FwdIt first, FwdIt last) {
 	size_t count = std::distance(first, last);
-	size_t idx = random_idx(count);
+	size_t idx = fea::random_idx(count);
 	return std::next(first, idx);
 }
 
@@ -285,7 +241,7 @@ template <size_t N>
 std::array<uint8_t, N> random_bytes() {
 	std::array<uint8_t, N> ret{};
 	for (size_t i = 0; i < N; ++i) {
-		ret[i] = random_val<uint8_t>();
+		ret[i] = fea::random_val<uint8_t>();
 	}
 	return ret;
 }
@@ -294,7 +250,7 @@ std::vector<uint8_t> random_bytes(size_t num_bytes) {
 	std::vector<uint8_t> ret;
 	ret.reserve(num_bytes);
 	for (size_t i = 0; i < num_bytes; ++i) {
-		ret.push_back(random_val<uint8_t>());
+		ret.push_back(fea::random_val<uint8_t>());
 	}
 	return ret;
 }
