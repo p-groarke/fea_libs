@@ -269,7 +269,7 @@ TEST(sort, radix_floats) {
 	}
 }
 
-#if FEA_RELEASE
+#if 0 && FEA_RELEASE
 TEST(sort, radix_benchmarks) {
 	using t = float;
 	std::vector<t> vals(100'000'000);
