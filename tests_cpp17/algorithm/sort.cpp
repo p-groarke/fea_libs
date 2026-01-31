@@ -6,6 +6,7 @@
 #include <fea/utility/platform.hpp>
 #include <gtest/gtest.h>
 #include <numeric>
+#include <thread>
 #include <vector>
 
 namespace {
@@ -672,15 +673,22 @@ TEST(sort, radix_floats) {
 TEST(sort, radix_benchmark_values) {
 	using t = float;
 	std::vector<t> in(100'000'000);
-	fea::random_fill(in.begin(), in.end(), -1000.f, 1000.f);
+	fea::random_fill(in.begin(), in.end(), -100000.f, 100000.f);
 	std::vector<t> vals = in;
 
 	fea::bench::suite suite;
 	suite.title("Radix Sort Value Based");
-	suite.average(5);
+	size_t avg_count = 5;
+	suite.average(avg_count);
 	suite.sleep_between(std::chrono::milliseconds{ 100 });
-	suite.benchmark("100 million floats",
-			[&]() { fea::radix_sort(vals.begin(), vals.end()); });
+	suite.benchmark(
+			"100 million floats",
+			[&]() { fea::radix_sort(vals.begin(), vals.end()); },
+			[&]() {
+				if (--avg_count > 0) {
+					std::copy(in.begin(), in.end(), vals.begin());
+				}
+			});
 	suite.print();
 
 	if (!std::is_sorted(vals.begin(), vals.end())) {
@@ -690,21 +698,32 @@ TEST(sort, radix_benchmark_values) {
 }
 
 TEST(sort, radix_benchmark_indexes) {
+	std::this_thread::sleep_for(std::chrono::milliseconds{ 500 });
+
 	using t = float;
 	std::vector<t> in(100'000'000);
-	fea::random_fill(in.begin(), in.end(), -1000.f, 1000.f);
+	fea::random_fill(in.begin(), in.end(), -100000.f, 100000.f);
 	std::vector<t> vals = in;
 	std::vector<size_t> idxes(vals.size());
 	std::iota(idxes.begin(), idxes.end(), 0);
 
 	fea::bench::suite suite;
 	suite.title("Radix Sort Index Based");
-	suite.average(5);
+	size_t avg_count = 5;
+	suite.average(avg_count);
 	suite.sleep_between(std::chrono::milliseconds{ 100 });
-	suite.benchmark("100 million floats", [&]() {
-		fea::radix_sort_idxes(
-				vals.begin(), vals.end(), idxes.begin(), idxes.end());
-	});
+	suite.benchmark(
+			"100 million floats",
+			[&]() {
+				fea::radix_sort_idxes(
+						vals.begin(), vals.end(), idxes.begin(), idxes.end());
+			},
+			[&]() {
+				if (--avg_count > 0) {
+					std::copy(in.begin(), in.end(), vals.begin());
+					std::iota(idxes.begin(), idxes.end(), 0);
+				}
+			});
 
 	suite.print();
 
