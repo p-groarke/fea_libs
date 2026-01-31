@@ -246,7 +246,7 @@ void radix_pass(FwdIt first1, FwdIt last1, FwdIt first2, FwdIt last2,
 	FwdIt read_last = (PassIdx % 2) == 0 ? last1 : last2;
 
 	FwdIt write_first = (PassIdx % 2) == 0 ? first2 : first1;
-	FwdIt write_last = (PassIdx % 2) == 0 ? last2 : last1;
+	//FwdIt write_last = (PassIdx % 2) == 0 ? last2 : last1;
 	assert(&(*read_first) != &(*write_first));
 
 	for (FwdIt it = read_first; it != read_last; ++it) {
