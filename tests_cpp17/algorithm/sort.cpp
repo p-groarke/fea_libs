@@ -677,7 +677,7 @@ TEST(sort, radix_benchmark_values) {
 
 	fea::bench::suite suite;
 	suite.title("Radix Sort Value Based");
-	// suite.average(5);
+	suite.average(5);
 	suite.sleep_between(std::chrono::milliseconds{ 100 });
 	suite.benchmark("100 million floats",
 			[&]() { fea::radix_sort(vals.begin(), vals.end()); });
@@ -699,7 +699,7 @@ TEST(sort, radix_benchmark_indexes) {
 
 	fea::bench::suite suite;
 	suite.title("Radix Sort Index Based");
-	 //suite.average(5);
+	suite.average(5);
 	suite.sleep_between(std::chrono::milliseconds{ 100 });
 	suite.benchmark("100 million floats", [&]() {
 		fea::radix_sort_idxes(
@@ -716,4 +716,26 @@ TEST(sort, radix_benchmark_indexes) {
 }
 #endif
 
+// TODO : Investigate w3c version
+// myArray = [170, 45, 75, 90, 802, 24, 2, 66]
+// print("Original array:", myArray)
+// radixArray = [[], [], [], [], [], [], [], [], [], []]
+// maxVal = max(myArray)
+// exp = 1
+//
+// while maxVal // exp > 0:
+//
+//    while len(myArray) > 0:
+//        val = myArray.pop()
+//        radixIndex = (val // exp) % 10
+//        radixArray[radixIndex].append(val)
+//
+//    for bucket in radixArray:
+//        while len(bucket) > 0:
+//            val = bucket.pop()
+//            myArray.append(val)
+//
+//    exp *= 10
+//
+// print("Sorted array:", myArray)
 } // namespace

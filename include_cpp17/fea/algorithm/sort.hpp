@@ -246,7 +246,7 @@ bool radix_precompute(
 // Signed negative values are at the wrong position but correct order.
 // Float negative values are at the wrong position and worng order.
 template <class FwdIt, class IndexT>
- __declspec(noinline) void radix_sort(
+__declspec(noinline) void radix_sort(
 		FwdIt first, FwdIt last, size_t count, radix_data<IndexT>& rad_data) {
 	using value_t = fea::iterator_value_t<FwdIt>;
 
@@ -263,41 +263,43 @@ template <class FwdIt, class IndexT>
 	std::vector<value_t> scratch(count);
 	FwdIt write_first;
 	FwdIt write_last;
-	fea::static_for<sizeof(value_t)>([&](auto const_pass_idx)  __declspec(noinline) {
-		constexpr size_t pass_idx = const_pass_idx;
-		std::array<IndexT, 256>& jmp_table
-				= std::get<pass_idx>(rad_data.jmp_table);
+	fea::static_for<sizeof(value_t)>(
+			[&](auto const_pass_idx) __declspec(noinline) {
+				constexpr size_t pass_idx = const_pass_idx;
+				std::array<IndexT, 256>& jmp_table
+						= std::get<pass_idx>(rad_data.jmp_table);
 
-		FwdIt read_first = (pass_idx % 2) == 0 ? first : scratch.begin();
-		FwdIt read_last = (pass_idx % 2) == 0 ? last : scratch.end();
+				FwdIt read_first
+						= (pass_idx % 2) == 0 ? first : scratch.begin();
+				FwdIt read_last = (pass_idx % 2) == 0 ? last : scratch.end();
 
-		write_first = (pass_idx % 2) == 0 ? scratch.begin() : first;
-		write_last = (pass_idx % 2) == 0 ? scratch.end() : last;
-		assert(&(*read_first) != &(*write_first));
+				write_first = (pass_idx % 2) == 0 ? scratch.begin() : first;
+				write_last = (pass_idx % 2) == 0 ? scratch.end() : last;
+				assert(&(*read_first) != &(*write_first));
 
-		for (FwdIt it = read_first; it != read_last; ++it) {
-			const uint8_t* radixes_ptr
-					= reinterpret_cast<const uint8_t*>(&(*it));
-			const uint8_t& radix = radixes_ptr[pass_idx];
+				for (FwdIt it = read_first; it != read_last; ++it) {
+					const uint8_t* radixes_ptr
+							= reinterpret_cast<const uint8_t*>(&(*it));
+					const uint8_t& radix = radixes_ptr[pass_idx];
 
-			ptrdiff_t off;
-			if constexpr (std::is_floating_point_v<value_t>
-						  && pass_idx == sizeof(value_t) - 1) {
-				if (radix < 128) {
-					off = ptrdiff_t(jmp_table[radix]++);
-				} else {
-					// Dealing with negative floats,
-					// the lookup is prepped from last to first.
-					off = ptrdiff_t(--jmp_table[radix]);
+					ptrdiff_t off;
+					if constexpr (std::is_floating_point_v<value_t>
+								  && pass_idx == sizeof(value_t) - 1) {
+						if (radix < 128) {
+							off = ptrdiff_t(jmp_table[radix]++);
+						} else {
+							// Dealing with negative floats,
+							// the lookup is prepped from last to first.
+							off = ptrdiff_t(--jmp_table[radix]);
+						}
+					} else {
+						off = ptrdiff_t(jmp_table[radix]++);
+					}
+
+					FwdIt cpy_it = std::next(write_first, off);
+					*cpy_it = *it;
 				}
-			} else {
-				off = ptrdiff_t(jmp_table[radix]++);
-			}
-
-			FwdIt cpy_it = std::next(write_first, off);
-			*cpy_it = *it;
-		}
-	});
+			});
 
 	if constexpr (sizeof(value_t) == 1) {
 		// We were a char (non-even byte size).
@@ -309,8 +311,8 @@ template <class FwdIt, class IndexT>
 
 template <class FwdIt, class FwdIt2, class IndexT>
 void radix_sort(FwdIt first, FwdIt last, FwdIt2 idx_first,
-		[[maybe_unused]] FwdIt2 idx_last,
-		size_t count, radix_data<IndexT>& rad_data) {
+		[[maybe_unused]] FwdIt2 idx_last, size_t count,
+		radix_data<IndexT>& rad_data) {
 	using value_t = fea::iterator_value_t<FwdIt>;
 	using user_index_t = fea::iterator_value_t<FwdIt2>;
 
@@ -320,11 +322,106 @@ void radix_sort(FwdIt first, FwdIt last, FwdIt2 idx_first,
 	}
 
 #if 1
+	// Optimized for TLB thrashing.
+	// Looks unintuitive, but copying the data like this is at minimum an
+	// order of magnitude faster on first run (cold cache), even more on
+	// subsequent runs.
+	struct data {
+		value_t value;
+		IndexT idx;
+	};
+
+	std::vector<data> idxes1(count);
+	std::vector<data> idxes2(count);
+
+	// Initialize compute data.
+	// We'll alternate between indexes in it.
+	{
+		auto it = first;
+		for (size_t i = 0; i < count; ++i, ++it) {
+			idxes1[i].idx = IndexT(i);
+			idxes1[i].value = *it;
+		}
+	}
+
+	typename std::vector<data>::iterator write_first;
+	typename std::vector<data>::iterator write_last;
+	fea::static_for<sizeof(value_t)>(
+			[&](auto const_pass_idx) __declspec(noinline) {
+				static constexpr size_t pass_idx = const_pass_idx;
+				std::array<IndexT, 256>& jmp_table
+						= std::get<pass_idx>(rad_data.jmp_table);
+
+				// Flip-flop our index containers.
+				auto read_first
+						= (pass_idx % 2) == 0 ? idxes1.begin() : idxes2.begin();
+				auto read_last
+						= (pass_idx % 2) == 0 ? idxes1.end() : idxes2.end();
+				write_first
+						= (pass_idx % 2) == 0 ? idxes2.begin() : idxes1.begin();
+				write_last = (pass_idx % 2) == 0 ? idxes2.end() : idxes1.end();
+				assert(&(*read_first) != &(*write_first));
+
+
+				// On first pass, use the input data directly.
+				// Skips one copy of whole data.
+				for (auto it = read_first; it != read_last; ++it) {
+					// Get our pointed too value.
+					const data& d = *it;
+					const IndexT& idx = d.idx;
+					const uint8_t* radixes_ptr
+							= reinterpret_cast<const uint8_t*>(&(d.value));
+					const uint8_t& radix = radixes_ptr[pass_idx];
+
+					// Compute the position it should be in.
+					// Also increment / decrement counters for that radix.
+					IndexT off;
+					if constexpr (std::is_floating_point_v<value_t>
+								  && pass_idx == sizeof(value_t) - 1) {
+						if (radix < 128) {
+							off = jmp_table[radix]++;
+						} else {
+							// Dealing with negative floats,
+							// the lookup is prepped from last to first.
+							off = --jmp_table[radix];
+						}
+					} else {
+						off = jmp_table[radix]++;
+					}
+
+					// At position 'off', we should be item 'idx'.
+					auto cpy_it = std::next(write_first, ptrdiff_t(off));
+					cpy_it->idx = idx;
+					cpy_it->value = d.value;
+				}
+			});
+
+	// And finally, copy our indexes to the output.
+	if constexpr (sizeof(value_t) == 1) {
+		// We were a char (non-even byte size).
+		// The output is in the wrong storage.
+		assert(&(*write_first) != &(*idxes1.begin()));
+		// std::copy(write_first, write_last, idxes1.begin());
+		for (const data& d : idxes2) {
+			assert(idx_first != idx_last);
+			*idx_first = user_index_t(d.idx);
+			++idx_first;
+		}
+
+	} else {
+		assert(&(*write_first) != &(*idxes2.begin()));
+		for (const data& d : idxes1) {
+			assert(idx_first != idx_last);
+			*idx_first = user_index_t(d.idx);
+			++idx_first;
+		}
+	}
+#elif 0
 	// Optimize TLB thrashing.
 	struct data {
 		IndexT idx1;
 		IndexT idx2;
-		//value_t value;
+		// value_t value;
 	};
 
 	std::vector<data> idxes(count);
@@ -335,77 +432,76 @@ void radix_sort(FwdIt first, FwdIt last, FwdIt2 idx_first,
 		auto it = first;
 		for (size_t i = 0; i < count; ++i, ++it) {
 			idxes[i].idx1 = IndexT(i);
-			//data_vec[i].value = *it;
+			// data_vec[i].value = *it;
 		}
 	}
 
 	fea::static_for<sizeof(value_t)>(
 			[&](auto const_pass_idx) __declspec(noinline) {
-				constexpr size_t pass_idx = const_pass_idx;
+				static constexpr size_t pass_idx = const_pass_idx;
 				std::array<IndexT, 256>& jmp_table
-				= std::get<pass_idx>(rad_data.jmp_table);
+						= std::get<pass_idx>(rad_data.jmp_table);
 
-				auto read_idx = []() {};
-				auto write_idx = []() {};
+				// Flip-flop our indexes.
+				auto read_idx = [](data& d) -> const IndexT& {
+					if constexpr ((pass_idx % 2) == 0) {
+						return d.idx1;
+					} else {
+						return d.idx2;
+					}
+				};
+				auto write_idx = [](data& d) -> IndexT& {
+					if constexpr ((pass_idx % 2) == 0) {
+						return d.idx2;
+					} else {
+						return d.idx1;
+					}
+				};
 
-		//// Flip-flop our index containers.
-		//auto read_first = (pass_idx % 2) == 0 ? idxes1.begin() : idxes2.begin();
-		//auto read_last = (pass_idx % 2) == 0 ? idxes1.end() : idxes2.end();
-		//write_first = (pass_idx % 2) == 0 ? idxes2.begin() : idxes1.begin();
-		//write_last = (pass_idx % 2) == 0 ? idxes2.end() : idxes1.end();
-		//assert(&(*read_first) != &(*write_first));
+				for (data& d : idxes) {
+					const IndexT& idx = read_idx(d);
 
-		for (data& d : idxes) {
-			IndexT&;
+					// Get our pointed too value.
+					auto it = std::next(first, size_t(idx));
+					const uint8_t* radixes_ptr
+							= reinterpret_cast<const uint8_t*>(&(*it));
+					const uint8_t& radix = radixes_ptr[pass_idx];
 
-			// Get our pointed too value.
-			IndexT idx = *idx_it;
-			auto it = std::next(first, size_t(idx));
-			const uint8_t* radixes_ptr
-					= reinterpret_cast<const uint8_t*>(&(*it));
-			const uint8_t& radix = radixes_ptr[pass_idx];
+					// Compute the position it should be in.
+					// Also increment / decrement counters for that radix.
+					IndexT off;
+					if constexpr (std::is_floating_point_v<value_t>
+								  && pass_idx == sizeof(value_t) - 1) {
+						if (radix < 128) {
+							off = jmp_table[radix]++;
+						} else {
+							// Dealing with negative floats,
+							// the lookup is prepped from last to first.
+							off = --jmp_table[radix];
+						}
+					} else {
+						off = jmp_table[radix]++;
+					}
 
-			// Compute the position it should be in.
-			// Also increment / decrement counters for that radix.
-			IndexT off;
-			if constexpr (std::is_floating_point_v<value_t>
-						  && pass_idx == sizeof(value_t) - 1) {
-				if (radix < 128) {
-					off = jmp_table[radix]++;
-				} else {
-					// Dealing with negative floats,
-					// the lookup is prepped from last to first.
-					off = --jmp_table[radix];
+					// At position 'off', we should be item 'idx'.
+					write_idx(idxes[off]) = idx;
 				}
-			} else {
-				off = jmp_table[radix]++;
-			}
-
-			// At position 'off', we should be item 'idx'.
-			auto idx_cpy_it = std::next(write_first, ptrdiff_t(off));
-			*idx_cpy_it = idx;
-		}
-	});
+			});
 
 	// And finally, copy our indexes to the output.
 	if constexpr (sizeof(value_t) == 1) {
 		// We were a char (non-even byte size).
 		// The output is in the wrong storage.
-		assert(&(*write_first) != &(*idxes1.begin()));
-		//std::copy(write_first, write_last, idxes1.begin());
-		for (const IndexT& idx : idxes2)
-		{
+		for (const data& d : idxes) {
 			assert(idx_first != idx_last);
-			*idx_first = user_index_t(idx);
+			*idx_first = user_index_t(d.idx2);
 			++idx_first;
 		}
 
 	} else {
-		assert(&(*write_first) != &(*idxes2.begin()));
-		for (const IndexT& idx : idxes1)
-		{
+		for (const data& d : idxes) {
 			assert(idx_first != idx_last);
-			*idx_first = user_index_t(idx);
+			*idx_first = user_index_t(d.idx1);
 			++idx_first;
 		}
 	}
@@ -422,53 +518,55 @@ void radix_sort(FwdIt first, FwdIt last, FwdIt2 idx_first,
 			[&](auto const_pass_idx) __declspec(noinline) {
 				constexpr size_t pass_idx = const_pass_idx;
 				std::array<IndexT, 256>& jmp_table
-				= std::get<pass_idx>(rad_data.jmp_table);
+						= std::get<pass_idx>(rad_data.jmp_table);
 
-		// Flip-flop our index containers.
-		auto read_first = (pass_idx % 2) == 0 ? idxes1.begin() : idxes2.begin();
-		auto read_last = (pass_idx % 2) == 0 ? idxes1.end() : idxes2.end();
-		write_first = (pass_idx % 2) == 0 ? idxes2.begin() : idxes1.begin();
-		write_last = (pass_idx % 2) == 0 ? idxes2.end() : idxes1.end();
-		assert(&(*read_first) != &(*write_first));
+				// Flip-flop our index containers.
+				auto read_first
+						= (pass_idx % 2) == 0 ? idxes1.begin() : idxes2.begin();
+				auto read_last
+						= (pass_idx % 2) == 0 ? idxes1.end() : idxes2.end();
+				write_first
+						= (pass_idx % 2) == 0 ? idxes2.begin() : idxes1.begin();
+				write_last = (pass_idx % 2) == 0 ? idxes2.end() : idxes1.end();
+				assert(&(*read_first) != &(*write_first));
 
-		for (auto idx_it = read_first; idx_it != read_last; ++idx_it) {
-			// Get our pointed too value.
-			IndexT idx = *idx_it;
-			auto it = std::next(first, size_t(idx));
-			const uint8_t* radixes_ptr
-					= reinterpret_cast<const uint8_t*>(&(*it));
-			const uint8_t& radix = radixes_ptr[pass_idx];
+				for (auto idx_it = read_first; idx_it != read_last; ++idx_it) {
+					// Get our pointed too value.
+					IndexT idx = *idx_it;
+					auto it = std::next(first, size_t(idx));
+					const uint8_t* radixes_ptr
+							= reinterpret_cast<const uint8_t*>(&(*it));
+					const uint8_t& radix = radixes_ptr[pass_idx];
 
-			// Compute the position it should be in.
-			// Also increment / decrement counters for that radix.
-			IndexT off;
-			if constexpr (std::is_floating_point_v<value_t>
-						  && pass_idx == sizeof(value_t) - 1) {
-				if (radix < 128) {
-					off = jmp_table[radix]++;
-				} else {
-					// Dealing with negative floats,
-					// the lookup is prepped from last to first.
-					off = --jmp_table[radix];
+					// Compute the position it should be in.
+					// Also increment / decrement counters for that radix.
+					IndexT off;
+					if constexpr (std::is_floating_point_v<value_t>
+								  && pass_idx == sizeof(value_t) - 1) {
+						if (radix < 128) {
+							off = jmp_table[radix]++;
+						} else {
+							// Dealing with negative floats,
+							// the lookup is prepped from last to first.
+							off = --jmp_table[radix];
+						}
+					} else {
+						off = jmp_table[radix]++;
+					}
+
+					// At position 'off', we should be item 'idx'.
+					auto idx_cpy_it = std::next(write_first, ptrdiff_t(off));
+					*idx_cpy_it = idx;
 				}
-			} else {
-				off = jmp_table[radix]++;
-			}
-
-			// At position 'off', we should be item 'idx'.
-			auto idx_cpy_it = std::next(write_first, ptrdiff_t(off));
-			*idx_cpy_it = idx;
-		}
-	});
+			});
 
 	// And finally, copy our indexes to the output.
 	if constexpr (sizeof(value_t) == 1) {
 		// We were a char (non-even byte size).
 		// The output is in the wrong storage.
 		assert(&(*write_first) != &(*idxes1.begin()));
-		//std::copy(write_first, write_last, idxes1.begin());
-		for (const IndexT& idx : idxes2)
-		{
+		// std::copy(write_first, write_last, idxes1.begin());
+		for (const IndexT& idx : idxes2) {
 			assert(idx_first != idx_last);
 			*idx_first = user_index_t(idx);
 			++idx_first;
@@ -476,8 +574,7 @@ void radix_sort(FwdIt first, FwdIt last, FwdIt2 idx_first,
 
 	} else {
 		assert(&(*write_first) != &(*idxes2.begin()));
-		for (const IndexT& idx : idxes1)
-		{
+		for (const IndexT& idx : idxes1) {
 			assert(idx_first != idx_last);
 			*idx_first = user_index_t(idx);
 			++idx_first;
@@ -535,7 +632,8 @@ void radix_sort_idxes(
 	}
 
 	fea::detail::radix_get_tls_cache(count, [&](auto& local_cache) {
-		return fea::detail::radix_sort(first, last, idx_first, idx_last, count, local_cache);
+		return fea::detail::radix_sort(
+				first, last, idx_first, idx_last, count, local_cache);
 	});
 }
 
