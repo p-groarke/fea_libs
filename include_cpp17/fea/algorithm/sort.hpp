@@ -59,23 +59,17 @@ namespace fea {
 template <class FwdIt>
 void radix_sort(FwdIt first, FwdIt last);
 
-// Radix sort.
+// Radix sort indexes.
 // See above for more details.
 //
 // This overload sorts indexes that are provided through first_idx and last_idx.
 // The indexes must be comprised of values from 0-N, but don't need to be
 // pre-sorted.
+// Sorting multiple times the same indexes using different input values
+// is supported / by design.
 template <class FwdIt, class FwdIt2>
 void radix_sort_idxes(
 		FwdIt first, FwdIt last, FwdIt2 first_idx, FwdIt2 last_idx);
-
-//// Radix sort.
-//// This overload uses a getter callback to evaluate values.
-//// Callback must return an arithmetic type to sort.
-//// Callback may be called multiple times.
-//// See 'radix_sort' for more details.
-// template <class FwdIt, class Getter>
-// void radix_sort(FwdIt first, FwdIt last, Getter&& get_func);
 } // namespace fea
 
 

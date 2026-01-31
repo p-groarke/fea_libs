@@ -669,37 +669,8 @@ TEST(sort, radix_floats) {
 	}
 }
 
-#if 1 && FEA_RELEASE
-TEST(sort, radix_benchmark_values) {
-	using t = float;
-	std::vector<t> in(100'000'000);
-	fea::random_fill(in.begin(), in.end(), -100000.f, 100000.f);
-	std::vector<t> vals = in;
-
-	fea::bench::suite suite;
-	suite.title("Radix Sort Value Based");
-	size_t avg_count = 5;
-	suite.average(avg_count);
-	suite.sleep_between(std::chrono::milliseconds{ 100 });
-	suite.benchmark(
-			"100 million floats",
-			[&]() { fea::radix_sort(vals.begin(), vals.end()); },
-			[&]() {
-				if (--avg_count > 0) {
-					std::copy(in.begin(), in.end(), vals.begin());
-				}
-			});
-	suite.print();
-
-	if (!std::is_sorted(vals.begin(), vals.end())) {
-		fea::maybe_throw<std::invalid_argument>(
-				__FUNCTION__, __LINE__, "Failed to sort.");
-	}
-}
-
-TEST(sort, radix_benchmark_indexes) {
-	std::this_thread::sleep_for(std::chrono::milliseconds{ 500 });
-
+#if 0 && FEA_RELEASE
+TEST(sort, radix_benchmarks) {
 	using t = float;
 	std::vector<t> in(100'000'000);
 	fea::random_fill(in.begin(), in.end(), -100000.f, 100000.f);
@@ -708,12 +679,28 @@ TEST(sort, radix_benchmark_indexes) {
 	std::iota(idxes.begin(), idxes.end(), 0);
 
 	fea::bench::suite suite;
-	suite.title("Radix Sort Index Based");
-	size_t avg_count = 5;
+	suite.title("Radix Sort Value Based");
+	constexpr size_t avg = 5;
+	size_t avg_count = avg;
 	suite.average(avg_count);
 	suite.sleep_between(std::chrono::milliseconds{ 100 });
 	suite.benchmark(
-			"100 million floats",
+			"fea::radix_sort : 100 million floats",
+			[&]() { fea::radix_sort(vals.begin(), vals.end()); },
+			[&]() {
+				if (--avg_count > 0) {
+					std::copy(in.begin(), in.end(), vals.begin());
+				}
+			});
+	if (!std::is_sorted(vals.begin(), vals.end())) {
+		fea::maybe_throw<std::invalid_argument>(
+				__FUNCTION__, __LINE__, "Failed to sort.");
+	}
+
+	avg_count = avg;
+	std::copy(in.begin(), in.end(), vals.begin());
+	suite.benchmark(
+			"fea::radix_sort_idxes : 100 million floats",
 			[&]() {
 				fea::radix_sort_idxes(
 						vals.begin(), vals.end(), idxes.begin(), idxes.end());
@@ -724,18 +711,32 @@ TEST(sort, radix_benchmark_indexes) {
 					std::iota(idxes.begin(), idxes.end(), 0);
 				}
 			});
-
-	suite.print();
-
 	sort_vals(idxes, &vals);
 	if (!std::is_sorted(vals.begin(), vals.end())) {
 		fea::maybe_throw<std::invalid_argument>(
 				__FUNCTION__, __LINE__, "Failed to sort.");
 	}
+
+	avg_count = avg;
+	std::copy(in.begin(), in.end(), vals.begin());
+	suite.benchmark(
+			"std::sort : 100 million floats",
+			[&]() { std::sort(vals.begin(), vals.end()); },
+			[&]() {
+				if (--avg_count > 0) {
+					std::copy(in.begin(), in.end(), vals.begin());
+				}
+			});
+	if (!std::is_sorted(vals.begin(), vals.end())) {
+		fea::maybe_throw<std::invalid_argument>(
+				__FUNCTION__, __LINE__, "Failed to sort.");
+	}
+
+	suite.print();
 }
 #endif
 
-// TODO : Investigate w3c version
+// w3c version
 // myArray = [170, 45, 75, 90, 802, 24, 2, 66]
 // print("Original array:", myArray)
 // radixArray = [[], [], [], [], [], [], [], [], [], []]
