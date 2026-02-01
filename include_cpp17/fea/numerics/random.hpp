@@ -134,11 +134,11 @@ struct platform_mersenne<8> {
 };
 
 using platform_mt19937 =
-		typename detail::platform_mersenne<sizeof(size_t)>::type;
+		typename detail::platform_mersenne<sizeof(uintptr_t)>::type;
 
 inline std::random_device rd;
 inline platform_mt19937 gen(
-		size_t(std::chrono::system_clock::now().time_since_epoch().count()));
+		size_t(std::chrono::steady_clock::now().time_since_epoch().count()));
 } // namespace detail
 
 template <class T>
