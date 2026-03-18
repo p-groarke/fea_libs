@@ -521,8 +521,8 @@ template <FEA_FSM_TMP>
 template <fsm_event Event>
 auto fsm_state<FEA_FSM_SPEC>::execute_event(
 		[[maybe_unused]] StateEnum to_from_state,
-		[[maybe_unused]] TransitionEnum to_from_transition, fsm_t& machine,
-		FuncArgs... func_args) -> FuncRet {
+		[[maybe_unused]] TransitionEnum to_from_transition,
+		[[maybe_unused]] fsm_t& machine, FuncArgs... func_args) -> FuncRet {
 	static_assert(Event != fsm_event::on_enter_from,
 			"state : do not execute on_enter_from, use on_enter instead "
 			"and provide to_from_state");
@@ -588,11 +588,11 @@ auto fsm_state<FEA_FSM_SPEC>::execute_event(
 
 	// Now call the callback.
 	if constexpr (no_fsm_arg) {
-		return (*func)(func_args...);
+		return (*func)(std::forward<FuncArgs>(func_args)...);
 	} else if constexpr (void_fsm_arg) {
-		return (*func)(func_args..., &machine);
+		return (*func)(std::forward<FuncArgs>(func_args)..., &machine);
 	} else {
-		return (*func)(func_args..., machine);
+		return (*func)(std::forward<FuncArgs>(func_args)..., machine);
 	}
 }
 
