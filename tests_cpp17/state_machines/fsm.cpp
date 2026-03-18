@@ -234,7 +234,7 @@ TEST(fsm, basics) {
 		++on_exits;
 	});
 	run_state.add_transition<transition::do_jump, state::run>();
-	run_state.ignore_transition(transition::ignore_me);
+	run_state.ignore_transition2(transition::ignore_me);
 	machine.add_state<state::run>(std::move(run_state));
 
 	fea::fsm_state<transition, state, void(bool&)> jump_state;
@@ -431,54 +431,54 @@ TEST(fsm, basics_non_tmp) {
 	fea::fsm<transition, state, void(bool&)> machine;
 
 	fea::fsm_state<transition, state, void(bool&)> walk_state;
-	walk_state.add_event(fea::fsm_event::on_enter, [&](bool& b, auto&) {
+	walk_state.add_event2(fea::fsm_event::on_enter, [&](bool& b, auto&) {
 		b = true;
 		++on_enters;
 	});
-	walk_state.add_event(fea::fsm_event::on_update, [&](bool& b, auto&) {
+	walk_state.add_event2(fea::fsm_event::on_update, [&](bool& b, auto&) {
 		b = true;
 		++on_updates;
 		machine.trigger<transition::do_run>(b);
 	});
-	walk_state.add_event(fea::fsm_event::on_exit, [&](bool& b, auto&) {
+	walk_state.add_event2(fea::fsm_event::on_exit, [&](bool& b, auto&) {
 		b = true;
 		++on_exits;
 	});
-	walk_state.add_transition(transition::do_run, state::run);
+	walk_state.add_transition2(transition::do_run, state::run);
 	machine.add_state<state::walk>(std::move(walk_state));
 
 	fea::fsm_state<transition, state, void(bool&)> run_state;
-	run_state.add_event(fea::fsm_event::on_enter, [&](bool& b, auto&) {
+	run_state.add_event2(fea::fsm_event::on_enter, [&](bool& b, auto&) {
 		b = true;
 		++on_enters;
 	});
-	run_state.add_event(fea::fsm_event::on_update, [&](bool& b, auto&) {
+	run_state.add_event2(fea::fsm_event::on_update, [&](bool& b, auto&) {
 		b = true;
 		++on_updates;
 		machine.trigger<transition::do_jump>(b);
 	});
-	run_state.add_event(fea::fsm_event::on_exit, [&](bool& b, auto&) {
+	run_state.add_event2(fea::fsm_event::on_exit, [&](bool& b, auto&) {
 		b = true;
 		++on_exits;
 	});
-	run_state.add_transition(transition::do_jump, state::run);
+	run_state.add_transition2(transition::do_jump, state::run);
 	machine.add_state<state::run>(std::move(run_state));
 
 	fea::fsm_state<transition, state, void(bool&)> jump_state;
-	jump_state.add_event(fea::fsm_event::on_enter, [&](bool& b, auto&) {
+	jump_state.add_event2(fea::fsm_event::on_enter, [&](bool& b, auto&) {
 		b = true;
 		++on_enters;
 	});
-	jump_state.add_event(fea::fsm_event::on_update, [&](bool& b, auto&) {
+	jump_state.add_event2(fea::fsm_event::on_update, [&](bool& b, auto&) {
 		b = true;
 		++on_updates;
 		machine.trigger<transition::do_walk>(b);
 	});
-	jump_state.add_event(fea::fsm_event::on_exit, [&](bool& b, auto&) {
+	jump_state.add_event2(fea::fsm_event::on_exit, [&](bool& b, auto&) {
 		b = true;
 		++on_exits;
 	});
-	jump_state.add_transition(transition::do_walk, state::walk);
+	jump_state.add_transition2(transition::do_walk, state::walk);
 	machine.add_state<state::jump>(std::move(jump_state));
 
 	machine.update(inpute);
@@ -502,8 +502,18 @@ TEST(fsm, event_triggering_non_tmp) {
 	test_data mtest_data;
 
 	// Create your enums. They MUST end with 'count'.
-	enum class state { walk, run, jump, count };
-	enum class transition { do_walk, do_run, do_jump, count };
+	enum class state {
+		walk,
+		run,
+		jump,
+		count,
+	};
+	enum class transition {
+		do_walk,
+		do_run,
+		do_jump,
+		count,
+	};
 
 	// Used for callbacks
 	using machine_t = fea::fsm<transition, state, void(test_data&)>;
@@ -517,22 +527,22 @@ TEST(fsm, event_triggering_non_tmp) {
 		fea::fsm_state<transition, state, void(test_data&)> walk_state;
 
 		// Add allowed transitions.
-		walk_state.add_transition(transition::do_run, state::run);
-		walk_state.add_transition(transition::do_jump, state::jump);
+		walk_state.add_transition2(transition::do_run, state::run);
+		walk_state.add_transition2(transition::do_jump, state::jump);
 
 		// Add state events.
-		walk_state.add_event(
+		walk_state.add_event2(
 				fea::fsm_event::on_enter, [](test_data& t, machine_t& machine) {
 					++t.num_onenter_calls;
 					machine.trigger<transition::do_run>(t);
 				});
-		walk_state.add_event(fea::fsm_event::on_enter_from, state::run,
+		walk_state.add_event2(fea::fsm_event::on_enter_from, state::run,
 				[](test_data& t, machine_t&) {
 					++t.num_onenterfrom_calls;
 					// Should finish here.
 					// machine.trigger<transition::do_jump>(t);
 				});
-		walk_state.add_event(fea::fsm_event::on_exit_to, state::run,
+		walk_state.add_event2(fea::fsm_event::on_exit_to, state::run,
 				[](test_data& t, machine_t& machine) {
 					++t.num_onexitto_calls;
 					machine.trigger<transition::do_jump>(t);
@@ -543,14 +553,14 @@ TEST(fsm, event_triggering_non_tmp) {
 	// Run
 	{
 		fea::fsm_state<transition, state, void(test_data&)> run_state;
-		run_state.add_transition(transition::do_walk, state::walk);
-		run_state.add_transition(transition::do_jump, state::jump);
-		run_state.add_event(fea::fsm_event::on_enter_from, state::jump,
+		run_state.add_transition2(transition::do_walk, state::walk);
+		run_state.add_transition2(transition::do_jump, state::jump);
+		run_state.add_event2(fea::fsm_event::on_enter_from, state::jump,
 				[](test_data& t, machine_t& machine) {
 					++t.num_onenterfrom_calls;
 					machine.trigger<transition::do_jump>(t);
 				});
-		run_state.add_event(fea::fsm_event::on_exit_to, state::jump,
+		run_state.add_event2(fea::fsm_event::on_exit_to, state::jump,
 				[](test_data& t, machine_t& machine) {
 					++t.num_onexitto_calls;
 					machine.trigger<transition::do_walk>(t);
@@ -561,16 +571,16 @@ TEST(fsm, event_triggering_non_tmp) {
 	// Jump
 	{
 		fea::fsm_state<transition, state, void(test_data&)> jump_state;
-		jump_state.add_transition(transition::do_walk, state::walk);
-		jump_state.add_transition(transition::do_run, state::run);
+		jump_state.add_transition2(transition::do_walk, state::walk);
+		jump_state.add_transition2(transition::do_run, state::run);
 
-		jump_state.add_event(fea::fsm_event::on_enter_from, state::walk,
+		jump_state.add_event2(fea::fsm_event::on_enter_from, state::walk,
 				[](test_data& t, machine_t& m) {
 					++t.num_onenterfrom_calls;
 					m.trigger<transition::do_run>(t);
 				});
 
-		jump_state.add_event(fea::fsm_event::on_exit_to, state::run,
+		jump_state.add_event2(fea::fsm_event::on_exit_to, state::run,
 				[](test_data& t, machine_t& m) {
 					++t.num_onexitto_calls;
 					m.trigger<transition::do_run>(t);

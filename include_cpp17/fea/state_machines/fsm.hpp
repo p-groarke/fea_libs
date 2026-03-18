@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <cassert>
 #include <cstdint>
 #include <functional>
+#include <limits>
 #include <type_traits>
 
 namespace fea {
@@ -133,7 +134,7 @@ struct fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 	// Add your event implementation (on_enter, on_update, on_exit).
 	// Non-template version.
 	// You can use these when Visual Studio is bugged and broken.
-	void add_event(fsm_event e, fsm_func_t&& func);
+	void add_event2(fsm_event e, fsm_func_t&& func);
 
 	// Add your event implementation that requires a target state
 	// (on_enter_from, on_exit_to).
@@ -144,7 +145,7 @@ struct fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 	// (on_enter_from, on_exit_to).
 	// Non-template version.
 	// You can use these when Visual Studio is bugged and broken.
-	void add_event(fsm_event e, StateEnum s, fsm_func_t&& func);
+	void add_event2(fsm_event e, StateEnum s, fsm_func_t&& func);
 
 	// Add your event implementation that requires a target transition
 	// (on_enter_from, on_exit_to).
@@ -155,7 +156,7 @@ struct fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 	// (on_enter_from, on_exit_to).
 	// Non-template version.
 	// You can use these when Visual Studio is bugged and broken.
-	void add_event(fsm_event e, TransitionEnum t, fsm_func_t&& func);
+	void add_event2(fsm_event e, TransitionEnum t, fsm_func_t&& func);
 
 	// Handle transition to a specified state.
 	template <TransitionEnum Transition, StateEnum State>
@@ -164,7 +165,7 @@ struct fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 	// Handle transition to a specified state.
 	// Non-template version.
 	// You can use these when Visual Studio is bugged and broken.
-	void add_transition(TransitionEnum t, StateEnum s);
+	void add_transition2(TransitionEnum t, StateEnum s);
 
 	// Handle but ignore a transition.
 	// The equivalent of allowing re-entry, but not calling any enter/exit
@@ -177,7 +178,7 @@ struct fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 	// events on reentry.
 	// Non-template version.
 	// You can use these when Visual Studio is bugged and broken.
-	void ignore_transition(TransitionEnum t);
+	void ignore_transition2(TransitionEnum t);
 
 	// Used internally to get which state is associated to the provided
 	// transition.
@@ -340,7 +341,8 @@ void fsm_state<FEA_FSM_STATE_TARGS>::add_event(fsm_func_t&& func) {
 }
 
 template <FEA_FSM_STATE_TMP>
-void fsm_state<FEA_FSM_STATE_TARGS>::add_event(fsm_event e, fsm_func_t&& func) {
+void fsm_state<FEA_FSM_STATE_TARGS>::add_event2(
+		fsm_event e, fsm_func_t&& func) {
 	if (e != fsm_event::on_enter && e != fsm_event::on_exit
 			&& e != fsm_event::on_update) {
 		fea::maybe_throw(__FUNCTION__, __LINE__, "Invalid event for function.");
@@ -377,7 +379,7 @@ void fsm_state<FEA_FSM_STATE_TARGS>::add_event(fsm_func_t&& func) {
 }
 
 template <FEA_FSM_STATE_TMP>
-void fsm_state<FEA_FSM_STATE_TARGS>::add_event(
+void fsm_state<FEA_FSM_STATE_TARGS>::add_event2(
 		fsm_event e, StateEnum s, fsm_func_t&& func) {
 	if (e != fsm_event::on_enter_from && e != fsm_event::on_exit_to) {
 		fea::maybe_throw(__FUNCTION__, __LINE__, "Invalid event for function.");
@@ -414,7 +416,7 @@ void fsm_state<FEA_FSM_STATE_TARGS>::add_event(fsm_func_t&& func) {
 }
 
 template <FEA_FSM_STATE_TMP>
-void fsm_state<FEA_FSM_STATE_TARGS>::add_event(
+void fsm_state<FEA_FSM_STATE_TARGS>::add_event2(
 		fsm_event e, TransitionEnum t, fsm_func_t&& func) {
 	if (e != fsm_event::on_enter_from && e != fsm_event::on_exit_to) {
 		fea::maybe_throw(__FUNCTION__, __LINE__, "Invalid event for function.");
@@ -444,7 +446,7 @@ void fsm_state<FEA_FSM_STATE_TARGS>::add_transition() {
 
 
 template <FEA_FSM_STATE_TMP>
-void fsm_state<FEA_FSM_STATE_TARGS>::add_transition(
+void fsm_state<FEA_FSM_STATE_TARGS>::add_transition2(
 		TransitionEnum t, StateEnum s) {
 	if (t == TransitionEnum::count) {
 		fea::maybe_throw(__FUNCTION__, __LINE__, "Bad transition.");
@@ -467,7 +469,7 @@ void fsm_state<FEA_FSM_STATE_TARGS>::ignore_transition() {
 }
 
 template <FEA_FSM_STATE_TMP>
-void fsm_state<FEA_FSM_STATE_TARGS>::ignore_transition(TransitionEnum t) {
+void fsm_state<FEA_FSM_STATE_TARGS>::ignore_transition2(TransitionEnum t) {
 	if (t == TransitionEnum::count) {
 		fea::maybe_throw(__FUNCTION__, __LINE__, "Bad transition.");
 	}
