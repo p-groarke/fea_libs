@@ -4,6 +4,7 @@
 
 
 namespace {
+#define FAIL_MSG "fsm.cpp : Failed test."
 
 TEST(fsm, example) {
 	struct test_data {
@@ -595,5 +596,205 @@ TEST(fsm, event_triggering_non_tmp) {
 	EXPECT_EQ(mtest_data.num_onupdate_calls, 0u);
 	EXPECT_EQ(mtest_data.num_onexit_calls, 0u);
 	EXPECT_EQ(mtest_data.num_onexitto_calls, 3u);
+}
+
+TEST(fsm, options) {
+	enum class state {
+		s1,
+		s2,
+		s3,
+		s4,
+		s5,
+		s6,
+		s7,
+		s8,
+		count,
+	};
+
+	enum class transition {
+		t1,
+		t2,
+		t3,
+		t4,
+		t5,
+		t6,
+		t7,
+		t8,
+		count,
+	};
+
+	// no fsm arg
+	{
+		fea::fsm<transition, state, void(bool&), fea::fsm_option::no_fsm_arg> m;
+
+		{
+			fea::fsm_state<transition, state, void(bool&),
+					fea::fsm_option::no_fsm_arg>
+					s1;
+
+			static_assert(decltype(s1)::no_fsm_arg, FAIL_MSG);
+			static_assert(!decltype(s1)::void_fsm_arg, FAIL_MSG);
+
+			// Add allowed transitions.
+			s1.add_transition<transition::t1, state::s1>();
+			s1.add_transition2(transition::t2, state::s2);
+
+			// Add state events.
+			s1.add_event<fea::fsm_event::on_enter>([](bool& b) { b = true; });
+			s1.add_event<fea::fsm_event::on_enter_from, state::s2>(
+					[](bool& b) { b = true; });
+			s1.add_event<fea::fsm_event::on_update>([](bool& b) { b = true; });
+			s1.add_event<fea::fsm_event::on_exit>([](bool& b) { b = true; });
+			s1.add_event<fea::fsm_event::on_exit_to, state::s2>(
+					[](bool& b) { b = true; });
+			m.add_state<state::s1>(std::move(s1));
+		}
+
+		{
+			fea::fsm_state<transition, state, void(bool&),
+					fea::fsm_option::no_fsm_arg>
+					s2;
+
+			static_assert(decltype(s2)::no_fsm_arg, FAIL_MSG);
+			static_assert(!decltype(s2)::void_fsm_arg, FAIL_MSG);
+
+			// Add allowed transitions.
+			s2.add_transition<transition::t1, state::s1>();
+			s2.add_transition2(transition::t2, state::s2);
+
+			// Add state events.
+			s2.add_event<fea::fsm_event::on_enter>([](bool& b) { b = true; });
+			s2.add_event<fea::fsm_event::on_enter_from, state::s1>(
+					[](bool& b) { b = true; });
+			s2.add_event<fea::fsm_event::on_update>([](bool& b) { b = true; });
+			s2.add_event<fea::fsm_event::on_exit>([](bool& b) { b = true; });
+			s2.add_event<fea::fsm_event::on_exit_to, state::s1>(
+					[](bool& b) { b = true; });
+			m.add_state<state::s2>(std::move(s2));
+		}
+
+		bool evaled = false;
+		m.trigger<transition::t1>(evaled);
+		EXPECT_TRUE(evaled);
+
+		evaled = false;
+		m.update(evaled);
+		EXPECT_TRUE(evaled);
+
+		evaled = false;
+		m.trigger<transition::t2>(evaled);
+		EXPECT_TRUE(evaled);
+
+		evaled = false;
+		m.update(evaled);
+		EXPECT_TRUE(evaled);
+
+		evaled = false;
+		m.trigger<transition::t1>(evaled);
+		EXPECT_TRUE(evaled);
+	}
+
+	// void* arg
+	{
+		fea::fsm<transition, state, void(bool&), fea::fsm_option::void_fsm_arg>
+				m;
+
+		{
+
+			fea::fsm_state<transition, state, void(bool&),
+					fea::fsm_option::void_fsm_arg>
+					s1;
+
+			static_assert(decltype(s1)::void_fsm_arg, FAIL_MSG);
+			static_assert(!decltype(s1)::no_fsm_arg, FAIL_MSG);
+
+			// Add allowed transitions.
+			s1.add_transition<transition::t1, state::s1>();
+			s1.add_transition2(transition::t2, state::s2);
+
+			// Add state events.
+			s1.add_event<fea::fsm_event::on_enter>([&](bool& b, void* ptr) {
+				EXPECT_EQ(&m, ptr);
+				b = true;
+			});
+			s1.add_event<fea::fsm_event::on_enter_from, state::s2>(
+					[&](bool& b, void* ptr) {
+						EXPECT_EQ(&m, ptr);
+						b = true;
+					});
+			s1.add_event<fea::fsm_event::on_update>([&](bool& b, void* ptr) {
+				EXPECT_EQ(&m, ptr);
+				b = true;
+			});
+			s1.add_event<fea::fsm_event::on_exit>([&](bool& b, void* ptr) {
+				EXPECT_EQ(&m, ptr);
+				b = true;
+			});
+			s1.add_event<fea::fsm_event::on_exit_to, state::s2>(
+					[&](bool& b, void* ptr) {
+						EXPECT_EQ(&m, ptr);
+						b = true;
+					});
+			m.add_state<state::s1>(std::move(s1));
+		}
+
+		{
+			fea::fsm_state<transition, state, void(bool&),
+					fea::fsm_option::void_fsm_arg>
+					s2;
+
+			static_assert(decltype(s2)::void_fsm_arg, FAIL_MSG);
+			static_assert(!decltype(s2)::no_fsm_arg, FAIL_MSG);
+
+			// Add allowed transitions.
+			s2.add_transition<transition::t1, state::s1>();
+			s2.add_transition2(transition::t2, state::s2);
+
+			// Add state events.
+			s2.add_event<fea::fsm_event::on_enter>([&](bool& b, void* ptr) {
+				EXPECT_EQ(&m, ptr);
+				b = true;
+			});
+			s2.add_event<fea::fsm_event::on_enter_from, state::s1>(
+					[&](bool& b, void* ptr) {
+						EXPECT_EQ(&m, ptr);
+						b = true;
+					});
+			s2.add_event<fea::fsm_event::on_update>([&](bool& b, void* ptr) {
+				EXPECT_EQ(&m, ptr);
+				b = true;
+			});
+			s2.add_event<fea::fsm_event::on_exit>([&](bool& b, void* ptr) {
+				EXPECT_EQ(&m, ptr);
+				b = true;
+			});
+			s2.add_event<fea::fsm_event::on_exit_to, state::s1>(
+					[&](bool& b, void* ptr) {
+						EXPECT_EQ(&m, ptr);
+						b = true;
+					});
+			m.add_state<state::s2>(std::move(s2));
+		}
+
+		bool evaled = false;
+		m.trigger<transition::t1>(evaled);
+		EXPECT_TRUE(evaled);
+
+		evaled = false;
+		m.update(evaled);
+		EXPECT_TRUE(evaled);
+
+		evaled = false;
+		m.trigger<transition::t2>(evaled);
+		EXPECT_TRUE(evaled);
+
+		evaled = false;
+		m.update(evaled);
+		EXPECT_TRUE(evaled);
+
+		evaled = false;
+		m.trigger<transition::t1>(evaled);
+		EXPECT_TRUE(evaled);
+	}
 }
 } // namespace

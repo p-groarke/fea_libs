@@ -30,6 +30,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/utility/bitmask.hpp"
 #include "fea/utility/error.hpp"
 
 #include <algorithm>
@@ -109,21 +110,64 @@ enum class fsm_event : uint8_t {
 	count,
 };
 
-template <class, class, class>
+// Use these to configure the fsm.
+enum fsm_option : unsigned {
+	defaults = 0b0000,
+	// Do not add the fsm to the callback args.
+	no_fsm_arg = 0b0001,
+	// The fsm callback arg is a void* (useful for type erase / header leakage).
+	void_fsm_arg = 0b0010,
+};
+template <>
+struct register_bitmask<fsm_option> : std::true_type {};
+
+
+template <class, class, class, fsm_option = fsm_option::defaults>
 struct fsm;
 
-template <class, class, class>
+template <class, class, class, fsm_option = fsm_option::defaults>
 struct fsm_state;
 
-template <class TransitionEnum, class StateEnum, class FuncRet,
-		class... FuncArgs>
-struct fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
-	using fsm_t = fsm<TransitionEnum, StateEnum, FuncRet(FuncArgs...)>;
-	using fsm_func_t = std::function<FuncRet(FuncArgs..., fsm_t&)>;
+template <class, class, class, fsm_option = fsm_option::defaults>
+struct fsm_builder;
 
+
+// Cleanup the signatures.
+// This is the template declaration.
+#define FEA_FSM_TMP \
+	class TransitionEnum, class StateEnum, fsm_option Options, class FuncRet, \
+			class... FuncArgs
+
+// This is the specialization.
+#define FEA_FSM_SPEC TransitionEnum, StateEnum, FuncRet(FuncArgs...), Options
+
+
+template <FEA_FSM_TMP>
+struct fsm_state<FEA_FSM_SPEC> {
+	// Used to detect ignored transitions.
 	using underlying_state_t = std::underlying_type_t<StateEnum>;
 	static constexpr StateEnum ignore_sentinel
 			= StateEnum((std::numeric_limits<underlying_state_t>::max)());
+
+	// State machine configuration.
+	constexpr static bool no_fsm_arg = bool(Options & fsm_option::no_fsm_arg);
+	constexpr static bool void_fsm_arg
+			= bool(Options & fsm_option::void_fsm_arg);
+
+	using fsm_t = fsm<FEA_FSM_SPEC>;
+	using fsm_func_arg_t = std::function<FuncRet(FuncArgs..., fsm_t&)>;
+	using fsm_func_voidarg_t = std::function<FuncRet(FuncArgs..., void*)>;
+	using fsm_func_noarg_t = std::function<FuncRet(FuncArgs...)>;
+
+	// Changes the callback signature according to options.
+	// You can choose between :
+	// auto (my_args... fsm&),
+	// auto (my_args..., void*),
+	// auto (my_args...)
+	using fsm_func_t = std::conditional_t<no_fsm_arg, fsm_func_noarg_t,
+			std::conditional_t<void_fsm_arg, fsm_func_voidarg_t,
+					fsm_func_arg_t>>;
+
 
 	fsm_state();
 
@@ -188,7 +232,7 @@ struct fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 
 	// Used internally, executes a specific event.
 	template <fsm_event Event>
-	auto execute_event([[maybe_unused]] StateEnum to_from_state,
+	FuncRet execute_event([[maybe_unused]] StateEnum to_from_state,
 			[[maybe_unused]] TransitionEnum to_from_transition, fsm_t& machine,
 			FuncArgs... func_args);
 
@@ -210,10 +254,9 @@ private:
 	// const char* _name;
 };
 
-template <class TransitionEnum, class StateEnum, class FuncRet,
-		class... FuncArgs>
-struct fsm<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
-	using state_t = fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)>;
+template <FEA_FSM_TMP>
+struct fsm<FEA_FSM_SPEC> {
+	using state_t = fsm_state<FEA_FSM_SPEC>;
 	using fsm_func_t = typename state_t::fsm_func_t;
 
 	// Helper so you don't have to type all the template parameters.
@@ -291,21 +334,15 @@ private:
 	bool _in_on_exit = false;
 };
 
-template <class, class, class>
-struct fsm_builder;
-
 // The fsm_builder is a helper class that returns the appropriately templated
 // machine and states.
-template <class TransitionEnum, class StateEnum, class FuncRet,
-		class... FuncArgs>
-struct fsm_builder<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
+template <FEA_FSM_TMP>
+struct fsm_builder<FEA_FSM_SPEC> {
 	[[nodiscard]]
-	static constexpr fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)>
-	make_state();
+	static constexpr fsm_state<FEA_FSM_SPEC> make_state();
 
 	[[nodiscard]]
-	static constexpr fsm<TransitionEnum, StateEnum, FuncRet(FuncArgs...)>
-	make_machine();
+	static constexpr fsm<FEA_FSM_SPEC> make_machine();
 };
 
 } // namespace fea
@@ -313,20 +350,14 @@ struct fsm_builder<TransitionEnum, StateEnum, FuncRet(FuncArgs...)> {
 
 // Implementation
 namespace fea {
-// Cleanup the signatures.
-#define FEA_FSM_STATE_TMP \
-	class TransitionEnum, class StateEnum, class FuncRet, class... FuncArgs
-
-#define FEA_FSM_STATE_TARGS TransitionEnum, StateEnum, FuncRet(FuncArgs...)
-
-template <FEA_FSM_STATE_TMP>
-fsm_state<FEA_FSM_STATE_TARGS>::fsm_state() {
+template <FEA_FSM_TMP>
+fsm_state<FEA_FSM_SPEC>::fsm_state() {
 	_transitions.fill(StateEnum::count);
 }
 
-template <FEA_FSM_STATE_TMP>
+template <FEA_FSM_TMP>
 template <fsm_event Event>
-void fsm_state<FEA_FSM_STATE_TARGS>::add_event(fsm_func_t&& func) {
+void fsm_state<FEA_FSM_SPEC>::add_event(fsm_func_t&& func) {
 	static_assert(Event == fsm_event::on_enter || Event == fsm_event::on_exit
 						  || Event == fsm_event::on_update,
 			"add_event : wrong template resolution called");
@@ -340,9 +371,8 @@ void fsm_state<FEA_FSM_STATE_TARGS>::add_event(fsm_func_t&& func) {
 	}
 }
 
-template <FEA_FSM_STATE_TMP>
-void fsm_state<FEA_FSM_STATE_TARGS>::add_event2(
-		fsm_event e, fsm_func_t&& func) {
+template <FEA_FSM_TMP>
+void fsm_state<FEA_FSM_SPEC>::add_event2(fsm_event e, fsm_func_t&& func) {
 	if (e != fsm_event::on_enter && e != fsm_event::on_exit
 			&& e != fsm_event::on_update) {
 		fea::maybe_throw(__FUNCTION__, __LINE__, "Invalid event for function.");
@@ -363,9 +393,9 @@ void fsm_state<FEA_FSM_STATE_TARGS>::add_event2(
 	}
 }
 
-template <FEA_FSM_STATE_TMP>
+template <FEA_FSM_TMP>
 template <fsm_event Event, StateEnum State>
-void fsm_state<FEA_FSM_STATE_TARGS>::add_event(fsm_func_t&& func) {
+void fsm_state<FEA_FSM_SPEC>::add_event(fsm_func_t&& func) {
 	static_assert(
 			Event == fsm_event::on_enter_from || Event == fsm_event::on_exit_to,
 			"add_event : must use on_enter_from or on_exit_to when "
@@ -378,8 +408,8 @@ void fsm_state<FEA_FSM_STATE_TARGS>::add_event(fsm_func_t&& func) {
 	}
 }
 
-template <FEA_FSM_STATE_TMP>
-void fsm_state<FEA_FSM_STATE_TARGS>::add_event2(
+template <FEA_FSM_TMP>
+void fsm_state<FEA_FSM_SPEC>::add_event2(
 		fsm_event e, StateEnum s, fsm_func_t&& func) {
 	if (e != fsm_event::on_enter_from && e != fsm_event::on_exit_to) {
 		fea::maybe_throw(__FUNCTION__, __LINE__, "Invalid event for function.");
@@ -398,9 +428,9 @@ void fsm_state<FEA_FSM_STATE_TARGS>::add_event2(
 	}
 }
 
-template <FEA_FSM_STATE_TMP>
+template <FEA_FSM_TMP>
 template <fsm_event Event, TransitionEnum Transition>
-void fsm_state<FEA_FSM_STATE_TARGS>::add_event(fsm_func_t&& func) {
+void fsm_state<FEA_FSM_SPEC>::add_event(fsm_func_t&& func) {
 	static_assert(
 			Event == fsm_event::on_enter_from || Event == fsm_event::on_exit_to,
 			"add_event : must use on_enter_from or on_exit_to when "
@@ -415,8 +445,8 @@ void fsm_state<FEA_FSM_STATE_TARGS>::add_event(fsm_func_t&& func) {
 	}
 }
 
-template <FEA_FSM_STATE_TMP>
-void fsm_state<FEA_FSM_STATE_TARGS>::add_event2(
+template <FEA_FSM_TMP>
+void fsm_state<FEA_FSM_SPEC>::add_event2(
 		fsm_event e, TransitionEnum t, fsm_func_t&& func) {
 	if (e != fsm_event::on_enter_from && e != fsm_event::on_exit_to) {
 		fea::maybe_throw(__FUNCTION__, __LINE__, "Invalid event for function.");
@@ -435,9 +465,9 @@ void fsm_state<FEA_FSM_STATE_TARGS>::add_event2(
 	}
 }
 
-template <FEA_FSM_STATE_TMP>
+template <FEA_FSM_TMP>
 template <TransitionEnum Transition, StateEnum State>
-void fsm_state<FEA_FSM_STATE_TARGS>::add_transition() {
+void fsm_state<FEA_FSM_SPEC>::add_transition() {
 	static_assert(
 			Transition != TransitionEnum::count, "fsm_state : bad transition");
 	static_assert(State != StateEnum::count, "fsm_state : bad state");
@@ -445,9 +475,8 @@ void fsm_state<FEA_FSM_STATE_TARGS>::add_transition() {
 }
 
 
-template <FEA_FSM_STATE_TMP>
-void fsm_state<FEA_FSM_STATE_TARGS>::add_transition2(
-		TransitionEnum t, StateEnum s) {
+template <FEA_FSM_TMP>
+void fsm_state<FEA_FSM_SPEC>::add_transition2(TransitionEnum t, StateEnum s) {
 	if (t == TransitionEnum::count) {
 		fea::maybe_throw(__FUNCTION__, __LINE__, "Bad transition.");
 	}
@@ -459,17 +488,17 @@ void fsm_state<FEA_FSM_STATE_TARGS>::add_transition2(
 	_transitions[size_t(t)] = s;
 }
 
-template <FEA_FSM_STATE_TMP>
+template <FEA_FSM_TMP>
 template <TransitionEnum Transition>
-void fsm_state<FEA_FSM_STATE_TARGS>::ignore_transition() {
+void fsm_state<FEA_FSM_SPEC>::ignore_transition() {
 	static_assert(
 			Transition != TransitionEnum::count, "fsm_state : bad transition");
 
 	std::get<size_t(Transition)>(_transitions) = ignore_sentinel;
 }
 
-template <FEA_FSM_STATE_TMP>
-void fsm_state<FEA_FSM_STATE_TARGS>::ignore_transition2(TransitionEnum t) {
+template <FEA_FSM_TMP>
+void fsm_state<FEA_FSM_SPEC>::ignore_transition2(TransitionEnum t) {
 	if (t == TransitionEnum::count) {
 		fea::maybe_throw(__FUNCTION__, __LINE__, "Bad transition.");
 	}
@@ -477,9 +506,9 @@ void fsm_state<FEA_FSM_STATE_TARGS>::ignore_transition2(TransitionEnum t) {
 	_transitions[size_t(t)] = ignore_sentinel;
 }
 
-template <FEA_FSM_STATE_TMP>
+template <FEA_FSM_TMP>
 template <TransitionEnum Transition>
-StateEnum fsm_state<FEA_FSM_STATE_TARGS>::transition_target() const {
+StateEnum fsm_state<FEA_FSM_SPEC>::transition_target() const {
 	if (std::get<size_t(Transition)>(_transitions) == StateEnum::count) {
 		fea::maybe_throw<std::invalid_argument>(
 				__FUNCTION__, __LINE__, "Unhandled transition.");
@@ -488,12 +517,12 @@ StateEnum fsm_state<FEA_FSM_STATE_TARGS>::transition_target() const {
 	return std::get<size_t(Transition)>(_transitions);
 }
 
-template <FEA_FSM_STATE_TMP>
+template <FEA_FSM_TMP>
 template <fsm_event Event>
-auto fsm_state<FEA_FSM_STATE_TARGS>::execute_event(
+auto fsm_state<FEA_FSM_SPEC>::execute_event(
 		[[maybe_unused]] StateEnum to_from_state,
 		[[maybe_unused]] TransitionEnum to_from_transition, fsm_t& machine,
-		FuncArgs... func_args) {
+		FuncArgs... func_args) -> FuncRet {
 	static_assert(Event != fsm_event::on_enter_from,
 			"state : do not execute on_enter_from, use on_enter instead "
 			"and provide to_from_state");
@@ -504,57 +533,77 @@ auto fsm_state<FEA_FSM_STATE_TARGS>::execute_event(
 	static_assert(Event != fsm_event::count, "fsm_state : invalid event");
 
 
-	// Check the event, call the appropriate user functions if it is stored.
+	// Check the event, get the appropriate user functions if it is stored.
+	fsm_func_t* func = nullptr;
 	if constexpr (Event == fsm_event::on_enter) {
 		if (to_from_state != StateEnum::count
 				&& _on_enter_from_state_funcs[size_t(to_from_state)]) {
 			// has enter_from state
-			_on_enter_from_state_funcs[size_t(to_from_state)](
-					func_args..., machine);
+			func = &_on_enter_from_state_funcs[size_t(to_from_state)];
 
 		} else if (to_from_transition != TransitionEnum::count
 				   && _on_enter_from_transition_funcs[size_t(
 						   to_from_transition)]) {
 			// has enter_from transition
-			_on_enter_from_transition_funcs[size_t(to_from_transition)](
-					func_args..., machine);
+			func = &_on_enter_from_transition_funcs[size_t(to_from_transition)];
 
 		} else if (_on_enter_func) {
-			_on_enter_func(func_args..., machine);
+			func = &_on_enter_func;
 		}
 
 	} else if constexpr (Event == fsm_event::on_update) {
 		if (_on_update_func) {
-			return _on_update_func(func_args..., machine);
+			func = &_on_update_func;
 		}
 	} else if constexpr (Event == fsm_event::on_exit) {
 		if (to_from_state != StateEnum::count
 				&& _on_exit_to_state_funcs[size_t(to_from_state)]) {
 			// has exit_to
-			_on_exit_to_state_funcs[size_t(to_from_state)](
-					func_args..., machine);
+			if constexpr (no_fsm_arg) {
+				func = &_on_exit_to_state_funcs[size_t(to_from_state)];
+			} else if constexpr (void_fsm_arg) {
+				func = &_on_exit_to_state_funcs[size_t(to_from_state)];
+			} else {
+				func = &_on_exit_to_state_funcs[size_t(to_from_state)];
+			}
 
 		} else if (to_from_transition != TransitionEnum::count
 				   && _on_exit_to_transition_funcs[size_t(
 						   to_from_transition)]) {
 			// has exit_to
-			_on_exit_to_transition_funcs[size_t(to_from_transition)](
-					func_args..., machine);
+			func = &_on_exit_to_transition_funcs[size_t(to_from_transition)];
 
 		} else if (_on_exit_func) {
-			_on_exit_func(func_args..., machine);
+			func = &_on_exit_func;
 		}
+	}
+
+	if (func == nullptr) {
+		if constexpr (std::is_same_v<FuncRet, void>) {
+			return;
+		} else {
+			return FuncRet{};
+		}
+	}
+
+	// Now call the callback.
+	if constexpr (no_fsm_arg) {
+		return (*func)(func_args...);
+	} else if constexpr (void_fsm_arg) {
+		return (*func)(func_args..., &machine);
+	} else {
+		return (*func)(func_args..., machine);
 	}
 }
 
-template <FEA_FSM_STATE_TMP>
-constexpr auto fsm<FEA_FSM_STATE_TARGS>::make_state() -> state_t {
+template <FEA_FSM_TMP>
+constexpr auto fsm<FEA_FSM_SPEC>::make_state() -> state_t {
 	return fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)>{};
 }
 
-template <FEA_FSM_STATE_TMP>
+template <FEA_FSM_TMP>
 template <StateEnum State>
-void fsm<FEA_FSM_STATE_TARGS>::add_state(state_t&& state) {
+void fsm<FEA_FSM_SPEC>::add_state(state_t&& state) {
 	static_assert(State != StateEnum::count, "fsm : bad state");
 
 	std::get<size_t(State)>(_states) = std::move(state);
@@ -565,46 +614,46 @@ void fsm<FEA_FSM_STATE_TARGS>::add_state(state_t&& state) {
 	}
 }
 
-template <FEA_FSM_STATE_TMP>
+template <FEA_FSM_TMP>
 template <StateEnum State>
-void fsm<FEA_FSM_STATE_TARGS>::start_state() {
+void fsm<FEA_FSM_SPEC>::start_state() {
 	static_assert(State != StateEnum::count, "fsm : bad state");
 	_default_state = State;
 }
 
-template <FEA_FSM_STATE_TMP>
-StateEnum fsm<FEA_FSM_STATE_TARGS>::start_state() const {
+template <FEA_FSM_TMP>
+StateEnum fsm<FEA_FSM_SPEC>::start_state() const {
 	return _default_state;
 }
 
-template <FEA_FSM_STATE_TMP>
+template <FEA_FSM_TMP>
 template <StateEnum State>
-void fsm<FEA_FSM_STATE_TARGS>::finish_state() {
+void fsm<FEA_FSM_SPEC>::finish_state() {
 	static_assert(State != StateEnum::count, "fsm : bad state");
 	_finish_state = State;
 }
 
-template <FEA_FSM_STATE_TMP>
-StateEnum fsm<FEA_FSM_STATE_TARGS>::finish_state() const {
+template <FEA_FSM_TMP>
+StateEnum fsm<FEA_FSM_SPEC>::finish_state() const {
 	return _finish_state;
 }
 
-template <FEA_FSM_STATE_TMP>
-bool fsm<FEA_FSM_STATE_TARGS>::finished() const {
+template <FEA_FSM_TMP>
+bool fsm<FEA_FSM_SPEC>::finished() const {
 	if (_finish_state != StateEnum::count) {
 		return _finish_state == _current_state;
 	}
 	return false;
 }
 
-template <FEA_FSM_STATE_TMP>
-void fsm<FEA_FSM_STATE_TARGS>::reset() {
+template <FEA_FSM_TMP>
+void fsm<FEA_FSM_SPEC>::reset() {
 	_current_state = StateEnum::count;
 }
 
-template <FEA_FSM_STATE_TMP>
+template <FEA_FSM_TMP>
 template <TransitionEnum Transition>
-void fsm<FEA_FSM_STATE_TARGS>::trigger(FuncArgs... func_args) {
+void fsm<FEA_FSM_SPEC>::trigger(FuncArgs... func_args) {
 	maybe_init(func_args...);
 
 	StateEnum from_state_e = _current_state;
@@ -638,8 +687,8 @@ void fsm<FEA_FSM_STATE_TARGS>::trigger(FuncArgs... func_args) {
 			from_state_e, Transition, *this, func_args...);
 }
 
-template <FEA_FSM_STATE_TMP>
-auto fsm<FEA_FSM_STATE_TARGS>::update(FuncArgs... func_args) -> FuncRet {
+template <FEA_FSM_TMP>
+auto fsm<FEA_FSM_SPEC>::update(FuncArgs... func_args) -> FuncRet {
 	maybe_init(func_args...);
 
 	return get_state(_current_state)
@@ -647,20 +696,20 @@ auto fsm<FEA_FSM_STATE_TARGS>::update(FuncArgs... func_args) -> FuncRet {
 					TransitionEnum::count, *this, func_args...);
 }
 
-template <FEA_FSM_STATE_TMP>
+template <FEA_FSM_TMP>
 template <StateEnum State>
-auto fsm<FEA_FSM_STATE_TARGS>::state() const -> const state_t& {
+auto fsm<FEA_FSM_SPEC>::state() const -> const state_t& {
 	return std::get<size_t(State)>(_states);
 }
 
-template <FEA_FSM_STATE_TMP>
+template <FEA_FSM_TMP>
 template <StateEnum State>
-auto fsm<FEA_FSM_STATE_TARGS>::state() -> state_t& {
+auto fsm<FEA_FSM_SPEC>::state() -> state_t& {
 	return std::get<size_t(State)>(_states);
 }
 
-template <FEA_FSM_STATE_TMP>
-void fsm<FEA_FSM_STATE_TARGS>::maybe_init(FuncArgs... func_args) {
+template <FEA_FSM_TMP>
+void fsm<FEA_FSM_SPEC>::maybe_init(FuncArgs... func_args) {
 	if (_current_state != StateEnum::count)
 		return;
 
@@ -669,8 +718,8 @@ void fsm<FEA_FSM_STATE_TARGS>::maybe_init(FuncArgs... func_args) {
 			StateEnum::count, TransitionEnum::count, *this, func_args...);
 }
 
-template <FEA_FSM_STATE_TMP>
-auto fsm<FEA_FSM_STATE_TARGS>::get_state(StateEnum s) const -> const state_t& {
+template <FEA_FSM_TMP>
+auto fsm<FEA_FSM_SPEC>::get_state(StateEnum s) const -> const state_t& {
 	if (s == StateEnum::count) {
 		fea::maybe_throw(__FUNCTION__, __LINE__, "Accessing invalid state.");
 	}
@@ -683,20 +732,18 @@ auto fsm<FEA_FSM_STATE_TARGS>::get_state(StateEnum s) const -> const state_t& {
 	return _states[size_t(s)];
 }
 
-template <FEA_FSM_STATE_TMP>
-auto fsm<FEA_FSM_STATE_TARGS>::get_state(StateEnum s) -> state_t& {
+template <FEA_FSM_TMP>
+auto fsm<FEA_FSM_SPEC>::get_state(StateEnum s) -> state_t& {
 	return const_cast<state_t&>(static_cast<const fsm*>(this)->get_state(s));
 }
 
-template <FEA_FSM_STATE_TMP>
-constexpr fsm_state<FEA_FSM_STATE_TARGS>
-fsm_builder<FEA_FSM_STATE_TARGS>::make_state() {
+template <FEA_FSM_TMP>
+constexpr fsm_state<FEA_FSM_SPEC> fsm_builder<FEA_FSM_SPEC>::make_state() {
 	return fsm_state<TransitionEnum, StateEnum, FuncRet(FuncArgs...)>{};
 }
 
-template <FEA_FSM_STATE_TMP>
-constexpr fsm<FEA_FSM_STATE_TARGS>
-fsm_builder<FEA_FSM_STATE_TARGS>::make_machine() {
+template <FEA_FSM_TMP>
+constexpr fsm<FEA_FSM_SPEC> fsm_builder<FEA_FSM_SPEC>::make_machine() {
 	return fsm<TransitionEnum, StateEnum, FuncRet(FuncArgs...)>{};
 }
 } // namespace fea
