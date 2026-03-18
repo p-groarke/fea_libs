@@ -34,8 +34,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "fea/containers/stack_vector.hpp"
 #include "fea/functional/callback.hpp"
 #include "fea/performance/constants.hpp"
-#include "fea/utility/platform.hpp"
 #include "fea/utility/error.hpp"
+#include "fea/utility/platform.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -490,36 +490,36 @@ private:
 // Implementation
 namespace fea {
 // Cleanup the signatures.
-#define FEA_NODE_TEMPLATE \
+#define FEA_NODE_TMP \
 	class Id, class NodeData, class DirtyVersion, size_t MaxParents, \
 			size_t MaxChildren
 
 #define FEA_NODE_TARGS Id, NodeData, DirtyVersion, MaxParents, MaxChildren
 
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 bool node<FEA_NODE_TARGS>::is_root() const {
 	return _parents.empty();
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 bool node<FEA_NODE_TARGS>::has_children() const {
 	return !_children.empty();
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 bool node<FEA_NODE_TARGS>::has_child(Id child_id) const {
 	auto it = std::find(_children.begin(), _children.end(), child_id);
 	return it != _children.end();
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 void node<FEA_NODE_TARGS>::add_child(Id child_id) {
 	add_child(child_id, std::conditional_t < MaxChildren == 0, std::true_type,
 			std::false_type > {});
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 void node<FEA_NODE_TARGS>::remove_child(Id child_id) {
 	auto it = std::find(_children.begin(), _children.end(), child_id);
 	if (it == _children.end()) {
@@ -538,19 +538,19 @@ void node<FEA_NODE_TARGS>::remove_child(Id child_id) {
 	assert(_children.size() == _children_versions.size());
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 bool node<FEA_NODE_TARGS>::has_parent(Id parent_id) const {
 	return std::find(_parents.begin(), _parents.end(), parent_id)
 		!= _parents.end();
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 void node<FEA_NODE_TARGS>::add_parent(Id parent_id) {
 	add_parent(parent_id, std::conditional_t < MaxParents == 0, std::true_type,
 			std::false_type > {});
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 void node<FEA_NODE_TARGS>::remove_parent(Id parent_id) {
 	auto it = std::find(_parents.begin(), _parents.end(), parent_id);
 	assert(it != _parents.end());
@@ -558,27 +558,27 @@ void node<FEA_NODE_TARGS>::remove_parent(Id parent_id) {
 	_dirty_evaluation_graph = true;
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 fea::span<const Id> node<FEA_NODE_TARGS>::children() const {
 	return { _children.data(), _children.size() };
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 fea::span<const Id> node<FEA_NODE_TARGS>::parents() const {
 	return { _parents.data(), _parents.size() };
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 bool node<FEA_NODE_TARGS>::is_evaluation_graph_dirty() const {
 	return _dirty_evaluation_graph;
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 void node<FEA_NODE_TARGS>::clean_evaluation_graph() {
 	_dirty_evaluation_graph = false;
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 fea::span<const Id> node<FEA_NODE_TARGS>::evaluation_graph() const {
 	if (_dirty_evaluation_graph) {
 		fea::maybe_throw(
@@ -587,32 +587,32 @@ fea::span<const Id> node<FEA_NODE_TARGS>::evaluation_graph() const {
 	return _evaluation_graph;
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 std::vector<Id>& node<FEA_NODE_TARGS>::evaluation_graph() {
 	return _evaluation_graph;
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 const NodeData& node<FEA_NODE_TARGS>::node_data() const {
 	return _node_data;
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 NodeData& node<FEA_NODE_TARGS>::node_data() {
 	return _node_data;
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 DirtyVersion node<FEA_NODE_TARGS>::version() const {
 	return _dirty_version;
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 DirtyVersion& node<FEA_NODE_TARGS>::version() {
 	return _dirty_version;
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 const DirtyVersion& node<FEA_NODE_TARGS>::child_version(Id child_id) const {
 	auto it = std::find(_children.begin(), _children.end(), child_id);
 	assert(it != _children.end());
@@ -622,38 +622,38 @@ const DirtyVersion& node<FEA_NODE_TARGS>::child_version(Id child_id) const {
 	return _children_versions[idx];
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 DirtyVersion& node<FEA_NODE_TARGS>::child_version(Id child_id) {
 	return const_cast<DirtyVersion&>(
 			static_cast<const node*>(this)->child_version(child_id));
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 fea::span<const DirtyVersion> node<FEA_NODE_TARGS>::children_versions() const {
 	return { _children_versions.data(), _children_versions.size() };
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 fea::span<DirtyVersion> node<FEA_NODE_TARGS>::children_versions() {
 	return { _children_versions.data(), _children_versions.size() };
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 constexpr DirtyVersion node<FEA_NODE_TARGS>::dirty_sentinel() {
 	return 0;
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 constexpr DirtyVersion node<FEA_NODE_TARGS>::clean_sentinel() {
 	return 1;
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 constexpr DirtyVersion node<FEA_NODE_TARGS>::init_sentinel() {
 	return 2;
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 void node<FEA_NODE_TARGS>::add_child(Id child_id, std::false_type) {
 	if (_children.size() == MaxChildren) {
 		fea::maybe_throw(
@@ -663,14 +663,14 @@ void node<FEA_NODE_TARGS>::add_child(Id child_id, std::false_type) {
 	add_child(child_id, std::true_type{});
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 void node<FEA_NODE_TARGS>::add_child(Id child_id, std::true_type) {
 	_children.push_back(child_id);
 	_children_versions.push_back(dirty_sentinel());
 	assert(_children.size() == _children_versions.size());
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 void node<FEA_NODE_TARGS>::add_parent(Id parent_id, std::false_type) {
 	if (_parents.size() == MaxParents) {
 		fea::maybe_throw(
@@ -680,7 +680,7 @@ void node<FEA_NODE_TARGS>::add_parent(Id parent_id, std::false_type) {
 	add_parent(parent_id, std::true_type{});
 }
 
-template <FEA_NODE_TEMPLATE>
+template <FEA_NODE_TMP>
 void node<FEA_NODE_TARGS>::add_parent(Id parent_id, std::true_type) {
 	_parents.push_back(parent_id);
 	_dirty_evaluation_graph = true;

@@ -689,7 +689,7 @@ get_opt<CharT, PrintfT>::make_machine() const {
 						&get_opt::on_end);
 
 		ret->template add_state<state::end>(std::move(end_state));
-		ret->template set_finish_state<state::end>();
+		ret->template finish_state<state::end>();
 	}
 
 	return ret;
