@@ -77,13 +77,15 @@ if (FEA_PULL_CONAN)
 	fea_bool_to_pybool(FEA_WITH_DATE _FEA_WITH_DATE_PYBOOL)
 
 	fea_pull_conan(CONAN_MSVC_TOOLSET "${CMAKE_VS_PLATFORM_TOOLSET}"
-		CONAN_ARGS "--profile default
+		CONAN_ARGS "
+			--profile:all default
+			--build missing
+			--build cascade
+			--build outdated
 			-o fea_libs/*:with_tbb=${_FEA_WITH_TBB_PYBOOL}
 			-o fea_libs/*:with_onetbb=${_FEA_WITH_ONETBB_PYBOOL}
 			-o fea_libs/*:with_date=${_FEA_WITH_DATE_PYBOOL}
-			--build missing
-			--build cascade
-			--build outdated"
+			"
 	)
 endif()
 
