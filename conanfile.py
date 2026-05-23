@@ -70,6 +70,8 @@ class FeaLibsConan(ConanFile):
         tc.cache_variables["FEA_WITH_TBB"] = self.options.with_tbb
         tc.cache_variables["FEA_WITH_ONETBB"] = self.options.with_onetbb
         tc.cache_variables["FEA_WITH_DATE"] = self.options.with_date
+
+        tc.user_presets_path = "ConanCMakeUserPresets.json"
         tc.generate()
 
         tc = CMakeDeps(self)
