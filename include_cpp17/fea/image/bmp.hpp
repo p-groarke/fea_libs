@@ -79,11 +79,11 @@ struct bmp {
 	//
 	// Expects top to bottom, packed RGB pixels.
 	// If alpha is present (RGBA), it will be dropped.
-	bmp(int width, int height, int pixel_stride,
+	inline bmp(int width, int height, int pixel_stride,
 			const std::vector<uint8_t>& in_data);
 
 	// Write the pixel data to file, with bmp header.
-	void write(const std::filesystem::path& filepath) const;
+	inline void write(const std::filesystem::path& filepath) const;
 
 	bmp_header header;
 	std::vector<uint8_t> data; // Padded bgr, top to bottom.
