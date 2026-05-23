@@ -339,4 +339,5 @@ OpenCover/
 
 # Conan generated
 CMakeUserPresets.json
+ConanCMakeUserPresets.json
 conan_imports_manifest.txt
