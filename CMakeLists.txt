@@ -72,13 +72,21 @@ fea_set_output_dir(${CMAKE_BINARY_DIR}/bin)
 # External dependencies.
 
 if (FEA_PULL_CONAN)
+	set(CONAN_VER 1)
+	set(PROFILE_OPT "--profile")
+	
+	fea_detect_conan(CONAN_VER)
+	if (CONAN_VER GREATER_EQUAL 2)
+		set(PROFILE_OPT "--profile:all")
+	endif()
+
 	fea_bool_to_pybool(FEA_WITH_TBB _FEA_WITH_TBB_PYBOOL)
 	fea_bool_to_pybool(FEA_WITH_ONETBB _FEA_WITH_ONETBB_PYBOOL)
 	fea_bool_to_pybool(FEA_WITH_DATE _FEA_WITH_DATE_PYBOOL)
 
 	fea_pull_conan(CONAN_MSVC_TOOLSET "${CMAKE_VS_PLATFORM_TOOLSET}"
 		CONAN_ARGS "
-			--profile:all default
+			${PROFILE_OPT} default
 			--build missing
 			--build cascade
 			--build outdated
