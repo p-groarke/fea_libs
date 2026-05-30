@@ -90,9 +90,9 @@ if (FEA_PULL_CONAN)
 			--build missing
 			--build cascade
 			--build outdated
-			-o fea_libs/*:with_tbb=${_FEA_WITH_TBB_PYBOOL}
-			-o fea_libs/*:with_onetbb=${_FEA_WITH_ONETBB_PYBOOL}
-			-o fea_libs/*:with_date=${_FEA_WITH_DATE_PYBOOL}
+			-o:all fea_libs/*:with_tbb=${_FEA_WITH_TBB_PYBOOL}
+			-o:all fea_libs/*:with_onetbb=${_FEA_WITH_ONETBB_PYBOOL}
+			-o:all fea_libs/*:with_date=${_FEA_WITH_DATE_PYBOOL}
 			"
 	)
 endif()
