@@ -99,4 +99,3 @@ class FeaLibsConan(ConanFile):
 
     def package_info(self):
         self.cpp_info.libs = collect_libs(self)
-
