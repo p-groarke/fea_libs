@@ -50,7 +50,7 @@ if (FEA_CMAKE_LOCAL)
 endif()
 FetchContent_Declare(fea_cmake
 	GIT_REPOSITORY https://github.com/p-groarke/fea_cmake.git
-	GIT_TAG 07e1d321a54589d49a56d651287a3c99e4e5bbd0
+	GIT_TAG 70a0ce52f6796ef189fca552591a1dbba6d6e6c5
 )
 FetchContent_MakeAvailable(fea_cmake)
 
@@ -90,9 +90,9 @@ if (FEA_PULL_CONAN)
 			--build missing
 			--build cascade
 			--build outdated
-			-o fea_libs/*:with_tbb=${_FEA_WITH_TBB_PYBOOL}
-			-o fea_libs/*:with_onetbb=${_FEA_WITH_ONETBB_PYBOOL}
-			-o fea_libs/*:with_date=${_FEA_WITH_DATE_PYBOOL}
+			-o:a fea_libs/*:with_tbb=${_FEA_WITH_TBB_PYBOOL}
+			-o:a fea_libs/*:with_onetbb=${_FEA_WITH_ONETBB_PYBOOL}
+			-o:a fea_libs/*:with_date=${_FEA_WITH_DATE_PYBOOL}
 			"
 	)
 endif()
