@@ -53,6 +53,70 @@ Cross-platform intrinsics.
 */
 
 namespace fea {
+/*
+Build a bit mask of 'Count' * ones, starting at least significant bit
+'LSBPos' (starting from the "right").
+
+For ex,
+make_bitmask<uint8_t, 3, 1>() == 0b0000'1110;
+make_bitmask<uint8_t, 5, 2>() == 0b0111'1100;
+*/
+template <class T, size_t BitCount, size_t LSBPos = 0>
+[[nodiscard]]
+constexpr auto make_bitmask();
+
+/*
+Build a bit mask of 'Count' * ones, starting at least significant bit
+'LSBPos' (starting from the "right").
+
+For ex,
+make_bitmask<unsigned>(3, 1) == 0b0000'1110;
+make_bitmask<unsigned>(5, 2) == 0b0111'1100;
+*/
+template <class T>
+[[nodiscard]]
+T make_bitmask(size_t bit_count, size_t lsb_pos = 0);
+
+// Casts the type to fit in uint32_t or uint64_t.
+template <class T>
+[[nodiscard]]
+constexpr auto to_unsigned(T t) noexcept;
+
+// Casts the type to fit in uint32_t or uint64_t.
+// If the type size is smaller than the target long, shifts to MSB (left).
+template <class T>
+[[nodiscard]]
+constexpr auto to_unsigned_pack_left(T t) noexcept;
+
+// Counts the number of consecutive 0 bits, starting from the most significant
+// bit ("left").
+// Effectively gives you the index of the first set bit, starting from the MSB.
+template <class T>
+[[nodiscard]]
+size_t countl_zero(T val);
+
+// Counts the number of consecutive 0 bits, starting from the least
+// significant bit ("right").
+// Effectively gives you the index of the first set bit, starting from the LSB.
+template <class T>
+[[nodiscard]]
+size_t countr_zero(T val);
+
+// TODO :
+//// Counts the number of consecutive 1 bits, starting from the most significant
+//// bit ("left").
+// template <class T>
+// size_t countl_one();
+
+//// Counts the number of consecutive 1 bits, starting from the least
+/// significant / bit ("right").
+// template <class T>
+// size_t countr_one();
+} // namespace fea
+
+
+// Implementation
+namespace fea {
 namespace detail {
 template <class T, size_t BitCount, size_t LSBPos>
 constexpr auto make_bitmask() {
@@ -64,15 +128,7 @@ constexpr auto make_bitmask() {
 }
 } // namespace detail
 
-/*
-Build a bit mask of 'Count' * ones, starting at least significant bit
-'LSBPos' (starting from the "right").
-
-For ex,
-make_bitmask<uint8_t, 3, 1>() == 0b0000'1110;
-make_bitmask<uint8_t, 5, 2>() == 0b0111'1100;
-*/
-template <class T, size_t BitCount, size_t LSBPos = 0>
+template <class T, size_t BitCount, size_t LSBPos>
 constexpr auto make_bitmask() {
 	static_assert(
 			std::is_integral_v<T>, "make_bitmask : expects integral types");
@@ -85,16 +141,8 @@ constexpr auto make_bitmask() {
 	return mask;
 }
 
-/*
-Build a bit mask of 'Count' * ones, starting at least significant bit
-'LSBPos' (starting from the "right").
-
-For ex,
-make_bitmask<unsigned>(3, 1) == 0b0000'1110;
-make_bitmask<unsigned>(5, 2) == 0b0111'1100;
-*/
 template <class T>
-T make_bitmask(size_t bit_count, size_t lsb_pos = 0) {
+T make_bitmask(size_t bit_count, size_t lsb_pos) {
 	static_assert(
 			std::is_integral_v<T>, "make_bitmask : expects integral types");
 	assert(bit_count + lsb_pos <= sizeof(T) * 8);
@@ -106,7 +154,6 @@ T make_bitmask(size_t bit_count, size_t lsb_pos = 0) {
 	return ret;
 }
 
-// Casts the type to fit in uint32_t or uint64_t.
 template <class T>
 constexpr auto to_unsigned(T t) noexcept {
 	static_assert(std::is_integral_v<T>, "to_ulong : expects integral types");
@@ -122,8 +169,6 @@ constexpr auto to_unsigned(T t) noexcept {
 	}
 }
 
-// Casts the type to fit in uint32_t or uint64_t.
-// If the type size is smaller than the target long, shifts to MSB (left).
 template <class T>
 constexpr auto to_unsigned_pack_left(T t) noexcept {
 	auto ret = to_unsigned(t);
@@ -136,9 +181,6 @@ constexpr auto to_unsigned_pack_left(T t) noexcept {
 	}
 }
 
-// Counts the number of consecutive 0 bits, starting from the most significant
-// bit ("left").
-// Effectively gives you the index of the first set bit, starting from the MSB.
 template <class T>
 size_t countl_zero(T val) {
 	static_assert(
@@ -189,9 +231,6 @@ size_t countl_zero(T val) {
 	return size_t(ret);
 }
 
-// Counts the number of consecutive 0 bits, starting from the least
-// significant bit ("right").
-// Effectively gives you the index of the first set bit, starting from the LSB.
 template <class T>
 size_t countr_zero(T val) {
 	static_assert(
@@ -226,18 +265,4 @@ size_t countr_zero(T val) {
 
 	return size_t(ret);
 }
-
-// TODO :
-//// Counts the number of consecutive 1 bits, starting from the most significant
-//// bit ("left").
-// template <class T>
-// size_t countl_one() {
-//}
-
-//// Counts the number of consecutive 1 bits, starting from the least
-/// significant / bit ("right").
-// template <class T>
-// size_t countr_one() {
-//}
-
 } // namespace fea

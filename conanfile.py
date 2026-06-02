@@ -64,9 +64,9 @@ class FeaLibsConan(ConanFile):
         tc.generate()
 
         tc = CMakeToolchain(self)
-        tc.cache_variables["FEA_PULL_CONAN"] = False
         tc.cache_variables["FEA_TESTS"] = False
         tc.cache_variables["FEA_BENCHMARKS"] = False
+        tc.cache_variables["FEA_PULL_CONAN"] = False
         tc.cache_variables["FEA_WITH_TBB"] = self.options.with_tbb
         tc.cache_variables["FEA_WITH_ONETBB"] = self.options.with_onetbb
         tc.cache_variables["FEA_WITH_DATE"] = self.options.with_date

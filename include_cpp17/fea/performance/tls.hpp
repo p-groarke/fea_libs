@@ -102,9 +102,11 @@ struct tls_lock {
 	T& local() && = delete;
 
 	// Access thread data.
+	[[nodiscard]]
 	const T& local() const&;
 
 	// Access thread data.
+	[[nodiscard]]
 	T& local() &;
 
 private:

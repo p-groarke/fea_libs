@@ -156,6 +156,28 @@ TEST(time, basics) {
 		EXPECT_EQ(diff_d.count(), 1.f);
 	}
 
+	{
+		date::sys_days d{};
+		std::string_view s;
+		fea::suffixed_day(d, &s);
+		EXPECT_EQ("1st", s);
+
+		d += date::days{ 1 };
+		std::wstring_view s2;
+		fea::suffixed_day(d, &s2);
+		EXPECT_EQ(L"2nd", s2);
+
+		d += date::days{ 1 };
+		std::u16string_view s3;
+		fea::suffixed_day(d, &s3);
+		EXPECT_EQ(u"3rd", s3);
+
+		d += date::days{ 1 };
+		std::u32string_view s4;
+		fea::suffixed_day(d, &s4);
+		EXPECT_EQ(U"4th", s4);
+	}
+
 #if FEA_CPP20
 	{
 		date::sys_days d{};

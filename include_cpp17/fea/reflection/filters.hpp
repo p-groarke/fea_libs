@@ -39,6 +39,91 @@
 #include <type_traits>
 
 namespace fea {
+// A runtime variable filter.
+template <class VEnum>
+struct var_filter {
+	constexpr var_filter<VEnum>& enable_all();
+	constexpr var_filter<VEnum>& disable_all();
+
+	template <VEnum... Es>
+	constexpr var_filter<VEnum>& enable();
+	template <VEnum... Es>
+	constexpr var_filter<VEnum>& disable();
+
+	template <class... Args>
+	constexpr var_filter<VEnum>& enable(Args... e);
+	template <class... Args>
+	constexpr var_filter<VEnum>& disable(Args... e);
+
+	template <VEnum E>
+	constexpr bool at() const;
+	constexpr bool at(VEnum e) const;
+
+private:
+	fea::enum_array<bool, VEnum> _data{};
+};
+} // namespace fea
+
+
+// Implementation
+namespace fea {
+// A runtime variable filter.
+template <class VEnum>
+constexpr var_filter<VEnum>& var_filter<VEnum>::enable_all() {
+	std::fill(_data.begin(), _data.end(), true);
+	return *this;
+}
+template <class VEnum>
+constexpr var_filter<VEnum>& var_filter<VEnum>::disable_all() {
+	std::fill(_data.begin(), _data.end(), false);
+	return *this;
+}
+
+template <class VEnum>
+template <VEnum... Es>
+constexpr var_filter<VEnum>& var_filter<VEnum>::enable() {
+	((fea::get<Es>(_data) = true), ...);
+	return *this;
+}
+template <class VEnum>
+template <VEnum... Es>
+constexpr var_filter<VEnum>& var_filter<VEnum>::disable() {
+	((fea::get<Es>(_data) = false), ...);
+	return *this;
+}
+
+template <class VEnum>
+template <class... Args>
+constexpr var_filter<VEnum>& var_filter<VEnum>::enable(Args... e) {
+	static_assert((std::is_same_v<Args, VEnum> && ...),
+			"var_filter : incorrect enable argument type");
+
+	((_data[e] = true), ...);
+	return *this;
+}
+
+template <class VEnum>
+template <class... Args>
+constexpr var_filter<VEnum>& var_filter<VEnum>::disable(Args... e) {
+	static_assert((std::is_same_v<Args, VEnum> && ...),
+			"var_filter : incorrect disable argument type");
+
+	((_data[e] = false), ...);
+	return *this;
+}
+
+template <class VEnum>
+template <VEnum E>
+constexpr bool var_filter<VEnum>::at() const {
+	return fea::get<E>(_data);
+}
+
+template <class VEnum>
+constexpr bool var_filter<VEnum>::at(VEnum e) const {
+	return _data[e];
+}
+
+
 //// This is a compile-time var filter.
 // template <class VEnum, bool... Args>
 // struct cexpr_var_filter {
@@ -134,56 +219,4 @@ namespace fea {
 //			std::make_index_sequence<Size>{});
 //}
 
-// A runtime variable filter.
-template <class VEnum>
-struct var_filter {
-	constexpr var_filter<VEnum>& enable_all() {
-		std::fill(_data.begin(), _data.end(), true);
-		return *this;
-	}
-	constexpr var_filter<VEnum>& disable_all() {
-		std::fill(_data.begin(), _data.end(), false);
-		return *this;
-	}
-
-	template <VEnum... Es>
-	constexpr var_filter<VEnum>& enable() {
-		((fea::get<Es>(_data) = true), ...);
-		return *this;
-	}
-	template <VEnum... Es>
-	constexpr var_filter<VEnum>& disable() {
-		((fea::get<Es>(_data) = false), ...);
-		return *this;
-	}
-
-	template <class... Args>
-	constexpr var_filter<VEnum>& enable(Args... e) {
-		static_assert((std::is_same_v<Args, VEnum> && ...),
-				"var_filter : incorrect enable argument type");
-
-		((_data[e] = true), ...);
-		return *this;
-	}
-	template <class... Args>
-	constexpr var_filter<VEnum>& disable(Args... e) {
-		static_assert((std::is_same_v<Args, VEnum> && ...),
-				"var_filter : incorrect disable argument type");
-
-		((_data[e] = false), ...);
-		return *this;
-	}
-
-	template <VEnum E>
-	constexpr bool at() const {
-		return fea::get<E>(_data);
-	}
-
-	constexpr bool at(VEnum e) const {
-		return _data[e];
-	}
-
-private:
-	fea::enum_array<bool, VEnum> _data{};
-};
 } // namespace fea

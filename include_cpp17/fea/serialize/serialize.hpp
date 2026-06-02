@@ -79,7 +79,6 @@ Not ideal, but good enough.
 */
 
 namespace fea {
-
 template <class T>
 void serialize(const T&, fea::serializer&);
 
@@ -93,7 +92,11 @@ bool deserialize(fea::deserializer&, T&);
 template <class T, class... Args>
 [[nodiscard]]
 bool deserialize(fea::deserializer&, std::queue<T, Args...>&);
+} // namespace fea
 
+
+// Implementation
+namespace fea {
 namespace detail {
 
 // c++20 has contiguous_iterator_tag
