@@ -39,6 +39,117 @@
 
 namespace fea {
 namespace detail {
+template <class Descriptor>
+struct reflectable_builder;
+} // namespace detail
+
+// This is a helper struct to assign the type of a var, its order and initial
+// value.
+template <auto E, class T>
+struct var_builder {
+	static constexpr auto key = E;
+	using type = T;
+
+	constexpr var_builder() = default;
+	constexpr var_builder(const T& init_val);
+	constexpr var_builder(T&& init_val);
+
+	constexpr const T& get_init_val() const;
+
+private:
+	T _init_val{};
+};
+
+// Inherit this on your class that will be reflectable.
+// Provide a configuration descriptor with the reflectable variables.
+template <class Descriptor>
+struct reflectable : Descriptor {
+private:
+	using Descriptor::vars;
+	using ref_builder_t = fea::detail::reflectable_builder<Descriptor>;
+	using type_map_t = typename ref_builder_t::type_map;
+	using front_t = typename type_map_t::front_t;
+
+public:
+	using var = typename Descriptor::FEA_REFL_ENAME;
+	using Descriptor::var_enum;
+	using Descriptor::var_name;
+	using Descriptor::var_names;
+
+	// Compile-time, no overhead getters.
+	template <var e>
+	[[nodiscard]]
+	const auto& get() const;
+
+	// Compile-time, no overhead getters.
+	template <var e>
+	[[nodiscard]]
+	auto& get();
+
+	// Runtime getters with enum.
+	template <class Func>
+	[[nodiscard]]
+	std::invoke_result_t<Func, const front_t&> get(var e, Func&& func) const;
+
+	// Runtime getters with enum.
+	template <class Func>
+	[[nodiscard]]
+	std::invoke_result_t<Func, front_t&> get(var e, Func&& func);
+
+	// Runtime getters with string.
+	template <class Func>
+	[[nodiscard]]
+	std::invoke_result_t<Func, const front_t&> get(
+			const std::string& var_name, Func&& func) const;
+
+	// Runtime getters with string.
+	template <class Func>
+	[[nodiscard]]
+	std::invoke_result_t<Func, front_t&> get(
+			const std::string& var_name, Func&& func);
+
+	// Loops on your variables.
+	// Passes (std::integral_constant<Enum, E>, const auto& val).
+	template <class Func>
+	void for_each(Func&& func) const;
+
+	// Loops on your variables.
+	// Passes (std::integral_constant<Enum, E>, auto& val).
+	template <class Func>
+	void for_each(Func&& func);
+
+	// Loops on your variables.
+	// If values are filtered out, they will be skipped.
+	// Passes (std::integral_constant<Enum, E>, const auto& val).
+	template <class Func>
+	void for_each(Func&& func, const var_filter<var>& filter) const;
+
+	// Loops on your variables.
+	// If values are filtered out, they will be skipped.
+	// Passes (std::integral_constant<Enum, E>, auto& val).
+	template <class Func, bool... Vals>
+	void for_each(Func&& func, const var_filter<var>& filter);
+
+	// Creates a filter which disables all variables.
+	// Disabled variables will be skipped in foreach when passing in filter.
+	[[nodiscard]]
+	static constexpr var_filter<var> filter_all();
+
+	// Creates a filter which enables all variables.
+	// Disabled variables will be skipped in foreach when passing in filter.
+	[[nodiscard]]
+	static constexpr var_filter<var> filter_none();
+
+private:
+	type_map_t _type_map = ref_builder_t::init_map();
+};
+
+} // namespace fea
+
+
+// Implementation
+namespace fea {
+namespace detail {
 template <class, size_t, size_t = 0>
 struct make_map_t;
 
@@ -98,95 +209,89 @@ public:
 } // namespace detail
 
 
-// This is a helper struct to assign the type of a var, its order and initial
-// value.
 template <auto E, class T>
-struct var_builder {
-	static constexpr auto key = E;
-	using type = T;
+constexpr var_builder<E, T>::var_builder(const T& init_val)
+		: _init_val(init_val) {
+}
 
-	constexpr var_builder() = default;
-	constexpr var_builder(const T& init_val)
-			: _init_val(init_val) {
-	}
-	constexpr var_builder(T&& init_val)
-			: _init_val(std::move(init_val)) {
-	}
+template <auto E, class T>
+constexpr var_builder<E, T>::var_builder(T&& init_val)
+		: _init_val(std::move(init_val)) {
+}
 
-	constexpr const T& get_init_val() const {
-		return _init_val;
-	}
-
-private:
-	T _init_val{};
-};
+template <auto E, class T>
+constexpr const T& var_builder<E, T>::get_init_val() const {
+	return _init_val;
+}
 
 
-// Inherit this on your class that will be reflectable.
-// Provide a configuration descriptor with the reflectable variables.
+// template <class Descriptor>
+// struct reflectable : Descriptor {
+// private:
+//	using Descriptor::vars;
+//	using ref_builder_t = fea::detail::reflectable_builder<Descriptor>;
+//	using type_map_t = typename ref_builder_t::type_map;
+//	using front_t = typename type_map_t::front_t;
+//
+// public:
+//	using var = typename Descriptor::FEA_REFL_ENAME;
+//	using Descriptor::var_enum;
+//	using Descriptor::var_name;
+//	using Descriptor::var_names;
+
 template <class Descriptor>
-struct reflectable : Descriptor {
-private:
-	using Descriptor::vars;
-	using ref_builder_t = fea::detail::reflectable_builder<Descriptor>;
-	using type_map_t = typename ref_builder_t::type_map;
-	using front_t = typename type_map_t::front_t;
+template <typename Descriptor::var e>
+const auto& reflectable<Descriptor>::get() const {
+	return _type_map.template find<e>();
+}
 
-public:
-	using var = typename Descriptor::FEA_REFL_ENAME;
-	using Descriptor::var_enum;
-	using Descriptor::var_name;
-	using Descriptor::var_names;
+template <class Descriptor>
+template <typename Descriptor::var e>
+auto& reflectable<Descriptor>::get() {
+	return _type_map.template find<e>();
+}
 
-	// Compile-time, no overhead getters.
-	template <var e>
-	const auto& get() const {
-		return _type_map.template find<e>();
-	}
-	// Compile-time, no overhead getters.
-	template <var e>
-	auto& get() {
-		return _type_map.template find<e>();
-	}
+template <class Descriptor>
+template <class Func>
+auto reflectable<Descriptor>::get(var e, Func&& func) const
+		-> std::invoke_result_t<Func, const front_t&> {
+	return fea::runtime_get(std::forward<Func>(func), e, _type_map);
+}
 
-	// Runtime getters with enum.
-	template <class Func>
-	std::invoke_result_t<Func, const front_t&> get(var e, Func&& func) const {
-		return fea::runtime_get(std::forward<Func>(func), e, _type_map);
-	}
-	// Runtime getters with enum.
-	template <class Func>
-	std::invoke_result_t<Func, front_t&> get(var e, Func&& func) {
-		return fea::runtime_get(std::forward<Func>(func), e, _type_map);
-	}
+template <class Descriptor>
+template <class Func>
+auto reflectable<Descriptor>::get(var e, Func&& func)
+		-> std::invoke_result_t<Func, front_t&> {
+	return fea::runtime_get(std::forward<Func>(func), e, _type_map);
+}
 
-	// Runtime getters with string.
-	template <class Func>
-	std::invoke_result_t<Func, const front_t&> get(
-			const std::string& var_name, Func&& func) const {
-		var e = var_enum(var_name);
-		return get(e, std::forward<Func>(func));
-	}
-	// Runtime getters with string.
-	template <class Func>
-	std::invoke_result_t<Func, front_t&> get(
-			const std::string& var_name, Func&& func) {
-		var e = var_enum(var_name);
-		return get(e, std::forward<Func>(func));
-	}
+template <class Descriptor>
+template <class Func>
+auto reflectable<Descriptor>::get(const std::string& var_name,
+		Func&& func) const -> std::invoke_result_t<Func, const front_t&> {
+	var e = var_enum(var_name);
+	return get(e, std::forward<Func>(func));
+}
 
-	// Loops on your variables.
-	// Passes (std::integral_constant<Enum, E>, const auto& val).
-	template <class Func>
-	void for_each(Func&& func) const {
-		_type_map.for_each(func);
-	}
-	// Loops on your variables.
-	// Passes (std::integral_constant<Enum, E>, auto& val).
-	template <class Func>
-	void for_each(Func&& func) {
-		_type_map.for_each(func);
-	}
+template <class Descriptor>
+template <class Func>
+auto reflectable<Descriptor>::get(const std::string& var_name, Func&& func)
+		-> std::invoke_result_t<Func, front_t&> {
+	var e = var_enum(var_name);
+	return get(e, std::forward<Func>(func));
+}
+
+template <class Descriptor>
+template <class Func>
+void reflectable<Descriptor>::for_each(Func&& func) const {
+	_type_map.for_each(func);
+}
+
+template <class Descriptor>
+template <class Func>
+void reflectable<Descriptor>::for_each(Func&& func) {
+	_type_map.for_each(func);
+}
 
 #if 0
 	// Loops on your variables.
@@ -215,28 +320,27 @@ public:
 	}
 #endif
 
-	// Loops on your variables.
-	// If values are filtered out, they will be skipped.
-	// Passes (std::integral_constant<Enum, E>, const auto& val).
-	template <class Func>
-	void for_each(Func&& func, const var_filter<var>& filter) const {
-		_type_map.for_each([&](auto key, const auto& val) {
-			if (filter.template at<key()>()) {
-				func(key, val);
-			}
-		});
-	}
-	// Loops on your variables.
-	// If values are filtered out, they will be skipped.
-	// Passes (std::integral_constant<Enum, E>, auto& val).
-	template <class Func, bool... Vals>
-	void for_each(Func&& func, const var_filter<var>& filter) {
-		_type_map.for_each([&](auto key, auto& val) {
-			if (filter.template at<key()>()) {
-				func(key, val);
-			}
-		});
-	}
+template <class Descriptor>
+template <class Func>
+void reflectable<Descriptor>::for_each(
+		Func&& func, const var_filter<var>& filter) const {
+	_type_map.for_each([&](auto key, const auto& val) {
+		if (filter.template at<key()>()) {
+			func(key, val);
+		}
+	});
+}
+
+template <class Descriptor>
+template <class Func, bool... Vals>
+void reflectable<Descriptor>::for_each(
+		Func&& func, const var_filter<var>& filter) {
+	_type_map.for_each([&](auto key, auto& val) {
+		if (filter.template at<key()>()) {
+			func(key, val);
+		}
+	});
+}
 
 #if 0
 	// Creates a filter which disables all variables.
@@ -252,20 +356,16 @@ public:
 	}
 #endif
 
-	// Creates a filter which disables all variables.
-	// Disabled variables will be skipped in foreach when passing in filter.
-	static constexpr var_filter<var> filter_all() {
-		return var_filter<var>{};
-	}
+template <class Descriptor>
+constexpr var_filter<typename Descriptor::var>
+reflectable<Descriptor>::filter_all() {
+	return var_filter<var>{};
+}
 
-	// Creates a filter which enables all variables.
-	// Disabled variables will be skipped in foreach when passing in filter.
-	static constexpr var_filter<var> filter_none() {
-		return var_filter<var>{}.enable_all();
-	}
-
-private:
-	type_map_t _type_map = ref_builder_t::init_map();
-};
+template <class Descriptor>
+constexpr var_filter<typename Descriptor::var>
+reflectable<Descriptor>::filter_none() {
+	return var_filter<var>{}.enable_all();
+}
 
 } // namespace fea

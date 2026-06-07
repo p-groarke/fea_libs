@@ -14,7 +14,8 @@ TEST(ini, example) {
 	// If the variable isn't found, returns | default.
 	// Assigns the default if ini object isn't const (and it doesn't contain
 	// "a_float").
-	[[maybe_unused]] float b = f["section"]["a_float"] | default_float;
+	[[maybe_unused]]
+	float b = f["section"]["a_float"] | default_float;
 
 	// Assignement.
 	// Also adds a comment to the output.
@@ -283,7 +284,7 @@ TEST(ini, basics) {
 		std::string got = fea::to_string(test);
 		EXPECT_NE(got.find("; bla comment"), got.npos);
 		EXPECT_NE(got.find("; fla comment"), got.npos);
-		EXPECT_NE(got.find("; bla.bla\n  ; comment"), got.npos);
+		EXPECT_NE(got.find("; bla.bla\n; comment"), got.npos);
 		EXPECT_NE(got.find("; bla.blee comment"), got.npos);
 		EXPECT_NE(got.find("; bla.flee comment"), got.npos);
 		EXPECT_NE(got.find("; fla.flou comment"), got.npos);

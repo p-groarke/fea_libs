@@ -30,6 +30,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/macros/literals.hpp"
 #include "fea/utility/platform.hpp"
 
 #if FEA_WITH_DATE
@@ -47,7 +48,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <date/tz.h>
 
 #if FEA_CPP20
-#include "fea/macros/literals.hpp"
 #include "fea/meta/return_overload.hpp"
 #endif
 
@@ -230,6 +230,132 @@ using size_t_duration
 // Helper functions
 
 // Platform independent gmtime.
+inline void gmtime(const std::time_t* timer, std::tm* buf);
+
+// Platform independent localtime.
+inline void localtime(const std::time_t* timer, std::tm* buf);
+
+// Converts sys_time timepoint to std::tm.
+// Ignores local timezone.
+template <class T>
+[[nodiscard]]
+std::tm to_utc_tm(date::sys_time<T> tp);
+
+// Converts sys_time timepoint to std::tm.
+// Uses local timezone.
+template <class T>
+[[nodiscard]]
+std::tm to_local_tm(date::sys_time<T> sys_tp);
+
+template <class T, class Duration>
+[[nodiscard]]
+hh_mm_ss to_hms(std::chrono::time_point<T, Duration> tp);
+
+template <class T>
+[[nodiscard]]
+date::year_month_day to_ymd(date::sys_time<T> tp);
+
+template <class T>
+[[nodiscard]]
+date::year_month_weekday to_ymw(date::sys_time<T> tp);
+
+// WARNING : Looses precision.
+[[nodiscard]]
+inline std::chrono::system_clock::time_point to_sys(
+		std::chrono::steady_clock::time_point tp);
+
+template <class Duration>
+[[nodiscard]]
+date::sys_time<Duration> to_sys(steady_time<Duration> time);
+
+// WARNING : Looses precision.
+[[nodiscard]]
+inline std::chrono::system_clock::time_point to_sys(
+		std::filesystem::file_time_type tp);
+
+// WARNING : Cannot represent as big values as system_clock.
+[[nodiscard]]
+inline std::chrono::steady_clock::time_point to_steady(
+		std::chrono::system_clock::time_point tp);
+
+template <class Duration>
+[[nodiscard]]
+steady_time<Duration> to_steady(date::sys_time<Duration> time);
+
+[[nodiscard]]
+inline steady_days to_steady(date::year_month_day ymd);
+
+// Computes elapsed time between start and end, clamped to a modulo clock.
+// For ex :
+// - modulo = 60, 59s to 2s == 3s elapsed.
+// - modulo = 24, 23h to 2h == 3h elapsed.
+// - modulo = 365, 364d to 2d == 3d elapsed.
+template <class T, class Period>
+[[nodiscard]]
+auto elapsed(std::chrono::duration<T, Period> start,
+		std::chrono::duration<T, Period> end, T modulo);
+
+[[nodiscard]]
+inline date::year_month_day floor_months(const date::year_month_day& ymd);
+
+[[nodiscard]]
+inline date::year_month_day floor_years(const date::year_month_day& ymd);
+
+[[nodiscard]]
+inline date::days this_month_days(date::sys_days d);
+
+[[nodiscard]]
+inline date::days next_month_days(date::sys_days d);
+
+[[nodiscard]]
+inline date::days this_year_days(date::sys_days d);
+
+[[nodiscard]]
+inline date::days next_year_days(date::sys_days d);
+
+template <class T>
+[[nodiscard]]
+std::string to_string(date::sys_time<T> tp);
+
+template <class T>
+[[nodiscard]]
+std::string to_string_precise(date::sys_time<T> tp);
+
+template <class T>
+[[nodiscard]]
+std::string to_string(steady_time<T> tp);
+
+template <class T>
+[[nodiscard]]
+std::string to_string_precise(steady_time<T> tp);
+
+template <class T, class Period>
+[[nodiscard]]
+std::string to_string(std::chrono::duration<T, Period> d);
+
+[[nodiscard]]
+inline std::string to_string(std::tm tm_);
+
+// Given a date, returns the month's day with suffix.
+// Ex, 1st, 2nd, 3rd, etc.
+// Output pointer cannot be null.
+inline void suffixed_day(date::sys_days tp, std::string_view*);
+inline void suffixed_day(date::sys_days tp, std::wstring_view*);
+inline void suffixed_day(date::sys_days tp, std::u16string_view*);
+inline void suffixed_day(date::sys_days tp, std::u32string_view*);
+
+#if FEA_CPP20
+// Given a date, returns the month's day with suffix.
+// Ex, 1st, 2nd, 3rd, etc.
+// Return type overload magic. Supports all std strings (other than u8string).
+[[nodiscard]]
+inline auto suffixed_day(date::sys_days tp);
+#endif
+} // namespace fea
+
+
+// Implementation
+namespace fea {
 inline void gmtime(const std::time_t* timer, std::tm* buf) {
 #if FEA_WINDOWS
 	gmtime_s(buf, timer);
@@ -238,7 +364,6 @@ inline void gmtime(const std::time_t* timer, std::tm* buf) {
 #endif
 }
 
-// Platform independent localtime.
 inline void localtime(const std::time_t* timer, std::tm* buf) {
 #if FEA_WINDOWS
 	localtime_s(buf, timer);
@@ -247,8 +372,6 @@ inline void localtime(const std::time_t* timer, std::tm* buf) {
 #endif
 }
 
-// Converts sys_time timepoint to std::tm.
-// Ignores local timezone.
 template <class T>
 std::tm to_utc_tm(date::sys_time<T> tp) {
 	auto days_tp = date::floor<date::days>(tp);
@@ -275,8 +398,6 @@ std::tm to_utc_tm(date::sys_time<T> tp) {
 	return ret;
 }
 
-// Converts sys_time timepoint to std::tm.
-// Uses local timezone.
 template <class T>
 std::tm to_local_tm(date::sys_time<T> sys_tp) {
 	auto zoned_time = date::make_zoned(date::current_zone(), sys_tp);
@@ -339,7 +460,6 @@ date::sys_time<Duration> to_sys(steady_time<Duration> time) {
 	return date::sys_time<Duration>{ time.time_since_epoch() };
 }
 
-// WARNING : Looses precision.
 inline std::chrono::system_clock::time_point to_sys(
 		std::filesystem::file_time_type tp) {
 	using namespace std::chrono;
@@ -348,7 +468,6 @@ inline std::chrono::system_clock::time_point to_sys(
 			tp - file_clock::now() + system_clock::now());
 }
 
-// WARNING : Cannot represent as big values as system_clock.
 inline std::chrono::steady_clock::time_point to_steady(
 		std::chrono::system_clock::time_point tp) {
 	using namespace std::chrono;
@@ -364,11 +483,6 @@ inline steady_days to_steady(date::year_month_day ymd) {
 	return to_steady(date::sys_days(ymd));
 }
 
-// Computes elapsed time between start and end, clamped to a modulo clock.
-// For ex :
-// - modulo = 60, 59s to 2s == 3s elapsed.
-// - modulo = 24, 23h to 2h == 3h elapsed.
-// - modulo = 365, 364d to 2d == 3d elapsed.
 template <class T, class Period>
 auto elapsed(std::chrono::duration<T, Period> start,
 		std::chrono::duration<T, Period> end, T modulo) {
@@ -452,8 +566,14 @@ inline std::string to_string(std::tm tm_) {
 	return oss.str();
 }
 
-#if FEA_CPP20
 namespace detail {
+inline unsigned to_day(date::sys_days tp) {
+	date::year_month_day ymd{ tp };
+	unsigned ret = unsigned(ymd.day());
+	assert(ret < 32u);
+	return ret;
+}
+
 template <class SV>
 constexpr std::array<SV, 32> make_suffix_array() {
 	using CharT = typename SV::value_type;
@@ -469,28 +589,52 @@ constexpr std::array<SV, 32> make_suffix_array() {
 }
 } // namespace detail
 
-// Given a date, returns the month's day with suffix.
-// Ex, 1st, 2nd, 3rd, etc.
-// Return type overload magic. Supports all std strings (other than u8string).
-inline auto suffixed_day(date::sys_days tp) {
-	static constexpr auto str_arr
-			= detail::make_suffix_array<std::string_view>();
-	static constexpr auto wstr_arr
-			= detail::make_suffix_array<std::wstring_view>();
-	static constexpr auto u16str_arr
+inline void suffixed_day(date::sys_days tp, std::string_view* ret) {
+	static constexpr auto suf = detail::make_suffix_array<std::string_view>();
+	unsigned d = detail::to_day(tp);
+	(*ret) = suf[d];
+}
+inline void suffixed_day(date::sys_days tp, std::wstring_view* ret) {
+	static constexpr auto suf = detail::make_suffix_array<std::wstring_view>();
+	unsigned d = detail::to_day(tp);
+	(*ret) = suf[d];
+}
+inline void suffixed_day(date::sys_days tp, std::u16string_view* ret) {
+	static constexpr auto suf
 			= detail::make_suffix_array<std::u16string_view>();
-	static constexpr auto u32str_arr
+	unsigned d = detail::to_day(tp);
+	(*ret) = suf[d];
+}
+inline void suffixed_day(date::sys_days tp, std::u32string_view* ret) {
+	static constexpr auto suf
 			= detail::make_suffix_array<std::u32string_view>();
+	unsigned d = detail::to_day(tp);
+	(*ret) = suf[d];
+}
 
-	date::year_month_day ymd{ tp };
-	unsigned d = unsigned(ymd.day());
-	assert(d < 32u);
-
+#if FEA_CPP20
+inline auto suffixed_day(date::sys_days tp) {
 	return fea::return_overload{
-		[d]() -> std::string_view { return str_arr[d]; },
-		[d]() -> std::wstring_view { return wstr_arr[d]; },
-		[d]() -> std::u16string_view { return u16str_arr[d]; },
-		[d]() -> std::u32string_view { return u32str_arr[d]; },
+		[tp]() -> std::string_view {
+			std::string_view ret;
+			fea::suffixed_day(tp, &ret);
+			return ret;
+		},
+		[tp]() -> std::wstring_view {
+			std::wstring_view ret;
+			fea::suffixed_day(tp, &ret);
+			return ret;
+		},
+		[tp]() -> std::u16string_view {
+			std::u16string_view ret;
+			fea::suffixed_day(tp, &ret);
+			return ret;
+		},
+		[tp]() -> std::u32string_view {
+			std::u32string_view ret;
+			fea::suffixed_day(tp, &ret);
+			return ret;
+		},
 	};
 }
 #endif

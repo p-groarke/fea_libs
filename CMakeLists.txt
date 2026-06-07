@@ -88,7 +88,6 @@ if (FEA_PULL_CONAN)
 		CONAN_ARGS "
 			${PROFILE_OPT} default
 			--build missing
-			--build cascade
 			--build outdated
 			-o:a fea_libs/*:with_tbb=${_FEA_WITH_TBB_PYBOOL}
 			-o:a fea_libs/*:with_onetbb=${_FEA_WITH_ONETBB_PYBOOL}

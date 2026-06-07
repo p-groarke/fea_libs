@@ -37,7 +37,6 @@
 
 #if FEA_WITH_TBB
 #include <tbb/partitioner.h>
-#endif
 
 /*
 Specialize the traits in the fea namespace to override the defaults.
@@ -53,7 +52,6 @@ struct default_grainsize<true> {
 */
 
 namespace fea {
-#if FEA_WITH_TBB
 template <bool Overridden>
 struct default_grainsize_small {
 	static constexpr size_t value = 1u;
@@ -99,6 +97,6 @@ struct default_partitioner<false>;
 
 template <bool B>
 using default_partitioner_t = typename default_partitioner<B>::type;
-#endif
-
 } // namespace fea
+
+#endif
