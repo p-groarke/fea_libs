@@ -30,6 +30,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #pragma once
+#include "fea/macros/literals.hpp"
 #include "fea/utility/platform.hpp"
 
 #if FEA_WITH_DATE
@@ -47,7 +48,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <date/tz.h>
 
 #if FEA_CPP20
-#include "fea/macros/literals.hpp"
 #include "fea/meta/return_overload.hpp"
 #endif
 
