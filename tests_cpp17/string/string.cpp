@@ -249,10 +249,10 @@ TEST(string, starts_with) {
 			"without");
 
 	static_assert(std::get<0>(alice_chunks).size()
-					== std::get<0>(valid_searches).size(),
+						  == std::get<0>(valid_searches).size(),
 			"Sanity check failed, you have gone off the deep end.");
 	static_assert(std::get<0>(alice_chunks).size()
-					== std::get<0>(invalid_searches).size(),
+						  == std::get<0>(invalid_searches).size(),
 			"Sanity check failed, you have gone off the deep end.");
 
 	fea::static_for<alice_size>([&](auto const_i) {
@@ -299,10 +299,10 @@ TEST(string, ends_with) {
 			"tO", "a", "  ,", "ittttt", "”", ",“", "Thought\n Alice ", "!!");
 
 	static_assert(std::get<0>(alice_chunks).size()
-					== std::get<0>(valid_searches).size(),
+						  == std::get<0>(valid_searches).size(),
 			"Sanity check failed, you have gone off the deep end.");
 	static_assert(std::get<0>(alice_chunks).size()
-					== std::get<0>(invalid_searches).size(),
+						  == std::get<0>(invalid_searches).size(),
 			"Sanity check failed, you have gone off the deep end.");
 
 	fea::static_for<alice_size>([&](auto const_i) {
@@ -576,6 +576,15 @@ TEST(string, line_funcs) {
 	});
 }
 
+TEST(string, html_escape) {
+	std::string test = "\n&\"'<>\n\rI'm & a test\r\n\n&apos;&#13;\r\n\r";
+	std::string expected
+			= "&NewLine;&amp;&quot;&apos;&lt;&gt;&NewLine;&#13;I&apos;m "
+			  "&amp; a test&crarr;&NewLine;&apos;&#13;&crarr;&#13;";
+
+	std::string result = fea::html_escape(test);
+	EXPECT_EQ(result, expected);
+}
 
 #if FEA_CPP20
 struct str {

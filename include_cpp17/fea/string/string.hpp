@@ -43,6 +43,7 @@
 #include <cctype>
 #include <cstring>
 #include <locale>
+#include <regex>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -429,7 +430,18 @@ std::basic_string<CharT> html_escape(std::basic_string_view<CharT> str) {
 	for (size_t i = 0; i < str.size(); ++i) {
 		switch (str[i]) {
 		case FEA_CH('&'): {
-			ret.append(FEA_LIT("&amp;"));
+			// We only replace with &amp; if this is not an entity.
+			static const std::regex re(R"xx(^&[[:alnum:]#]+;)xx",
+					std::regex_constants::extended | std::regex_constants::icase
+							| std::regex_constants::optimize);
+			if (std::regex_search(str.begin() + i, str.end(), re,
+						std::regex_constants::match_continuous)) {
+				// We are an entity, keep ampersand.
+				ret.append(FEA_LIT("&"));
+			} else {
+				ret.append(FEA_LIT("&amp;"));
+			}
+
 		} break;
 		case FEA_CH('\"'): {
 			ret.append(FEA_LIT("&quot;"));
@@ -444,10 +456,18 @@ std::basic_string<CharT> html_escape(std::basic_string_view<CharT> str) {
 			ret.append(FEA_LIT("&gt;"));
 		} break;
 		case FEA_CH('\n'): {
+			// We should never get here if we were preceeded by \r.
+			assert(i == 0 || str[i - 1] != '\r');
 			ret.append(FEA_LIT("&NewLine;"));
 		} break;
 		case FEA_CH('\r'): {
-			// note : &crarr; is both \n\r
+			// Note : &crarr; is both \r\n
+			if (i < str.size() - 1 && str[i + 1] == '\n') {
+				// Next character is \n
+				ret.append(FEA_LIT("&crarr;"));
+				++i;
+				continue;
+			}
 			ret.append(FEA_LIT("&#13;"));
 		} break;
 
