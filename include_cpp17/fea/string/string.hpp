@@ -456,20 +456,19 @@ std::basic_string<CharT> html_escape(std::basic_string_view<CharT> str) {
 			ret.append(FEA_LIT("&gt;"));
 		} break;
 		case FEA_CH('\n'): {
-			if (i > 0 && str[i - 1] == '\r') {
-				// skip, we were parsed by carriage return.
-				continue;
-			} else {
-				ret.append(FEA_LIT("&NewLine;"));
-			}
+			// We should never get here if we were preceeded by \r.
+			assert(i == 0 || str[i - 1] != '\r');
+			ret.append(FEA_LIT("&NewLine;"));
 		} break;
 		case FEA_CH('\r'): {
+			// Note : &crarr; is both \r\n
 			if (i < str.size() - 1 && str[i + 1] == '\n') {
-				// note : &crarr; is both \r\n
+				// Next character is \n
 				ret.append(FEA_LIT("&crarr;"));
-			} else {
-				ret.append(FEA_LIT("&#13;"));
+				++i;
+				continue;
 			}
+			ret.append(FEA_LIT("&#13;"));
 		} break;
 
 		// TODO : utf8 input.
