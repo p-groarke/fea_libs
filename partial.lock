@@ -12,7 +12,7 @@
     "context": "host"
    },
    "1": {
-    "ref": "gtest/1.11.0#7475482232fcd017fa110b0b8b0f936e",
+    "ref": "gtest/1.15.0#9eb07f548819215e766e41399858454f",
     "context": "host"
    },
    "2": {

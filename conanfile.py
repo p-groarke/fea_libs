@@ -13,7 +13,7 @@ class Mnmesh2Conan(ConanFile):
     generators = "cmake_find_package_multi"
     settings = "os", "compiler", "build_type", "arch"
     requires = [
-        ("gtest/1.11.0")
+        ("gtest/1.15.0")
         , ("onetbb/2021.3.0")
         , ("date/3.0.3")
     ]
