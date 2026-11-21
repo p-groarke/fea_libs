@@ -15,7 +15,7 @@ class Mnmesh2Conan(ConanFile):
     requires = [
         ("gtest/1.11.0")
         , ("onetbb/2021.3.0")
-        , ("date/3.0.0")
+        , ("date/3.0.3")
     ]
     options = {
         "fPIC": [True, False]
